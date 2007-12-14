@@ -16,7 +16,7 @@ setup(
     maintainer="Jeff Ortel",
     maintainer_email="jortel@redhat.com",
     packages=find_packages(),
-    url="https://fedorahosted.org/suds"
+    url="https://fedorahosted.org/suds",
     install_requires=requires
 )
 
