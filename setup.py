@@ -1,12 +1,13 @@
 import sys
 from setuptools import setup, find_packages
 
-import sys
-if sys.version_info < (2,5):
-    requires = ['lxml.etree >= 1.3.3',]
-else:
-    requires = ['xml.etree >= 1.3.3',]
+requires = ['python >= 2.4']
 
+if sys.version_info < (2,5):
+    requires.append('lxml.etree >= 1.3.3')
+else:
+    requires.append('xml.etree >= 1.3.3')
+    
 setup(
     name="suds",
     version="0.1",
@@ -19,4 +20,3 @@ setup(
     url="https://fedorahosted.org/suds",
     install_requires=requires
 )
-
