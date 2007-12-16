@@ -136,6 +136,11 @@ class DocumentBinding(Binding):
         """encode and return the specified property within the named root tag"""
         if isinstance(object, dict):
             return self.writer.tostring(name, object)
+        if isinstance(object, list) or isinstance(object, tuple):
+            tags = ''
+            for item in object:
+                tags += '<%s>%s</%s>' % (name, item, name)
+            return tags 
         if isinstance(object, Property):
             return self.writer.tostring(name, object.dict())
         return '<%s>%s</%s>' % (name, object, name)

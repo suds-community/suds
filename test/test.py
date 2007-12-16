@@ -135,6 +135,19 @@ class Test:
             print '\nreply( %s )\n' % str(result)
         except Exception, e:
             print e
+
+        #
+        # test list args
+        #
+        print 'testListArgs(list)'
+        mylist = ['my', 'dog', 'likes', 'steak']
+        result = service.testListArg(mylist)
+        print '\nreply( %s )\n' % str(result)
+        # tuple
+        print 'testListArgs(tuple)'
+        mylist = ('my', 'dog', 'likes', 'steak')
+        result = service.testListArg(mylist)
+        print '\nreply( %s )\n' % str(result)
         
         #
         # test exceptions
@@ -145,6 +158,9 @@ class Test:
             print '\nreply( %s )\n' % str(result)
         except Exception, e:
             print e
+            
+
+
             
     def auth_test(self):
         
