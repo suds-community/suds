@@ -139,3 +139,9 @@ dot notation as follows:
 >
 > name = service.get_instance('person.name') 
 >
+
+
+BUILD-NOTES:
+
+python 2.4:
+  add (sed -i -e 's@\(.\+\)\.pyc$@\1.pyc\n\1.pyo@' INSTALLED_FILES) to the rpm.spec
