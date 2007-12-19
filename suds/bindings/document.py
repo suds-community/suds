@@ -197,7 +197,7 @@ class ReplyHint(Hint):
         
     def stripns(self, s):
         """ strip the elementtree {} namespace prefix """
-        return self.binding.reader.stripns(s)
+        return self.binding.reader.stripns(s)[1]
         
     def schema(self):
         """ get the binding's schema """
