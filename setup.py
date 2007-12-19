@@ -20,11 +20,8 @@ from setuptools import setup, find_packages
 from suds import VERSION
 
 requires = ['python >= 2.4']
-
 if sys.version_info < (2,5):
-    requires.append('lxml.etree >= 1.3.3')
-else:
-    requires.append('xml.etree >= 1.3.3')
+    requires.append('lxml')
     
 setup(
     name="suds",
