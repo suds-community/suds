@@ -1,5 +1,7 @@
 import logging
 
+VERSION = "0.1.2"
+
 class MethodNotFound(Exception):
     def __init__(self, name):
         self.name = name

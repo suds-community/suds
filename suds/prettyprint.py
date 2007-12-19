@@ -13,10 +13,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-def prettyprint(object):
-    return prettyprinter().tostring(object)
 
-class prettyprinter:
+class PrettyPrinter:
     
     """ Pretty printing of a Property object. """
     

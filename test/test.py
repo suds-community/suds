@@ -17,6 +17,7 @@ from suds import *
 from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
 from suds.propertyreader import DocumentReader, Hint
+from suds.propertywriter import DocumentWriter
 from suds.property import Property
 from suds.wsdl import WSDL
 
@@ -178,6 +179,8 @@ class Test:
         subject = service.login('jonadmin', 'jonadmin')
         print '\nreply(\n%s\n)\n' % str(subject)
         
+        #print DocumentWriter().tostring('root', subject)
+        
         #
         # create page control and get all subjects
         #
@@ -216,7 +219,6 @@ class Test:
         #
         print 'login()'
         subject = ServiceProxy(get_url('auth')).login('jonadmin', 'jonadmin')
-        print '\nreply(\n%s\n)\n' % str(subject)
         
         #
         # create page control and get all subjects
@@ -266,7 +268,6 @@ class Test:
         #
         print 'login()'
         subject = ServiceProxy(get_url('auth')).login('jonadmin', 'jonadmin')
-        print "subject: ", str(subject)
 
         #
         # get all perspectives
@@ -316,7 +317,6 @@ class Test:
         #
         print 'login()'
         subject = ServiceProxy(get_url('auth')).login('jonadmin', 'jonadmin')
-        print "subject: ", str(subject)
 
         #
         # get all perspectives
@@ -344,15 +344,24 @@ def test3():
     schema = Schema(wsdl.definitions_schema())
     #print schema.build('property')
     #print schema.build('configuration.properties.entry')
-    print schema.build('propertySimple')
+    simple =  schema.build('propertySimple')
+    print simple
+    simple.name = 'userid'
+    simple.stringValue = 'jortel'
+    simple.id = 43
+    print simple
+    print DocumentWriter().tostring(simple.__type__, simple)
 
 def test4():
-    hint = Hint()
+    hint = Hint(addtag = True)
     hint.sequences = ('/root/test',)
-    xml = '<root><test/></root>'
+    xml = '<root><name>jeff</name><age xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="int">20</age><test/></root>'
     reader = DocumentReader(hint=hint)
+    writer = DocumentWriter()
     d = reader.read(string=xml)
     print d
+    print d.age.get_metadata('_type')
+    print writer.tostring('test', d)
     
 def test5():
     wsdl = WSDL(get_url('auth'))
@@ -367,6 +376,7 @@ def test5():
         print p
         
 if __name__ == '__main__':
+    #test4()
     #test5()
     #test3()
     test = Test()

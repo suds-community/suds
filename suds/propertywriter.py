@@ -18,6 +18,8 @@ if sys.version_info < (2,5):
     from lxml.etree import Element, tostring
 else:
     from xml.etree.ElementTree import Element, tostring
+    
+from suds.property import Property
 
 class DocumentWriter:
 
@@ -28,41 +30,42 @@ class DocumentWriter:
         """
         self.atpfx = atpfx
 
-    def tostring(self, root, object):
-        """ get the xml string value of the dictionary and root name """
-        dict = self.translate(object)
+    def tostring(self, root, property):
+        """ get the xml string value of the property and root name """
         parent = Element(root)
-        for item in dict.items():
-            self.writecontent(parent, item[0], item[1])
+        if isinstance(property, dict):
+            property = Property(property)
+        for item in property.get_items():
+            self.writecontent(parent, property, item[0], item[1])
         return tostring(parent)
        
-    def writecontent(self, parent, tag, object):
+    def writecontent(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """
         if object is None:
             return
-        object = self.translate(object)
         if isinstance(object, dict):
+            object = Property(object)
+        if isinstance(object, Property):
             child = Element(tag)
             parent.append(child)
-            for item in object.items():
-                self.writecontent(child, item[0], item[1])
+            for item in object.get_items():
+                self.writecontent(child, object, item[0], item[1])
             return
         if isinstance(object, list) or isinstance(object, tuple):
             for item in object:
-                self.writecontent(parent, tag, item)
+                self.writecontent(parent, property, tag, item)
             return
+        nses = property.get_metadata(tag)
+        ns = property.get_metadata(tag).namespace
         if self.atpfx and tag.startswith(self.atpfx):
-            parent.attrib[tag[len(self.atpfx):]] = str(object)
+            tag = tag[len(self.atpfx):]
+            if ns is not None:
+                tag = '{%s}%s'%(ns,tag)
+            parent.attrib[tag] = str(object)
         else:
+            if ns is not None:
+                tag = '{%s}%s'%(ns,tag)
             child = Element(tag)
             child.text = str(object)
             parent.append(child)
-            
-    def translate(self, object):
-        """ attempt to translate the object into a dictionary """
-        result = object
-        try:
-            result = object.dict()
-        except:
-            pass
-        return result
+

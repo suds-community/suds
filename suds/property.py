@@ -13,8 +13,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-from prettyprint import prettyprint
-
 """
     Property object used to provide an object wrapper around a complex dictionary.
     
@@ -42,7 +40,7 @@ from prettyprint import prettyprint
 
 class Property:
     
-    __protected__ = ('__data__', '__strict__', '__type__')
+    __protected__ = ('__data__', '__strict__', '__type__', '__metadata__')
     
     """
     provides an object wrapper around a complex dictionary.
@@ -56,9 +54,12 @@ class Property:
         """
         if data is None:
             data = {}
-        self.__dict__['__data__'] = data
-        self.__dict__['__strict__'] = strict
-        self.__dict__['__type__'] = None
+        if isinstance(data, Property):
+            data = data.dict()
+        self.__data__ = data
+        self.__strict__ = strict
+        self.__type__ = None
+        self.__metadata__ = {}
             
     def get_names(self):
         """get a list of property names"""
@@ -67,6 +68,10 @@ class Property:
     def get_values(self):
         """get a list of property values"""
         return self.__data__.values()
+
+    def get_items(self):
+        """ get the property's collection of items."""
+        return self.__data__.items()
     
     def get(self, **kwargs):
         """get a property(s) value by name while specifying a default: property=default, """
@@ -83,6 +88,15 @@ class Property:
     def set(self, name, value):
         """set the value of the specified named"""
         self.__setattr__(name, value)
+            
+    def get_metadata(self, name):
+        """ get the metadata associated with the named property"""
+        if name in self.__metadata__:
+            md = self.__metadata__[name]
+        else:
+            md = Property()
+            self.__metadata__[name] = md
+        return md       
 
     def dict(self):
         """get the underlying dictionary"""
@@ -97,37 +111,6 @@ class Property:
                 del self.__data__[k]
                 pruned.append(k)
         return pruned
-
-    def __getattr__(self, name):
-        """get the specified attribute (property).  raise exception based on strict flag"""
-        result = None
-        if name in Property.__protected__:
-            return self.__dict__[name] 
-        try:            
-            result = self.translate(self.__data__[name])
-        except KeyError:
-            if self.__strict__:
-                raise AttributeError, name
-        return result      
-    
-    def __setattr__(self, name, value):
-        """set the value of the specified attribute (property)"""
-        if name in Property.__protected__:
-            self.__dict__[name] = value
-            return
-        if isinstance(value, Property):
-            self.__data__[name] = value.dict()
-            return
-        if isinstance(value, list) or isinstance(value, tuple):
-            _list = []
-            for item in value:
-                if isinstance(item, Property):
-                    _list.append(item.dict())
-                else:
-                    _list.append(item)
-            self.__data__[name] = _list
-            return
-        self.__data__[name] = value
             
     def translate(self, v):
         """
@@ -166,37 +149,78 @@ class Property:
             else:
                 list.append(item)
         return tuple(list)
+
+    def __getattr__(self, name):
+        """get the specified attribute (property).  raise exception based on strict flag"""
+        result = None
+        if name in Property.__protected__:
+            return self.__dict__[name] 
+        try:            
+            result = self.translate(self.__data__[name])
+        except KeyError:
+            if self.__strict__:
+                raise AttributeError, name
+        return result
+    
+    def __setattr__(self, name, value):
+        """set the value of the specified attribute (property)"""
+        if name in Property.__protected__:
+            self.__dict__[name] = value
+            return
+        if isinstance(value, Property):
+            self.__data__[name] = value
+            return
+        if isinstance(value, list) or isinstance(value, tuple):
+            _list = []
+            for item in value:
+                if isinstance(item, Property):
+                    _list.append(item)
+            self.__data__[name] = _list
+            return
+        self.__data__[name] = value
+
+    def __getitem__(self, name):
+        """ dictionary accessor """
+        return self.translate(self.__data__[name])
+        
+    def __setitem__(self, name, value):
+        """ dictionary accessor """
+        self.__setattr__(name, value)
     
     def __str__(self):
+        """ get a string representation """
         if self.__type__ is None:
             return prettyprint(self.__data__)
         else:
             return '(%s)%s' % (self.__type__, prettyprint(self.__data__))
     
     def __repr__(self):
+        """ get a string representation """
         return self.__str__()
     
     def __neq__(self, other):
+        """ not equals operator """
         return not self.__eq__(other)
     
     def __eq__(self, other):
+        """ equals operator """
         if isinstance(other, Property):
             return self.__data__ == other.__data__
         else:
             return False
+        
+    def __len__(self):
+        """ len() operator """
+        return len(self.__data__)
     
-if __name__ == '__main__':
-    p = Property()
-    print p
-    p.__type__ = 'jeff'
-    print p
-    p.name = 'jeff'
-    p.age = 43
-    print p
-    p.list = [{'a':1,'b':2},{'c':3,'d':4}]
-    print p
-    _list = p.list
-    p.list.append(23)
-    print p
+    def __contains__(self, name):
+        return name in self.__data__
 
+    
+
+
+from suds.prettyprint import PrettyPrinter
+    
+def prettyprint(object):
+    return PrettyPrinter().tostring(object)
         

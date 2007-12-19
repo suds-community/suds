@@ -129,7 +129,7 @@ class DocumentBinding(Binding):
             result = node.text
         else:
             self.reader.set_hint(hint)
-            result = Property(self.reader.process(node))
+            result = self.reader.process(node)
         return result
     
     def param(self, name, object):

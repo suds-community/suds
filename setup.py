@@ -17,6 +17,7 @@
 
 import sys
 from setuptools import setup, find_packages
+from suds import VERSION
 
 requires = ['python >= 2.4']
 
@@ -27,7 +28,7 @@ else:
     
 setup(
     name="suds",
-    version="0.1.1",
+    version=VERSION,
     description="Lightweight SOAP client",
     author="Jeff Ortel",
     author_email="jortel@redhat.com",

@@ -316,7 +316,7 @@ class Builder:
         if type is None:
             raise TypeNotFound(typename)
         p = Property()
-        self.set_xsi_type(p, type)
+        self.set_xsitype(p, type)
         p.__type__ = typename
         self.process_children(p, type)
         return p
@@ -330,7 +330,7 @@ class Builder:
         else:
             children = resolved.get_children()
             if len(children) > 0:
-                self.set_xsi_type(p, type)
+                self.set_xsitype(p, type)
                 value = Property()
         p.set(type.get_name(), value)
         if value is not None:
@@ -343,8 +343,7 @@ class Builder:
         for c in type.get_children():
             self.process(p, c)
             
-    def set_xsi_type(self, p, type):
+    def set_xsitype(self, p, type):
         """ add the xsi:type property to the type name """
-        ns = 'http://www.w3.org/2001/XMLSchema-instance'
-        attr = '_{%s}type' %ns
-        p.set(attr, type.get_name())
+        p._type = type.get_name()
+        p.get_metadata('_type').namespace = 'http://www.w3.org/2001/XMLSchema-instance'

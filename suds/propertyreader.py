@@ -100,8 +100,7 @@ class DocumentReader:
             root = XML(string)
         else:
             raise Exception('(file|url|string) must be specified')
-        data = self.process(root)
-        return Property(data)
+        return self.process(root)
     
     def process(self, e):
         """
@@ -121,14 +120,17 @@ class DocumentReader:
             raise TypeError, 'handler must be TagHandler'
         
     def stripns(self, s):
-        """strip the {} namespace prefix used by element tree"""
-        result = s
+        """strip the {} namespace used by etree and return (ns, s)"""
+        ns = None
         if self._stripns:
             p = re.compile('({[^{]+})(.+)')
             m = p.match(s)
             if m:
-                result = m.group(2)
-        return result
+                 ns = m.group(1)
+                 s = m.group(2)
+        if ns is not None:
+            ns = ns[1:-1]
+        return (ns, s)
 
 
 class TagHandler:
@@ -164,10 +166,10 @@ class BasicHandler(TagHandler):
         attributes are added to the dictionary then the children are processed using recursion.  
         the child dictionary is added to the result using the child's tag as the key.
         """
-        data = {}
+        data = Property()
         if self.p.hint.addtag:
-            data['__tag__'] = e.tag
-        self.path.append(self.p.stripns(e.tag))
+            data.__type__ = e.tag
+        self.path.append(self.p.stripns(e.tag)[1])
         self.import_attrs(data, e)
         self.import_children(data, e)
         self.import_text(data, e)
@@ -177,7 +179,10 @@ class BasicHandler(TagHandler):
     def import_attrs(self, data, e):
         """import attribute nodes into the data structure"""
         for attr in e.keys():
-            key = '%s%s' % (self.p.hint.atpfx, self.p.stripns(self.clean(attr)))
+            ns, key = self.p.stripns(attr)
+            key = '%s%s' % (self.p.hint.atpfx, self.clean(key))
+            if ns is not None:
+                data.get_metadata(key).namespace = ns
             value = e.get(attr).strip()
             value = self.booleans.get(value.lower(), value)
             data[key] = value
@@ -186,7 +191,10 @@ class BasicHandler(TagHandler):
         """import child nodes into the data structure"""
         for child in e.getchildren():
             cdata = self.p.process(child)
-            key = self.clean(self.p.stripns(child.tag))
+            ns, key = self.p.stripns(child.tag)
+            key = self.clean(key)
+            if ns is not None:
+                data.get_metadata(key).namespace = ns
             if key in data:
                 v = data[key]
                 if isinstance(v, list):
@@ -220,9 +228,8 @@ class BasicHandler(TagHandler):
         try:
             if len(data) == 0:
                 return None
-            text = data['text']
             if len(data) == 1 and self.p.hint.nonsequence(e.tag):
-                return text
+                return data['text']
         except:
             pass
         return data
@@ -233,7 +240,7 @@ class BasicHandler(TagHandler):
         for p in self.path:
             s += '/%s' % p
         if leaf is not None:
-            s += '/%s' % leaf
+           s += '/%s' % leaf
         return s
 
 
