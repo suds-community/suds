@@ -19,10 +19,6 @@ import sys
 from setuptools import setup, find_packages
 from suds import VERSION
 
-requires = ['python >= 2.4']
-if sys.version_info < (2,5):
-    requires.append('lxml')
-    
 setup(
     name="suds",
     version=VERSION,
@@ -33,5 +29,5 @@ setup(
     maintainer_email="jortel@redhat.com",
     packages=find_packages(),
     url="https://fedorahosted.org/suds",
-    install_requires=requires
+    install_requires=['lxml',]
 )
