@@ -378,6 +378,7 @@ def test5():
         print p
         
 if __name__ == '__main__':
+    #logger('serviceproxy').setLevel(logging.DEBUG)
     #test4()
     #test5()
     #test3()

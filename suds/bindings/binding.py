@@ -21,7 +21,7 @@ from suds.propertywriter import DocumentWriter
 class Binding:
 
     def __init__(self, wsdl, faults):
-        self.log = logger
+        self.log = logger('binding')
         self.faults = faults
         self.reader = DocumentReader()
         self.writer = DocumentWriter()
