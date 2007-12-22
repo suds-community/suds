@@ -74,7 +74,10 @@ class DocumentBinding(Binding):
         for a in args:
             if p == len(ptypes): break
             tag = ptypes[p][0]
-            params += self.param(tag, a)
+            if a is None:
+                params += '<%s xsi:nil="true"/>' % tag
+            else:
+                params += self.param(tag, a)
             p += 1
         msg = docfmt % (body[0], m[0], params, m[1], body[1])
         return msg
@@ -139,10 +142,10 @@ class DocumentBinding(Binding):
         if isinstance(object, list) or isinstance(object, tuple):
             tags = ''
             for item in object:
-                tags += '<%s>%s</%s>' % (name, item, name)
+                tags += self.param(name, item)
             return tags 
         if isinstance(object, Property):
-            return self.writer.tostring(name, object.dict())
+            return self.writer.tostring(name, object)
         return '<%s>%s</%s>' % (name, object, name)
         
     def body(self):
