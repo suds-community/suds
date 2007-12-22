@@ -111,6 +111,8 @@ class Test:
         print 'updatePersion()'
         result = service.updatePerson(person, newname)
         print '\nreply(\n%s\n)\n' % str(result)
+        result = service.updatePerson(person, None)
+        print '\nreply(\n%s\n)\n' % str(result)
         
         
         #
@@ -376,12 +378,12 @@ def test5():
         print p
         
 if __name__ == '__main__':
-    test4()
+    #test4()
     #test5()
     #test3()
-    #test = Test()
-    #test.basic_test()
-    #test.auth_test()
-    #test.resource_test()
-    #test.perspectives_test()
-    #test.contentsource_test()
+    test = Test()
+    test.basic_test()
+    test.auth_test()
+    test.resource_test()
+    test.perspectives_test()
+    test.contentsource_test()
