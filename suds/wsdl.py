@@ -35,7 +35,7 @@ class WSDL:
     hint.sequences += Schema.hint.sequences
     
     def __init__(self, url):
-        self.log = logger
+        self.log = logger('wsdl')
         self.url = url
         try:
             self.log.debug('opening %s', url)

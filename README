@@ -9,6 +9,17 @@ The primary classes in the package are the:
   * provides an object-like API.
   * reads wsdl at runtime for encoding/decoding
   * provides for Document-Literal style SOAP binding
+  
+Logging:
+
+By default, the suds package logs at LEVEL=INFO using a console handler.
+All messages are at level DEBUG or ERROR so, no messages are written
+unless the user does the following: suds.logger(<desired package>).setLevel(logging.<desired-level>)
+A common example (show sent/received soap messages):
+>
+> suds.logger('suds.serviceproxy').setLevel(logging.DEBUG)
+>
+
 
 Basic usage:
 
@@ -161,4 +172,11 @@ version-0.1.3 (12-19-07):
      bindings.Document.ReplyHint.stripns() (which uses the DocumentReader.stripns())
      conversion to DocumentReader.stripn() now returning a tuple (ns,tag) as
      of 0.1.2.
+     
+version-0.1.4 (12-21-07):
+  * Provides for service method parameters to be None.
+  * Add proper handling of method params that are lists of property
+    objects.
 
+version-0.1.5( not-released ):
+ * Provides better logging in the modules get logger by hierarchal names.

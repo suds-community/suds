@@ -37,7 +37,7 @@ class Schema:
     def __init__(self, schema):
         """ construct the sequence object with a schema """
         self.root = schema
-        self.log = logger
+        self.log = logger('schema')
         self.hints = {}
         self.types = {}
         

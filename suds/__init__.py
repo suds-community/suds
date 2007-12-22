@@ -32,13 +32,15 @@ class WebFault(Exception):
     def __str__(self):
         return 'service provider raised fault %s\n' % repr(self.type)
 
-try:
-    logger
-except:
+def logger(name=None):
+    if name is None:
+        return logging.getLogger()
     fmt =\
         '%(asctime)s {%(process)d} (%(filename)s, %(lineno)d) [%(levelname)s] %(message)s'
-    logger = logging.getLogger('suds')
-    logger.setLevel(logging.INFO)
-    __handler = logging.StreamHandler()
-    __handler.setFormatter(logging.Formatter(fmt))
-    logger.addHandler(__handler)
+    logger = logging.getLogger('suds.%s' % name)
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        __handler = logging.StreamHandler()
+        __handler.setFormatter(logging.Formatter(fmt))
+        logger.addHandler(__handler)
+    return logger

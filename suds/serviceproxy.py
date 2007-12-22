@@ -23,7 +23,7 @@ class ServiceProxy(object):
         self.faults = faults
         self.wsdl = WSDL(url)
         self.binding = self.wsdl.get_binding(faults)
-        self.log = logger
+        self.log = logger('serviceproxy')
         
     def get_methods(self):
         """get a list of methods provided by this service"""
