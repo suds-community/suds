@@ -59,6 +59,8 @@ class DocumentBinding(Binding):
         msg = self.wsdl.get_message(operation.input._message)
         for p in msg.get(part=[]):
             type = self.schema.get_type(p._element)
+            if type is None:
+                raise TypeNotFound(p._element)
             for e in type.get_children():
                 params.append((e.get_name(), self.schema.stripns(e.get_type())))
         self.log.debug('parameters %s for method %s', str(params), method)
