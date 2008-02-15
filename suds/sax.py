@@ -64,7 +64,7 @@ class Attribute:
 
 class Node:
     """ simple xml node """
-    def __init__(self, name, parent=None):
+    def __init__(self, name, parent=None, ns=None):
         self.prefix, self.name = self.splitPrefix(name)
         self.expns = None
         self.nsprefixes = {}
@@ -72,7 +72,8 @@ class Node:
         self.text = None
         self.parent = parent
         self.children = []
-        
+        self.applyns(ns)
+            
     def append(self, child):
         if isinstance(child, Node):
             self.children.append(child)
@@ -89,6 +90,40 @@ class Node:
                 ( ns is None or c.namespace()[1] == ns[1] ):
                 return c
         return None
+    
+    def find(self, path):
+        result = None
+        node = self
+        for p in [p for p in path.split('/') if len(p) > 0]:
+            result = node.getChild(p)
+            if result is None:
+                break;
+            else:
+                node = result
+        return result
+
+    def findAll(self, path):
+        result = []
+        child = None
+        parts = [p for p in path.split('/') if len(p) > 0]
+        if len(parts) == 1:
+            child = self.getChild(path)
+            if child is not None:
+                result.append(child)
+        else:
+            node = self
+            last = len(parts)-1
+            ancestors = parts[:last]
+            leaf = parts[last]
+            for n in ancestors:
+                child = node.getChild(n)
+                if child is None:
+                    break
+                else:
+                    node = child
+            if child is not None:
+                result = child.getChildren(leaf)
+        return result
         
     def getChildren(self, name=None, ns=None):
         result = []
@@ -101,12 +136,20 @@ class Node:
         return result
     
     def attribute(self, name, value=None):
+        attr = None
         for a in self.attributes:
             if a.name == name:
-                if value is None:
-                    return a
-                else:
-                    a.value = value
+                attr = a
+                break
+        if value is None:
+            if attr is not None:
+                return attr.value
+        else:
+            if attr is None:
+                attr = Attribute(name, value)
+                self.append(attr)
+            else:
+                attr.value = value
         
     def qname(self):
         if self.prefix is None:
@@ -143,6 +186,13 @@ class Node:
     def isempty(self):
         return len(self.children) == 0 and \
             self.text is None
+            
+    def applyns(self, ns):
+        if ns is not None:
+            if ns[0] is None:
+                self.expns = ns[1]
+            else:
+                self.nsprefixes[ns[0]] = ns[1]
 
     def __eq__(self, rhs):
         return  rhs is not None and \
@@ -156,6 +206,8 @@ class Node:
     
     def nsdeclarations(self):
         result = ''
+        if self.expns is not None:
+            result += ' xmlns="%s"' % self.expns
         for (p,u) in self.nsprefixes.items():
             result += ' xmlns:%s="%s"' % (p, u)
         return result
@@ -223,9 +275,11 @@ class Handler(ContentHandler):
  
     def startElement(self, name, attrs):
         top = self.top()
-        node = Node(str(name), top)
+        node = Node(str(name), parent=top)
         for a in attrs.getNames():
-            attribute = Attribute(str(a), str(attrs.getValue(a)))
+            n = str(a)
+            v = str(attrs.getValue(a))
+            attribute = Attribute(n,v)
             if self.mapPrefix(node, attribute):
                 continue
             node.append(attribute)
@@ -255,9 +309,6 @@ class Handler(ContentHandler):
         text = str(content).strip()
         if len(content) > 0:
             self.top().text = text;
-
-    def endDocument(self):
-        print self.nodes
 
     def push(self, node):
         self.nodes.append(node)
