@@ -19,14 +19,14 @@ from xml.sax import parse, parseString, ContentHandler
 class Attribute:
     """ simple attribute """
     def __init__(self, name, value=None):
-        self.node = None
+        self.parent = None
         self.prefix, self.name = self.splitPrefix(name)
         self.value = value
         
     def resolvePrefix(self, prefix):
         ns = (None,None)
-        if node is not None:
-            ns = self.node.resolvePrefix(prefix)
+        if self.parent is not None:
+            ns = self.parent.resolvePrefix(prefix)
         return ns
     
     def qname(self):
@@ -62,8 +62,8 @@ class Attribute:
         return '%s="%s"' % (self.qname(), self.value)
 
 
-class Node:
-    """ simple xml node """
+class Element:
+    """ simple xml element """
     def __init__(self, name, parent=None, ns=None):
         self.prefix, self.name = self.splitPrefix(name)
         self.expns = None
@@ -75,13 +75,13 @@ class Node:
         self.applyns(ns)
             
     def append(self, child):
-        if isinstance(child, Node):
+        if isinstance(child, Element):
             self.children.append(child)
             child.parent = self
             return
         if isinstance(child, Attribute):
             self.attributes.append(child)
-            child.node = self
+            child.parent = self
             return
 
     def getChild(self, name, ns=None):
@@ -196,13 +196,13 @@ class Node:
 
     def __eq__(self, rhs):
         return  rhs is not None and \
-            isinstance(rhs, Node) and \
+            isinstance(rhs, Element) and \
             self.name == rhs.name and \
             self.namespace() == rhs.namespace()
         
     def __repr__(self):
         return \
-            'node (prefix=%s, name=%s)' % (self.prefix, self.name)
+            'element (prefix=%s, name=%s)' % (self.prefix, self.name)
     
     def nsdeclarations(self):
         result = ''
@@ -246,11 +246,11 @@ class Node:
         return result
 
 
-class Document(Node):
-    """ simple document node """
+class Document(Element):
+    """ simple document """
 
     def __init__(self):
-        Node.__init__(self, 'document')
+        Element.__init__(self, 'document')
         
     def root(self):
         if len(self.children) > 0:
@@ -275,7 +275,7 @@ class Handler(ContentHandler):
  
     def startElement(self, name, attrs):
         top = self.top()
-        node = Node(str(name), parent=top)
+        node = Element(str(name), parent=top)
         for a in attrs.getNames():
             n = str(a)
             v = str(attrs.getValue(a))
