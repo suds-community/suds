@@ -94,7 +94,7 @@ class Element:
                 return c
         return default
     
-    def find(self, path):
+    def childAtPath(self, path):
         result = None
         node = self
         for name in [p for p in path.split('/') if len(p) > 0]:
@@ -109,7 +109,7 @@ class Element:
                 node = result
         return result
 
-    def findAll(self, path):
+    def childrenAtPath(self, path):
         result = []
         child = None
         parts = [p for p in path.split('/') if len(p) > 0]
@@ -118,10 +118,10 @@ class Element:
             if child is not None:
                 result.append(child)
         else:
-            result = self.__findAll(path)
+            result = self.__childrenAtPath(parts)
         return result
     
-    def __findAll(self, parts):
+    def __childrenAtPath(self, parts):
         result = []
         node = self
         last = len(parts)-1
@@ -196,7 +196,7 @@ class Element:
         
     def splitPrefix(self, name):
         if name is not None and ':' in name:
-            return tuple(name.split(':'))
+            return tuple(name.split(':', 1))
         else:
             return (None, name)
         
@@ -208,15 +208,6 @@ class Element:
             else:
                 n = n.parent
         return (None,None)
-    
-    def findPrefix(self, uri):
-        n = self
-        while n is not None:
-            for ns in n.nsprefixes.items():
-                if ns[1] == uri:
-                    return ns[0]
-            n = n.parent
-        return None
             
     def isempty(self):
         return len(self.children) == 0 and \
@@ -287,7 +278,7 @@ class Element:
         if len(self.children) > 0:
             result += '\n'
             for i in range(0, indent):
-                result += '    '
+                result += '  '
         result += '</%s>' % self.qname()
         return result
 
