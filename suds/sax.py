@@ -21,7 +21,7 @@ class Attribute:
     def __init__(self, name, value=None):
         self.parent = None
         self.prefix, self.name = self.splitPrefix(name)
-        self.value = value
+        self.value = encode(value)
         
     def resolvePrefix(self, prefix):
         """ resolve the specified prefix to a known namespace """
@@ -36,6 +36,14 @@ class Attribute:
             return self.name
         else:
             return '%s:%s' % (self.prefix, self.name)
+        
+    def setValue(self, value):
+        """ set the attributes value """
+        self.value = encode(value)
+        
+    def getValue(self):
+        """ set the attributes value """
+        return decode(self.value)
         
     def namespace(self):
         """ get the attributes namespace """
@@ -94,6 +102,15 @@ class Element:
             self.attributes.append(child)
             child.parent = self
             return
+
+    def setText(self, value):
+        """ set the element's text """
+        self.text = encode(value)
+        return self
+        
+    def getText(self):
+        """ set the element's text """
+        return decode(self.text)
 
     def getChild(self, name, ns=None, default=None):
         """ get a child by name and (optional) namespace """
@@ -196,13 +213,13 @@ class Element:
                 if attr.value is None:
                     return default
                 else:
-                    return attr.value
+                    return attr.getValue()
         else:
             if attr is None:
                 attr = Attribute(name, value)
                 self.append(attr)
             else:
-                attr.value = value
+                attr.setValue(value)
         
     def qname(self):
         """ get the fully qualified name """
@@ -400,3 +417,20 @@ class Parser:
         if string is not None:
             parseString(string, handler)
             return handler.nodes[0]
+
+
+
+encodings = \
+(( '&', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
+
+def encode(s):
+    if s is None: return s
+    for x in encodings:
+        s = s.replace(x[0], x[1])
+    return s
+
+def decode(s):
+    if s is None: return s
+    for x in encodings:
+        s = s.replace(x[1], x[0])
+    return s
