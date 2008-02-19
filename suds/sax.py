@@ -84,18 +84,25 @@ class Element:
             child.parent = self
             return
 
-    def getChild(self, name, ns=None):
+    def getChild(self, name, ns=None, default=None):
+        prefix, name = self.splitPrefix(name)
+        if prefix is not None:
+            ns = self.resolvePrefix(prefix)
         for c in self.children:
             if c.name == name and \
                 ( ns is None or c.namespace()[1] == ns[1] ):
                 return c
-        return None
+        return default
     
     def find(self, path):
         result = None
         node = self
-        for p in [p for p in path.split('/') if len(p) > 0]:
-            result = node.getChild(p)
+        for name in [p for p in path.split('/') if len(p) > 0]:
+            ns = None
+            prefix, name = self.splitPrefix(name)
+            if prefix is not None:
+                ns = node.resolvePrefix(prefix)
+            result = node.getChild(name, ns)
             if result is None:
                 break;
             else:
@@ -111,22 +118,38 @@ class Element:
             if child is not None:
                 result.append(child)
         else:
-            node = self
-            last = len(parts)-1
-            ancestors = parts[:last]
-            leaf = parts[last]
-            for n in ancestors:
-                child = node.getChild(n)
-                if child is None:
-                    break
-                else:
-                    node = child
-            if child is not None:
-                result = child.getChildren(leaf)
+            result = self.__findAll(path)
+        return result
+    
+    def __findAll(self, parts):
+        result = []
+        node = self
+        last = len(parts)-1
+        ancestors = parts[:last]
+        leaf = parts[last]
+        for name in ancestors:
+            ns = None
+            prefix, name = self.splitPrefix(name)
+            if prefix is not None:
+                ns = node.resolvePrefix(prefix)
+            child = node.getChild(name, ns)
+            if child is None:
+                break
+            else:
+                node = child
+        if child is not None:
+            ns = None
+            prefix, leaf = self.splitPrefix(leaf)
+            if prefix is not None:
+                ns = node.resolvePrefix(prefix)
+            result = child.getChildren(leaf)
         return result
         
     def getChildren(self, name=None, ns=None):
         result = []
+        prefix, name = self.splitPrefix(name)
+        if prefix is not None:
+            ns = self.resolvePrefix(prefix)
         if name is None and ns is None:
             return self.children
         for c in self.children:
@@ -135,7 +158,7 @@ class Element:
                 result.append(c)
         return result
     
-    def attribute(self, name, value=None):
+    def attribute(self, name, value=None, default=None):
         attr = None
         for a in self.attributes:
             if a.name == name:
@@ -143,7 +166,10 @@ class Element:
                 break
         if value is None:
             if attr is not None:
-                return attr.value
+                if attr.value is None:
+                    return default
+                else:
+                    return attr.value
         else:
             if attr is None:
                 attr = Attribute(name, value)
@@ -169,7 +195,7 @@ class Element:
             return self.resolvePrefix(self.prefix)
         
     def splitPrefix(self, name):
-        if ':' in name:
+        if name is not None and ':' in name:
             return tuple(name.split(':'))
         else:
             return (None, name)
@@ -182,6 +208,15 @@ class Element:
             else:
                 n = n.parent
         return (None,None)
+    
+    def findPrefix(self, uri):
+        n = self
+        while n is not None:
+            for ns in n.nsprefixes.items():
+                if ns[1] == uri:
+                    return ns[0]
+            n = n.parent
+        return None
             
     def isempty(self):
         return len(self.children) == 0 and \
@@ -193,12 +228,23 @@ class Element:
                 self.expns = ns[1]
             else:
                 self.nsprefixes[ns[0]] = ns[1]
+                
+    def __getitem__(self, index):
+        if index < len(self.children):
+            return self.children[index]
+        else:
+            return None
+        
+    def __setitem__(self, index, child):
+        if index < len(self.children) and \
+            isinstance(child, Element):
+            self.children.insert(index, child)
 
     def __eq__(self, rhs):
         return  rhs is not None and \
             isinstance(rhs, Element) and \
             self.name == rhs.name and \
-            self.namespace() == rhs.namespace()
+            self.namespace()[1] == rhs.namespace()[1]
         
     def __repr__(self):
         return \
@@ -224,7 +270,7 @@ class Element:
     def str(self, indent=0):
         result = ''
         for i in range(0, indent):
-            result += '    '
+            result += '  '
         result += '<%s' % self.qname()
         result += self.nsdeclarations()
         for a in [str(a) for a in self.attributes]:
