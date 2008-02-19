@@ -89,19 +89,28 @@ class Element:
         self.children = []
         self.applyns(ns)
             
-    def append(self, child):
+    def append(self, objects):
         """
         append the specified child based on whether it is an
         element or an attrbuite.
         """
-        if isinstance(child, Element):
-            self.children.append(child)
-            child.parent = self
-            return
-        if isinstance(child, Attribute):
-            self.attributes.append(child)
-            child.parent = self
-            return
+        if not isinstance(objects, list) and not isinstance(objects, list):
+            objects = (objects,)
+        for child in objects:
+            if isinstance(child, Element):
+                self.children.append(child)
+                child.parent = self
+                continue
+            if isinstance(child, Attribute):
+                self.attributes.append(child)
+                child.parent = self
+                continue
+            
+    def detach(self):
+        """ detach from parent """
+        if self.parent is not None:
+            self.parent.children.remove(self)
+            self.parent = None
 
     def setText(self, value):
         """ set the element's text """
@@ -195,6 +204,14 @@ class Element:
                 ( ns is None or c.namespace()[1] == ns[1] ):
                 result.append(c)
         return result
+    
+    def detachChildren(self):
+        """ detach and return the list of children """
+        detached = self.children
+        self.children = []
+        for child in detached:
+            child.parent = None
+        return detached
     
     def attrib(self, name):
         """ get an attribute by name """
