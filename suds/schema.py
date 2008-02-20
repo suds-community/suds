@@ -49,10 +49,6 @@ class Schema:
         """
         result = None
         parts = path.split('.')
-        for type in self.root.getChildren('element'):
-            if type.attribute('name') == parts[0]:
-                result = Element(self, type)
-                break
         if result is None:
             for type in self.root.getChildren('complexType'):
                 if type.attribute('name') == parts[0]:
@@ -62,6 +58,11 @@ class Schema:
             for type in self.root.getChildren('simpleType'):
                 if type.attribute('name') == parts[0]:
                     result = Simple(self, type)
+                    break
+        if result is None:
+            for type in self.root.getChildren('element'):
+                if type.attribute('name') == parts[0]:
+                    result = Element(self, type)
                     break
         if result is not None:
             for name in parts[1:]:
