@@ -83,16 +83,17 @@ class DocumentBinding(Binding):
     def get_reply(self, method_name, msg):
         """extract the content from the specified soap reply message"""
         replyroot = self.parser.parse(string=msg)
-        reply = replyroot[0][1][0]
-        nodes = reply.children
+        soapenv = replyroot.getChild('Envelope')
+        soapbody = soapenv.getChild('Body')
+        nodes = soapbody.children
         if self.returns_collection(method_name):
             list = []
             for node in nodes:
-                hint = ReplyHint(self, reply, node)
+                hint = ReplyHint(self, replyroot, node)
                 list.append(self.translate_node(node, hint))
             return list
         if len(nodes) > 0:
-            hint = ReplyHint(self, reply, nodes[0])
+            hint = ReplyHint(self, replyroot, nodes[0])
             return self.translate_node(nodes[0], hint)
         return None
     
