@@ -69,7 +69,7 @@ class WSDL:
         result = Element('schema')
         for schema in self.root.childrenAtPath('types/schema'):
             result.append(schema.detachChildren())
-        self.log.info(result)
+        self.log.debug('aggregated schema:\n', result)
         return result
     
     def get_servicename(self):

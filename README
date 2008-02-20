@@ -9,6 +9,7 @@ The primary classes in the package are the:
   * provides an object-like API.
   * reads wsdl at runtime for encoding/decoding
   * provides for Document-Literal style SOAP binding
+  * RPC-Literal (under construction)
   
 Logging:
 
@@ -151,8 +152,34 @@ dot notation as follows:
 > name = service.get_instance('person.name') 
 >
 
+PROPERTY OBJECT
+
+    Property object used to provide an object wrapper around a complex dictionary.
+    
+    Eg::
+
+        { 'name':{'first':'Elvis', 'middle':'Grant', 'last':'Prestley'},
+           'age':30, 
+           'address':{'address':'123 Lakepines Dr.','city':'Memphis', 'state':'TN', 'zip':'87373'},
+           'phone':'919-555-1212',
+           'records':[{'name':'Elvis', 'year':'1956'}, 
+                          {'name':'Just for You', 'year':'1957'},
+                          {'name':'GI Blues', 'year':'1960'}],
+           'born':'1935',
+           }
+        p = Property(data)
+        p.died = '1977'   # assign value
+        hair = p.get(haircolor='black') # get value and specify a default.
+        print p.age
+        print 'name= %s, %s, %s' % (p.name.first, p.name.last, p.name.middle)
+        print 'city=%s' % p.address.city
+        print 'state=%s' % p.address.state
+        print [r.name for r in p.records]
+        print 'born %s died %s' % (p.born, p.died)
+
 
 RELEASE-NOTES:
+=================================================
 
 version-0.1.1 (12-17-07):
   This release marks the first release in fedora.
