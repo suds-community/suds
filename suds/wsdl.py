@@ -56,8 +56,13 @@ class WSDL:
         result = []
         url = self.root.childAtPath('service/port/address').attribute('location')
         parts = urlparse(url)
-        result.append(parts[1].split(':')[0])
-        result.append(parts[1].split(':')[1])
+        try:
+            host, port = parts[1].split(':')
+            result.append(host)
+            result.append(port)
+        except:
+            result.append(parts[1])
+            result.append(0)
         result.append(parts[2])
         return result
     
