@@ -99,11 +99,13 @@ class DocumentBinding(Binding):
     def get_fault(self, msg):
         """extract the fault from the specified soap reply message"""
         faultroot = self.parser.parse(string=msg)
-        fault = faultroot[0][1][0]
+        soapenv = faultroot.getChild('Envelope')
+        soapbody = soapenv.getChild('Body')
+        fault = soapbody.getChild('Fault')
         hint = Hint()
         p = self.translate_node(fault)
         if self.faults:
-            raise WebFault(str(p.detail))
+            raise WebFault(str(p))
         else:
             return p.detail
         
