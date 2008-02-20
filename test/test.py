@@ -22,7 +22,7 @@ from suds.property import Property
 from suds.wsdl import WSDL
 
 
-urlfmt = 'http://localhost:7080/on-on-enterprise-server-ejb./%s?wsdl'
+urlfmt = 'http://columbia.usersys.redhat.com:7080/on-on-enterprise-server-ejb3/%s?wsdl'
 
 services = \
 { 
@@ -300,8 +300,8 @@ class Test:
         print configuration
         entry = service.get_instance('configuration.properties.entry')
         simple = service.get_instance('propertySimple')
-        entry.key = 'url'
-        simple.name = 'url'
+        entry.key = 'location'
+        simple.name = 'location'
         simple.stringValue = 'http://download.skype.com/linux/repos/fedora/updates/i586'
         entry.value = simple
         configuration.properties.entry.append(entry)
@@ -378,7 +378,7 @@ def test5():
         print p
         
 if __name__ == '__main__':
-    #logger('serviceproxy').setLevel(logging.DEBUG)
+    logger('serviceproxy').setLevel(logging.DEBUG)
     #test4()
     #test5()
     #test3()

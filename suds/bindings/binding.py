@@ -14,6 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
+from suds.sax import Parser
 from suds.propertyreader import DocumentReader
 from suds.propertywriter import DocumentWriter
 
@@ -23,6 +24,7 @@ class Binding:
     def __init__(self, wsdl, faults):
         self.log = logger('binding')
         self.faults = faults
+        self.parser = Parser()
         self.reader = DocumentReader()
         self.writer = DocumentWriter()
         self.wsdl = wsdl
@@ -32,9 +34,9 @@ class Binding:
         list = []
         ops = self.wsdl.get_operations()
         for op in self.wsdl.get_operations():
-            ptypes = self.get_ptypes(op._name)
+            ptypes = self.get_ptypes(op.attribute('name'))
             params = ['%s{%s}' % (t[0], t[1]) for t in ptypes]
-            m = '%s(%s)' % (op._name, ', '.join(params))
+            m = '%s(%s)' % (op.attribute('name'), ', '.join(params))
             list.append(m)
         return list
 

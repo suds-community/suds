@@ -12,14 +12,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
-
-import sys
-if sys.version_info < (2,5):
-    from lxml.etree import Element, tostring
-else:
-    from xml.etree.ElementTree import Element, tostring
-    
+   
 from suds.property import Property
+from suds.sax import Element, Attribute
 
 class DocumentWriter:
 
@@ -33,11 +28,13 @@ class DocumentWriter:
     def tostring(self, root, property):
         """ get the xml string value of the property and root name """
         parent = Element(root)
+        for a in self.xmlnsattrs(property):
+            parent.append(a)
         if isinstance(property, dict):
             property = Property(property)
         for item in property.get_items():
             self.writecontent(parent, property, item[0], item[1])
-        return tostring(parent)
+        return str(parent)
        
     def writecontent(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """
@@ -46,7 +43,9 @@ class DocumentWriter:
         if isinstance(object, dict):
             object = Property(object)
         if isinstance(object, Property):
-            child = Element(tag)
+            child = Element(self.tag(property, tag))
+            for a in self.xmlnsattrs(property, tag):
+                child.append(a)
             parent.append(child)
             for item in object.get_items():
                 self.writecontent(child, object, item[0], item[1])
@@ -55,17 +54,45 @@ class DocumentWriter:
             for item in object:
                 self.writecontent(parent, property, tag, item)
             return
-        nses = property.get_metadata(tag)
-        ns = property.get_metadata(tag).namespace
-        if self.atpfx and tag.startswith(self.atpfx):
-            tag = tag[len(self.atpfx):]
-            if ns is not None:
-                tag = '{%s}%s'%(ns,tag)
-            parent.attrib[tag] = str(object)
+        if tag.startswith(self.atpfx):
+            parent.attribute(self.tag(property, tag), str(object))
+        elif tag == 'text':
+            parent.setText(str(object))
         else:
-            if ns is not None:
-                tag = '{%s}%s'%(ns,tag)
-            child = Element(tag)
-            child.text = str(object)
+            child = Element(self.tag(property, tag))
+            child.setText(str(object))
             parent.append(child)
+    
+    def tag(self, property, tag):
+        """
+        format the tag based on the attribute prefix detection
+        and the prefix found in the metadata.
+        """
+        md = property.get_metadata(tag)
+        tag = self.stripatpfx(tag)
+        if md is not None and md.prefix is not None:
+            return '%s:%s' % (md.prefix, tag)
+        else:
+            return tag
+        
+    def stripatpfx(self, tag):
+        """ strip the leading attribute prefix """
+        if tag.startswith(self.atpfx):
+            return tag[len(self.atpfx):]
+        else:
+            return tag
+        
+    def xmlnsattrs(self, property, tag=Property.__self__):
+        """ get the list of xmlns declarations """
+        attrs = []
+        md = property.get_metadata(tag)
+        if md is not None:
+            if md.expns is not None:
+                attrs.append(Attribute('xmlns', md.expns))
+            if md.nsprefixes is not None:
+                for p in md.nsprefixes:
+                    a = Attribute('xmlns:%s'%p[0], p[1])
+                    attrs.append(a)
+        return attrs
+            
 

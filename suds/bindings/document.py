@@ -20,18 +20,13 @@ from suds.property import Property
 from suds.propertyreader import DocumentReader, Hint
 from suds.propertywriter import DocumentWriter
 import re
-import sys
-if sys.version_info < (2,5):
-    from lxml.etree import XML
-else:
-    from xml.etree.ElementTree import XML
 
 
 docfmt = """
 <SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <SOAP-ENV:Header></SOAP-ENV:Header>
+      xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header/>
     %s
     %s
     %s
@@ -48,7 +43,7 @@ class DocumentBinding(Binding):
 
     def __init__(self, wsdl, faults=True):
         Binding.__init__(self, wsdl, faults)
-        self.schema = Schema(wsdl.definitions_schema())
+        self.schema = Schema(wsdl.get_schema())
         
     def get_ptypes(self, method):
         """get a list of parameter types defined for the specified method"""
@@ -56,13 +51,14 @@ class DocumentBinding(Binding):
         operation = self.wsdl.get_operation(method)
         if operation is None:
             raise NoSuchMethod(method)
-        msg = self.wsdl.get_message(operation.input._message)
-        for p in msg.get(part=[]):
-            type = self.schema.get_type(p._element)
+        input = operation.getChild('input')
+        msg = self.wsdl.get_message(input.attribute('message'))
+        for p in msg.getChildren('part'):
+            type = self.schema.get_type(p.attribute('element'))
             if type is None:
-                raise TypeNotFound(p._element)
+                raise TypeNotFound(p.attribute('element'))
             for e in type.get_children():
-                params.append((e.get_name(), self.schema.stripns(e.get_type())))
+                params.append((e.get_name(), e.get_type()))
         self.log.debug('parameters %s for method %s', str(params), method)
         return params
         
@@ -86,8 +82,9 @@ class DocumentBinding(Binding):
     
     def get_reply(self, method_name, msg):
         """extract the content from the specified soap reply message"""
-        reply = XML(msg)[1][0]
-        nodes = reply.getchildren()
+        replyroot = self.parser.parse(string=msg)
+        reply = replyroot[0][1][0]
+        nodes = reply.children
         if self.returns_collection(method_name):
             list = []
             for node in nodes:
@@ -101,7 +98,8 @@ class DocumentBinding(Binding):
     
     def get_fault(self, msg):
         """extract the fault from the specified soap reply message"""
-        fault = XML(msg)[1][0]
+        faultroot = self.parser.parse(string=msg)
+        fault = faultroot[0][1][0]
         hint = Hint()
         p = self.translate_node(fault)
         if self.faults:
@@ -130,7 +128,7 @@ class DocumentBinding(Binding):
     def translate_node(self, node, hint=Hint()):
         """translate the specified node into a property object"""
         result = None
-        if len(node) == 0:
+        if len(node.children) == 0:
             result = node.text
         else:
             self.reader.set_hint(hint)
@@ -152,34 +150,28 @@ class DocumentBinding(Binding):
         
     def body(self):
         """get the soap body fragment tag template"""
-        return ('<SOAP-ENV:Body xmlns:ns1="%s">' % self.wsdl.get_tns(), '</SOAP-ENV:Body>')
+        return ('<SOAP-ENV:Body xmlns:tns="%s">' % self.wsdl.get_tns(), '</SOAP-ENV:Body>')
     
     def method(self, name):
         """get method fragment"""
-        return ('<ns1:%s xsi:type="ns1:%s">' % (name, name), '</ns1:%s>' % name)
+        return ('<tns:%s xsi:type="tns:%s">' % (name, name), '</tns:%s>' % name)
 
     def returns_collection(self, method):
         """ get whether the  type defined for the specified method is a collection """
         operation = self.wsdl.get_operation(method)
         if operation is None:
             raise NoSuchMethod(method)
-        msg = self.wsdl.get_message(operation.output._message)
+        msg = self.wsdl.get_message(operation.getChild('output').attribute('message'))
         result = False
-        for p in msg.get(part=[]):
-            type = self.schema.get_type(p._element)
+        for p in msg.getChildren('part'):
+            type = self.schema.get_type(p.attribute('element'))
             elements = type.get_children(empty=[])
             result = ( len(elements) > 0 and elements[0].unbounded() )
             break
         return result
     
-    def stripns(self, s):
-        """strip the {} namespace prefix used by element tree"""
-        return self.reader.stripns(s)
-
-
 
 class ReplyHint(Hint):
-   
     """
     A dynamic hint used to process reply content.
     Performs a lookup to determine if the specified path references a collection.
@@ -193,16 +185,12 @@ class ReplyHint(Hint):
         self.node = ''
         self.rtype = ''
         try:
-            self.reply = self.stripns(reply.tag)
-            self.node = self.stripns(node.tag)
+            self.reply = reply.name
+            self.node = node.name
             rtype = self.schema().get_type('.'.join([self.reply, self.node]))
-            self.rtype = rtype.__type__
+            self.rtype = rtype.name
         except Exception, e:
             self.log.debug("failed: reply=(%s), node=(%s)", self.reply, self.node)
-        
-    def stripns(self, s):
-        """ strip the elementtree {} namespace prefix """
-        return self.binding.reader.stripns(s)[1]
         
     def schema(self):
         """ get the binding's schema """

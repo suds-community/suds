@@ -42,6 +42,8 @@ class Property:
     
     __protected__ = ('__data__', '__strict__', '__type__', '__metadata__')
     
+    __self__ = '__self__'
+    
     """
     provides an object wrapper around a complex dictionary.
     """
@@ -89,7 +91,7 @@ class Property:
         """set the value of the specified named"""
         self.__setattr__(name, value)
             
-    def get_metadata(self, name):
+    def get_metadata(self, name=__self__):
         """ get the metadata associated with the named property"""
         if name in self.__metadata__:
             md = self.__metadata__[name]
@@ -170,12 +172,8 @@ class Property:
         if isinstance(value, Property):
             self.__data__[name] = value
             return
-        if isinstance(value, list) or isinstance(value, tuple):
-            _list = []
-            for item in value:
-                if isinstance(item, Property):
-                    _list.append(item)
-            self.__data__[name] = _list
+        if isinstance(value, list):
+            self.__data__[name] = value[:]
             return
         self.__data__[name] = value
 
