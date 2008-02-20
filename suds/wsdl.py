@@ -14,33 +14,25 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from urlparse import urlparse
-from propertyreader import DocumentReader, Hint
+from suds.sax import Parser, Element
 from bindings.document import DocumentBinding
 from bindings.rpc import RPCBinding
 from schema import Schema
+from urlparse import urlparse
 
 class WSDL:
     """
     a web services definition language inspection object
     """
-
-    hint = Hint()
-    hint.sequences = [
-      '/definitions/message', 
-      '/definitions/message/part',
-      '/definitions/portType/operation',
-      '/definitions/types/schema',]
-    
-    hint.sequences += Schema.hint.sequences
     
     def __init__(self, url):
         self.log = logger('wsdl')
         self.url = url
         try:
-            self.log.debug('opening %s', url)
-            self.properties = DocumentReader(hint=WSDL.hint).read(url=url)
-            self.log.debug(str(self.properties))
+            self.log.debug('reading wsdl at: %s ...', url)
+            self.root = Parser().parse(url=url).root()
+            self.purgePrefixes()
+            self.log.debug('parsed content:\n%s', str(self.root))
         except Exception, e:
             self.log.exception(e)
             raise e
@@ -57,12 +49,12 @@ class WSDL:
         return None 
         
     def get_binding_style(self):
-        return self.properties.binding.binding._style
+        return self.root.childAtPath('binding/binding').attribute('style')
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""
         result = []
-        url = self.properties.service.port.address._location
+        url = self.root.childAtPath('service/port/address').attribute('location')
         parts = urlparse(url)
         result.append(parts[1].split(':')[0])
         result.append(parts[1].split(':')[1])
@@ -71,46 +63,49 @@ class WSDL:
     
     def get_tns(self):
         """get the target namespace defined in the wsdl"""
-        return self.properties._targetNamespace
+        return self.root.attribute('targetNamespace')
     
-    def definitions_schema(self):
-        tns = self.get_tns()
-        for schema in self.properties.types.schema:
-            if schema._targetNamespace == tns:
-                return schema
-        return Property()
+    def get_schema(self):
+        result = Element('schema')
+        for schema in self.root.childrenAtPath('types/schema'):
+            result.append(schema.detachChildren())
+        self.log.info(result)
+        return result
     
     def get_servicename(self):
         """get the name of the serivce defined in the wsdl"""
-        return self.properties.service._name
+        return self.root.getChild('service').attribute('name')
     
     def get_operation(self, name):
         """get an operation definition by name"""
-        for o in self.properties.portType.operation:
-            if o._name == self.stripns(name):
-                self.log.debug('operation by name (%s) found:\n%s', name, o)
-                return o
+        for op in self.root.childrenAtPath('portType/operation'):
+            if name == op.attribute('name'):
+                self.log.debug('operation by name (%s) found:\n%s', name, op)
+                return op
         return None
     
     def get_operations(self):
         """get a list of operations provided by the service"""
-        return self.properties.portType.operation
+        return self.root.childrenAtPath('portType/operation')
 
     def get_message(self, name):
         """get the definition of a specified message by name"""
-        for m in self.properties.message:
-            if m._name == self.stripns(name):
+        for m in self.root.getChildren('message'):
+            if name == m.attribute('name'):
                 self.log.debug('message by name (%s) found:\n%s', name, m)
                 return m
         return None
     
-    def stripns(self, name):
-        """strip the namespace {} prefix from the specified tag name"""
-        if name is not None:
-            parts = name.split(':')
-            if len(parts) > 1:
-                return parts[1]
-        return name
+    def purgePrefixes(self, node=None):
+        """ purge prefixes from attribute values """
+        if node is None:
+            node = self.root
+        for a in node.attributes:
+            if a.prefix != 'xmlns' and \
+                    a.name in ['name', 'type', 'element', 'message']:
+                a.value = node.splitPrefix(a.value)[1]
+        for child in node.children:
+            self.purgePrefixes(child)
     
     def __str__(self):
-        return str(self.properties)
+        return str(self.root)

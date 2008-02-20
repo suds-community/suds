@@ -15,19 +15,10 @@
 
 
 
-from property import Property
-from urllib import urlopen
-import re
-import sys
-
-if sys.version_info < (2,5):
-    from lxml.etree import ElementTree, XML
-else:
-    from xml.etree.ElementTree import ElementTree
-    from xml.etree.ElementTree import XML
+from suds.property import Property
+from suds.sax import Parser
 
 class Hint:
-    
     """
     the hint class provides XML schema-like information that allows
     greater precision in generating the data structures.
@@ -35,9 +26,8 @@ class Hint:
     (...) prefix and/or suffix wildcards.
     """
     
-    def __init__(self, addtag=False):
+    def __init__(self):
         self.atpfx = '_'
-        self.addtag = addtag
         self.sequences = []
         self.cache = {}
         
@@ -70,21 +60,19 @@ class Hint:
         return not self.sequence(path)
 
 
-class DocumentReader:
-    
+class DocumentReader:  
     """
     the property reader reads an XML file and generates a property object.   
     """
 
-    def __init__(self, hint=Hint(), stripns=True):
+    def __init__(self, hint=Hint()):
         """
-        hint -- a hit object used to interpret the document.
-        stripns -- indicates whether to strip the namespace from tag names.     
+        hint -- a hit object used to interpret the document.   
         """
         self.handlers = {}
         self.hint = hint
-        self._stripns = stripns
         self.basichandler = BasicHandler(self)
+        self.parser = Parser()
         
     def set_hint(self, hint):
         """ set the parsing hint """
@@ -93,24 +81,24 @@ class DocumentReader:
     def read(self, file=None, url=None, string=None):
         """open and process the specified file|url|string"""
         if file is not None:
-            root = ElementTree(file=file).getroot()
+            root = self.parser.parse(file=file).root()
         elif url is not None:
-            root = ElementTree(file=urlopen(url)).getroot()
+            root = self.parser.parse(url=url).root()
         elif string is not None:
-            root = XML(string)
+            root = self.parser.parse(string=string).root()
         else:
             raise Exception('(file|url|string) must be specified')
         return self.process(root)
     
-    def process(self, e):
+    def process(self, node):
         """
-        process the specified element and convert the XML document into
+        process the specified node and convert the XML document into
         a data structure (python dictionary).  the element is examined for attributes and children.
         Attributes are added to the dictionary then the children are processed using recursion.  
         the child dictionary is added to the result using the child's tag as the key.
         """
-        handler = self.handlers.get(e.tag, self.basichandler)
-        return handler.process(e)
+        handler = self.handlers.get(node.name, self.basichandler)
+        return handler.process(node)
     
     def set_handler(self, tag, handler):
         """set a custom tag handler for the specified tag"""
@@ -118,19 +106,6 @@ class DocumentReader:
             self.handlers[tag] = handler
         else:
             raise TypeError, 'handler must be TagHandler'
-        
-    def stripns(self, s):
-        """strip the {} namespace used by etree and return (ns, s)"""
-        ns = None
-        if self._stripns:
-            p = re.compile('({[^{]+})(.+)')
-            m = p.match(s)
-            if m:
-                 ns = m.group(1)
-                 s = m.group(2)
-        if ns is not None:
-            ns = ns[1:-1]
-        return (ns, s)
 
 
 class TagHandler:
@@ -142,8 +117,8 @@ class TagHandler:
         """initialize with the specified processor"""
         self.p = p
         
-    def process(self, e):
-        """process the specified element and convert into a dictionary"""
+    def process(self, node):
+        """process the specified node and convert into a dictionary"""
         raise NotImplementedError
 
     def clean(self, key):
@@ -159,42 +134,46 @@ class BasicHandler(TagHandler):
         TagHandler.__init__(self, p)
         self.path = []
             
-    def process(self, e):
+    def process(self, node):
         """
-        process the specified element and convert the XML document into
+        process the specified node and convert the XML document into
         a python dictionary.  the element is examined for attributes and children.
         attributes are added to the dictionary then the children are processed using recursion.  
         the child dictionary is added to the result using the child's tag as the key.
         """
         data = Property()
-        if self.p.hint.addtag:
-            data.__type__ = e.tag
-        self.path.append(self.p.stripns(e.tag)[1])
-        self.import_attrs(data, e)
-        self.import_children(data, e)
-        self.import_text(data, e)
+        md = data.get_metadata()
+        md.prefix = node.prefix
+        md.expns = node.expns
+        md.nsprefixes = node.nsprefixes.items()
+        self.path.append(node.name)
+        self.import_attrs(data, node)
+        self.import_children(data, node)
+        self.import_text(data, node)
         self.path.pop()
-        return self.result(data, e)
+        return self.result(data, node)
     
-    def import_attrs(self, data, e):
+    def import_attrs(self, data, node):
         """import attribute nodes into the data structure"""
-        for attr in e.keys():
-            ns, key = self.p.stripns(attr)
+        for attr in node.attributes:
+            key = attr.name
             key = '%s%s' % (self.p.hint.atpfx, self.clean(key))
-            if ns is not None:
-                data.get_metadata(key).namespace = ns
-            value = e.get(attr).strip()
+            md = data.get_metadata(key)
+            md.prefix = attr.prefix
+            value = attr.getValue()
             value = self.booleans.get(value.lower(), value)
             data[key] = value
 
-    def import_children(self, data, e):
+    def import_children(self, data, node):
         """import child nodes into the data structure"""
-        for child in e.getchildren():
+        for child in node.children:
             cdata = self.p.process(child)
-            ns, key = self.p.stripns(child.tag)
+            key = child.name
             key = self.clean(key)
-            if ns is not None:
-                data.get_metadata(key).namespace = ns
+            md = data.get_metadata(key)
+            md.prefix = child.prefix
+            md.expns = child.expns
+            md.nsprefixes = child.nsprefixes.items()
             if key in data:
                 v = data[key]
                 if isinstance(v, list):
@@ -210,16 +189,15 @@ class BasicHandler(TagHandler):
             else:
                 data[key] = cdata
     
-    def import_text(self, data, e):
+    def import_text(self, data, node):
         """import text nodes into the data structure"""
-        if e.text is None: return
-        if len(e.text):
-            value = e.text.strip()
+        if node.text is None: return
+        if len(node.text):
+            value = node.getText()
             value = self.booleans.get(value.lower(), value)
-            key = self.clean('text')
-            data[key] = value
+            data['text'] = value
             
-    def result(self, data, e):
+    def result(self, data, node):
         """
         perform final processing of the resulting data structure as follows:
         simple elements (not attrs or children) with text nodes will have a string 
@@ -228,7 +206,7 @@ class BasicHandler(TagHandler):
         try:
             if len(data) == 0:
                 return None
-            if len(data) == 1 and self.p.hint.nonsequence(e.tag):
+            if len(data) == 1 and self.p.hint.nonsequence(node.name):
                 return data['text']
         except:
             pass

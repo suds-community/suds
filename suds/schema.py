@@ -18,21 +18,10 @@ from suds.property import Property
 from suds.propertyreader import Hint
 
 class Schema:
-    
     """
     The schema is an objectification of a <schema/> (xsd) definition.
     It provides inspection, lookup and type resolution. 
     """
-
-    hint = Hint()
-    hint.sequences = [
-      '.../element',
-      '.../simpleType',
-      '.../complexType',
-      '.../complexContent',
-      '.../extension',
-      '.../enumeration',
-      '.../sequence',]
     
     def __init__(self, schema):
         """ construct the sequence object with a schema """
@@ -60,14 +49,20 @@ class Schema:
         """
         result = None
         parts = path.split('.')
-        for type in self.root.get(complexType=[]):
-            if type._name == self.stripns(parts[0]):
-                result = Complex(self, type)
+        for type in self.root.getChildren('element'):
+            if type.attribute('name') == parts[0]:
+                result = Element(self, type)
                 break
-        for type in self.root.get(simpleType=[]):
-            if type._name == self.stripns(parts[0]):
-                result = Simple(self, type)
-                break
+        if result is None:
+            for type in self.root.getChildren('complexType'):
+                if type.attribute('name') == parts[0]:
+                    result = Complex(self, type)
+                    break
+        if result is None:
+            for type in self.root.getChildren('simpleType'):
+                if type.attribute('name') == parts[0]:
+                    result = Simple(self, type)
+                    break
         if result is not None:
             for name in parts[1:]:
                 result = result.get_child(name)
@@ -75,14 +70,6 @@ class Schema:
                     break
                 result = result.resolve()
         return result
-
-    def stripns(self, name):
-        """ strip the namespace prefix """
-        if name is not None:
-            parts = name.split(':')
-            if len(parts) > 1:
-                return parts[1]
-        return name
     
     def build(self, typename):
         """ build an instance of the specified typename """
@@ -93,8 +80,7 @@ class Schema:
         return not (t is not None and t.split()[0] in ['xs', 'xsi'])
 
 
-class SchemaProperty(Property):
-    
+class SchemaProperty:
     """
     A schema property is an extension to property object with
     with schema awareness.
@@ -104,7 +90,6 @@ class SchemaProperty(Property):
     
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
-        Property.__init__(self, data=root.dict())
         self.root = root
         self.schema = schema
         
@@ -149,20 +134,6 @@ class SchemaProperty(Property):
                 result = resolved
         return result
 
-    def __getattr__(self, name):
-        """ provide proper handling of this objects attributes """
-        if name in SchemaProperty.__protected__:
-            return self.__dict__[name]
-        else:
-            return Property.__getattr__(self, name)
-
-    def __setattr__(self, name, value):
-        """ provide proper handling of this objects attributes """
-        if name in SchemaProperty.__protected__:
-            self.__dict__[name] = value
-        else:
-            Property.__setattr__(self, name, value)
-
 
 class Complex(SchemaProperty):
     
@@ -171,18 +142,17 @@ class Complex(SchemaProperty):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
-        self.__type__ = self.root._name
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
-        return self.root._name
+        return self.root.attribute('name')
         
     def add_children(self, list):
         """ add <xs:sequence/> and <xs:complexContent/> nested types """
-        for s in self.root.get(sequence=[]):
+        for s in self.root.getChildren('sequence'):
             seq = Sequence(self.schema, s)
             seq.add_children(list)
-        for s in self.root.get(complexContent=[]):
+        for s in self.root.getChildren('complexContent'):
             cont = ComplexContent(self.schema, s)
             cont.add_children(list)
 
@@ -194,19 +164,18 @@ class Simple(SchemaProperty):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
-        self.__type__ = self.root._name
 
     def get_name(self):
         """ gets the <xs:simpleType name=""/> attribute value """
-        return self.root._name
+        return self.root.attribute('name')
 
     def get_type(self):
         """ gets the <xs:simpleType xsi:type=""/> attribute value """
-        return self.root._type
+        return self.root.attribute('type')
         
     def add_children(self, list):
         """ add <xs:enumeration/> nested types """
-        for e in self.root.get(restriction=Property()).get(enumeration=[]):
+        for e in self.root.childrenAtPath('restriction/enumeration'):
             list.append(Enumeration(self.schema, e))
         return list
 
@@ -218,11 +187,10 @@ class Sequence(SchemaProperty):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
-        self.__type__ = 'sequence'
 
     def add_children(self, list):
         """ add <xs:element/> nested types """
-        for e in self.root.get(element=[]):
+        for e in self.root.getChildren('element'):
             list.append(Element(self.schema, e))
 
 
@@ -233,11 +201,10 @@ class ComplexContent(SchemaProperty):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
-        self.__type__ = 'complex-content'
 
     def add_children(self, list):
         """ add <xs:extension/> nested types """
-        for e in self.root.get(extension=[]):
+        for e in self.root.getChildren('extension'):
             extension = Extension(self.schema, e)
             extension.add_children(list)
 
@@ -249,11 +216,10 @@ class Enumeration(SchemaProperty):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
-        self.__type__ = self.root._value
         
     def get_name(self):
         """ gets the <xs:enumeration value=""/> attribute value """
-        return self.root._value
+        return self.root.attribute('attribute')
 
     
 class Element(SchemaProperty):
@@ -263,25 +229,24 @@ class Element(SchemaProperty):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
-        self.__type__ = self.root._name
         
     def get_name(self):
         """ gets the <xs:element name=""/> attribute value """
-        return self.root._name
+        return self.root.attribute('name')
     
     def get_type(self):
         """ gets the <xs:element type=""/> attribute value """
-        return self.root._type
+        return self.root.attribute('type')
     
     def add_children(self, list):
         """ add <complexType/>/* nested nodes """
-        for c in self.root.get(complexType=[]):
+        for c in self.root.getChildren('complexType'):
             complex = Complex(self.schema, c)
             complex.add_children(list)
     
     def unbounded(self):
         """ get whether the element has a maxOccurs > 1 or unbounded """
-        max = self.root.get(_maxOccurs=1)
+        max = self.root.attribute('maxOccurs', default=1)
         return ( max > 1 or max == 'unbounded' )
 
 
@@ -292,11 +257,10 @@ class Extension(Complex):
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
         Complex.__init__(self, schema, root)
-        self.__type__ = 'extension'
 
     def add_children(self, list):
         """ lookup extended type and add its children then add nested types """
-        super = self.schema.get_type(self.root._base)
+        super = self.schema.get_type(self.root.attribute('base'))
         if super is not None:
             super.add_children(list)
         Complex.add_children(self, list)
@@ -316,7 +280,7 @@ class Builder:
         if type is None:
             raise TypeNotFound(typename)
         p = Property()
-        self.set_xsitype(p, type)
+        p.set('_xsi:type', type.get_name())
         p.__type__ = typename
         self.process_children(p, type)
         return p
@@ -330,7 +294,7 @@ class Builder:
         else:
             children = resolved.get_children()
             if len(children) > 0:
-                self.set_xsitype(p, type)
+                p.set('_xsi:type', type.get_name())
                 value = Property()
         p.set(type.get_name(), value)
         if value is not None:
@@ -342,8 +306,3 @@ class Builder:
         """ process the types children """
         for c in type.get_children():
             self.process(p, c)
-            
-    def set_xsitype(self, p, type):
-        """ add the xsi:type property to the type name """
-        p._type = type.get_name()
-        p.get_metadata('_type').namespace = 'http://www.w3.org/2001/XMLSchema-instance'
