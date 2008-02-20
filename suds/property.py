@@ -13,41 +13,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-"""
-    Property object used to provide an object wrapper around a complex dictionary.
-    
-    Eg::
-
-        { 'name':{'first':'Elvis', 'middle':'Grant', 'last':'Prestley'},
-           'age':30, 
-           'address':{'address':'123 Lakepines Dr.','city':'Memphis', 'state':'TN', 'zip':'87373'},
-           'phone':'919-555-1212',
-           'records':[{'name':'Elvis', 'year':'1956'}, 
-                          {'name':'Just for You', 'year':'1957'},
-                          {'name':'GI Blues', 'year':'1960'}],
-           'born':'1935',
-           }
-        p = Property(data)
-        p.died = '1977'   # assign value
-        hair = p.get(haircolor='black') # get value and specify a default.
-        print p.age
-        print 'name= %s, %s, %s' % (p.name.first, p.name.last, p.name.middle)
-        print 'city=%s' % p.address.city
-        print 'state=%s' % p.address.state
-        print [r.name for r in p.records]
-        print 'born %s died %s' % (p.born, p.died)
-"""
 
 class Property:
-    
-    __protected__ = ('__data__', '__strict__', '__type__', '__metadata__')
-    
-    __self__ = '__self__'
-    
     """
     provides an object wrapper around a complex dictionary.
     """
-    
+    __self__ = '__self__'    
+    __protected__ = ('__data__', '__strict__', '__type__', '__metadata__')
+
     def __init__(self, data=None, strict=False):
         """
         data -- a dictionary containing properties.
