@@ -15,9 +15,6 @@
 
 from suds import *
 from suds.sax import Parser
-from suds.propertyreader import DocumentReader
-from suds.propertywriter import DocumentWriter
-
 
 class Binding:
 
@@ -25,8 +22,6 @@ class Binding:
         self.log = logger('binding')
         self.faults = faults
         self.parser = Parser()
-        self.reader = DocumentReader()
-        self.writer = DocumentWriter()
         self.wsdl = wsdl
         
     def get_method_descriptions(self):

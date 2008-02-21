@@ -15,7 +15,7 @@
 
 from suds import *
 from suds.property import Property
-from suds.propertyreader import Hint
+
 
 class Schema:
     """
@@ -71,14 +71,6 @@ class Schema:
                     break
                 result = result.resolve()
         return result
-    
-    def build(self, typename):
-        """ build an instance of the specified typename """
-        return Builder(self).build(typename)
-    
-    def not_builtin(self, t):
-        """ get whether the specified type is a native to xsd """
-        return not (t is not None and t.split()[0] in ['xs', 'xsi'])
 
 
 class SchemaProperty:
@@ -129,11 +121,26 @@ class SchemaProperty:
         """ return the nodes true type when another named type is referenced. """
         result = self
         type = self.get_type()
-        if type is not None and self.schema.not_builtin(type):
+        if self.custom():
             resolved = self.schema.get_type(type)
             if resolved is not None:
                 result = resolved
         return result
+    
+    def custom(self):
+        """ get whether this object schema type is custom """
+        if self.get_type() is None:
+            return False
+        else:
+            return (not self.builtin())
+    
+    def builtin(self):
+        """ get whether this object schema type is an (xsd) builtin """
+        try:
+            prefix = self.get_type().split()[0]
+            return prefix.startswith('xs')
+        except:
+            return False
 
 
 class Complex(SchemaProperty):
@@ -265,45 +272,4 @@ class Extension(Complex):
         if super is not None:
             super.add_children(list)
         Complex.add_children(self, list)
-    
-    
-class Builder:
-    
-    """ Builder used to construct property object for types defined in the schema """
-    
-    def __init__(self, schema):
-        """ initialize with a schema object """
-        self.schema = schema
-        
-    def build(self, typename):
-        """ build a property object for the specified typename as defined in the schema """
-        type = self.schema.get_type(typename)
-        if type is None:
-            raise TypeNotFound(typename)
-        p = Property()
-        p.set('_xsi:type', type.get_name())
-        p.__type__ = typename
-        self.process_children(p, type)
-        return p
-            
-    def process(self, p, type):
-        """ process the specified type then process its children """
-        resolved = type.resolve()
-        value = None
-        if type.unbounded():
-            value = []
-        else:
-            children = resolved.get_children()
-            if len(children) > 0:
-                p.set('_xsi:type', type.get_name())
-                value = Property()
-        p.set(type.get_name(), value)
-        if value is not None:
-            p = value
-        if not isinstance(p, list):
-            self.process_children(p, resolved)
-            
-    def process_children(self, p, type):
-        """ process the types children """
-        for c in type.get_children():
-            self.process(p, c)
+

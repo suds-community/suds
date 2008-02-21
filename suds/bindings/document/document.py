@@ -14,12 +14,12 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from binding import Binding
-from suds.schema import Schema, Element
+from suds.bindings.binding import Binding
+from suds.schema import Schema
 from suds.property import Property
-from suds.propertyreader import DocumentReader, Hint
-from suds.propertywriter import DocumentWriter
-import re
+from marshaller import Marshaller
+from unmarshaller import Unmarshaller
+from builder import Builder
 
 
 docfmt = """
@@ -35,7 +35,7 @@ docfmt = """
 </SOAP-ENV:Envelope>
 """
 
-class DocumentBinding(Binding):
+class Document(Binding):
     
     """
     a document literal binding style.
@@ -44,6 +44,9 @@ class DocumentBinding(Binding):
     def __init__(self, wsdl, faults=True):
         Binding.__init__(self, wsdl, faults)
         self.schema = Schema(wsdl.get_schema())
+        self.marshaller = Marshaller(self.schema)
+        self.unmarshaller = Unmarshaller(self.schema)
+        self.builder = Builder(self.schema)
         
     def get_ptypes(self, method):
         """get a list of parameter types defined for the specified method"""
@@ -75,7 +78,7 @@ class DocumentBinding(Binding):
             if a is None:
                 params += '<%s xsi:nil="true"/>' % tag
             else:
-                params += self.param(tag, a)
+                params += self.param(method_name, tag, a)
             p += 1
         msg = docfmt % (body[0], m[0], params, m[1], body[1])
         return msg
@@ -85,16 +88,14 @@ class DocumentBinding(Binding):
         replyroot = self.parser.parse(string=msg)
         soapenv = replyroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
-        nodes = soapbody.children
+        nodes = soapbody[0].children
         if self.returns_collection(method_name):
             list = []
             for node in nodes:
-                hint = ReplyHint(self, replyroot, node)
-                list.append(self.translate_node(node, hint))
+                list.append(self.translate_node(node))
             return list
         if len(nodes) > 0:
-            hint = ReplyHint(self, replyroot, nodes[0])
-            return self.translate_node(nodes[0], hint)
+            return self.translate_node(nodes[0])
         return None
     
     def get_fault(self, msg):
@@ -103,7 +104,6 @@ class DocumentBinding(Binding):
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
-        hint = Hint()
         p = self.translate_node(fault)
         if self.faults:
             raise WebFault(str(p))
@@ -113,7 +113,7 @@ class DocumentBinding(Binding):
     def get_instance(self, typename, *args):
         """get an instance of an meta-object by type."""
         try:
-            return self.schema.build(typename)
+            return self.builder.build(typename)
         except TypeNotFound, e:
             raise e
         except:
@@ -128,27 +128,26 @@ class DocumentBinding(Binding):
                 result.dict()[e.get_name()] = e.get_name()
         return result
                     
-    def translate_node(self, node, hint=Hint()):
+    def translate_node(self, node):
         """translate the specified node into a property object"""
         result = None
         if len(node.children) == 0:
             result = node.text
         else:
-            self.reader.set_hint(hint)
-            result = self.reader.process(node)
+            result = self.unmarshaller.process(node)
         return result
     
-    def param(self, name, object):
+    def param(self, method, name, object):
         """encode and return the specified property within the named root tag"""
         if isinstance(object, dict):
-            return self.writer.tostring(name, object)
+            return self.marshaller.process(name, object)
         if isinstance(object, list) or isinstance(object, tuple):
             tags = ''
             for item in object:
-                tags += self.param(name, item)
+                tags += self.param(method, name, item)
             return tags 
         if isinstance(object, Property):
-            return self.writer.tostring(name, object)
+            return self.marshaller.process(name, object)
         return '<%s>%s</%s>' % (name, object, name)
         
     def body(self):
@@ -171,46 +170,4 @@ class DocumentBinding(Binding):
             elements = type.get_children(empty=[])
             result = ( len(elements) > 0 and elements[0].unbounded() )
             break
-        return result
-    
-
-class ReplyHint(Hint):
-    """
-    A dynamic hint used to process reply content.
-    Performs a lookup to determine if the specified path references a collection.
-    """
-    
-    def __init__(self, binding, reply, node):
-        Hint.__init__(self)
-        self.binding = binding
-        self.log = binding.log
-        self.reply = ''
-        self.node = ''
-        self.rtype = ''
-        try:
-            self.reply = reply.name
-            self.node = node.name
-            rtype = self.schema().get_type('.'.join([self.reply, self.node]))
-            self.rtype = rtype.name
-        except Exception, e:
-            self.log.debug("failed: reply=(%s), node=(%s)", self.reply, self.node)
-        
-    def schema(self):
-        """ get the binding's schema """
-        return self.binding.schema
-
-    def match_sequence(self, path):
-        """ override the match_sequence method and lookup if the specified path is a sequence """
-        result = False
-        if not path.startswith('/'):
-            return result
-        try:
-            parts = path[1:].split('/')
-            if parts[0] == self.node:
-                parts[0] = self.rtype
-            path = '.'.join(parts)
-            type = self.schema().get_type(path)
-            result = type.unbounded()
-        except:
-            self.log.debug("match failed: reply=(%s)", path) 
         return result
