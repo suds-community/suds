@@ -205,5 +205,8 @@ version-0.1.4 (12-21-07):
   * Add proper handling of method params that are lists of property
     objects.
 
-version-0.1.5( not-released ):
+version-0.1.5( 02-21-08 ):
  * Provides better logging in the modules get logger by hierarchal names.
+ * Refactored as needed to truely support other bindings.
+ * Add sax module which replaces ElementTree.  This is faster, simpler and
+   handles namespaces (prefixes) properly.

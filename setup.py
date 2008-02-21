@@ -29,5 +29,5 @@ setup(
     maintainer_email="jortel@redhat.com",
     packages=find_packages(),
     url="https://fedorahosted.org/suds",
-    install_requires=['lxml',]
+    install_requires=[]
 )
