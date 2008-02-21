@@ -297,7 +297,6 @@ class Test:
         print service
         
         configuration = service.get_instance('configuration')
-        print configuration
         entry = service.get_instance('configuration.properties.entry')
         simple = service.get_instance('propertySimple')
         entry.key = 'location'
@@ -310,7 +309,6 @@ class Test:
         print configuration
         
         name = 'SkipeAdapter'
-        displayName = 'Skipe Adapter'
         description = 'The skipe adapter'
         type = 'YumSource'
 
@@ -325,7 +323,7 @@ class Test:
         #
         try:
             print 'createContentSource()'
-            result = service.createContentSource(subject, name, displayName, description, type, configuration, False)
+            result = service.createContentSource(subject, name, description, type, configuration, False)
             print 'createContentSource: ', str(result)
         except Exception, e:
             print e
@@ -383,8 +381,8 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    #test.basic_test()
+    test.basic_test()
     test.auth_test()
-    #test.resource_test()
-    #test.perspectives_test()
-    #test.contentsource_test()
+    test.resource_test()
+    test.perspectives_test()
+    test.contentsource_test()
