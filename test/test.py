@@ -16,10 +16,9 @@
 from suds import *
 from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
-from suds.propertyreader import DocumentReader, Hint
-from suds.propertywriter import DocumentWriter
 from suds.property import Property
 from suds.wsdl import WSDL
+from suds.bindings.document.marshaller import Marshaller
 
 
 urlfmt = 'http://columbia.usersys.redhat.com:7080/on-on-enterprise-server-ejb3/%s?wsdl'
@@ -181,7 +180,8 @@ class Test:
         subject = service.login('jonadmin', 'jonadmin')
         print '\nreply(\n%s\n)\n' % str(subject)
         
-        #print DocumentWriter().tostring('root', subject)
+        marshaller = Marshaller(service.binding.schema)
+        print marshaller.process('subject', subject)
         
         #
         # create page control and get all subjects
@@ -378,13 +378,13 @@ def test5():
         print p
         
 if __name__ == '__main__':
-    logger('serviceproxy').setLevel(logging.DEBUG)
+    #logger('serviceproxy').setLevel(logging.DEBUG)
     #test4()
     #test5()
     #test3()
     test = Test()
-    test.basic_test()
+    #test.basic_test()
     test.auth_test()
-    test.resource_test()
-    test.perspectives_test()
-    test.contentsource_test()
+    #test.resource_test()
+    #test.perspectives_test()
+    #test.contentsource_test()

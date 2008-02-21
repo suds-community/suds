@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import WebFault
-from binding import Binding
+from suds.bindings.binding import Binding
 
 
 docfmt = """
@@ -30,7 +30,7 @@ docfmt = """
 </SOAP-ENV:Envelope>
 """
 
-class RPCBinding(Binding):
+class RPC(Binding):
     
     """
     a RPC literal binding style.

@@ -15,8 +15,8 @@
 
 from suds import *
 from suds.sax import Parser, Element
-from bindings.document import DocumentBinding
-from bindings.rpc import RPCBinding
+from bindings.document.document import Document
+from bindings.rpc.rpc import RPC
 from schema import Schema
 from urlparse import urlparse
 
@@ -41,10 +41,10 @@ class WSDL:
         style = self.get_binding_style()
         if style == 'document':
             self.log.debug('document binding detected')
-            return DocumentBinding(self, faults)
+            return Document(self, faults)
         elif style == 'rpc':
             self.log.info('document binding detected')
-            return RPCBinding(self, faults)
+            return RPC(self, faults)
         self.log.debug('document binding (%s), not-supported', style)
         return None 
         
