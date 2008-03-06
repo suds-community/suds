@@ -109,8 +109,10 @@ class Element:
     def detach(self):
         """ detach from parent """
         if self.parent is not None:
-            self.parent.children.remove(self)
+            if self in self.parent.children:
+                self.parent.children.remove(self)
             self.parent = None
+        return self
 
     def setText(self, value):
         """ set the element's text """
@@ -120,6 +122,23 @@ class Element:
     def getText(self):
         """ set the element's text """
         return decode(self.text)
+    
+    def removeChild(self, child):
+        """ remove the specified child """
+        return child.detach()
+            
+    def replaceChild(self, child, content):
+        """ replace the specified content (content may be a list|tuple) """
+        if child not in self.children:
+            raise Exception('child not-found')
+        index = self.children.index(child)
+        self.removeChild(child)
+        if not isinstance(content, list) and not isinstance(content, tuple):
+            content = (content,)
+        for node in content:
+            self.children.insert(index, node.detach())
+            node.parent = self
+            index += 1
 
     def getChild(self, name, ns=None, default=None):
         """ get a child by name and (optional) namespace """

@@ -71,9 +71,10 @@ class WSDL:
         return self.root.attribute('targetNamespace')
     
     def get_schema(self):
+        """ get a composite of all <schema/> nodes """
         result = Element('schema')
-        for schema in self.root.childrenAtPath('types/schema'):
-            result.append(schema.detachChildren())
+        for xsd in self.root.childrenAtPath('types/schema'):
+            result.append(xsd.detachChildren())
         self.log.debug('aggregated schema:\n', result)
         return result
     
