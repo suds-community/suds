@@ -210,3 +210,9 @@ version-0.1.5( 02-21-08 ):
  * Refactored as needed to truely support other bindings.
  * Add sax module which replaces ElementTree.  This is faster, simpler and
    handles namespaces (prefixes) properly.
+   
+version-0.1.6 (03-06-08):
+ * Provides proper handling of wsdls that contain schema sections containing
+    xsd schema imports: <import namespace="" schemaLocation=""?>.  The
+    referenced schemas are imported when a schemaLocation is specified.
+* Raises exceptions for http status codes not already handled.

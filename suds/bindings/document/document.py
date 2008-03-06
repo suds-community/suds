@@ -43,7 +43,7 @@ class Document(Binding):
 
     def __init__(self, wsdl, faults=True):
         Binding.__init__(self, wsdl, faults)
-        self.schema = Schema(wsdl.get_schema())
+        self.schema = Schema(wsdl.get_schema(), wsdl.url)
         self.marshaller = Marshaller(self.schema)
         self.unmarshaller = Unmarshaller(self.schema)
         self.builder = Builder(self.schema)

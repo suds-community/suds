@@ -77,7 +77,7 @@ class ServiceProxy(object):
                 else:
                     return (status, p)
         if self.faults:
-            return None
+            raise Exception('failed, http status (%s)', status)
         else:
             return (status, None)
         

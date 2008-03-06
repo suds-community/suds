@@ -15,6 +15,8 @@
 
 from suds import *
 from suds.property import Property
+from sax import Parser
+from urlparse import urljoin
 
 
 class Schema:
@@ -23,12 +25,14 @@ class Schema:
     It provides inspection, lookup and type resolution. 
     """
     
-    def __init__(self, schema):
+    def __init__(self, root, baseurl=None):
         """ construct the sequence object with a schema """
-        self.root = schema
+        self.root = root
+        self.baseurl = baseurl
         self.log = logger('schema')
         self.hints = {}
         self.types = {}
+        self.process_imports()
         
     def get_type(self, path):
         """
@@ -71,6 +75,26 @@ class Schema:
                     break
                 result = result.resolve()
         return result
+    
+    def process_imports(self):
+        """ process xsd imports containing a @schemaLocation """
+        for child in self.root.getChildren('import'):
+            uri = child.attribute('schemaLocation')
+            if uri is not None:
+                self.__import(child, uri)
+            
+    def __import(self, node, uri):
+        """ import the xsd content at the specified url """
+        p = Parser()
+        try:           
+            if '://' not in uri:
+                uri = urljoin(self.baseurl, uri)
+            imported = p.parse(url=uri).root()
+            content = imported.detachChildren()
+            node.parent.replaceChild(node, content)
+            self.log.debug('schema at (%s), imported', uri)
+        except Exception, e:
+            self.log.error('imported schema at (%s), not-found', uri)
 
 
 class SchemaProperty:
