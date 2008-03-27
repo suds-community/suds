@@ -16,11 +16,18 @@
 from urllib import urlopen
 from xml.sax import parse, parseString, ContentHandler
 
+def splitPrefix(name):
+    """ split the name into a tuple (prefix, name) """
+    if ':' in name:
+        return tuple(name.split(':', 1))
+    else:
+        return (None, name)
+
 class Attribute:
     """ simple attribute """
     def __init__(self, name, value=None):
         self.parent = None
-        self.prefix, self.name = self.splitPrefix(name)
+        self.prefix, self.name = splitPrefix(name)
         self.value = encode(value)
         
     def resolvePrefix(self, prefix):
@@ -51,13 +58,6 @@ class Attribute:
             return (None,None)
         else:
             return self.resolvePrefix(self.prefix)
-        
-    def splitPrefix(self, name):
-        """ split the name into a tuple (prefix, name) """
-        if ':' in name:
-            return tuple(name.split(':', 1))
-        else:
-            return (None, name)
     
     def __eq__(self, rhs):
         """ equals operator """
@@ -80,7 +80,7 @@ class Attribute:
 class Element:
     """ simple xml element """
     def __init__(self, name, parent=None, ns=None):
-        self.prefix, self.name = self.splitPrefix(name)
+        self.prefix, self.name = splitPrefix(name)
         self.expns = None
         self.nsprefixes = {}
         self.attributes = []
@@ -142,7 +142,7 @@ class Element:
 
     def getChild(self, name, ns=None, default=None):
         """ get a child by name and (optional) namespace """
-        prefix, name = self.splitPrefix(name)
+        prefix, name = splitPrefix(name)
         if prefix is not None:
             ns = self.resolvePrefix(prefix)
         for c in self.children:
@@ -160,7 +160,7 @@ class Element:
         node = self
         for name in [p for p in path.split('/') if len(p) > 0]:
             ns = None
-            prefix, name = self.splitPrefix(name)
+            prefix, name = splitPrefix(name)
             if prefix is not None:
                 ns = node.resolvePrefix(prefix)
             result = node.getChild(name, ns)
@@ -194,7 +194,7 @@ class Element:
         leaf = parts[last]
         for name in ancestors:
             ns = None
-            prefix, name = self.splitPrefix(name)
+            prefix, name = splitPrefix(name)
             if prefix is not None:
                 ns = node.resolvePrefix(prefix)
             child = node.getChild(name, ns)
@@ -204,7 +204,7 @@ class Element:
                 node = child
         if child is not None:
             ns = None
-            prefix, leaf = self.splitPrefix(leaf)
+            prefix, leaf = splitPrefix(leaf)
             if prefix is not None:
                 ns = node.resolvePrefix(prefix)
             result = child.getChildren(leaf)
@@ -213,7 +213,7 @@ class Element:
     def getChildren(self, name=None, ns=None):
         """ get list of child elements by name and (optional) namespace """
         result = []
-        prefix, name = self.splitPrefix(name)
+        prefix, name = splitPrefix(name)
         if prefix is not None:
             ns = self.resolvePrefix(prefix)
         if name is None and ns is None:
@@ -275,13 +275,6 @@ class Element:
                     p = p.parent
         else:
             return self.resolvePrefix(self.prefix)
-        
-    def splitPrefix(self, name):
-        """ split the name in to a tuple (prefix, name) """
-        if name is not None and ':' in name:
-            return tuple(name.split(':', 1))
-        else:
-            return (None, name)
         
     def resolvePrefix(self, prefix):
         """ resolve the specified prefix into a namespace """

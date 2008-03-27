@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sax import Parser, Element
+from suds.sax import Parser, Element, splitPrefix
 from bindings.document.document import Document
 from bindings.rpc.rpc import RPC
 from schema import Schema
@@ -109,7 +109,7 @@ class WSDL:
         for a in node.attributes:
             if a.prefix != 'xmlns' and \
                     a.name in ['name', 'type', 'element', 'message']:
-                a.value = node.splitPrefix(a.value)[1]
+                a.value = splitPrefix(a.value)[1]
         for child in node.children:
             self.purgePrefixes(child)
     
