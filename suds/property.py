@@ -208,7 +208,7 @@ class Printer:
         if self.__complex(object):
             if isinstance(object, dict):
                 return self.__print_dict(object, n+2, nl)
-            if isinstance(object, list) or isinstance(object, tuple):
+            if isinstance(object, (list,tuple)):
                 return self.__print_collection(object, n+2)
         if self.__collection(object):
             if len(object) > 0:
@@ -227,7 +227,7 @@ class Printer:
         for item in d.items():
             s.append('\n')
             s.append(self.__indent(n+1))
-            if isinstance(item[1], list) or isinstance(item[1], tuple):               
+            if isinstance(item[1], (list,tuple)):            
                 s.append(item[0])
                 s.append('[]')
             else:
@@ -253,10 +253,10 @@ class Printer:
         """ get whether the object is a complex type """
         if isinstance(object, dict) and len(object) > 1:
             return True
-        if isinstance(object, list) or isinstance(object, tuple):
+        if isinstance(object, (list,tuple)):
             if len(object) > 1: return True
             for v in object:
-                if isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
+                if isinstance(v, (dict,list,tuple)):
                     return True
             return False
         return False
@@ -272,7 +272,7 @@ class Printer:
     
     def __collection(self, object):
         """ get whether the object is a collection (list|tuple)."""
-        return (  isinstance(object, dict) or isinstance(object, list) or isinstance(object, tuple) )
+        return (  isinstance(object, (dict,list,tuple)) )
                 
     def __indent(self, n):
         """ generate (n) spaces for indent. """

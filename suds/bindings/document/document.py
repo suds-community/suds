@@ -141,7 +141,7 @@ class Document(Binding):
         """encode and return the specified property within the named root tag"""
         if isinstance(object, dict):
             return self.marshaller.process(name, object)
-        if isinstance(object, list) or isinstance(object, tuple):
+        if isinstance(object, (list,tuple)):
             tags = ''
             for item in object:
                 tags += self.param(method, name, item)

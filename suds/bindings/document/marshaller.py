@@ -46,7 +46,7 @@ class Marshaller:
             for item in object.get_items():
                 self.write_content(child, object, item[0], item[1])
             return
-        if isinstance(object, list) or isinstance(object, tuple):
+        if isinstance(object, (list,tuple)):
             for item in object:
                 self.write_content(parent, property, tag, item)
             return
