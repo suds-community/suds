@@ -18,7 +18,7 @@ from xml.sax import parse, parseString, ContentHandler
 
 def splitPrefix(name):
     """ split the name into a tuple (prefix, name) """
-    if ':' in name:
+    if name is not None and ':' in name:
         return tuple(name.split(':', 1))
     else:
         return (None, name)
@@ -42,15 +42,18 @@ class Attribute:
         if self.prefix is None:
             return self.name
         else:
-            return '%s:%s' % (self.prefix, self.name)
+            return ':'.join((self.prefix, self.name))
         
     def setValue(self, value):
         """ set the attributes value """
         self.value = encode(value)
         
-    def getValue(self):
-        """ set the attributes value """
-        return decode(self.value)
+    def getValue(self, default=None):
+        """ get the attributes value with optional default """
+        result = decode(self.value)
+        if result is None:
+            result = default
+        return result
         
     def namespace(self):
         """ get the attributes namespace """
@@ -119,9 +122,12 @@ class Element:
         self.text = encode(value)
         return self
         
-    def getText(self):
-        """ set the element's text """
-        return decode(self.text)
+    def getText(self, default=None):
+        """ get the element's text with optional default """
+        result = decode(self.text)
+        if result is None:
+            result = default
+        return result
     
     def removeChild(self, child):
         """ remove the specified child """
@@ -256,6 +262,24 @@ class Element:
                 self.append(attr)
             else:
                 attr.setValue(value)
+                
+    def flattenedAttributes(self):
+        """ get flattened list of attributes for branch in the tree """
+        result = []
+        for a in self.attributes:
+            result.append(a)
+        for c in self.children:
+            result += c.flattenedAttributes()
+        return result
+
+    def flattenedTree(self, addSelf=True):
+        """ get flattened list of attributes for branch in the tree """
+        result = []
+        if addSelf:
+            result.append(self)
+        for c in self.children:
+            result.append(c, False)
+        return result
         
     def qname(self):
         """ get the fully qualified name """
@@ -285,6 +309,47 @@ class Element:
             else:
                 n = n.parent
         return (None,None)
+    
+    def addPrefix(self, p, u):
+        """ add/update a prefix mapping """
+        self.nsprefixes[p] = u
+        for c in self.children:
+            c.addPrefix(p, u)
+    
+    def repns(self, nsA, nsB):
+        """ replace namespace (A) with namespace (B) """
+        myns = self.namespace()
+        if myns[1] == nsA[1]:
+            if self.expns == nsA[1]:
+                self.expns = nsB[1]
+            else:
+                if self.prefix == nsA[0]:
+                    self.prefix = nsB[0]           
+        nsprefixes = {}
+        if item in self.nsprefixes.items():
+            if item[1] == nsA[1]:
+                nsprefixes[nsB[0]] = nsB[1]
+            else:
+                nsprefixes[item[0]] = item[1]
+        self.nsprefixes = nsprefixes
+        for c in self.children:
+            c.repns(nsA, nsB)
+            
+    def clearPrefix(self, prefix):
+        """ clear the specified prefix from the mapping """
+        if prefix in self.nsprefixes:
+            del self.nsprefixes[prefix]     
+    
+    def findPrefix(self, uri):
+        """ find a mapped prefix for the specified namespace URI """
+        for item in self.nsprefixes.items():
+            if item[1] == uri:
+                prefix = item[0]
+                return prefix
+        if self.parent is not None:
+            return self.parent.findPrefix(uri)
+        else:
+            return None
             
     def isempty(self):
         """ get whether the element has no children """

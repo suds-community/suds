@@ -17,7 +17,7 @@ from suds import *
 from suds.sax import Parser, Element, splitPrefix
 from bindings.document.document import Document
 from bindings.rpc.rpc import RPC
-from schema import Schema
+from schema import Schema, SchemaCollection
 from urlparse import urlparse
 
 class WSDL:
@@ -71,10 +71,11 @@ class WSDL:
         return self.root.attribute('targetNamespace')
     
     def get_schema(self):
-        """ get a composite of all <schema/> nodes """
-        result = Element('schema')
-        for xsd in self.root.childrenAtPath('types/schema'):
-            result.append(xsd.detachChildren())
+        """ get a collective schema of all <schema/> nodes """
+        result = SchemaCollection()
+        for sr in self.root.childrenAtPath('types/schema'):
+            schema = Schema(sr, self.url)
+            result.append(schema)
         self.log.debug('aggregated schema:\n', result)
         return result
     
