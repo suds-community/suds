@@ -313,27 +313,13 @@ class Element:
     def addPrefix(self, p, u):
         """ add/update a prefix mapping """
         self.nsprefixes[p] = u
+ 
+    def updatePrefix(self, p, u):
+        """ update a prefix mapping (recursive) """
+        if p in self.nsprefixes:
+            self.nsprefixes[p] = u
         for c in self.children:
-            c.addPrefix(p, u)
-    
-    def repns(self, nsA, nsB):
-        """ replace namespace (A) with namespace (B) """
-        myns = self.namespace()
-        if myns[1] == nsA[1]:
-            if self.expns == nsA[1]:
-                self.expns = nsB[1]
-            else:
-                if self.prefix == nsA[0]:
-                    self.prefix = nsB[0]           
-        nsprefixes = {}
-        if item in self.nsprefixes.items():
-            if item[1] == nsA[1]:
-                nsprefixes[nsB[0]] = nsB[1]
-            else:
-                nsprefixes[item[0]] = item[1]
-        self.nsprefixes = nsprefixes
-        for c in self.children:
-            c.repns(nsA, nsB)
+            c.updatePrefix(p, u)
             
     def clearPrefix(self, prefix):
         """ clear the specified prefix from the mapping """
