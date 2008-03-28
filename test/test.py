@@ -21,7 +21,7 @@ from suds.wsdl import WSDL
 from suds.bindings.document.marshaller import Marshaller
 
 
-urlfmt = 'http://columbia.usersys.redhat.com:7080/on-on-enterprise-server-ejb3/%s?wsdl'
+urlfmt = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/%s?wsdl'
 
 services = \
 { 
