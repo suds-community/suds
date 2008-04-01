@@ -40,7 +40,8 @@ class Builder:
             
     def process(self, p, type):
         """ process the specified type then process its children """
-        resolved = type.resolve()
+        history = [type]
+        resolved = type.resolve(history)
         value = None
         if type.unbounded():
             value = []
