@@ -23,10 +23,12 @@ class SchemaCollection(list):
     
     """ a collection of schemas providing a wrapper """
     
-    def get_type(self, path):
+    def get_type(self, path, history=None):
         """ see Schema.get_type() """
+        if history is None:
+            history = []
         for s in self:
-            result = s.get_type(path)
+            result = s.get_type(path, history)
             if result is not None:
                 return result
         return None
@@ -80,43 +82,52 @@ class Schema:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
         
-    def get_type(self, path):
+    def get_type(self, path, history=None):
         """
         get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
-        The cached type is returned, else find_type() is used.
+        The cached type is returned, else find_type() is used.  The history prevents
+        cyclic graphs.
         """
-        type = self.types.get(path, None)
-        if type is None:
-            type = self.__find_path(path)
-            self.types[path] = type
-        return type
+        if history is None:
+            history = []   
+        result = self.types.get(path, None)
+        if result is None or result in history:
+            result = self.__find_path(path, history)
+            if result is not None:
+                self.types[path] = result
+        return result
     
-    def __find_path(self, path):
+    def __find_path(self, path, history):
         """
         get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
         """
         result = None
         parts = path.split('.')
-        for child in self.children:
-            ref, ns = self.qualified_reference(parts[0])
+        ref, ns = self.qualified_reference(parts[0])
+        for child in self.children:           
             name = child.get_name()
             if name is None:
                 result = child.get_child(ref, ns)
+                if result in history:
+                    continue
                 if result is not None:
                     break
             else:
                 if child.match(ref, ns):
                     result = child
-                    break
+                    if result not in history:
+                        break
         if result is not None:
+            history.append(result)
+            result = result.resolve(history)
             for name in parts[1:]:
                 ref, ns = self.qualified_reference(name)
                 result = result.get_child(ref, ns)
                 if result is None:
                     break
-                result = result.resolve()
+                result = result.resolve(history)
         return result
     
     def qualified_reference(self, ref):
@@ -169,7 +180,7 @@ class SchemaProperty:
     
     def get_type(self):
         """ get the node's (xsi) type as defined by the schema """
-        return '_'
+        return None
     
     def get_children(self, empty=None):
         """ get child (nested) schema definition nodes """ 
@@ -189,12 +200,14 @@ class SchemaProperty:
         """ get whether this node's specifes that it is unbounded (collection) """
         return False
     
-    def resolve(self):
+    def resolve(self, history):
         """ return the nodes true type when another named type is referenced. """
+        if history is None:
+            history = []
         result = self
         reftype = self.get_type()
         if self.custom():
-            resolved = self.schema.get_type(reftype)
+            resolved = self.schema.get_type(reftype, history)
             if resolved is not None:
                 result = resolved
         return result
@@ -210,7 +223,7 @@ class SchemaProperty:
         """ get whether this object schema type is an (xsd) builtin """
         try:
             mytype = self.get_type()
-            prefix = splitPrefix[0]
+            prefix = splitPrefix(mytype)[0]
             return ( prefix == self.schema.xsdprefix )
         except:
             return False
@@ -233,7 +246,6 @@ class Complex(SchemaProperty):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
         self.__add_children()
-        self.children.sort()
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
@@ -249,12 +261,6 @@ class Complex(SchemaProperty):
             cont = ComplexContent(self.schema, s)
             for cc in cont.children:
                 self.children.append(cc)
-                
-    def __cmp__(self, other):
-        if isinstance(other, (Simple, Element)):
-            return -1
-        else:
-            return 0
 
 
 class Simple(SchemaProperty):
@@ -265,7 +271,6 @@ class Simple(SchemaProperty):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
         self.__add_children()
-        self.children.sort()
 
     def get_name(self):
         """ gets the <xs:simpleType name=""/> attribute value """
@@ -280,12 +285,6 @@ class Simple(SchemaProperty):
         for e in self.root.childrenAtPath('restriction/enumeration'):
             enum = Enumeration(self.schema, e)
             self.children.append(enum)
-            
-    def __cmp__(self, other):
-        if isinstance(other, Element):
-            return -1
-        else:
-            return 0
 
 
 class Sequence(SchemaProperty):
@@ -296,7 +295,6 @@ class Sequence(SchemaProperty):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
         self.__add_children()
-        self.children.sort()
 
     def __add_children(self):
         """ add <xs:element/> nested types """
@@ -313,7 +311,6 @@ class ComplexContent(SchemaProperty):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
         self.__add_children()
-        self.children.sort()
 
     def __add_children(self):
         """ add <xs:extension/> nested types """
@@ -344,7 +341,6 @@ class Element(SchemaProperty):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
         self.__add_children()
-        self.children.sort()
         
     def get_name(self):
         """ gets the <xs:element name=""/> attribute value """
@@ -365,6 +361,13 @@ class Element(SchemaProperty):
         """ get whether the element has a maxOccurs > 1 or unbounded """
         max = self.root.attribute('maxOccurs', default=1)
         return ( max > 1 or max == 'unbounded' )
+    
+    def __cmp__(self, other):
+        """ <element/> before types """
+        if not isinstance(other, Import):
+            return -1
+        else:
+            return 0
 
 
 class Extension(Complex):
@@ -375,7 +378,6 @@ class Extension(Complex):
         """ create the object with a schema and root node """
         Complex.__init__(self, schema, root)
         self.__add_children()
-        self.children.sort()
 
     def __add_children(self):
         """ lookup extended type and add its children then add nested types """
@@ -400,7 +402,6 @@ class Import(SchemaProperty):
         if location is not None:
             self.__import(location)
         self.__add_children()
-        self.children.sort()
 
     def namespace(self):
         """ get this properties namespace """
@@ -457,9 +458,7 @@ class Import(SchemaProperty):
                     a.setValue(value)
         
     def __cmp__(self, other):
-        if isinstance(other, Complex):
-            return -1
-        else:
-            return 0
+        """ <import/> first """
+        return -1
 
         
