@@ -18,8 +18,9 @@ from xml.sax import parse, parseString, ContentHandler
 
 def splitPrefix(name):
     """ split the name into a tuple (prefix, name) """
-    if name is not None and ':' in name:
-        return tuple(name.split(':', 1))
+    if name is not None \
+        and ':' in name:
+            return tuple(name.split(':', 1))
     else:
         return (None, name)
 
@@ -273,12 +274,19 @@ class Element:
         return result
 
     def flattenedTree(self, addSelf=True):
-        """ get flattened list of attributes for branch in the tree """
+        """ get flattened list of attributes for this branch in the tree """
         result = []
         if addSelf:
             result.append(self)
         for c in self.children:
             result.append(c, False)
+        return result
+    
+    def flattened_nsprefixes(self):
+        """ get a flattened list of all ns prefixes for this branch in the tree """
+        result = []
+        for item in self.nsprefixes.items():
+            result.append((item[0], item[1]))
         return result
         
     def qname(self):
@@ -300,7 +308,7 @@ class Element:
         else:
             return self.resolvePrefix(self.prefix)
         
-    def resolvePrefix(self, prefix):
+    def resolvePrefix(self, prefix, default=(None,None)):
         """ resolve the specified prefix into a namespace """
         n = self
         while n is not None:
@@ -308,7 +316,7 @@ class Element:
                 return (prefix, n.nsprefixes[prefix])
             else:
                 n = n.parent
-        return (None,None)
+        return default
     
     def addPrefix(self, p, u):
         """ add/update a prefix mapping """
@@ -419,6 +427,11 @@ class Document(Element):
             return self.children[0]
         else:
             return None
+        
+    def flattened_nsprefixes(self):
+        result = {}
+        
+        return result
         
     def __str__(self):
         result = '<?xml version="1.0" encoding="UTF-8"?>'

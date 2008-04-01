@@ -19,7 +19,7 @@ class Property:
     provides an object wrapper around a complex dictionary.
     """
     __self__ = '__self__'    
-    __protected__ = ('__data__', '__strict__', '__type__', '__metadata__')
+    __protected__ = ('__data__', '__strict__', '__type__', '__metadata__', '__keylist__')
 
     def __init__(self, data=None, strict=False):
         """
@@ -34,11 +34,12 @@ class Property:
         self.__data__ = data
         self.__strict__ = strict
         self.__type__ = None
+        self.__keylist__ = []
         self.__metadata__ = {}
             
     def get_names(self):
         """get a list of property names"""
-        return self.__data__.keys()
+        return self.__keylist__
         
     def get_values(self):
         """get a list of property values"""
@@ -46,7 +47,9 @@ class Property:
 
     def get_items(self):
         """ get the property's collection of items."""
-        return self.__data__.items()
+        for k in self.__keylist__:
+            v = self.__data__[k]
+            yield (k, v)
     
     def get(self, **kwargs):
         """get a property(s) value by name while specifying a default: property=default, """
@@ -142,6 +145,8 @@ class Property:
         if name in Property.__protected__:
             self.__dict__[name] = value
             return
+        if name not in self.__keylist__:
+            self.__keylist__.append(name)
         if isinstance(value, Property):
             self.__data__[name] = value
             return

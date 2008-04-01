@@ -152,7 +152,7 @@ class Document(Binding):
         
     def body(self):
         """get the soap body fragment tag template"""
-        return ('<SOAP-ENV:Body xmlns:tns="%s">' % self.wsdl.get_tns(), '</SOAP-ENV:Body>')
+        return ('<SOAP-ENV:Body xmlns:tns="%s">' % self.wsdl.tns[1], '</SOAP-ENV:Body>')
     
     def method(self, name):
         """get method fragment"""

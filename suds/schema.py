@@ -42,12 +42,13 @@ class Schema:
     def __init__(self, root, baseurl=None):
         """ construct the sequence object with a schema """
         self.root = root
-        self.tns = self.__get_tns()
+        self.tns = self.get_tns()
         self.baseurl = baseurl
         self.log = logger('schema')
         self.hints = {}
         self.types = {}
         self.children = []
+        self.xsdprefix = self.__xsdprefix()
         self.__add_children()
                 
     def __add_children(self):
@@ -63,8 +64,16 @@ class Schema:
                 child = cls(self, node)
                 self.children.append(child)
         self.children.sort()
+        
+    def __xsdprefix(self):
+        """ get the prefix mapped to the XMLSchema URI """
+        uri = 'http://www.w3.org/2001/XMLSchema'
+        prefix = self.root.findPrefix(uri)
+        if prefix is None:
+            self.log.warn('prefix for xmlns (%s), not mapped to a prefix' % uri)
+        return prefix
                 
-    def __get_tns(self):
+    def get_tns(self):
         """ get the target namespace """
         tns = [None, self.root.attribute('targetNamespace')]
         if tns[1] is not None:
@@ -79,11 +88,11 @@ class Schema:
         """
         type = self.types.get(path, None)
         if type is None:
-            type = self.__lookup(path)
+            type = self.__find_path(path)
             self.types[path] = type
         return type
     
-    def __lookup(self, path):
+    def __find_path(self, path):
         """
         get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
@@ -91,22 +100,37 @@ class Schema:
         result = None
         parts = path.split('.')
         for child in self.children:
+            ref, ns = self.qualified_reference(parts[0])
             name = child.get_name()
             if name is None:
-                result = child.get_child(parts[0])
+                result = child.get_child(ref, ns)
                 if result is not None:
                     break
             else:
-                if name == parts[0]:
+                if child.match(ref, ns):
                     result = child
                     break
         if result is not None:
             for name in parts[1:]:
-                result = result.get_child(name)
+                ref, ns = self.qualified_reference(name)
+                result = result.get_child(ref, ns)
                 if result is None:
                     break
                 result = result.resolve()
         return result
+    
+    def qualified_reference(self, ref):
+        """ get type reference *qualified* by namespace w/ prefix stripped """
+        prefix, name = splitPrefix(ref)
+        if prefix is None:
+            ns = self.tns
+        else:
+            ns = self.resolve_prefix(prefix, None)
+        return (name, ns)
+                
+    def resolve_prefix(self, p, d):
+        """ resolve the specified namespace prefix """
+        return self.root.resolvePrefix(p, d)
     
     def __str__(self):
         return str(self.root)
@@ -125,6 +149,15 @@ class SchemaProperty:
         self.schema = schema
         self.log = schema.log
         self.children = []
+        
+    def match(self, name, ns=None):
+        """ match by name and optional namespace """
+        myns = self.namespace()
+        myname = self.get_name()
+        if ns is None:
+            return ( myname == name )
+        else:
+            return ( myns[1] == ns[1] and myname == name )
         
     def namespace(self):
         """ get this properties namespace """
@@ -145,10 +178,10 @@ class SchemaProperty:
             list = empty
         return list
     
-    def get_child(self, name):
+    def get_child(self, name, ns):
         """ get a child by name """
         for child in self.get_children():
-            if child.get_name() == name:
+            if child.match(name, ns):
                 return child
         return None
     
@@ -159,9 +192,9 @@ class SchemaProperty:
     def resolve(self):
         """ return the nodes true type when another named type is referenced. """
         result = self
-        type = self.get_type()
+        reftype = self.get_type()
         if self.custom():
-            resolved = self.schema.get_type(type)
+            resolved = self.schema.get_type(reftype)
             if resolved is not None:
                 result = resolved
         return result
@@ -176,8 +209,9 @@ class SchemaProperty:
     def builtin(self):
         """ get whether this object schema type is an (xsd) builtin """
         try:
-            prefix = self.get_type().split()[0]
-            return prefix.startswith('xs')
+            mytype = self.get_type()
+            prefix = splitPrefix[0]
+            return ( prefix == self.schema.xsdprefix )
         except:
             return False
         

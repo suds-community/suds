@@ -31,11 +31,20 @@ class WSDL:
         try:
             self.log.debug('reading wsdl at: %s ...', url)
             self.root = Parser().parse(url=url).root()
-            self.purgePrefixes()
+            self.tns = self.__tns()
             self.log.debug('parsed content:\n%s', str(self.root))
         except Exception, e:
             self.log.exception(e)
             raise e
+           
+    def __tns(self):
+        """get the target namespace defined in the wsdl"""
+        uri = self.root.attribute('targetNamespace')
+        prefix = self.root.findPrefix(uri)
+        ns = (prefix, uri)
+        if ns[0] is None:
+            self.warn('tns (%s), not mapped to a prefix', uri)
+        return ns
         
     def get_binding(self, faults):
         style = self.get_binding_style()
@@ -66,10 +75,6 @@ class WSDL:
         result.append(parts[2])
         return result
     
-    def get_tns(self):
-        """get the target namespace defined in the wsdl"""
-        return self.root.attribute('targetNamespace')
-    
     def get_schema(self):
         """ get a collective schema of all <schema/> nodes """
         result = SchemaCollection()
@@ -97,22 +102,15 @@ class WSDL:
 
     def get_message(self, name):
         """get the definition of a specified message by name"""
+        name = splitPrefix(name)[1]
         for m in self.root.getChildren('message'):
             if name == m.attribute('name'):
                 self.log.debug('message by name (%s) found:\n%s', name, m)
                 return m
         return None
-    
-    def purgePrefixes(self, node=None):
-        """ purge prefixes from attribute values """
-        if node is None:
-            node = self.root
-        for a in node.attributes:
-            if a.prefix != 'xmlns' and \
-                    a.name in ['name', 'type', 'element', 'message']:
-                a.value = splitPrefix(a.value)[1]
-        for child in node.children:
-            self.purgePrefixes(child)
+            
+    def mapped_prefixes(self):
+        return self.root.flattened_nsprefixes()
     
     def __str__(self):
         return str(self.root)

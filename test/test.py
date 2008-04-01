@@ -13,6 +13,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+import sys
+sys.path.append('../')
+
 from suds import *
 from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
@@ -40,6 +43,12 @@ class Test:
     
     def basic_test(self):
         
+        p = Property()
+        p.name = 'Elvis'
+        p.age = 20
+        for item in p.get_items():
+            print item
+        
         #
         # create a service proxy using the wsdl.
         #
@@ -53,7 +62,7 @@ class Test:
         #
         # create a name object using the wsdl
         #
-        name = service.get_instance('name')
+        name = service.get_instance('tns:name')
         name.first = 'jeff'
         name.last = 'ortel'
         
@@ -177,7 +186,7 @@ class Test:
         # login
         #
         print 'login()'
-        subject = service.login('jonadmin', 'jonadmin')
+        subject = service.login('rhqadmin', 'rhqadmin')
         print '\nreply(\n%s\n)\n' % str(subject)
         
         marshaller = Marshaller(service.binding.schema)
@@ -220,7 +229,7 @@ class Test:
         # login
         #
         print 'login()'
-        subject = ServiceProxy(get_url('auth')).login('jonadmin', 'jonadmin')
+        subject = ServiceProxy(get_url('auth')).login('rhqadmin', 'rhqadmin')
         
         #
         # create page control and get all subjects
@@ -269,7 +278,7 @@ class Test:
         # login
         #
         print 'login()'
-        subject = ServiceProxy(get_url('auth')).login('jonadmin', 'jonadmin')
+        subject = ServiceProxy(get_url('auth')).login('rhqadmin', 'rhqadmin')
 
         #
         # get all perspectives
@@ -297,7 +306,7 @@ class Test:
         print service
         
         configuration = service.get_instance('configuration')
-        entry = service.get_instance('configuration.properties.entry')
+        entry = service.get_instance('configuration.tns:properties.entry')
         simple = service.get_instance('propertySimple')
         entry.key = 'location'
         simple.name = 'location'
@@ -316,7 +325,7 @@ class Test:
         # login
         #
         print 'login()'
-        subject = ServiceProxy(get_url('auth')).login('jonadmin', 'jonadmin')
+        subject = ServiceProxy(get_url('auth')).login('rhqadmin', 'rhqadmin')
 
         #
         # get all perspectives
@@ -382,7 +391,7 @@ if __name__ == '__main__':
     #test3()
     test = Test()
     test.basic_test()
-    test.auth_test()
-    test.resource_test()
-    test.perspectives_test()
+    #test.auth_test()
+    #test.resource_test()
+    #test.perspectives_test()
     test.contentsource_test()

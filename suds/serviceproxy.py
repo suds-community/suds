@@ -83,9 +83,13 @@ class ServiceProxy(object):
         
     def __str__(self):
         try:
-            s = 'service (%s)\nmethods:\n' % self.wsdl.get_servicename()
+            s = 'service (%s)' % self.wsdl.get_servicename()
+            s += '\n\tprefixes:\n'
+            for p in self.wsdl.mapped_prefixes():
+                s += '\t\t%s = "%s"\n' % p
+            s += '\n\tmethods:\n'
             for m in self.get_methods():
-                s += '  %s\n' % m
+                s += '\t\t%s\n' % m
             return s
         except Exception, e:
             self.log.exception(e)
