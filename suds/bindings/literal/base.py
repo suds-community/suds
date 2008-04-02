@@ -35,35 +35,19 @@ docfmt = """
 </SOAP-ENV:Envelope>
 """
 
-class Document(Binding):
+class Literal(Binding):
     
     """
-    a document literal binding style.
+    Literal binding style.
     """
 
     def __init__(self, wsdl, faults=True):
+        """constructor """
         Binding.__init__(self, wsdl, faults)
         self.schema = wsdl.get_schema()
         self.marshaller = Marshaller(self.schema)
         self.unmarshaller = Unmarshaller(self.schema)
         self.builder = Builder(self.schema)
-        
-    def get_ptypes(self, method):
-        """get a list of parameter types defined for the specified method"""
-        params = []
-        operation = self.wsdl.get_operation(method)
-        if operation is None:
-            raise NoSuchMethod(method)
-        input = operation.getChild('input')
-        msg = self.wsdl.get_message(input.attribute('message'))
-        for p in msg.getChildren('part'):
-            type = self.schema.get_type(p.attribute('element'))
-            if type is None:
-                raise TypeNotFound(p.attribute('element'))
-            for e in type.get_children():
-                params.append((e.get_name(), e.get_type()))
-        self.log.debug('parameters %s for method %s', str(params), method)
-        return params
         
     def get_message(self, method_name, *args):
         """get the soap message for the specified method and args"""
@@ -120,6 +104,7 @@ class Document(Binding):
             raise BuildError(typename)
     
     def get_enum(self, name):
+        """ get an enumeration """
         result = None
         type = self.schema.get_type(name)
         if type is not None:
@@ -159,7 +144,7 @@ class Document(Binding):
         return ('<tns:%s xsi:type="tns:%s">' % (name, name), '</tns:%s>' % name)
 
     def returns_collection(self, method):
-        """ get whether the  type defined for the specified method is a collection """
+        """ get whether the type defined for the specified method is a collection """
         operation = self.wsdl.get_operation(method)
         if operation is None:
             raise NoSuchMethod(method)

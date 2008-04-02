@@ -43,16 +43,11 @@ class Test:
     
     def basic_test(self):
         
-        p = Property()
-        p.name = 'Elvis'
-        p.age = 20
-        for item in p.get_items():
-            print item
-        
         #
         # create a service proxy using the wsdl.
         #
-        service = ServiceProxy(get_url('test'))
+        #service = ServiceProxy(get_url('test'))
+        service = ServiceProxy('file:///home/jortel/Desktop/t.wsdl')
         
         #
         # print the service (introspection)

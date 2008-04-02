@@ -15,8 +15,8 @@
 
 from suds import *
 from suds.sax import Parser, Element, splitPrefix
-from bindings.document.document import Document
-from bindings.rpc.rpc import RPC
+from bindings.literal.document import Document
+from bindings.literal.rpc import RPC
 from schema import Schema, SchemaCollection
 from urlparse import urlparse
 
@@ -47,17 +47,19 @@ class WSDL:
         return ns
         
     def get_binding(self, faults):
+        """ get the binding object """
         style = self.get_binding_style()
         if style == 'document':
-            self.log.debug('document binding detected')
+            self.log.debug('document/literal binding detected')
             return Document(self, faults)
         elif style == 'rpc':
-            self.log.info('document binding detected')
+            self.log.info('rpc/literal binding detected')
             return RPC(self, faults)
         self.log.debug('document binding (%s), not-supported', style)
         return None 
         
     def get_binding_style(self):
+        """ get the binding style """
         return self.root.childAtPath('binding/binding').attribute('style')
 
     def get_location(self):
