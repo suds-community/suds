@@ -22,7 +22,7 @@ from urlparse import urljoin
 class SchemaCollection(list):
     
     """ a collection of schemas providing a wrapper """
-    
+
     def get_type(self, path, history=None):
         """ see Schema.get_type() """
         if history is None:
@@ -33,6 +33,13 @@ class SchemaCollection(list):
                 return result
         return None
 
+    def custom(self, ref):
+        """ get whether specified type reference is custom """
+        return self[0].custom(ref)
+    
+    def builtin(self, ref):
+        """ get whether the specified type reference is an (xsd) builtin """
+        return self[0].builtin(ref)
 
 class Schema:
     
@@ -50,7 +57,7 @@ class Schema:
         self.hints = {}
         self.types = {}
         self.children = []
-        self.xsdprefix = self.__xsdprefix()
+        self.xsprefixes = self.__xsprefixes()
         self.__add_children()
                 
     def __add_children(self):
@@ -67,13 +74,13 @@ class Schema:
                 self.children.append(child)
         self.children.sort()
         
-    def __xsdprefix(self):
+    def __xsprefixes(self):
         """ get the prefix mapped to the XMLSchema URI """
         uri = 'http://www.w3.org/2001/XMLSchema'
-        prefix = self.root.findPrefix(uri)
-        if prefix is None:
-            self.log.warn('prefix for xmlns (%s), not mapped to a prefix' % uri)
-        return prefix
+        prefixes = self.root.findPrefixes(uri)
+        if len(prefixes) == 0:
+            self.log.warn('no prefixes for xmlns (%s) mapped' % uri)
+        return prefixes
                 
     def get_tns(self):
         """ get the target namespace """
@@ -97,6 +104,21 @@ class Schema:
             if result is not None:
                 self.types[path] = result
         return result
+
+    def custom(self, ref):
+        """ get whether specified type reference is custom """
+        if ref is None:
+            return False
+        else:
+            return ( not self.builtin(ref) )
+    
+    def builtin(self, ref):
+        """ get whether the specified type reference is an (xsd) builtin """
+        try:
+            prefix = splitPrefix(ref)[0]
+            return ( prefix in self.xsprefixes )
+        except:
+            return False
     
     def __find_path(self, path, history):
         """
@@ -214,19 +236,13 @@ class SchemaProperty:
     
     def custom(self):
         """ get whether this object schema type is custom """
-        if self.get_type() is None:
-            return False
-        else:
-            return (not self.builtin())
+        ref = self.get_type()
+        return self.schema.custom(ref)
     
     def builtin(self):
         """ get whether this object schema type is an (xsd) builtin """
-        try:
-            mytype = self.get_type()
-            prefix = splitPrefix(mytype)[0]
-            return ( prefix == self.schema.xsdprefix )
-        except:
-            return False
+        ref = self.get_type()
+        return self.schema.builtin(ref)
         
     def __str__(self):
         return 'ns=%s, name=(%s), type=(%s)' \

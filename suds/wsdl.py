@@ -53,7 +53,7 @@ class WSDL:
             self.log.debug('document/literal binding detected')
             return Document(self, faults)
         elif style == 'rpc':
-            self.log.info('rpc/literal binding detected')
+            self.log.debug('rpc/literal binding detected')
             return RPC(self, faults)
         self.log.debug('document binding (%s), not-supported', style)
         return None 

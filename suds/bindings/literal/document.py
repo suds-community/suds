@@ -45,3 +45,18 @@ class Document(Literal):
                 params.append((e.get_name(), e.get_type()))
         self.log.debug('parameters %s for method %s', str(params), method)
         return params
+
+    def returns_collection(self, method):
+        """ get whether the type defined for the specified method is a collection """
+        operation = self.wsdl.get_operation(method)
+        if operation is None:
+            raise NoSuchMethod(method)
+        msg = self.wsdl.get_message(operation.getChild('output').attribute('message'))
+        result = False
+        for p in msg.getChildren('part'):
+            ref = p.attribute('element')
+            type = self.schema.get_type(ref)
+            elements = type.get_children(empty=[])
+            result = ( len(elements) > 0 and elements[0].unbounded() )
+            break
+        return result
