@@ -21,7 +21,7 @@ from suds.bindings.literal.base import Literal
 class RPC(Literal):
     
     """
-    RPC/literal binding style.
+    RPC/Literal binding style.
     """
 
     def __init__(self, wsdl, faults=True):
@@ -37,7 +37,7 @@ class RPC(Literal):
         input = operation.getChild('input')
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
-            ref = p.attribute('element')
+            ref = p.attribute('type')
             type = self.schema.get_type(ref)
             if type is None:
                 raise TypeNotFound(ref)
