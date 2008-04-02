@@ -142,17 +142,3 @@ class Literal(Binding):
     def method(self, name):
         """get method fragment"""
         return ('<tns:%s xsi:type="tns:%s">' % (name, name), '</tns:%s>' % name)
-
-    def returns_collection(self, method):
-        """ get whether the type defined for the specified method is a collection """
-        operation = self.wsdl.get_operation(method)
-        if operation is None:
-            raise NoSuchMethod(method)
-        msg = self.wsdl.get_message(operation.getChild('output').attribute('message'))
-        result = False
-        for p in msg.getChildren('part'):
-            type = self.schema.get_type(p.attribute('element'))
-            elements = type.get_children(empty=[])
-            result = ( len(elements) > 0 and elements[0].unbounded() )
-            break
-        return result

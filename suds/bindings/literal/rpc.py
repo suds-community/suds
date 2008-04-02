@@ -38,9 +38,28 @@ class RPC(Literal):
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
+            if self.schema.builtin(ref):
+                params.append((p.attribute('name'), ref))
+                continue
             type = self.schema.get_type(ref)
             if type is None:
                 raise TypeNotFound(ref)
-            params.append((p.attribute('name'), ref))
+            params.append((p.attribute('name'), type.get_name()))
         self.log.debug('parameters %s for method %s', str(params), method)
         return params
+
+    def returns_collection(self, method):
+        """ get whether the type defined for the specified method is a collection """
+        operation = self.wsdl.get_operation(method)
+        if operation is None:
+            raise NoSuchMethod(method)
+        msg = self.wsdl.get_message(operation.getChild('output').attribute('message'))
+        result = False
+        for p in msg.getChildren('part'):
+            ref = p.attribute('type')
+            if self.schema.custom(ref):
+                type = self.schema.get_type(ref)
+                elements = type.get_children(empty=[])
+                result = ( len(elements) > 0 and elements[0].unbounded() )
+            break
+        return result

@@ -344,6 +344,17 @@ class Element:
             return self.parent.findPrefix(uri)
         else:
             return None
+
+    def findPrefixes(self, uri):
+        """ find a mapped prefixes for the specified namespace URI """
+        result = []
+        for item in self.nsprefixes.items():
+            if item[1] == uri:
+                prefix = item[0]
+                result.append(prefix)
+        if self.parent is not None:
+            result += self.parent.findPrefixes(uri)
+        return result
             
     def isempty(self):
         """ get whether the element has no children """

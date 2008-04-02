@@ -21,7 +21,7 @@ from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
 from suds.property import Property
 from suds.wsdl import WSDL
-from suds.bindings.document.marshaller import Marshaller
+from suds.bindings.literal.marshaller import Marshaller
 
 
 urlfmt = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/%s?wsdl'
@@ -29,6 +29,7 @@ urlfmt = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/%s?wsdl'
 services = \
 { 
     'test':'WebServiceTestBean', 
+    'rpc':'RPCEncodedBean', 
     'auth':'SubjectManagerBean', 
     'resources':'ResourceManagerBean',
     'perspectives':'PerspectiveManagerBean',
@@ -46,8 +47,7 @@ class Test:
         #
         # create a service proxy using the wsdl.
         #
-        #service = ServiceProxy(get_url('test'))
-        service = ServiceProxy('file:///home/jortel/Desktop/t.wsdl')
+        service = ServiceProxy(get_url('test'))
         
         #
         # print the service (introspection)
@@ -165,7 +165,114 @@ class Test:
         except Exception, e:
             print e
             
+    def rpc_test(self):
+        
+        #
+        # create a service proxy using the wsdl.
+        #
+        service = ServiceProxy(get_url('rpc'))
+        
+        #
+        # print the service (introspection)
+        #
+        print service
+        
+        #
+        # create a name object using the wsdl
+        #
+        name = service.get_instance('tns:name')
+        name.first = 'jeff'
+        name.last = 'ortel'
+        
+        #
+        # create a phone object using the wsdl
+        #
+        phoneA = service.get_instance('phone')
+        phoneA.npa = 410
+        phoneA.nxx = 822
+        phoneA.number = 5138
 
+        phoneB = service.get_instance('phone')
+        phoneB.npa = 919
+        phoneB.nxx = 606
+        phoneB.number = 4406
+        
+        #
+        # create a person object using the wsdl
+        #
+        person = service.get_instance('person')
+        
+        #
+        # inspect empty person
+        #
+        print '{empty} person=\n%s' % person
+        
+        person.name = name
+        person.age = 43
+        person.phone.append(phoneA)
+        person.phone.append(phoneB)
+        
+        #
+        # inspect person
+        #
+        print 'person=\n%s' % person
+        
+        #
+        # add the person (using the webservice)
+        #
+        print 'addPersion()'
+        result = service.addPerson(person)
+        print '\nreply(\n%s\n)\n' % str(result)
+        
+        #
+        # create a new name object used to update the person
+        #
+        newname = service.get_instance('name')
+        newname.first = 'Todd'
+        newname.last = 'Sanders'
+        
+        #
+        # update the person's name (using the webservice) and print return person object
+        #
+        print 'updatePersion()'
+        result = service.updatePerson(person, newname)
+        print '\nreply(\n%s\n)\n' % str(result)
+        result = service.updatePerson(person, None)
+        print '\nreply(\n%s\n)\n' % str(result)
+        
+        #
+        # invoke the echo service
+        #
+        print 'echo()'
+        result = service.echo('this is cool')
+        print '\nreply( %s )\n' % str(result)
+        
+        #
+        # invoke the hello service
+        #
+        print 'hello()'
+        result = service.hello()
+        print '\nreply( %s )\n' % str(result)
+        
+        #
+        # invoke the testVoid service
+        #
+        try:
+            print 'testVoid()'
+            result = service.testVoid()
+            print '\nreply( %s )\n' % str(result)
+        except Exception, e:
+            print e
+        
+        #
+        # test exceptions
+        #
+        try:
+            print 'testExceptions()'
+            result = service.testExceptions()
+            print '\nreply( %s )\n' % str(result)
+        except Exception, e:
+            print e
 
             
     def auth_test(self):
@@ -386,7 +493,8 @@ if __name__ == '__main__':
     #test3()
     test = Test()
     test.basic_test()
+    test.rpc_test()
     #test.auth_test()
     #test.resource_test()
     #test.perspectives_test()
-    test.contentsource_test()
+    #test.contentsource_test()
