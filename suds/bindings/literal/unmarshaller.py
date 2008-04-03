@@ -81,7 +81,7 @@ class Unmarshaller:
         if len(node.text):
             value = node.getText()
             value = self.booleans.get(value.lower(), value)
-            data['text'] = value
+            data['__text__'] = value
             
     def result(self, data, node):
         """
@@ -93,7 +93,7 @@ class Unmarshaller:
             if len(data) == 0:
                 return None
             if len(data) == 1 and self.bounded(node.name):
-                return data['text']
+                return data['__text__']
         except:
             pass
         return data
