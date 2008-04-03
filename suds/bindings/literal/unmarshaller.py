@@ -115,4 +115,5 @@ class Unmarshaller:
 
     def xstype(self, a):
         """ determine if the attr is a xsi:type """
-        return ( a.prefix == 'xsi' and a.name == 'type' )
+        return ( self.schema.builtin(a.qname) and \
+                 a.name == 'type' )
