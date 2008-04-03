@@ -42,7 +42,7 @@ class ServiceProxy(object):
         result = None
         location = self.wsdl.get_location()
         msg = self.binding.get_message(method.name, *args)
-        http = httplib.HTTP(location[0], location[1])
+        http = httplib.HTTP(str(location[0]), str(location[1]))
         http.putrequest("POST", location[2])
         http.putheader("Host", location[0])
         http.putheader("user-agent", "Python post")
@@ -94,6 +94,9 @@ class ServiceProxy(object):
         except Exception, e:
             self.log.exception(e)
             return 'service not available'
+        
+    def __unicode__(self):
+        return self.__str__()
         
     def __repr__(self):
         return self.__str__()

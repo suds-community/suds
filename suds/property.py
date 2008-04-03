@@ -169,6 +169,10 @@ class Property:
             return prettyprint(self.__data__)
         else:
             return '(%s)%s' % (self.__type__, prettyprint(self.__data__))
+        
+    def __unicode__(self):
+        """ get a string representation """
+        return self.__str__()
     
     def __repr__(self):
         """ get a string representation """
@@ -217,10 +221,10 @@ class Printer:
                 return self.__print_collection(object, n+2)
         if self.__collection(object):
             if len(object) > 0:
-                return str(object)
+                return unicode(object)
             else:
                 return '<empty>'
-        return '(%s)' % str(object)
+        return '(%s)' % unicode(object)
     
     def __print_dict(self, d, n, nl=False):
         """ print the specified dictionary using the specified indent (n) and newline (nl). """
