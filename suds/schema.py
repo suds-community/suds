@@ -166,7 +166,10 @@ class Schema:
         return self.root.resolvePrefix(p, d)
     
     def __str__(self):
-        return str(self.root)
+        return unicode(self.root)
+    
+    def __unicode__(self):
+        return self.__str__()
 
 
 class SchemaProperty:
@@ -249,6 +252,9 @@ class SchemaProperty:
             % (self.namespace(),
                   self.get_name(),
                   self.get_type())
+            
+    def __unicode__(self):
+        return self.__str__()
     
     def __repr__(self):
         return self.__str__()
@@ -442,7 +448,7 @@ class Import(SchemaProperty):
             self.root = imp_root
             self.log.info('schema at (%s)\n\timported with tns=%s', uri, self.namespace())
         except tuple, e:
-            self.log.error('imported schema at (%s), not-found\n\t%s', uri, str(e))
+            self.log.error('imported schema at (%s), not-found\n\t%s', uri, unicode(e))
             
     def __update_tns(self, imp_root):
         """

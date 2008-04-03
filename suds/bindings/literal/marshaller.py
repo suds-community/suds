@@ -31,7 +31,7 @@ class Marshaller:
             property = Property(property)
         for item in property.get_items():
             self.write_content(parent, property, item[0], item[1])
-        return str(parent)
+        return unicode(parent)
        
     def write_content(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """
@@ -51,12 +51,12 @@ class Marshaller:
                 self.write_content(parent, property, tag, item)
             return
         if tag.startswith('_'):
-            parent.attribute(tag[1:], str(object))
+            parent.attribute(tag[1:], unicode(object))
         elif tag == 'text':
-            parent.setText(str(object))
+            parent.setText(unicode(object))
         else:
             child = Element(tag)
-            child.setText(str(object))
+            child.setText(unicode(object))
             parent.append(child)
 
     def process_metadata(self, p, node):

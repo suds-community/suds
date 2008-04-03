@@ -32,7 +32,7 @@ class WSDL:
             self.log.debug('reading wsdl at: %s ...', url)
             self.root = Parser().parse(url=url).root()
             self.tns = self.__tns()
-            self.log.debug('parsed content:\n%s', str(self.root))
+            self.log.debug('parsed content:\n%s', unicode(self.root))
         except Exception, e:
             self.log.exception(e)
             raise e
@@ -115,4 +115,7 @@ class WSDL:
         return self.root.flattened_nsprefixes()
     
     def __str__(self):
-        return str(self.root)
+        return self.root.str()
+    
+    def __unicode__(self):
+        return self.__str__()

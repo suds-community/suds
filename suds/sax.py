@@ -79,6 +79,10 @@ class Attribute:
     def __str__(self):
         """ get an xml string representation """
         return '%s="%s"' % (self.qname(), self.value)
+    
+    def __unicode__(self):
+        """ get an xml string representation """
+        return self.__str__()
 
 
 class Element:
@@ -401,6 +405,9 @@ class Element:
     
     def __str__(self):
         return self.str()
+    
+    def __unicode__(self):
+        return self.__str__()
         
     def str(self, indent=0):
         result = ''
@@ -408,7 +415,7 @@ class Element:
             result += '  '
         result += '<%s' % self.qname()
         result += self.nsdeclarations()
-        for a in [str(a) for a in self.attributes]:
+        for a in [unicode(a) for a in self.attributes]:
             result += ' %s' % a
         if self.isempty():
             result += '/>'
@@ -451,6 +458,9 @@ class Document(Element):
             result += '\n'
             result += root.str()
         return result
+    
+    def __unicode__(self):
+        return self.__str__()
 
 
 class Handler(ContentHandler):
@@ -461,10 +471,10 @@ class Handler(ContentHandler):
  
     def startElement(self, name, attrs):
         top = self.top()
-        node = Element(str(name), parent=top)
+        node = Element(unicode(name), parent=top)
         for a in attrs.getNames():
-            n = str(a)
-            v = str(attrs.getValue(a))
+            n = unicode(a)
+            v = unicode(attrs.getValue(a))
             attribute = Attribute(n,v)
             if self.mapPrefix(node, attribute):
                 continue
@@ -484,7 +494,7 @@ class Handler(ContentHandler):
         return skip
  
     def endElement(self, name):
-        name = str(name)
+        name = unicode(name)
         topqname = self.top().qname()
         if name == topqname:
             self.pop()
@@ -492,7 +502,7 @@ class Handler(ContentHandler):
             raise Exception('malformed document')
  
     def characters(self, content):
-        text = str(content).strip()
+        text = unicode(content).strip()
         if len(content) > 0:
             self.top().text = text;
 

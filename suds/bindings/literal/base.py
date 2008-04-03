@@ -90,7 +90,7 @@ class Literal(Binding):
         fault = soapbody.getChild('Fault')
         p = self.translate_node(fault)
         if self.faults:
-            raise WebFault(str(p))
+            raise WebFault(unicode(p))
         else:
             return p.detail
         

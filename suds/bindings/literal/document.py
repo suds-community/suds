@@ -43,7 +43,7 @@ class Document(Literal):
                 raise TypeNotFound(ref)
             for e in type.get_children():
                 params.append((e.get_name(), e.get_type()))
-        self.log.debug('parameters %s for method %s', str(params), method)
+        self.log.debug('parameters %s for method %s', unicode(params), method)
         return params
 
     def returns_collection(self, method):
