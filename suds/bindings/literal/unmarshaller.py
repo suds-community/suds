@@ -111,7 +111,7 @@ class Unmarshaller:
     
     def bounded(self, nodename):
         """ determine if the named node is bounded (max=1) """
-        return (not unbounded(nodename))
+        return (not self.unbounded(nodename))
 
     def xstype(self, a):
         """ determine if the attr is a xsi:type """
