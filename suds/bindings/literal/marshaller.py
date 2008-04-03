@@ -50,10 +50,10 @@ class Marshaller:
             for item in object:
                 self.write_content(parent, property, tag, item)
             return
-        if tag.startswith('_'):
-            parent.attribute(tag[1:], unicode(object))
-        elif tag == 'text':
+        if tag == '__text__':
             parent.setText(unicode(object))
+        elif tag.startswith('_'):
+            parent.attribute(tag[1:], unicode(object))
         else:
             child = Element(tag)
             child.setText(unicode(object))
