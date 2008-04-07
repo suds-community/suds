@@ -45,7 +45,7 @@ class RPC(Literal):
             if type is None:
                 raise TypeNotFound(ref)
             params.append((p.attribute('name'), type.get_name()))
-        self.log.debug('parameters %s for method %s', unicode(params), method)
+        self.log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
     def returns_collection(self, method):

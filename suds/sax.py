@@ -14,7 +14,6 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from urllib import urlopen
-from suds import tostr
 from xml.sax import parse, parseString, ContentHandler
 
 
@@ -25,15 +24,6 @@ def splitPrefix(name):
             return tuple(name.split(':', 1))
     else:
         return (None, name)
-
-
-matcher = \
-{
-    'eq': lambda a,b: a == b,
-    'startswith' : lambda a,b: a.startswith(b),
-    'endswith' : lambda a,b: a.endswith(b),
-    'contains' : lambda a,b: b in a 
-}
 
 
 class Attribute:
@@ -98,7 +88,17 @@ class Attribute:
 
 
 class Element:
+    
     """ simple xml element """
+
+    matcher = \
+    {
+        'eq': lambda a,b: a == b,
+        'startswith' : lambda a,b: a.startswith(b),
+        'endswith' : lambda a,b: a.endswith(b),
+        'contains' : lambda a,b: b in a 
+    }
+
     def __init__(self, name, parent=None, ns=None):
         self.prefix, self.name = splitPrefix(name)
         self.expns = None
@@ -367,11 +367,11 @@ class Element:
         """ find all mapped prefixes for the specified namespace URI """
         result = []
         for item in self.nsprefixes.items():
-            if matcher[match](item[1], uri):
+            if self.matcher[match](item[1], uri):
                 prefix = item[0]
                 result.append(prefix)
         if self.parent is not None:
-            result += self.parent.findPrefixes(uri)
+            result += self.parent.findPrefixes(uri, match)
         return result
             
     def isempty(self):

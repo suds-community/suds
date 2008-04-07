@@ -33,13 +33,14 @@ class SchemaCollection(list):
                 return result
         return None
 
-    def custom(self, ref):
+    def custom(self, ref, context=None):
         """ get whether specified type reference is custom """
-        return self[0].custom(ref)
+        return self[0].custom(ref, context)
     
-    def builtin(self, ref):
+    def builtin(self, ref, context=None):
         """ get whether the specified type reference is an (xsd) builtin """
-        return self[0].builtin(ref)
+        return self[0].builtin(ref, context)
+
 
 class Schema:
     
@@ -47,6 +48,14 @@ class Schema:
     The schema is an objectification of a <schema/> (xsd) definition.
     It provides inspection, lookup and type resolution. 
     """
+
+    factory =\
+    {
+        'import' : lambda x, y: Import(x, y),
+        'complexType' : lambda x,y: Complex(x, y),
+        'simpleType' : lambda x,y: Simple(x, y),
+        'element' : lambda x,y: Element(x, y)
+    }
     
     def __init__(self, root, baseurl=None):
         """ construct the sequence object with a schema """
@@ -57,30 +66,16 @@ class Schema:
         self.hints = {}
         self.types = {}
         self.children = []
-        self.xsprefixes = self.__xsprefixes()
         self.__add_children()
                 
     def __add_children(self):
         """ populate the list of children """
-        factory =\
-            { 'import' : Import,
-              'complexType' : Complex,
-              'simpleType' : Simple,
-              'element' : Element }
         for node in self.root.children:
-            if node.name in factory:
-                cls = factory[node.name]
+            if node.name in self.factory:
+                cls = self.factory[node.name]
                 child = cls(self, node)
                 self.children.append(child)
         self.children.sort()
-        
-    def __xsprefixes(self):
-        """ get the prefix mapped to the XMLSchema URI """
-        uri = 'http://www.w3.org'
-        prefixes = self.root.findPrefixes(uri, 'startswith')
-        if len(prefixes) == 0:
-            self.log.warn('no prefixes for xmlns (%s) mapped' % uri)
-        return prefixes
                 
     def get_tns(self):
         """ get the target namespace """
@@ -105,18 +100,21 @@ class Schema:
                 self.types[path] = result
         return result
 
-    def custom(self, ref):
+    def custom(self, ref, context=None):
         """ get whether specified type reference is custom """
         if ref is None:
             return False
         else:
-            return ( not self.builtin(ref) )
+            return ( not self.builtin(ref, context) )
     
-    def builtin(self, ref):
+    def builtin(self, ref, context=None):
         """ get whether the specified type reference is an (xsd) builtin """
         try:
+            if context is None:
+                context = self.root
             prefix = splitPrefix(ref)[0]
-            return ( prefix in self.xsprefixes )
+            prefixes = context.findPrefixes('http://www.w3.org', 'startswith')
+            return ( prefix in prefixes )
         except:
             return False
     
