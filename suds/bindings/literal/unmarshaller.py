@@ -43,8 +43,10 @@ class Unmarshaller:
     
     def import_attrs(self, data, node):
         """import attribute nodes into the data structure"""
+        xsprefixes = \
+            node.findPrefixes('http://www.w3.org/2001/XMLSchema-instance')
         for attr in node.attributes:
-            if self.xstype(attr):
+            if attr.prefix in xsprefixes:
                 md = data.get_metadata()
                 md.xsd = Property()
                 md.xsd.type = attr.value
@@ -112,8 +114,3 @@ class Unmarshaller:
     def bounded(self, nodename):
         """ determine if the named node is bounded (max=1) """
         return (not self.unbounded(nodename))
-
-    def xstype(self, a):
-        """ determine if the attr is a xsi:type """
-        return ( self.schema.builtin(a.qname) and \
-                 a.name == 'type' )

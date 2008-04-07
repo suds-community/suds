@@ -76,8 +76,8 @@ class Schema:
         
     def __xsprefixes(self):
         """ get the prefix mapped to the XMLSchema URI """
-        uri = 'http://www.w3.org/2001/XMLSchema'
-        prefixes = self.root.findPrefixes(uri)
+        uri = 'http://www.w3.org'
+        prefixes = self.root.findPrefixes(uri, 'startswith')
         if len(prefixes) == 0:
             self.log.warn('no prefixes for xmlns (%s) mapped' % uri)
         return prefixes
@@ -166,10 +166,10 @@ class Schema:
         return self.root.resolvePrefix(p, d)
     
     def __str__(self):
-        return unicode(self.root)
+        return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        return self.__str__()
+        return unicode(self.root.str())
 
 
 class SchemaProperty:
@@ -248,16 +248,16 @@ class SchemaProperty:
         return self.schema.builtin(ref)
         
     def __str__(self):
-        return 'ns=%s, name=(%s), type=(%s)' \
+        return unicode(self).encode('utf-8')
+            
+    def __unicode__(self):
+        return u'ns=%s, name=(%s), type=(%s)' \
             % (self.namespace(),
                   self.get_name(),
                   self.get_type())
-            
-    def __unicode__(self):
-        return self.__str__()
     
     def __repr__(self):
-        return self.__str__()
+        return unicode(self).encode('utf-8')
 
 
 class Complex(SchemaProperty):
@@ -352,7 +352,7 @@ class Enumeration(SchemaProperty):
         
     def get_name(self):
         """ gets the <xs:enumeration value=""/> attribute value """
-        return self.root.attribute('attribute')
+        return self.root.attribute('value')
 
     
 class Element(SchemaProperty):

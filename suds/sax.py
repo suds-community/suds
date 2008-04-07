@@ -14,7 +14,9 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from urllib import urlopen
+from suds import tostr
 from xml.sax import parse, parseString, ContentHandler
+
 
 def splitPrefix(name):
     """ split the name into a tuple (prefix, name) """
@@ -23,6 +25,16 @@ def splitPrefix(name):
             return tuple(name.split(':', 1))
     else:
         return (None, name)
+
+
+matcher = \
+{
+    'eq': lambda a,b: a == b,
+    'startswith' : lambda a,b: a.startswith(b),
+    'endswith' : lambda a,b: a.endswith(b),
+    'contains' : lambda a,b: b in a 
+}
+
 
 class Attribute:
     """ simple attribute """
@@ -78,11 +90,11 @@ class Attribute:
 
     def __str__(self):
         """ get an xml string representation """
-        return '%s="%s"' % (self.qname(), self.value)
+        return unicode(self).encode('utf-8')
     
     def __unicode__(self):
         """ get an xml string representation """
-        return self.__str__()
+        return u'%s="%s"' % (self.qname(), self.value)
 
 
 class Element:
@@ -291,6 +303,8 @@ class Element:
         result = []
         for item in self.nsprefixes.items():
             result.append((item[0], item[1]))
+        for c in self.children:
+            result += c.flattened_nsprefixes()
         return result
         
     def qname(self):
@@ -349,11 +363,11 @@ class Element:
         else:
             return None
 
-    def findPrefixes(self, uri):
-        """ find a mapped prefixes for the specified namespace URI """
+    def findPrefixes(self, uri, match='eq'):
+        """ find all mapped prefixes for the specified namespace URI """
         result = []
         for item in self.nsprefixes.items():
-            if item[1] == uri:
+            if matcher[match](item[1], uri):
                 prefix = item[0]
                 result.append(prefix)
         if self.parent is not None:
@@ -404,10 +418,10 @@ class Element:
         return result
     
     def __str__(self):
-        return self.str()
+        return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        return self.__str__()
+        return self.str()
         
     def str(self, indent=0):
         result = ''
@@ -452,15 +466,15 @@ class Document(Element):
         return result
         
     def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
         result = '<?xml version="1.0" encoding="UTF-8"?>'
         root = self.root()
         if root is not None:
             result += '\n'
             result += root.str()
-        return result
-    
-    def __unicode__(self):
-        return self.__str__()
+        return unicode(result)
 
 
 class Handler(ContentHandler):
@@ -514,7 +528,36 @@ class Handler(ContentHandler):
  
     def top(self):
         return self.nodes[len(self.nodes)-1]
+
+
+class Matcher:
+    def __init__(self, s):
+        self.s = s
+
+class Eq(Matcher):
+    def __init__(self, s):
+        Matcher.__init__(s)
+    def __eq__(self, other):
+        return s == other
+
+class StartsWith(Matcher):
+    def __init__(self, s):
+        Matcher.__init__(s)
+    def __eq__(self, other):
+        return s.startswith(other)
     
+class EndsWith(Matcher):
+    def __init__(self, s):
+        Matcher.__init__(s)
+    def __eq__(self, other):
+        return s.endswith(other)
+
+class Contains(Matcher):
+    def __init__(self, s):
+        Matcher.__init__(s)
+    def __eq__(self, other):
+        return s in other
+
 
 class Parser:
     """ simple parser """

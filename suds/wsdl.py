@@ -115,7 +115,7 @@ class WSDL:
         return self.root.flattened_nsprefixes()
     
     def __str__(self):
-        return self.root.str()
+        return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        return self.__str__()
+        return unicode(self.root.str())

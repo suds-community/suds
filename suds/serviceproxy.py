@@ -82,6 +82,9 @@ class ServiceProxy(object):
             return (status, None)
         
     def __str__(self):
+        return unicode(self).encode('utf-8')
+        
+    def __unicode__(self):
         try:
             s = 'service (%s)' % self.wsdl.get_servicename()
             s += '\n\tprefixes:\n'
@@ -90,16 +93,13 @@ class ServiceProxy(object):
             s += '\n\tmethods:\n'
             for m in self.get_methods():
                 s += '\t\t%s\n' % m
-            return s
+            return unicode(s)
         except Exception, e:
             self.log.exception(e)
-            return 'service not available'
-        
-    def __unicode__(self):
-        return self.__str__()
+            return u'service not available'
         
     def __repr__(self):
-        return self.__str__()
+        return unicode(self).encode('utf-8')
     
     def __getattr__(self, name):
         try:
