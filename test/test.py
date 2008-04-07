@@ -22,6 +22,8 @@ from suds.schema import Schema
 from suds.property import Property
 from suds.wsdl import WSDL
 from suds.bindings.literal.marshaller import Marshaller
+from suds.bindings.literal.unmarshaller import Unmarshaller
+from suds.sax import Parser
 
 
 urlfmt = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/%s?wsdl'
@@ -41,6 +43,19 @@ def get_url(name):
     return urlfmt % services[name]
 
 class Test:
+    
+    def test_misc(self):
+        service = ServiceProxy(get_url('test'))
+        marshaller = Marshaller(service.binding.schema)
+        unmarshaller = Unmarshaller(service.binding.schema)
+
+        p = Property()
+        p.first = u'jeff'+unichr(1234)
+        p.age = u'44'
+        x = str( p)
+
+        p = unmarshaller.process(Parser().parse(file='/home/jortel/Desktop/x.xml'))
+        print p
     
     def basic_test(self):
         
@@ -309,7 +324,9 @@ class Test:
         # get user preferences
         #
         print 'loadUserConfiguration()'
-        prefs = service.loadUserConfiguration(subject.id)
+        id = subject.id
+        print subject
+        prefs = service.loadUserConfiguration(id)
         print 'Reply:\n(\n%s\n)\n' % str(prefs)
         
 
@@ -492,9 +509,10 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    test.basic_test()
-    test.rpc_test()
-    #test.auth_test()
-    #test.resource_test()
-    #test.perspectives_test()
-    #test.contentsource_test()
+    #test.test_misc()
+    #test.basic_test()
+    #test.rpc_test()
+    test.auth_test()
+    test.resource_test()
+    test.perspectives_test()
+    test.contentsource_test()
