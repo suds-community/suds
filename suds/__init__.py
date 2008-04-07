@@ -27,7 +27,7 @@ class MethodNotFound(Exception):
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return 'service method: %s not-found' % tostr(self.name)
+        return 'service method: %s not-found' % unicode(self.name)
     
 class TypeNotFound(Exception):
     def __init__(self, name):
@@ -35,7 +35,7 @@ class TypeNotFound(Exception):
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return 'WSDL type: %s not-found' % tostr(self.name)
+        return 'WSDL type: %s not-found' % unicode(self.name)
     
 class BuildError(Exception):
     def __init__(self, type):
@@ -49,7 +49,7 @@ class BuildError(Exception):
             the object you requested could not be constructed.  It is recommended
             that you construct the type manually uisng a Property object.
             Please notify the project mantainer of this error.
-            """ % tostr(self.type)
+            """ % unicode(self.type)
     
 class WebFault(Exception):
     def __init__(self, type):
@@ -57,7 +57,7 @@ class WebFault(Exception):
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return 'service endpoint raised fault %s\n' % tostr(self.type)
+        return 'service endpoint raised fault %s\n' % unicode(self.type)
 
 #
 # Logging

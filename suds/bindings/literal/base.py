@@ -65,7 +65,7 @@ class Literal(Binding):
                 params += self.param(method_name, tag, a)
             p += 1
         msg = docfmt % (body[0], m[0], params, m[1], body[1])
-        return msg
+        return msg.encode('utf-8')
     
     def get_reply(self, method_name, msg):
         """extract the content from the specified soap reply message"""
@@ -133,7 +133,7 @@ class Literal(Binding):
             return tags 
         if isinstance(object, Property):
             return self.marshaller.process(name, object)
-        return '<%s>%s</%s>' % (name, object, name)
+        return '<%s>%s</%s>' % (name, tostr(object), name)
         
     def body(self):
         """get the soap body fragment tag template"""

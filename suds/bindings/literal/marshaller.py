@@ -36,6 +36,9 @@ class Marshaller:
     def write_content(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """
         if object is None:
+            child = Element(tag)
+            child.attribute('xsi:nil', 'true')
+            parent.append(child)
             return
         if isinstance(object, dict):
             object = Property(object)
