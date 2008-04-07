@@ -48,9 +48,11 @@ class Property:
 
     def get_items(self):
         """ get the property's collection of items."""
+        items = []
         for k in self.__keylist__:
             v = self.__data__[k]
-            yield (k, v)
+            items.append((k,v))
+        return items
     
     def get(self, **kwargs):
         """get a property(s) value by name while specifying a default: property=default, """
@@ -171,9 +173,9 @@ class Property:
     def __unicode__(self):
         """ get a string representation """
         if self.__type__ is None:
-            return propertystring(self.__data__)
+            return propertystring(self)
         else:
-            return u'(%s)%s' % (self.__type__, propertystring(self.__data__))
+            return u'(%s)%s' % (self.__type__, propertystring(self))
     
     def __repr__(self):
         """ get a string representation """
@@ -214,19 +216,43 @@ class Printer:
         """ print the specified object using the specified indent (n) and newline (nl). """
         if object is None:
             return 'None'
-        if isinstance(object, Property):
-            object = object.dict()
         if self.complex(object):
+            if isinstance(object, Property):
+                return self.print_property(object, n+2, nl)
             if isinstance(object, dict):
                 return self.print_dict(object, n+2, nl)
             if isinstance(object, (list,tuple)):
                 return self.print_collection(object, n+2)
+        if isinstance(object, Property):
+            object = object.dict()
         if isinstance(object, (dict,list,tuple)):
             if len(object) > 0:
                 return tostr(object)
             else:
                 return '<empty>'
         return '(%s)' % tostr(object)
+
+    def print_property(self, p, n, nl=False):
+        """ print the specified property using the specified indent (n) and newline (nl). """
+        s = []
+        if nl:
+            s.append('\n')
+            s.append(self.indent(n))
+        s.append('{')
+        for item in p.get_items():
+            s.append('\n')
+            s.append(self.indent(n+1))
+            if isinstance(item[1], (list,tuple)):            
+                s.append(item[0])
+                s.append('[]')
+            else:
+                s.append(item[0])
+            s.append(' = ')
+            s.append(self.process(item[1], n, True))
+        s.append('\n')
+        s.append(self.indent(n))
+        s.append('}')
+        return ''.join(s)
     
     def print_dict(self, d, n, nl=False):
         """ print the specified dictionary using the specified indent (n) and newline (nl). """
@@ -262,12 +288,12 @@ class Printer:
     
     def complex(self, object):
         """ get whether the object is a complex type """
-        if isinstance(object, dict) and len(object) > 1:
+        if isinstance(object, (Property, dict)) and len(object) > 1:
             return True
         if isinstance(object, (list,tuple)):
             if len(object) > 1: return True
             for v in object:
-                if isinstance(v, (dict,list,tuple)):
+                if isinstance(v, (Property, dict,list,tuple)):
                     return True
             return False
         return False
