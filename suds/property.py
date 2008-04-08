@@ -20,9 +20,11 @@ class Property:
     provides an object wrapper around a complex dictionary.
     """
     __self__ = '__self__'    
-    __protected__ = ('__data__', '__strict__', '__type__', '__metadata__', '__keylist__')
+    __protected__ = \
+        ('__data__', '__strict__', '__lazy__', '__type__',
+         '__metadata__', '__keylist__', '__printer__')
 
-    def __init__(self, data=None, strict=False):
+    def __init__(self, data=None, strict=False, lazy=False):
         """
         data -- a dictionary containing properties.
         strict -- flag indicates whether __getattr__() will throw an exception
@@ -34,8 +36,10 @@ class Property:
             data = data.dict()
         self.__data__ = data
         self.__strict__ = strict
+        self.__lazy__ = lazy
         self.__type__ = None
         self.__keylist__ = []
+        self.__printer__ = Printer()
         self.__metadata__ = {}
             
     def get_names(self):
@@ -141,6 +145,9 @@ class Property:
         except KeyError:
             if self.__strict__:
                 raise AttributeError, name
+            if self.__lazy__:
+                result = Property()
+                self.set(name, result)
         return result
     
     def __setattr__(self, name, value):
@@ -173,9 +180,10 @@ class Property:
     def __unicode__(self):
         """ get a string representation """
         if self.__type__ is None:
-            return propertystring(self)
+            return self.__printer__.tostr(self)
         else:
-            return u'(%s)%s' % (self.__type__, propertystring(self))
+            return u'(%s)%s' % \
+                (self.__type__, self.__printer__.tostr(self))
     
     def __repr__(self):
         """ get a string representation """
@@ -288,12 +296,16 @@ class Printer:
     
     def complex(self, object):
         """ get whether the object is a complex type """
-        if isinstance(object, (Property, dict)) and len(object) > 1:
-            return True
+        if isinstance(object, (Property, dict)):
+            if len(object) > 1:
+                return True
+            for item in object.get_items():
+                if self.complex(item[1]):
+                    return True
         if isinstance(object, (list,tuple)):
             if len(object) > 1: return True
-            for v in object:
-                if isinstance(v, (Property, dict,list,tuple)):
+            for c in object:
+                if self.complex(c):
                     return True
             return False
         return False
@@ -302,11 +314,4 @@ class Printer:
         """ generate (n) spaces for indent. """
         return '%*s'% (n*3, ' ')
 
-
-#
-# printing utility
-# 
-def propertystring(object):
-    """ get a string representation of a property object """
-    return Printer().tostr(object)
         

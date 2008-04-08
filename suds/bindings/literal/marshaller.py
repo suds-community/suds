@@ -15,14 +15,16 @@
 
 from suds import *
 from suds.property import Property
+from suds.bindings.binding import Binding
 from suds.sax import Element
 
 class Marshaller:
     """ marshal a property object."""
 
-    def __init__(self, schema):
+    def __init__(self, binding):
         """constructor """
-        self.schema = schema
+        self.binding = binding
+        self.schema = binding.schema
 
     def process(self, root, property):
         """ get the xml string value of the property and root name """
@@ -37,7 +39,8 @@ class Marshaller:
         """ write the content of the property object using the specified tag """
         if object is None:
             child = Element(tag)
-            child.attribute('xsi:nil', 'true')
+            if self.binding.nil_supported:
+                child.attribute('xsi:nil', 'true')
             parent.append(child)
             return
         if isinstance(object, dict):

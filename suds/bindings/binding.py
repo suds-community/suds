@@ -17,12 +17,14 @@ from suds import *
 from suds.sax import Parser
 
 class Binding:
+    """ The soap binding base class """
 
     def __init__(self, wsdl, faults):
-        self.log = logger('binding')
-        self.faults = faults
-        self.parser = Parser()
         self.wsdl = wsdl
+        self.faults = faults
+        self.log = logger('binding')
+        self.parser = Parser()
+        self.nil_supported = True
         
     def get_method_descriptions(self):
         """get a list of methods provided by this service"""

@@ -24,7 +24,8 @@ class Unmarshaller:
     
     booleans = { 'true':True, 'false':False }
     
-    def __init__(self, schema):
+    def __init__(self, binding):
+        self.binding = binding
         self.schema = schema
         self.path = []
             
@@ -92,11 +93,17 @@ class Unmarshaller:
         result equal to the value of the text node.
         """
         try:
-            if len(data) == 0:
-                return None
+            if self.binding.nil_supported:
+                if node.isnil():
+                    return None
+                if len(data) == 0:
+                    return ''
+            else:
+                 if len(data) == 0:
+                     return None
             if len(data) == 1 and self.bounded(node.name):
                 return data['__text__']
-        except:
+        except Exception, e:
             pass
         return data
     
