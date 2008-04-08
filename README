@@ -264,6 +264,8 @@ version-0.1.7 (04-08-08):
   
   * Property maintains attribute names (keys) in the order added. This also means
     that get_item() and get_names() return ordered values.
+     ( Although, I suspect ordering really needs to be done in the marshaller using the
+        order specified in the wsdl/schema )
   
   Major refactoring of the schema.py. The primary goals is perparation for type lookups that are
   fully qualified by namespace.  Once completed, the prefixes on attribute values will not longer
