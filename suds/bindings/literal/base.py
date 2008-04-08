@@ -45,8 +45,8 @@ class Literal(Binding):
         """constructor """
         Binding.__init__(self, wsdl, faults)
         self.schema = wsdl.get_schema()
-        self.marshaller = Marshaller(self.schema)
-        self.unmarshaller = Unmarshaller(self.schema)
+        self.marshaller = Marshaller(self)
+        self.unmarshaller = Unmarshaller(self)
         self.builder = Builder(self.schema)
         
     def get_message(self, method_name, *args):

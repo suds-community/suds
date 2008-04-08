@@ -115,15 +115,15 @@ def tostr(object):
             if isinstance(item, basestring):
                 s.append(item)
                 continue
-            if hasattr(item[1], '__unicode__'):
+            if hasattr(item[0], '__unicode__'):
                 s.append(unicode(item[0]))
             else:
-                s.append(str(item))
-            s.append(',')
+                s.append(str(item[0]))
+            s.append(' = ')
             if hasattr(item[1], '__unicode__'):
                 s.append(unicode(item[1]))
             else:
-                s.append(str(item))
+                s.append(str(item[1]))
         s.append('}')
         return ''.join(s)
     if hasattr(object, '__unicode__'):

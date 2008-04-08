@@ -18,7 +18,9 @@ from suds import *
 from wsdl import WSDL
 
 class ServiceProxy(object):
+    
     """ a lightweight soap based web service proxy"""
+
     def __init__(self, url, faults=True):
         self.faults = faults
         self.wsdl = WSDL(url)
@@ -88,7 +90,9 @@ class ServiceProxy(object):
         try:
             s = 'service (%s)' % self.wsdl.get_servicename()
             s += '\n\tprefixes:\n'
-            for p in self.wsdl.mapped_prefixes():
+            prefixes = self.wsdl.mapped_prefixes()
+            prefixes.sort()
+            for p in prefixes:
                 s += '\t\t%s = "%s"\n' % p
             s += '\n\tmethods:\n'
             for m in self.get_methods():

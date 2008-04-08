@@ -21,6 +21,7 @@ from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
 from suds.property import Property
 from suds.wsdl import WSDL
+from suds.bindings.binding import Binding
 from suds.bindings.literal.marshaller import Marshaller
 from suds.bindings.literal.unmarshaller import Unmarshaller
 from suds.sax import Parser
@@ -46,8 +47,39 @@ class Test:
     
     def test_misc(self):
         service = ServiceProxy(get_url('test'))
-        marshaller = Marshaller(service.binding.schema)
-        unmarshaller = Unmarshaller(service.binding.schema)
+        marshaller = Marshaller(service.binding)
+        unmarshaller = Unmarshaller(service.binding)
+        
+        x = """
+        <person xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <name>
+                <first>jeff</first>
+                <middle/>
+                <last xsi:nil="true"/>
+            </name>
+        </person>
+        """
+        node = Parser().parse(string=x).root()
+        service.binding.nil_supported = True
+        p = unmarshaller.process(node)
+        print p
+        service.binding.nil_supported = False
+        p = unmarshaller.process(node)
+        print p
+        service.binding.nil_supported = True
+        print marshaller.process('dog', p)
+        service.binding.nil_supported = False
+        print marshaller.process('dog', p)
+
+        
+        p = Property()
+        p2 = Property()
+        p2.msg='hello'
+        p2.xx =10
+        p.name = ['jeff', p2]
+        print p
+        
+        
 
         p = Property()
         p.first = u'jeff'+unichr(1234)
@@ -73,7 +105,8 @@ class Test:
         # create a name object using the wsdl
         #
         name = service.get_instance('tns:name')
-        name.first = 'jeff'
+        name.first = u'jeff'+unichr(1234)
+        name.middle = None
         name.last = 'ortel'
         
         #
@@ -114,14 +147,14 @@ class Test:
         #
         print 'addPersion()'
         result = service.addPerson(person)
-        print '\nreply(\n%s\n)\n' % str(result)
+        print '\nreply(\n%s\n)\n' % result.encode('utf-8')
         
         #
         # create a new name object used to update the person
         #
         newname = service.get_instance('name')
         newname.first = 'Todd'
-        newname.last = 'Sanders'
+        newname.last = None
         
         #
         # update the person's name (using the webservice) and print return person object
@@ -306,7 +339,7 @@ class Test:
         subject = service.login('rhqadmin', 'rhqadmin')
         print '\nreply(\n%s\n)\n' % str(subject)
         
-        marshaller = Marshaller(service.binding.schema)
+        marshaller = Marshaller(service.binding)
         print marshaller.process('subject', subject)
         
         #
@@ -509,9 +542,9 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    #test.test_misc()
-    #test.basic_test()
-    #test.rpc_test()
+    test.test_misc()
+    test.basic_test()
+    test.rpc_test()
     test.auth_test()
     test.resource_test()
     test.perspectives_test()

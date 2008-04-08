@@ -51,7 +51,7 @@ class Attribute:
         """ set the attributes value """
         self.value = encode(value)
         
-    def getValue(self, default=None):
+    def getValue(self, default=''):
         """ get the attributes value with optional default """
         result = decode(self.value)
         if result is None:
@@ -255,18 +255,26 @@ class Element:
             child.parent = None
         return detached
     
-    def attrib(self, name):
-        """ get an attribute by name """
+    def attrib(self, name, ns=None):
+        """ get an attribute by name and (optional) namespace """
         result = None
+        if len(self.attributes) == 0:
+            return result
+        if ns is None:
+            p, n = splitPrefix(name)
+            p = [p]
+        else:
+            prefixes = self.findPrefixes(ns[1])
+            p, n = (prefixes, name)
         for a in self.attributes:
-            if a.name == name:
+            if a.prefix in p and a.name == n:
                 result = a
                 break
         return result
     
-    def attribute(self, name, value=None, default=None):
-        """ get/set an attribute by name """
-        attr = self.attrib(name)
+    def attribute(self, name, value=None, default=None, ns=None):
+        """ get/set an attribute by name and optional namespace """
+        attr = self.attrib(name, ns)
         if value is None:
             if attr is not None:
                 if attr.value is None:
@@ -279,6 +287,7 @@ class Element:
                 self.append(attr)
             else:
                 attr.setValue(value)
+            return attr
                 
     def flattenedAttributes(self):
         """ get flattened list of attributes for branch in the tree """
@@ -302,9 +311,12 @@ class Element:
         """ get a flattened list of all ns prefixes for this branch in the tree """
         result = []
         for item in self.nsprefixes.items():
+            if item in result:
+                continue
             result.append((item[0], item[1]))
         for c in self.children:
-            result += c.flattened_nsprefixes()
+            cp = c.flattened_nsprefixes()
+            result += [item for item in cp if item not in result]
         return result
         
     def qname(self):
@@ -378,6 +390,15 @@ class Element:
         """ get whether the element has no children """
         return len(self.children) == 0 and \
             self.text is None
+            
+    def isnil(self):
+        """ get whether the element is xsi:nil """
+        xsi = (None, 'http://www.w3.org/2001/XMLSchema-instance')
+        nilattr = self.attrib('nil', ns=xsi)
+        if nilattr is None:
+            return False
+        else:
+            return ( nilattr.getValue().lower() == 'true' )
             
     def applyns(self, ns):
         """ apply the namespace to this node """
@@ -517,8 +538,13 @@ class Handler(ContentHandler):
  
     def characters(self, content):
         text = unicode(content).strip()
-        if len(content) > 0:
-            self.top().text = text;
+        if len(content) == 0:
+            return
+        node = self.top()
+        if node.text is None:
+            node.text = text
+        else:
+            node.text += text
 
     def push(self, node):
         self.nodes.append(node)
@@ -528,35 +554,6 @@ class Handler(ContentHandler):
  
     def top(self):
         return self.nodes[len(self.nodes)-1]
-
-
-class Matcher:
-    def __init__(self, s):
-        self.s = s
-
-class Eq(Matcher):
-    def __init__(self, s):
-        Matcher.__init__(s)
-    def __eq__(self, other):
-        return s == other
-
-class StartsWith(Matcher):
-    def __init__(self, s):
-        Matcher.__init__(s)
-    def __eq__(self, other):
-        return s.startswith(other)
-    
-class EndsWith(Matcher):
-    def __init__(self, s):
-        Matcher.__init__(s)
-    def __eq__(self, other):
-        return s.endswith(other)
-
-class Contains(Matcher):
-    def __init__(self, s):
-        Matcher.__init__(s)
-    def __eq__(self, other):
-        return s in other
 
 
 class Parser:

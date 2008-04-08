@@ -112,6 +112,7 @@ class WSDL:
         return None
             
     def mapped_prefixes(self):
+        """ get a list of mapped prefixes """
         return self.root.flattened_nsprefixes()
     
     def __str__(self):
