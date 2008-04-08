@@ -52,11 +52,9 @@ class Property:
 
     def get_items(self):
         """ get the property's collection of items."""
-        items = []
         for k in self.__keylist__:
             v = self.__data__[k]
-            items.append((k,v))
-        return items
+            yield (k,v)
     
     def get(self, **kwargs):
         """get a property(s) value by name while specifying a default: property=default, """
