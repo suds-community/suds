@@ -458,7 +458,6 @@ class Import(SchemaProperty):
             return
         prefixes = (imp_root.findPrefix(impuri), self.root.findPrefix(impuri))
         if prefixes[1] is None:
-            self.log.debug('imported (%s), prefix not remapped', impuri)
             return
         self.log.debug('imported (%s), prefix remapped as (%s)', impuri, prefixes[1])
         self.imported.tns = (prefixes[1], impuri)
