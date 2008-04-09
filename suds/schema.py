@@ -444,7 +444,7 @@ class Import(SchemaProperty):
             self.__update_tns(imp_root)
             self.root.parent.replaceChild(self.root, imp_root)
             self.root = imp_root
-            self.log.info('schema at (%s)\n\timported with tns=%s', uri, self.namespace())
+            self.log.debug('schema at (%s)\n\timported with tns=%s', uri, self.namespace())
         except tuple, e:
             self.log.error('imported schema at (%s), not-found\n\t%s', uri, unicode(e))
             
@@ -457,6 +457,10 @@ class Import(SchemaProperty):
         if impuri is None:
             return
         prefixes = (imp_root.findPrefix(impuri), self.root.findPrefix(impuri))
+        if prefixes[1] is None:
+            self.log.debug('imported (%s), prefix not remapped', impuri)
+            return
+        self.log.debug('imported (%s), prefix remapped as (%s)', impuri, prefixes[1])
         self.imported.tns = (prefixes[1], impuri)
         if prefixes[0] is None:
             return
