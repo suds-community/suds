@@ -81,10 +81,13 @@ def logger(name=None):
 # Utility
 #
 
-def tostr(object):
+def tostr(object, encoding=None):
     """ get a unicode safe string representation of an object """
     if isinstance(object, basestring):
-        return object
+        if encoding is None:
+            return object
+        else:
+            return object.encode(encoding)
     if isinstance(object, tuple):
         s = ['(']
         for item in object:
@@ -95,6 +98,7 @@ def tostr(object):
                 s.append(unicode(item))
             else:
                 s.append(str(item))
+            s.append(', ')
         s.append(')')
         return ''.join(s)
     if isinstance(object, list):
@@ -107,6 +111,7 @@ def tostr(object):
                 s.append(unicode(item))
             else:
                 s.append(str(item))
+            s.append(', ')
         s.append(']')
         return ''.join(s)
     if isinstance(object, dict):
@@ -124,6 +129,7 @@ def tostr(object):
                 s.append(unicode(item[1]))
             else:
                 s.append(str(item[1]))
+            s.append(', ')
         s.append('}')
         return ''.join(s)
     if hasattr(object, '__unicode__'):

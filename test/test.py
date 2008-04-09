@@ -1,6 +1,5 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -34,9 +33,9 @@ services = \
     'test':'WebServiceTestBean', 
     'rpc':'RPCEncodedBean', 
     'auth':'SubjectManagerBean', 
-    'resources':'ResourceManagerBean',
-    'perspectives':'PerspectiveManagerBean',
-    'content':'ContentManagerBean',
+    'resources':'ResourceManagerBean', 
+    'perspectives':'PerspectiveManagerBean', 
+    'content':'ContentManagerBean', 
     'contentsource':'ContentSourceManagerBean'
 }
 
@@ -71,20 +70,17 @@ class Test:
         service.binding.nil_supported = False
         print marshaller.process('dog', p)
 
-        
         p = Property()
         p2 = Property()
         p2.msg='hello'
         p2.xx =10
         p.name = ['jeff', p2]
         print p
-        
-        
 
         p = Property()
         p.first = u'jeff'+unichr(1234)
         p.age = u'44'
-        x = str( p)
+        x = str(p)
 
         p = unmarshaller.process(Parser().parse(file='/home/jortel/Desktop/x.xml'))
         print p
@@ -209,7 +205,7 @@ class Test:
         try:
             print 'testExceptions()'
             result = service.testExceptions()
-            print '\nreply( %s )\n' % str(result)
+            print '\nreply( %s )\n' % tostr(result)
         except Exception, e:
             print e
             
@@ -544,8 +540,8 @@ if __name__ == '__main__':
     test = Test()
     test.test_misc()
     test.basic_test()
-    test.rpc_test()
-    test.auth_test()
-    test.resource_test()
-    test.perspectives_test()
-    test.contentsource_test()
+    #test.rpc_test()
+    #test.auth_test()
+    #test.resource_test()
+    #test.perspectives_test()
+    #test.contentsource_test()
