@@ -42,7 +42,7 @@ class ServiceProxy(object):
     def _send(self, method, *args):
         """"send the required soap message to invoke the specified method"""
         result = None
-        headers = { 'Content-Type' : 'text/xml' }
+        headers = self.__headers()
         location = self.wsdl.get_location().encode('utf-8')
         msg = self.binding.get_message(method.name, *args)
         self.log.debug('sending to (%s)\nmessage:\n%s', location, msg)
@@ -54,6 +54,11 @@ class ServiceProxy(object):
         except HTTPError, e:
             result = self.__failed(method, e)
         return result
+    
+    def __headers(self):
+        """ get http headers """
+        return \
+            { 'Content-Type' : 'text/xml' }
     
     def __succeeded(self, method, reply):
         """ request succeeded, process reply """
