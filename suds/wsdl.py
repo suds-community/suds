@@ -64,18 +64,7 @@ class WSDL:
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""
-        result = []
-        url = self.root.childAtPath('service/port/address').attribute('location')
-        parts = urlparse(url)
-        try:
-            host, port = parts[1].split(':')
-            result.append(host)
-            result.append(port)
-        except:
-            result.append(parts[1])
-            result.append(0)
-        result.append(parts[2])
-        return result
+        return self.root.childAtPath('service/port/address').attribute('location')
     
     def get_schema(self):
         """ get a collective schema of all <schema/> nodes """

@@ -13,7 +13,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-import httplib
+from urllib2 import Request, urlopen, HTTPError
 from suds import *
 from wsdl import WSDL
 
@@ -42,44 +42,42 @@ class ServiceProxy(object):
     def _send(self, method, *args):
         """"send the required soap message to invoke the specified method"""
         result = None
-        location = self.wsdl.get_location()
+        headers = { 'Content-Type' : 'text/xml' }
+        location = self.wsdl.get_location().encode('utf-8')
         msg = self.binding.get_message(method.name, *args)
-        http = httplib.HTTP(location[0], int(location[1]))
-        http.putrequest("POST", location[2])
-        http.putheader("Host", location[0])
-        http.putheader("user-agent", "Python post")
-        http.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
-        http.putheader("Content-length", "%d" % len(msg))
-        http.putheader("SOAPAction", "\"\"")
-        http.endheaders()
-        self.log.debug('sending\ndestination:\n  (%s)\nmessage:%s', location, msg)
+        self.log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
-            http.send(msg)
-            result = self.__receive(http, method)
-        finally:
-            http.close()
-        return result 
+            request = Request(location, msg, headers)
+            fp = urlopen(request)
+            reply = fp.read()
+            result = self.__succeeded(method, reply)
+        except HTTPError, e:
+            result = self.__failed(method, e)
+        return result
+    
+    def __succeeded(self, method, reply):
+        """ request succeeded, process reply """
+        self.log.debug('http succeeded:\n%s', reply)
+        if len(reply) > 0:
+            p = self.binding.get_reply(method.name, reply)
+            if self.faults:
+                return p
+            else:
+                return (200, p)
+        else:
+            return (200, None)
         
-    def __receive(self, http, method):
-        """receive the http reply for a sent message"""
-        status, message, header = http.getreply()
-        self.log.debug('received response (%s, %s)', status, message)
-        reply = http.getfile().read()
-        self.log.debug('reply (%s)', reply)
+    def __failed(self, method, error):
+        """ request failed, process reply based on reason """
+        status, reason = (error.code, error.msg)
+        reply = error.fp.read()
         if status == 500:
             if len(reply) > 0:
                 return (status, self.binding.get_fault(reply))
             else:
                 return (status, None)
-        if status == 200:
-            if len(reply) > 0:
-                p = self.binding.get_reply(method.name, reply)
-                if self.faults:
-                    return p
-                else:
-                    return (status, p)
         if self.faults:
-            raise Exception('failed, http status (%s)', status)
+            raise Exception((status, reason))
         else:
             return (status, None)
         
@@ -133,7 +131,3 @@ class ServiceProxy(object):
                     self.proxy.log.debug('fault (%s)', e)
                     result = (500, e)
             return result
-                    
-        
-
-
