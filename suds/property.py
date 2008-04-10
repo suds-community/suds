@@ -14,15 +14,17 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import tostr
+import traceback
 
 class Property:
     """
     provides an object wrapper around a complex dictionary.
     """
-    __self__ = '__self__'    
+    __self__ = '__self__'
+    __flags__ = ('__strict__', '__lazy__')
     __protected__ = \
-        ('__data__', '__strict__', '__lazy__', '__type__',
-         '__metadata__', '__keylist__', '__printer__')
+        ('__data__', '__type__', '__metadata__', '__keylist__', '__printer__') \
+        + __flags__
 
     def __init__(self, data=None, strict=False, lazy=False):
         """
@@ -62,7 +64,7 @@ class Property:
         for k in kwargs.keys():
             default = kwargs[k]
             value = self.__data__.get(k, default)
-            result.append(self.translate(value))
+            result.append(self.__xlate(value))
         if len(result) == 1:
             return result[0]
         else:
@@ -94,8 +96,15 @@ class Property:
                 del self.__data__[k]
                 pruned.append(k)
         return pruned
+    
+    def __propagate(self, fn):
+        """ propagate function/lambda (fn) on property tree """
+        for item in self.__data__.values():
+            if isinstance(item, Property):
+                fn(item)
+                item.__propagate(fn)
             
-    def translate(self, v):
+    def __xlate(self, v):
         """
         translate the specified value to ensure that dictionaries and collections
         of dictionaries are returned as a Propety or collection of properties
@@ -103,12 +112,12 @@ class Property:
         if isinstance(v, dict):
             return Property(v)
         if isinstance(v, tuple):
-             return self.translate_tuple(v)
+             return self.__xlate_tuple(v)
         if isinstance(v, list):
-            return self.translate_list(v)
+            return self.__xlate_list(v)
         return v
     
-    def translate_list(self, collection):
+    def __xlate_list(self, collection):
         """
         translate the specified collection of dictionaries
         into a collection of Propety objects.
@@ -120,7 +129,7 @@ class Property:
             i += 1
         return collection
     
-    def translate_tuple(self, collection):
+    def __xlate_tuple(self, collection):
         """
         translate the specified collection of dictionaries
         into a collection of Propety objects.
@@ -139,13 +148,20 @@ class Property:
         if name in Property.__protected__:
             return self.__dict__[name] 
         try:            
-            result = self.translate(self.__data__[name])
+            result = self.__xlate(self.__data__[name])
+            if self.__lazy__ and \
+                not isinstance(result, Property):
+                self.__lazy__ = False
+                fn = lambda p: (p.__setattr__('__lazy__', False))
+                self.__propagate(fn)
         except KeyError:
             if self.__strict__:
                 raise AttributeError, name
             if self.__lazy__:
-                result = Property()
-                self.set(name, result)
+                builtin =  name.startswith('__') and name.endswith('__')
+                if not builtin:
+                    result = Property(lazy=self.__lazy__)
+                    self.set(name, result)
         return result
     
     def __setattr__(self, name, value):
@@ -165,7 +181,7 @@ class Property:
 
     def __getitem__(self, name):
         """ dictionary accessor """
-        return self.translate(self.__data__[name])
+        return self.__xlate(self.__data__[name])
         
     def __setitem__(self, name, value):
         """ dictionary accessor """

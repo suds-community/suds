@@ -45,6 +45,7 @@ def get_url(name):
 class Test:
     
     def test_misc(self):
+        
         service = ServiceProxy(get_url('test'))
         marshaller = Marshaller(service.binding)
         unmarshaller = Unmarshaller(service.binding)
