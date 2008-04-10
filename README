@@ -8,8 +8,10 @@ The primary classes in the package are the:
   * no class generation
   * provides an object-like API.
   * reads wsdl at runtime for encoding/decoding
-  * provides for Document-Literal style SOAP binding
-  * RPC-Literal (under construction)
+  * provides for the following SOAP (style) binding:
+     * Document/Literal
+     * RPC/Literal
+     * RPC/Encoded (section 5) ... under construction
   
 Logging:
 
@@ -17,9 +19,9 @@ By default, the suds package logs at LEVEL=INFO using a console handler.
 All messages are at level DEBUG or ERROR so, no messages are written
 unless the user does the following: suds.logger(<desired package>).setLevel(logging.<desired-level>)
 A common example (show sent/received soap messages):
->
-> suds.logger('suds.serviceproxy').setLevel(logging.DEBUG)
->
+  >
+  > suds.logger('suds.serviceproxy').setLevel(logging.DEBUG)
+  >
 
 
 Basic usage:
@@ -27,19 +29,19 @@ Basic usage:
 You will need to know the url for WSDL for each service used.  Simply create
 a proxy for that service as follows:
 
-> from serviceproxy import ServiceProxy
->
->myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
->
->myservice = ServiceProxy(url)
+  > from serviceproxy import ServiceProxy
+  >
+  > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+  >
+  > myservice = ServiceProxy(url)
 
 
 You can inspect service object with: __str()__ or __repr()__ as follows to get a list of
 methods provide by the service:
 
->
->print myservice
->
+  >
+  > print myservice
+  >
 service (WebServiceTestBeanService)
 methods:
   addPerson(person{person})
@@ -63,7 +65,7 @@ methods:
  > person = myservice.get_instance('person')
  > print person
  >
-{
+  {
     phone = []
     age = NONE
     name = 
@@ -71,54 +73,54 @@ methods:
             last = NONE
             first = NONE
         }
- }
+   }
  
  As you can see, the object is created as defined by the WSDL.  The list of phone
  number is empty so we'll have to create one:
  
->
-> phone = service.get_instance('phone')
-> phone.npa = 202
-> phone.nxx = 555
-> phone.number = 1212
->
+  >
+  > phone = service.get_instance('phone')
+  > phone.npa = 202
+  > phone.nxx = 555
+  > phone.number = 1212
+  >
  
  ... and the name and age need to be set and we need to create a
  name object first:
  
- >
-> name = service.get_instance('name')
-> name.first = 'Elmer'
-> name.last = 'Fudd'
->
+  >
+  > name = service.get_instance('name')
+  > name.first = 'Elmer'
+  > name.last = 'Fudd'
+  >
 
 Now, let's set the properties of our person object
 
->
-> person.name = name
-> person.age = 35
-> person.phone = [phone]
->
+  >
+  > person.name = name
+  > person.age = 35
+  > person.phone = [phone]
+  >
 
 ... and invoke our method named addPerson() as follows:
 
->
-> try:
->    person_added = myservice.addPerson(person)
-> except WebFault, e:
->    print e
->
+  >
+  > try:
+  >    person_added = myservice.addPerson(person)
+  > except WebFault, e:
+  >    print e
+  >
 
 It's that easy.
 
 The ServiceProxy can be configured to throw web faults as WebFault or
 to return a tuple (<status>, <returned-value>) instead as follows:
 
->
-> myservice = ServiceProxy(url, faults=False)
-> result = myservice.addPerson(person)
-> print result
-( 200, person ...)
+  >
+  > myservice = ServiceProxy(url, faults=False)
+  > result = myservice.addPerson(person)
+  > print result
+  ( 200, person ...)
 
 Enumerations are handled as follows:
 
@@ -136,10 +138,10 @@ Let's say the wsdl defines the following enumeration,
  used.  Misspelled references to elements of the enum will raise a
  AttrError exception as:
  
- >
-> resourceCategory = myservice.get_enum('resourceCategory')   <--- None if not found.
-> myservice.getResourceByCategory(resourceCategory.PLATFORM)
->
+  >
+  > resourceCategory = myservice.get_enum('resourceCategory')   <--- None if not found.
+  > myservice.getResourceByCategory(resourceCategory.PLATFORM)
+  >
 
 The get_instance() method should always be used becuase it returns objects that already
 have the proper structure and xsi:type="" attribute defined.  Since xsd supports nested type
@@ -148,13 +150,15 @@ type was not defined as a top level "named" type but rather defined within the (
 In this case creating a (name) object would have to be quanified by it's parent's name using the
 dot notation as follows:
 
->
-> name = service.get_instance('person.name') 
->
+  >
+  > name = service.get_instance('person.name') 
+  >
 
 PROPERTY OBJECT
 
     Property object used to provide an object wrapper around a complex dictionary.
+    These (meta) objects are used to represent object passed between the web
+    service provider (server) and service consumer (client).
     
     Eg::
 
@@ -166,7 +170,7 @@ PROPERTY OBJECT
                           {'name':'Just for You', 'year':'1957'},
                           {'name':'GI Blues', 'year':'1960'}],
            'born':'1935',
-           }
+        }
         p = Property(data)
         p.died = '1977'   # assign value
         hair = p.get(haircolor='black') # get value and specify a default.
@@ -176,6 +180,75 @@ PROPERTY OBJECT
         print 'state=%s' % p.address.state
         print [r.name for r in p.records]
         print 'born %s died %s' % (p.born, p.died)
+
+        p = Property()
+        p.name = Property()
+        p.name.first = 'Elvis'
+        p.name.last = 'Presley'
+
+        # using lazy mode, intermediate nodes are created automatically.
+        # The lazy mode is intended for building property objects.  Since nodes
+        # are created automaically, it is switched OFF by any read access.  This is
+        # to prevent a consumer of the object from accidentally adding nodes when
+        # attempting to access (read) attributes.
+ 
+         p = Property(lazy=True)
+         p.name.first = 'Elvis'
+         p.name.last = 'Presley'
+         p.address.street = '25 King Lane'
+         p.address.city = 'Memphis'
+         p.address.state = 'TN'
+
+
+NOTE FOR AXIS USERS
+
+Axis, by default, uses MultiRefs when marshalling objects,
+but suds does not yet support multirefs. If you are using a SOAP
+service provided by Axis, you must change the Axis global configuration and
+set the global parameter "sendMultiRefs" to false.
+
+See http://ws.apache.org/axis/java/reference.html#GlobalAxisConfiguration for
+an explanation about Axis global configuration.
+
+
+AUTHENTICATION
+
+Revision 63+ (and release 0.1.8+) includes the migration from httplib to urllib2
+which enables users to leverage all of the authentication features provided
+by urllib2.  For example basic http authentication could be implemented
+as follows:
+
+  > import urllib2
+  > 
+  > theurl = 'www.someserver.com/toplevelurl/somepage.htm'
+  > protocol = 'http://'
+  > username = 'johnny'
+  > password = 'XXXXXX'
+  > # a great password
+  > 
+  > passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+  > # this creates a password manager
+  > passman.add_password(None, theurl, username, password)
+  > # because we have put None at the start it will always
+  > # use this username/password combination for  urls
+  > # for which `theurl` is a super-url
+  > 
+  > authhandler = urllib2.HTTPBasicAuthHandler(passman)
+  > # create the AuthHandler
+  > 
+  > opener = urllib2.build_opener(authhandler)
+  > 
+  > urllib2.install_opener(opener)
+  > # All calls to urllib2.urlopen will now use our handler
+  > # Make sure not to include the protocol in with the URL, or
+  > # HTTPPasswordMgrWithDefaultRealm will be very confused.
+  > # You must (of course) use it when fetching the page though.
+  > 
+  > pagehandle = urllib2.urlopen(protocol + theurl)
+
+Since suds uses urlopen(), basic http authentication is handles
+automatically for you.
+
 
 
 RELEASE-NOTES:
