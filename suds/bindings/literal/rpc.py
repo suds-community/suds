@@ -15,8 +15,8 @@
 
 from suds import *
 from suds.bindings.binding import Binding
+from suds.bindings.unmarshaller import Unmarshaller
 from marshaller import Marshaller
-from unmarshaller import Unmarshaller
 
 
 class RPC(Binding):
