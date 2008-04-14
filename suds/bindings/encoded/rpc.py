@@ -19,10 +19,10 @@ from marshaller import Marshaller
 from unmarshaller import Unmarshaller
 
 
-class Document(Binding):
+class RPC(Binding):
     
     """
-    Document/Literal binding style.
+    RPC/Encoded binding style.
     """
 
     def __init__(self, wsdl, faults=True):
@@ -40,12 +40,14 @@ class Document(Binding):
         input = operation.getChild('input')
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
-            ref = p.attribute('element')
+            ref = p.attribute('type')
+            if self.schema.builtin(ref):
+                params.append((p.attribute('name'), ref))
+                continue
             type = self.schema.get_type(ref)
             if type is None:
                 raise TypeNotFound(ref)
-            for e in type.get_children():
-                params.append((e.get_name(), e.get_type()))
+            params.append((p.attribute('name'), type.get_name()))
         self.log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
@@ -57,9 +59,10 @@ class Document(Binding):
         msg = self.wsdl.get_message(operation.getChild('output').attribute('message'))
         result = False
         for p in msg.getChildren('part'):
-            ref = p.attribute('element')
-            type = self.schema.get_type(ref)
-            elements = type.get_children(empty=[])
-            result = ( len(elements) > 0 and elements[0].unbounded() )
+            ref = p.attribute('type')
+            if self.schema.custom(ref):
+                type = self.schema.get_type(ref)
+                elements = type.get_children(empty=[])
+                result = ( len(elements) > 0 and elements[0].unbounded() )
             break
         return result

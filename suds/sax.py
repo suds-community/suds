@@ -390,7 +390,22 @@ class Element:
         if self.parent is not None:
             result += self.parent.findPrefixes(uri, match)
         return result
-            
+    
+    def promotePrefixes(self):
+        """ push prefix declarations up the tree as far as possible """
+        for c in self.children:
+            c.promotePrefixes()
+        if self.parent is None:
+            return
+        for p,u in self.nsprefixes.items():
+            if p in self.parent.nsprefixes:
+                pu = self.parent.nsprefixes[p]
+                if pu == u:
+                    del self.nsprefixes[p]
+            else:
+                self.parent.nsprefixes[p] = u
+                del self.nsprefixes[p]
+
     def isempty(self):
         """ get whether the element has no children """
         return len(self.children) == 0 and \
