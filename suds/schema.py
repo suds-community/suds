@@ -244,6 +244,10 @@ class SchemaProperty:
         """ get whether this object schema type is an (xsd) builtin """
         ref = self.get_type()
         return self.schema.builtin(ref)
+    
+    def resolve_prefix(self, prefix):
+        """ resolve the specified prefix """
+        return self.root.resolvePrefix(prefix)
         
     def __str__(self):
         return unicode(self).encode('utf-8')

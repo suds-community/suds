@@ -25,6 +25,11 @@ def splitPrefix(name):
     else:
         return (None, name)
 
+    
+class Namespaces:
+    XS = ('xs', 'http://www.w3.org/2001/XMLSchema')
+    XSI = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+
 
 class Attribute:
     """ simple attribute """
@@ -435,6 +440,10 @@ class Element:
         if self.expns is not None:
             result += ' xmlns="%s"' % self.expns
         for (p,u) in self.nsprefixes.items():
+            if self.parent is not None:
+                ns = self.parent.resolvePrefix(p)
+                if ns[1] == u: # already declared
+                    continue
             result += ' xmlns:%s="%s"' % (p, u)
         return result
     

@@ -34,6 +34,7 @@ class Builder:
         md = p.get_metadata()
         md.xsd = Property()
         md.xsd.type = type.get_name()
+        md.xsd.ns = type.namespace()
         for c in type.get_children():
             self.process(p, c)
         return p
