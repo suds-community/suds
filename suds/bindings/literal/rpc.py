@@ -15,10 +15,11 @@
 
 from suds import *
 from suds.bindings.binding import Binding
-from suds.bindings.literal.base import Literal
+from marshaller import Marshaller
+from unmarshaller import Unmarshaller
 
 
-class RPC(Literal):
+class RPC(Binding):
     
     """
     RPC/Literal binding style.
@@ -26,7 +27,9 @@ class RPC(Literal):
 
     def __init__(self, wsdl, faults=True):
         """constructor """
-        Literal.__init__(self, wsdl, faults)
+        Binding.__init__(self, wsdl, faults)
+        self.marshaller = Marshaller(self)
+        self.unmarshaller = Unmarshaller(self)
         
     def get_ptypes(self, method):
         """get a list of parameter types defined for the specified method"""
