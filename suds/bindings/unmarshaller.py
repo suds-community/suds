@@ -15,7 +15,7 @@
 
 from suds import *
 from suds.property import Property
-
+from suds.sax import xsins
 
 class Unmarshaller:
     """ property unmarshaller """
@@ -44,8 +44,7 @@ class Unmarshaller:
     
     def import_attrs(self, data, node):
         """import attribute nodes into the data structure"""
-        xsprefixes = \
-            node.findPrefixes('http://www.w3.org/2001/XMLSchema-instance')
+        xsprefixes = node.findPrefixes(xsins[1])
         for attr in node.attributes:
             if attr.prefix in xsprefixes:
                 md = data.get_metadata()

@@ -15,8 +15,6 @@
 
 from suds import *
 from suds.bindings.binding import Binding
-from suds.bindings.unmarshaller import Unmarshaller
-from marshaller import Marshaller
 
 
 class Document(Binding):
@@ -28,8 +26,6 @@ class Document(Binding):
     def __init__(self, wsdl, faults=True):
         """constructor """
         Binding.__init__(self, wsdl, faults)
-        self.marshaller = Marshaller(self)
-        self.unmarshaller = Unmarshaller(self)
         
     def get_ptypes(self, method):
         """get a list of parameter types defined for the specified method"""
