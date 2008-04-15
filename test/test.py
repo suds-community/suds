@@ -22,7 +22,8 @@ from suds.property import Property
 from suds.wsdl import WSDL
 from suds.bindings.binding import Binding
 from suds.bindings.literal.marshaller import Marshaller
-from suds.bindings.literal.unmarshaller import Unmarshaller
+from suds.bindings.encoded.marshaller import Marshaller as Encoder
+from suds.bindings.unmarshaller import Unmarshaller
 from suds.sax import Parser
 
 
@@ -47,8 +48,23 @@ class Test:
     def test_misc(self):
         
         service = ServiceProxy(get_url('test'))
+        
         marshaller = Marshaller(service.binding)
+        encoder = Encoder(service.binding)
         unmarshaller = Unmarshaller(service.binding)
+        
+        p = service.get_instance('person')
+        p.name.first='jeff'
+        p.name.last='ortel'
+        p.age = 21
+        ph = service.get_instance('phone')
+        ph.nxx = 919
+        ph.npa = 606
+        ph.number = None
+        p.phone.append(ph)
+        print p
+        print encoder.process('person', p)
+        sys.exit()
         
         x = """
         <person xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -319,7 +335,44 @@ class Test:
         except Exception, e:
             print e
 
-            
+    def rpc_enctest(self):
+        
+        #
+        # create a service proxy using the wsdl.
+        #
+        service = ServiceProxy('http://127.0.0.1:8080/axis/Jeff.jws?wsdl')
+        
+        #
+        # print the service (introspection)
+        #
+        print service
+        
+        #
+        # create a person object using the wsdl
+        #
+        person = service.get_instance('Person')
+        
+        #
+        # inspect empty person
+        #
+        print '{empty} person=\n%s' % person
+        
+        person.name = 'jeff ortel'
+        person.age = 43
+        
+        #
+        # inspect person
+        #
+        print 'person=\n%s' % person
+        
+        #
+        # add the person (using the webservice)
+        #
+        print 'addPersion()'
+        result = service.addPerson(person)
+        print '\nreply(\n%s\n)\n' % str(result)
+
+
     def auth_test(self):
         
         service = ServiceProxy(get_url('auth'))
@@ -539,9 +592,10 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    test.test_misc()
+    #test.test_misc()
     test.basic_test()
-    #test.rpc_test()
+    test.rpc_test()
+    #test.rpc_enctest()
     #test.auth_test()
     #test.resource_test()
     #test.perspectives_test()

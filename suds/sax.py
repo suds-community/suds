@@ -25,10 +25,11 @@ def splitPrefix(name):
     else:
         return (None, name)
 
-    
-class Namespaces:
-    XS = ('xs', 'http://www.w3.org/2001/XMLSchema')
-    XSI = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+"""
+well known namespaces
+"""
+xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
+xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
 
 
 class Attribute:
@@ -110,16 +111,29 @@ class Element:
         self.nsprefixes = {}
         self.attributes = []
         self.text = None
-        self.parent = parent
+        if parent is not None:
+            if isinstance(parent, Element):
+                self.parent = parent
+            else:
+                raise Exception('parent (%s) not-valid', parent.__class__.__name__)
+        else:
+            self.parent = None
         self.children = []
         self.applyns(ns)
+        
+    def getRoot(self):
+        """ get the root of the tree """
+        if self.parent is None:
+            return self
+        else:
+            return self.parent.getRoot()
             
     def append(self, objects):
         """
         append the specified child based on whether it is an
         element or an attrbuite.
         """
-        if not isinstance(objects, list) and not isinstance(objects, list):
+        if not isinstance(objects, (list, tuple)):
             objects = (objects,)
         for child in objects:
             if isinstance(child, Element):
@@ -130,6 +144,8 @@ class Element:
                 self.attributes.append(child)
                 child.parent = self
                 continue
+            raise Exception('append %s not-valid', child.__class__.__name__)
+        return self
             
     def detach(self):
         """ detach from parent """
@@ -356,6 +372,7 @@ class Element:
     def addPrefix(self, p, u):
         """ add/update a prefix mapping """
         self.nsprefixes[p] = u
+        return self
  
     def updatePrefix(self, p, u):
         """ update a prefix mapping (recursive) """
@@ -398,6 +415,8 @@ class Element:
         if self.parent is None:
             return
         for p,u in self.nsprefixes.items():
+            if isinstance(self.parent, tuple):
+                print self.parent.__class__.__name__
             if p in self.parent.nsprefixes:
                 pu = self.parent.nsprefixes[p]
                 if pu == u:
@@ -413,20 +432,30 @@ class Element:
             
     def isnil(self):
         """ get whether the element is xsi:nil """
-        xsi = (None, 'http://www.w3.org/2001/XMLSchema-instance')
-        nilattr = self.attrib('nil', ns=xsi)
+        nilattr = self.attrib('nil', ns=xsins)
         if nilattr is None:
             return False
         else:
             return ( nilattr.getValue().lower() == 'true' )
+        
+    def setnil(self, flag=True):
+        """ set the value of this node nil based on flag """
+        self.attribute('%s:nil' % xsins[0], flag)
+        self.addPrefix(xsins[0], xsins[1])
+        if flag:
+            self.text = None
+        return self
             
     def applyns(self, ns):
         """ apply the namespace to this node """
-        if ns is not None:
-            if ns[0] is None:
-                self.expns = ns[1]
-            else:
-                self.nsprefixes[ns[0]] = ns[1]
+        if ns is None:
+            return
+        if not isinstance(ns, (tuple,list)):
+            raise Exception('namespace must be tuple')
+        if ns[0] is None:
+            self.expns = ns[1]
+        else:
+            self.nsprefixes[ns[0]] = ns[1]
                 
     def __getitem__(self, index):
         if index < len(self.children):
@@ -602,13 +631,13 @@ encodings = \
 (( '&', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
 
 def encode(s):
-    if s is None: return s
-    for x in encodings:
-        s = s.replace(x[0], x[1])
+    if isinstance(s, basestring):
+        for x in encodings:
+            s = s.replace(x[0], x[1])
     return s
 
 def decode(s):
-    if s is None: return s
-    for x in encodings:
-        s = s.replace(x[1], x[0])
+    if isinstance(s, basestring):
+        for x in encodings:
+            s = s.replace(x[1], x[0])
     return s

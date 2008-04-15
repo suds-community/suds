@@ -14,9 +14,12 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sax import Parser
+from suds.sax import Parser, Element, xsins
 from suds.property import Property
+from suds.bindings.literal.marshaller import Marshaller as Literal
+from suds.bindings.encoded.marshaller import Marshaller as Encoded
 from builder import Builder
+from unmarshaller import Unmarshaller
 
 docfmt = """
 <SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
@@ -31,6 +34,21 @@ docfmt = """
 </SOAP-ENV:Envelope>
 """
 
+encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
+envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
+
+def envelope():
+    env = Element('%s:Envelope' % envns[0], envns)
+    env.addPrefix(encns[0], encns[1])
+    env.addPrefix(xsins[0], xsins[1])
+    return env
+
+def body():
+    ns = self.wsdl.tns
+    body = Element('%s:Body' % envns[0])
+    body.addPrefix(ns[0], ns[1])
+    return body
+
 class Binding:
     """ The soap binding base class """
 
@@ -42,6 +60,16 @@ class Binding:
         self.log = logger('binding')
         self.parser = Parser()
         self.nil_supported = True
+        self.marshaller = None
+        self.unmarshaller = Unmarshaller(self)
+        
+    def use_literal(self):
+        """ set the input message encoding to "literal" """
+        self.marshaller = Literal(self)
+    
+    def use_encoded(self):
+        """ set the input message encoding to "encoded" """
+        self.marshaller = Encoded(self)
         
     def get_method_descriptions(self):
         """get a list of methods provided by this service"""
@@ -56,21 +84,21 @@ class Binding:
 
     def get_message(self, method_name, *args):
         """get the soap message for the specified method and args"""
-        body = self.body()
+        method = self.method(method_name)
+        body = self.body(method)
+        env = self.envelope(body)
         ptypes = self.get_ptypes(method_name)
-        m = self.method(method_name)
-        p = 0
-        params = '';
-        for a in args:
-            if p == len(ptypes): break
-            tag = ptypes[p][0]
-            if a is None:
-                params += '<%s xsi:nil="true"/>' % tag
+        n = 0
+        for arg in args:
+            if n == len(ptypes): break
+            pdef = ptypes[n]
+            if arg is None:
+                method.append(Element(pdef[0]).setnil())
             else:
-                params += self.param(method_name, tag, a)
-            p += 1
-        msg = docfmt % (body[0], m[0], params, m[1], body[1])
-        return msg.encode('utf-8')
+                method.append(self.param(method_name, pdef, arg))
+            n += 1
+        env.promotePrefixes()
+        return str(env)
     
     def get_reply(self, method_name, msg):
         """extract the content from the specified soap reply message"""
@@ -127,23 +155,40 @@ class Binding:
             result = self.unmarshaller.process(node)
         return result
     
-    def param(self, method, name, object):
+    def param(self, method, pdef, object):
         """encode and return the specified property within the named root tag"""
-        if isinstance(object, dict):
-            return self.marshaller.process(name, object)
+        if isinstance(object, (Property, dict)):
+            return self.marshaller.process(pdef, object)
         if isinstance(object, (list,tuple)):
-            tags = ''
+            tags = []
             for item in object:
-                tags += self.param(method, name, item)
-            return tags 
-        if isinstance(object, Property):
-            return self.marshaller.process(name, object)
-        return '<%s>%s</%s>' % (name, tostr(object), name)
-        
-    def body(self):
-        """get the soap body fragment tag template"""
-        return ('<SOAP-ENV:Body xmlns:tns="%s">' % self.wsdl.tns[1], '</SOAP-ENV:Body>')
+                tags.append(self.param(method, pdef, item))
+            return tags
+        node = Element(pdef[0])
+        node.setText(tostr(object))
+        return node
+            
+    def envelope(self, body=None):
+        """ get soap envelope """
+        env = Element('%s:Envelope' % envns[0], ns=envns)
+        env.addPrefix(encns[0], encns[1])
+        env.addPrefix(xsins[0], xsins[1])
+        if body is not None:
+            env.append(body)
+        return env
+    
+    def body(self, method=None):
+        """ get soap envelope body """
+        ns = self.wsdl.tns
+        body = Element('%s:Body' % envns[0])
+        body.addPrefix(ns[0], ns[1])
+        if method is not None:
+            body.append(method)
+        return body
     
     def method(self, name):
         """get method fragment"""
-        return ('<tns:%s xsi:type="tns:%s">' % (name, name), '</tns:%s>' % name)
+        prefix = self.wsdl.tns[0]
+        method = Element('%s:%s' % (prefix, name))
+        method.attribute('xsi:type', '%s:%s' % (prefix, name))
+        return method

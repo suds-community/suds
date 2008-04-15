@@ -15,7 +15,6 @@
 
 from suds import *
 from suds.property import Property
-from suds.bindings.binding import Binding
 from suds.sax import Element
 
 class Marshaller:
@@ -26,14 +25,14 @@ class Marshaller:
         self.binding = binding
         self.schema = binding.schema
 
-    def process(self, root, property):
-        """ get the xml string value of the property and root name """
-        parent = Element(root)
+    def process(self, pdef, property):
+        """ get the xml fragment for the property and root name """
+        node = Element(pdef[0])
         if isinstance(property, dict):
             property = Property(property)
         for item in property.get_items():
-            self.write_content(parent, property, item[0], item[1])
-        return unicode(parent)
+            self.write_content(node, property, item[0], item[1])
+        return node
        
     def write_content(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """

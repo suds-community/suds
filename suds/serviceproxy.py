@@ -42,7 +42,8 @@ class ServiceProxy(object):
     def _send(self, method, *args):
         """"send the required soap message to invoke the specified method"""
         result = None
-        headers = self.__headers()
+        self.__set_encoding(method)
+        headers = self.__headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
         msg = self.binding.get_message(method.name, *args)
         self.log.debug('sending to (%s)\nmessage:\n%s', location, msg)
@@ -55,10 +56,11 @@ class ServiceProxy(object):
             result = self.__failed(method, e)
         return result
     
-    def __headers(self):
+    def __headers(self, method):
         """ get http headers """
         return \
-            { 'Content-Type' : 'text/xml' }
+            { 'SOAPAction': 'http://org.fedora.suds#%s' % method,
+               'Content-Type' : 'text/xml' }
     
     def __succeeded(self, method, reply):
         """ request succeeded, process reply """
@@ -85,6 +87,16 @@ class ServiceProxy(object):
             raise Exception((status, reason))
         else:
             return (status, None)
+        
+    def __set_encoding(self, method):
+        """ set the input message encoding """
+        use = self.wsdl.get_input_encoding(method.name)
+        if use == 'literal':
+            self.binding.use_literal()
+        elif use == 'encoded':
+            self.binding.use_encoded()
+        else:
+            raise Exception('method (%s) has unknown encoding (%s)' % (method, use))
         
     def __str__(self):
         return unicode(self).encode('utf-8')

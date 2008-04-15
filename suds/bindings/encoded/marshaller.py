@@ -15,7 +15,6 @@
 
 from suds import *
 from suds.property import Property
-from suds.bindings.binding import Binding
 from suds.sax import Element, splitPrefix
 
 
@@ -25,23 +24,21 @@ class Marshaller:
 
     def __init__(self, binding):
         """constructor """
-        self.set_nil = lambda e: e.attribute('xsi:nil', 'true')
         self.binding = binding
         self.schema = binding.schema
         self.path = []
 
-    def process(self, root, property):
-        """ get the xml string value of the property and root name """
-        self.path = [root]
-        node = Element(root)
-        st = self.soaptype(root)
+    def process(self, pdef, property):
+        """ get the xml fragment for the property and root name """
+        self.path = [pdef[1]]
+        node = Element(pdef[0])
+        st = self.soaptype(pdef[1])
         self.set_type(node, st)
         if isinstance(property, dict):
             property = Property(property)
         for item in property.get_items():
             self.write(node, property, item[0], item[1])
-        node.promotePrefixes()
-        return unicode(node)
+        return node
     
     def write(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """
@@ -56,7 +53,7 @@ class Marshaller:
             child = Element(tag)
             self.set_type(child, st)
             if self.binding.nil_supported:
-                self.set_nil(child)
+                child.setnil()
             parent.append(child)
             return
         if isinstance(object, dict):

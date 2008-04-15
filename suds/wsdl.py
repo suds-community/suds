@@ -15,8 +15,8 @@
 
 from suds import *
 from suds.sax import Parser, Element, splitPrefix
-from bindings.literal.document import Document
-from bindings.literal.rpc import RPC
+from bindings.document import Document
+from bindings.rpc import RPC
 from schema import Schema, SchemaCollection
 from urlparse import urlparse
 
@@ -61,6 +61,15 @@ class WSDL:
     def get_binding_style(self):
         """ get the binding style """
         return self.root.childAtPath('binding/binding').attribute('style')
+    
+    def get_input_encoding(self, method):
+        """ get an operations encoding @use """
+        for operation in self.root.childrenAtPath('binding/operation'):
+            if method == operation.attribute('name'):
+                body = operation.childAtPath('input/body')
+                self.log.debug('input encoding for (%s) found as (%s)', method, body)
+                return body.attribute('use')
+        return None 
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""
