@@ -18,24 +18,3 @@ class Marshaller:
     def __init__(self, binding):
         self.binding = binding
         self.schema = binding.schema
-
-    
-class SoapObject:
-    
-    def __init__(self, master, name, content, tns=None, xs=None):
-        self.master = master
-        self.content = content
-        self.xs = xs
-        self.prefix, self.name = splitPrefix(name)
-        if self.prefix is not None:
-            self.ns = master.resolvePrefix(self.prefix)
-        else:
-            self.ns = tns
-        if ns is not None:
-            self.prefix = ns[0]
-
-    def qname(self):
-        if prefix is not None:
-            return ':'.join(self.prefix, self.name)
-        else:    
-            return self.name
