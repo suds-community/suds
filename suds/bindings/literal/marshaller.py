@@ -15,15 +15,15 @@
 
 from suds import *
 from suds.property import Property
+from suds.bindings.marshaller import Marshaller as Base
 from suds.sax import Element
 
-class Marshaller:
+class Marshaller(Base):
     """ marshal a property object."""
 
     def __init__(self, binding):
         """constructor """
-        self.binding = binding
-        self.schema = binding.schema
+        Base.__init__(self, binding)
 
     def process(self, pdef, property):
         """ get the xml fragment for the property and root name """

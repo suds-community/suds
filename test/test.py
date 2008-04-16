@@ -337,10 +337,16 @@ class Test:
 
     def rpc_enctest(self):
         
+        google = ServiceProxy('http://api.google.com/GoogleSearch.wsdl')
+        print google
+        print google.doGoogleSearch('suds')
+
+        sys.exit()
+        
         #
         # create a service proxy using the wsdl.
         #
-        service = ServiceProxy('http://127.0.0.1:8080/axis/Jeff.jws?wsdl')
+        service = ServiceProxy('http://127.0.0.1:8080/axis/services/Jeff?wsdl')
         
         #
         # print the service (introspection)
@@ -587,14 +593,14 @@ def test5():
         print p
         
 if __name__ == '__main__':
-    #logger('serviceproxy').setLevel(logging.DEBUG)
+    logger('serviceproxy').setLevel(logging.DEBUG)
     #test4()
     #test5()
     #test3()
     test = Test()
     #test.test_misc()
     test.basic_test()
-    test.rpc_test()
+    #test.rpc_test()
     #test.rpc_enctest()
     #test.auth_test()
     #test.resource_test()
