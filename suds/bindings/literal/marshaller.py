@@ -30,8 +30,11 @@ class Marshaller(Base):
         node = Element(pdef[0])
         if isinstance(property, dict):
             property = Property(property)
-        for item in property.get_items():
-            self.write_content(node, property, item[0], item[1])
+        if isinstance(property, Property):
+            for item in property.get_items():
+                self.write_content(node, property, item[0], item[1])
+        else:
+            node.setText(tostr(property))
         return node
        
     def write_content(self, parent, property, tag, object):
@@ -57,7 +60,8 @@ class Marshaller(Base):
             return
         if tag == '__text__':
             parent.setText(unicode(object))
-        elif tag.startswith('_'):
+        elif isinstance(tag, basestring) and \
+                tag.startswith('_'):
             parent.attribute(tag[1:], unicode(object))
         else:
             child = Element(tag)

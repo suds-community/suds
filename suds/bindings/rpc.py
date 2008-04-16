@@ -14,6 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
+from suds.schema import XBuiltin
 from suds.bindings.binding import Binding
 
 
@@ -38,12 +39,13 @@ class RPC(Binding):
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
             if self.schema.builtin(ref):
-                params.append((p.attribute('name'), ref))
+                xsb = XBuiltin(self.schema, ref)
+                params.append((p.attribute('name'), xsb))
                 continue
-            type = self.schema.get_type(ref)
+            type = self.schema.find(ref)
             if type is None:
                 raise TypeNotFound(ref)
-            params.append((p.attribute('name'), type.get_name()))
+            params.append((p.attribute('name'), type))
         self.log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
@@ -57,7 +59,7 @@ class RPC(Binding):
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
             if self.schema.custom(ref):
-                type = self.schema.get_type(ref)
+                type = self.schema.find(ref)
                 elements = type.get_children(empty=[])
                 result = ( len(elements) > 0 and elements[0].unbounded() )
             break

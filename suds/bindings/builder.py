@@ -26,7 +26,7 @@ class Builder:
         
     def build(self, typename):
         """ build a property object for the specified typename as defined in the schema """
-        type = self.schema.get_type(typename)
+        type = self.schema.find(typename)
         if type is None:
             raise TypeNotFound(typename)
         p = Property()
