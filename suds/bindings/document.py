@@ -37,11 +37,11 @@ class Document(Binding):
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
             ref = p.attribute('element')
-            type = self.schema.get_type(ref)
+            type = self.schema.find(ref)
             if type is None:
                 raise TypeNotFound(ref)
-            for e in type.get_children():
-                params.append((e.get_name(), e.get_type()))
+            for c in type.get_children():
+                params.append((c.get_name(), c))
         self.log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
@@ -54,7 +54,7 @@ class Document(Binding):
         result = False
         for p in msg.getChildren('part'):
             ref = p.attribute('element')
-            type = self.schema.get_type(ref)
+            type = self.schema.find(ref)
             elements = type.get_children(empty=[])
             result = ( len(elements) > 0 and elements[0].unbounded() )
             break

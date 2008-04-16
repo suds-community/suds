@@ -22,24 +22,36 @@ from urlparse import urljoin
 class SchemaCollection(list):
     
     """ a collection of schemas providing a wrapper """
+    
+    def __init__(self):
+        self.root = None
+        self.tns = (None, None)
+        self.log = logger('schema')
+        self.content = []
+    
+    def append(self, schema):
+        self.content.append(schema)
+        if self.root is None:
+            self.root = schema.root
+            self.tns = schema.tns
 
-    def get_type(self, path, history=None):
-        """ see Schema.get_type() """
+    def find(self, path, history=None):
+        """ see Schema.find() """
         if history is None:
             history = []
-        for s in self:
-            result = s.get_type(path, history)
+        for s in self.content:
+            result = s.find(path, history)
             if result is not None:
                 return result
         return None
 
     def custom(self, ref, context=None):
         """ get whether specified type reference is custom """
-        return self[0].custom(ref, context)
+        return self.content[0].custom(ref, context)
     
     def builtin(self, ref, context=None):
         """ get whether the specified type reference is an (xsd) builtin """
-        return self[0].builtin(ref, context)
+        return self.content[0].builtin(ref, context)
 
 
 class Schema:
@@ -60,7 +72,7 @@ class Schema:
     def __init__(self, root, baseurl=None):
         """ construct the sequence object with a schema """
         self.root = root
-        self.tns = self.get_tns()
+        self.tns = self.__tns()
         self.baseurl = baseurl
         self.log = logger('schema')
         self.hints = {}
@@ -77,20 +89,22 @@ class Schema:
                 self.children.append(child)
         self.children.sort()
                 
-    def get_tns(self):
+    def __tns(self):
         """ get the target namespace """
         tns = [None, self.root.attribute('targetNamespace')]
         if tns[1] is not None:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
         
-    def get_type(self, path, history=None):
+    def find(self, path, history=None):
         """
         get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
         The cached type is returned, else find_type() is used.  The history prevents
         cyclic graphs.
         """
+        if self.builtin(path):
+            return XBuiltin(self, path)
         if history is None:
             history = []   
         result = self.types.get(path, None)
@@ -197,9 +211,22 @@ class SchemaProperty:
         """ get the object's name """
         return None
     
-    def get_type(self):
-        """ get the node's (xsi) type as defined by the schema """
+    def ref(self):
+        """ get the referenced (xsi) type as defined by the schema """
         return None
+    
+    def qref(self):
+        """ get the qualified referenced (xsi) type as defined by the schema """
+        ref = self.ref()
+        if ref is not None:
+            p,n = splitPrefix(ref)
+            if p is not None:
+                ns = self.root.resolvePrefix(p)
+            else:
+                ns = self.schema.tns
+            return (':'.join((ns[0], n)), ns)
+        else:
+            return (None, (None,None))
     
     def get_children(self, empty=None):
         """ get child (nested) schema definition nodes """ 
@@ -224,31 +251,31 @@ class SchemaProperty:
         if history is None:
             history = []
         result = self
-        reftype = self.get_type()
+        reftype = self.ref()
         if self.custom():
-            resolved = self.schema.get_type(reftype, history)
+            resolved = self.schema.find(reftype, history)
             if resolved is not None:
                 result = resolved
         return result
     
     def custom(self):
         """ get whether this object schema type is custom """
-        ref = self.get_type()
+        ref = self.ref()
         return self.schema.custom(ref)
     
     def builtin(self):
         """ get whether this object schema type is an (xsd) builtin """
-        ref = self.get_type()
+        ref = self.ref()
         return self.schema.builtin(ref)
         
     def __str__(self):
         return unicode(self).encode('utf-8')
             
     def __unicode__(self):
-        return u'ns=%s, name=(%s), type=(%s)' \
+        return u'ns=%s, name=(%s), qref=(%s)' \
             % (self.namespace(),
                   self.get_name(),
-                  self.get_type())
+                  self.qref())
     
     def __repr__(self):
         return unicode(self).encode('utf-8')
@@ -292,7 +319,7 @@ class Simple(SchemaProperty):
         """ gets the <xs:simpleType name=""/> attribute value """
         return self.root.attribute('name')
 
-    def get_type(self):
+    def ref(self):
         """ gets the <xs:simpleType xsi:type=""/> attribute value """
         return self.root.attribute('type')
         
@@ -362,7 +389,7 @@ class Element(SchemaProperty):
         """ gets the <xs:element name=""/> attribute value """
         return self.root.attribute('name')
     
-    def get_type(self):
+    def ref(self):
         """ gets the <xs:element type=""/> attribute value """
         return self.root.attribute('type')
     
@@ -397,7 +424,7 @@ class Extension(Complex):
 
     def __add_children(self):
         """ lookup extended type and add its children then add nested types """
-        super = self.schema.get_type(self.root.attribute('base'))
+        super = self.schema.find(self.root.attribute('base'))
         if super is None:
             return
         index = 0
@@ -412,7 +439,7 @@ class Import(SchemaProperty):
     
     def __init__(self, schema, root):
         """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)   
+        SchemaProperty.__init__(self, schema, root)
         self.imported = None
         location = root.attribute('schemaLocation')
         if location is not None:
@@ -480,4 +507,17 @@ class Import(SchemaProperty):
         """ <import/> first """
         return -1
 
+
+class XBuiltin(SchemaProperty):
+    
+    """ Represents an (xsd) schema <xs:*/> node """
+    
+    def __init__(self, schema, name):
+        SchemaProperty.__init__(self, schema, schema.root)
+        self.name = name
         
+    def builtin(self, ref, context=None):
+        return True
+        
+    def ref(self):
+        return self.name

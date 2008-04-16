@@ -77,7 +77,7 @@ class Binding:
         ops = self.wsdl.get_operations()
         for op in self.wsdl.get_operations():
             ptypes = self.get_ptypes(op.attribute('name'))
-            params = ['%s{%s}' % (t[0], t[1]) for t in ptypes]
+            params = ['%s{%s}' % (t[0], t[1].qref()[0]) for t in ptypes]
             m = '%s(%s)' % (op.attribute('name'), ', '.join(params))
             list.append(m)
         return list
@@ -139,7 +139,7 @@ class Binding:
     def get_enum(self, name):
         """ get an enumeration """
         result = None
-        type = self.schema.get_type(name)
+        type = self.schema.find(name)
         if type is not None:
             result = Property()
             for e in type.get_children():
@@ -159,14 +159,12 @@ class Binding:
         """encode and return the specified property within the named root tag"""
         if isinstance(object, (Property, dict)):
             return self.marshaller.process(pdef, object)
-        if isinstance(object, (list,tuple)):
+        if isinstance(object, (list, tuple)):
             tags = []
             for item in object:
                 tags.append(self.param(method, pdef, item))
             return tags
-        node = Element(pdef[0])
-        node.setText(tostr(object))
-        return node
+        return self.marshaller.process(pdef, object)
             
     def envelope(self, body=None):
         """ get soap envelope """

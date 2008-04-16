@@ -32,15 +32,19 @@ class Property:
         strict -- flag indicates whether __getattr__() will throw an exception
         when the name is not found
         """
-        if data is None:
-            data = {}
-        if isinstance(data, Property):
-            data = data.dict()
-        self.__data__ = data
+        if data is not None:
+            if isinstance(data, dict):
+                self.__keylist__ = list(data.keys())
+                self.__data__ = data.copy()
+            elif isinstance(data, Property):
+                self.__keylist__ = list(data.get_names())
+                self.__data__ = data.dict().copy()
+        else:
+            self.__keylist__ = []
+            self.__data__ = {}       
         self.__strict__ = strict
         self.__lazy__ = lazy
         self.__type__ = None
-        self.__keylist__ = []
         self.__printer__ = Printer()
         self.__metadata__ = {}
             

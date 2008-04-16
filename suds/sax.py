@@ -19,7 +19,7 @@ from xml.sax import parse, parseString, ContentHandler
 
 def splitPrefix(name):
     """ split the name into a tuple (prefix, name) """
-    if name is not None \
+    if isinstance(name, basestring) \
         and ':' in name:
             return tuple(name.split(':', 1))
     else:

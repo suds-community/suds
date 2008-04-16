@@ -30,14 +30,29 @@ class Marshaller(Base):
 
     def process(self, pdef, property):
         """ get the xml fragment for the property and root name """
-        self.path = [pdef[1]]
-        node = Element(pdef[0])
-        st = self.soaptype(pdef[1])
-        self.set_type(node, st)
+        type = pdef[1]
+        self.path = [type.get_name()]
+        root = self.__root(pdef)
         if isinstance(property, dict):
             property = Property(property)
-        for item in property.get_items():
-            self.write(node, property, item[0], item[1])
+        if isinstance(property, Property):
+            for item in property.get_items():
+                self.write(root, property, item[0], item[1])
+        else:
+            root.setText(tostr(property))
+        return root
+    
+    def __root(self, pdef):
+        """ create the root node """
+        type = pdef[1]
+        ns = type.namespace()
+        tag = ':'.join((ns[0], pdef[0]))
+        node = Element(tag)
+        qref = type.qref()
+        node.attribute('xsi:type', qref[0])
+        refns = qref[1]
+        node.addPrefix(ns[0], ns[1])
+        node.addPrefix(refns[0], refns[1])
         return node
     
     def write(self, parent, property, tag, object):
@@ -84,10 +99,10 @@ class Marshaller(Base):
     def soaptype(self, tag):
         """ get the soap type for the specified type """
         path = '.'.join(self.path)
-        type = self.schema.get_type(path)
+        type = self.schema.find(path)
         if type is None:
             raise TypeNotFound(path)
-        ref = type.get_type()
+        ref = type.ref()
         if ref is None:
             ref = tag
         p,v = splitPrefix(ref)

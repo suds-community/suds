@@ -339,9 +339,11 @@ class Test:
         
         google = ServiceProxy('http://api.google.com/GoogleSearch.wsdl')
         print google
-        print google.doGoogleSearch('suds')
+        try:
+            print google.doGoogleSearch('suds')
+        except Exception, e:
+            print e
 
-        sys.exit()
         
         #
         # create a service proxy using the wsdl.
@@ -600,8 +602,8 @@ if __name__ == '__main__':
     test = Test()
     #test.test_misc()
     test.basic_test()
-    #test.rpc_test()
-    #test.rpc_enctest()
+    test.rpc_test()
+    test.rpc_enctest()
     #test.auth_test()
     #test.resource_test()
     #test.perspectives_test()

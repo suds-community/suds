@@ -112,7 +112,7 @@ class Unmarshaller:
             path = list(self.path)
             path.append(nodename)
             path = '.'.join(path)
-            type = self.schema.get_type(path)
+            type = self.schema.find(path)
             return type.unbounded()
         except:
             return False
