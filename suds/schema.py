@@ -156,12 +156,8 @@ class Schema:
         if prefix is None:
             ns = self.tns
         else:
-            ns = self.resolve_prefix(prefix, None)
+            ns = self.root.resolvePrefix(prefix, None)
         return (name, ns)
-                
-    def resolve_prefix(self, p, d):
-        """ resolve the specified namespace prefix """
-        return self.root.resolvePrefix(p, d)
     
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -244,10 +240,6 @@ class SchemaProperty:
         """ get whether this object schema type is an (xsd) builtin """
         ref = self.get_type()
         return self.schema.builtin(ref)
-    
-    def resolve_prefix(self, prefix):
-        """ resolve the specified prefix """
-        return self.root.resolvePrefix(prefix)
         
     def __str__(self):
         return unicode(self).encode('utf-8')

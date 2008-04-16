@@ -15,17 +15,17 @@
 
 from suds import *
 from suds.property import Property
+from suds.bindings.marshaller import Marshaller as Base
 from suds.sax import Element, splitPrefix
 
 
-class Marshaller:
+class Marshaller(Base):
 
     """ marshal a property object."""
 
     def __init__(self, binding):
         """constructor """
-        self.binding = binding
-        self.schema = binding.schema
+        Base.__init__(self, binding)
         self.path = []
 
     def process(self, pdef, property):
@@ -95,7 +95,7 @@ class Marshaller:
             ns = type.namespace()
         else:
             ref = v
-            ns = type.resolve_prefix(p)
+            ns = type.root.resolvePrefix(p)
         return (ref, ns)
     
     def set_type(self, node, st):
