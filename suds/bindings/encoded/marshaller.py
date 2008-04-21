@@ -48,11 +48,12 @@ class Marshaller(Base):
         ns = type.namespace()
         tag = ':'.join((ns[0], pdef[0]))
         node = Element(tag)
-        qref = type.qref()
-        node.attribute('xsi:type', qref[0])
-        refns = qref[1]
         node.addPrefix(ns[0], ns[1])
-        node.addPrefix(refns[0], refns[1])
+        ref,refns = type.qref()
+        if ref is not None:
+            xst = ':'.join((refns[0], ref))
+            node.attribute('xsi:type', xst)
+            node.addPrefix(refns[0], refns[1])
         return node
     
     def write(self, parent, property, tag, object):

@@ -47,6 +47,10 @@ class Test:
     
     def test_misc(self):
         
+        service = ServiceProxy('http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL')
+        print service
+        sys.exit()
+        
         service = ServiceProxy(get_url('test'))
         
         marshaller = Marshaller(service.binding)
@@ -309,6 +313,7 @@ class Test:
         print 'updatePersion()'
         result = service.updatePerson(person, newname)
         print '\nreply(\n%s\n)\n' % str(result)
+        print 'updatePersion() newperson = None'
         result = service.updatePerson(person, None)
         print '\nreply(\n%s\n)\n' % str(result)
         
@@ -351,11 +356,12 @@ class Test:
         service = ServiceProxy('http://test.closingmarket.com/ClosingMarketService/cminterface.asmx?WSDL')
         print service
         try:
-            pass
-            #print service.doGoogleSearch('suds')
+            token = service.Login( 'DVTest1@bbwcdf.com', 'DevTest1')
+            print token
         except Exception, e:
             print e
-
+            
+        print '************ JEFF ***************'
         
         #
         # create a service proxy using the wsdl.

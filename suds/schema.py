@@ -15,8 +15,23 @@
 
 from suds import *
 from suds.property import Property
-from sax import Parser, splitPrefix
+from sax import Parser, splitPrefix, defns
 from urlparse import urljoin
+
+
+def qualified_reference(ref, resolvers, tns=defns):
+    """ get type reference *qualified* by prefix and namespace """
+    ns = tns
+    p, n = splitPrefix(ref)
+    if p is not None:
+        if not isinstance(resolvers, (list,tuple)):
+            resolvers = (resolvers,)
+        for r in resolvers:
+            resolved = r.resolvePrefix(p)
+            if resolved[1] is not None:
+                ns = resolved
+                break 
+    return (n, ns)
 
 
 class SchemaCollection(list):
@@ -25,7 +40,7 @@ class SchemaCollection(list):
     
     def __init__(self):
         self.root = None
-        self.tns = (None, None)
+        self.tns = defns
         self.log = logger('schema')
         self.content = []
     
@@ -95,15 +110,20 @@ class Schema:
         The cached type is returned, else find_type() is used.  The history prevents
         cyclic graphs.
         """
-        if self.builtin(path):
-            return XBuiltin(self, path)
         if history is None:
-            history = []   
-        result = self.types.get(path, None)
-        if result is None or result in history:
-            result = self.__find_path(path, history)
-            if result is not None:
-                self.types[path] = result
+            history = []
+        if isinstance(path, basestring):
+            cached = self.types.get(path, None)
+            if cached is not None:
+                return cached
+            if self.builtin(path):
+                b = XBuiltin(self, path)
+                self.types[path] = b
+                return b
+        result = self.__find_path(path, history)
+        if result is not None and \
+            isinstance(path, basestring):
+            self.types[path] = result
         return result
 
     def custom(self, ref, context=None):
@@ -130,8 +150,8 @@ class Schema:
         The path may contain (.) dot notation to specify nested types.
         """
         result = None
-        parts = path.split('.')
-        ref, ns = self.qualified_reference(parts[0])
+        parts = self.__qualify(path)
+        ref, ns = parts[0]
         for child in self.children:           
             name = child.get_name()
             if name is None:
@@ -148,22 +168,29 @@ class Schema:
         if result is not None:
             history.append(result)
             result = result.resolve(history)
-            for name in parts[1:]:
-                ref, ns = self.qualified_reference(name)
+            for part in parts[1:]:
+                ref, ns = part
                 result = result.get_child(ref, ns)
                 if result is None:
                     break
                 result = result.resolve(history)
         return result
     
-    def qualified_reference(self, ref):
-        """ get type reference *qualified* by namespace w/ prefix stripped """
-        prefix, name = splitPrefix(ref)
-        if prefix is None:
-            ns = self.tns
-        else:
-            ns = self.root.resolvePrefix(prefix, None)
-        return (name, ns)
+    def __qualify(self, path):
+        """ convert the path into a list of qualified references """
+        if isinstance(path, basestring):
+            qualified = []
+            for p in path.split('.'):
+                if isinstance(p, basestring):
+                    p = qualified_reference(p, self.root, self.tns)
+                    qualified.append(p)
+            return qualified
+        if isinstance(path, tuple) and \
+            len(path) == 2 and \
+            isinstance(path[0], basestring) and \
+            isinstance(path[1], tuple):
+            path = (path,)
+        return path
     
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -211,14 +238,9 @@ class SchemaProperty:
         """ get the qualified referenced (xsi) type as defined by the schema """
         ref = self.ref()
         if ref is not None:
-            p,n = splitPrefix(ref)
-            if p is not None:
-                ns = self.root.resolvePrefix(p)
-            else:
-                ns = self.schema.tns
-            return (':'.join((ns[0], n)), ns)
+            return qualified_reference(ref, self.root, self.schema.tns)
         else:
-            return (None, (None,None))
+            return (None, defns)
     
     def get_children(self, empty=None):
         """ get child (nested) schema definition nodes """ 
