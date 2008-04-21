@@ -37,18 +37,6 @@ docfmt = """
 encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
 envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
 
-def envelope():
-    env = Element('%s:Envelope' % envns[0], envns)
-    env.addPrefix(encns[0], encns[1])
-    env.addPrefix(xsins[0], xsins[1])
-    return env
-
-def body():
-    ns = self.wsdl.tns
-    body = Element('%s:Body' % envns[0])
-    body.addPrefix(ns[0], ns[1])
-    return body
-
 class Binding:
     """ The soap binding base class """
 

@@ -45,14 +45,6 @@ class SchemaCollection(list):
                 return result
         return None
 
-    def custom(self, ref, context=None):
-        """ get whether specified type reference is custom """
-        return self.content[0].custom(ref, context)
-    
-    def builtin(self, ref, context=None):
-        """ get whether the specified type reference is an (xsd) builtin """
-        return self.content[0].builtin(ref, context)
-
 
 class Schema:
     

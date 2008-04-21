@@ -63,13 +63,21 @@ class WSDL:
         return self.root.childAtPath('binding/binding').attribute('style')
     
     def get_input_encoding(self, method):
-        """ get an operations encoding @use """
+        """ get an operation's encoding @use """
         for operation in self.root.childrenAtPath('binding/operation'):
             if method == operation.attribute('name'):
                 body = operation.childAtPath('input/body')
                 self.log.debug('input encoding for (%s) found as (%s)', method, body)
                 return body.attribute('use')
-        return None 
+        return None
+    
+    def get_soap_action(self, method):
+        """ get an operation's soap action @soapAction """
+        for operation in self.root.childrenAtPath('binding/operation'):
+            if method == operation.attribute('name'):
+                operation = operation.getChild('operation')
+                return operation.attribute('soapAction')
+        return 'none'
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""

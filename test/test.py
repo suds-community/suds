@@ -217,6 +217,17 @@ class Test:
         print '\nreply( %s )\n' % str(result)
         
         #
+        # test list returned
+        #
+        print 'getList(str, 1)'
+        result = service.getList('hello', 1)
+        print '\nreply( %s )\n' % str(result)
+        
+        print 'getList(str, 3)'
+        result = service.getList('hello', 3)
+        print '\nreply( %s )\n' % str(result)
+        
+        #
         # test exceptions
         #
         try:
@@ -337,10 +348,11 @@ class Test:
 
     def rpc_enctest(self):
         
-        google = ServiceProxy('http://api.google.com/GoogleSearch.wsdl')
-        print google
+        service = ServiceProxy('http://test.closingmarket.com/ClosingMarketService/cminterface.asmx?WSDL')
+        print service
         try:
-            print google.doGoogleSearch('suds')
+            pass
+            #print service.doGoogleSearch('suds')
         except Exception, e:
             print e
 
@@ -595,7 +607,7 @@ def test5():
         print p
         
 if __name__ == '__main__':
-    logger('serviceproxy').setLevel(logging.DEBUG)
+    #logger('serviceproxy').setLevel(logging.DEBUG)
     #test4()
     #test5()
     #test3()
