@@ -58,8 +58,9 @@ class ServiceProxy(object):
     
     def __headers(self, method):
         """ get http headers """
+        action = self.wsdl.get_soap_action(method)
         return \
-            { 'SOAPAction': 'http://org.fedora.suds#%s' % method,
+            { 'SOAPAction': action,
                'Content-Type' : 'text/xml' }
     
     def __succeeded(self, method, reply):

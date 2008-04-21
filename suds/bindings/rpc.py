@@ -38,10 +38,6 @@ class RPC(Binding):
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
-            if self.schema.builtin(ref):
-                xsb = XBuiltin(self.schema, ref)
-                params.append((p.attribute('name'), xsb))
-                continue
             type = self.schema.find(ref)
             if type is None:
                 raise TypeNotFound(ref)
@@ -58,9 +54,8 @@ class RPC(Binding):
         result = False
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
-            if self.schema.custom(ref):
-                type = self.schema.find(ref)
-                elements = type.get_children(empty=[])
-                result = ( len(elements) > 0 and elements[0].unbounded() )
+            type = self.schema.find(ref)
+            elements = type.get_children(empty=[])
+            result = ( len(elements) > 0 and elements[0].unbounded() )
             break
         return result
