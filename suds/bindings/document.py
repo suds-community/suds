@@ -15,6 +15,7 @@
 
 from suds import *
 from suds.bindings.binding import Binding
+from suds.schema import qualified_reference
 
 
 class Document(Binding):
@@ -37,7 +38,8 @@ class Document(Binding):
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
             ref = p.attribute('element')
-            type = self.schema.find(ref)
+            qref = qualified_reference(ref, p, self.wsdl.tns)
+            type = self.schema.find(qref)
             if type is None:
                 raise TypeNotFound(ref)
             for c in type.get_children():

@@ -28,6 +28,7 @@ def splitPrefix(name):
 """
 well known namespaces
 """
+defns = (None, None)
 xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
 xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
 
@@ -41,7 +42,7 @@ class Attribute:
         
     def resolvePrefix(self, prefix):
         """ resolve the specified prefix to a known namespace """
-        ns = (None,None)
+        ns = defns
         if self.parent is not None:
             ns = self.parent.resolvePrefix(prefix)
         return ns
@@ -67,7 +68,7 @@ class Attribute:
     def namespace(self):
         """ get the attributes namespace """
         if self.prefix is None:
-            return (None,None)
+            return defns
         else:
             return self.resolvePrefix(self.prefix)
     
@@ -359,7 +360,7 @@ class Element:
         else:
             return self.resolvePrefix(self.prefix)
         
-    def resolvePrefix(self, prefix, default=(None,None)):
+    def resolvePrefix(self, prefix, default=defns):
         """ resolve the specified prefix into a namespace """
         n = self
         while n is not None:
