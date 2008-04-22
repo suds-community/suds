@@ -79,6 +79,7 @@ class ServiceProxy(object):
         """ request failed, process reply based on reason """
         status, reason = (error.code, error.msg)
         reply = error.fp.read()
+        self.log.debug('http failed:\n%s', reply)
         if status == 500:
             if len(reply) > 0:
                 return (status, self.binding.get_fault(reply))
