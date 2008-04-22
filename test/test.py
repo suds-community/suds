@@ -47,8 +47,20 @@ class Test:
     
     def test_misc(self):
         
+        service = ServiceProxy('https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl')
+        print service
+        print service.genSSHA('hello', 'sha1')
+        
+        #service = ServiceProxy('http://ws.strikeiron.com/OptionsOnTrack/OptionData3?WSDL')
+        service = ServiceProxy('file:///home/jortel/Desktop/OptionData3.wsdl.xml')
+        print service
+        sys.exit()
+        
         service = ServiceProxy('http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL')
         print service
+        d = dict(authCode='abc', userId='123', vendorPassword='xx', vendorUserName='yy')
+        #bean = service.getUserBean('abc', '123', 'mypassword', 'myusername')
+        bean = service.getUserBean(d)
         return
         
         service = ServiceProxy(get_url('test'))
@@ -353,9 +365,10 @@ class Test:
 
     def rpc_enctest(self):
         
-        service = ServiceProxy('http://test.closingmarket.com/ClosingMarketService/cminterface.asmx?WSDL')
-        print service
+
         try:
+            service = ServiceProxy('http://test.closingmarket.com/ClosingMarketService/cminterface.asmx?WSDL')
+            print service
             token = service.Login( 'DVTest1@bbwcdf.com', 'DevTest1')
             print token
         except Exception, e:
@@ -619,11 +632,11 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    test.test_misc()
+    #test.test_misc()
     test.basic_test()
     test.rpc_test()
     test.rpc_enctest()
     test.auth_test()
-    #test.resource_test()
-    #test.perspectives_test()
-    #test.contentsource_test()
+    test.resource_test()
+    test.perspectives_test()
+    test.contentsource_test()
