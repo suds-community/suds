@@ -315,11 +315,10 @@ class Element:
         """ get/set an attribute by name and optional namespace """
         attr = self.attrib(name, ns)
         if value is None:
-            if attr is not None:
-                if attr.value is None:
-                    return default
-                else:
-                    return attr.getValue()
+            if attr is None or attr.value is None:
+                return default
+            else:
+                return attr.getValue()
         else:
             if attr is None:
                 attr = Attribute(name, value)

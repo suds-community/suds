@@ -46,21 +46,35 @@ class WSDL:
             self.warn('tns (%s), not mapped to a prefix', uri)
         return ns
         
-    def get_binding(self, faults):
+    def get_binding(self, method, faults):
         """ get the binding object """
-        style = self.get_binding_style()
+        binding = None
+        style = self.get_binding_style(method)
         if style == 'document':
-            self.log.debug('document/literal binding detected')
-            return Document(self, faults)
+            binding = Document(self, faults)
         elif style == 'rpc':
-            self.log.debug('rpc/literal binding detected')
-            return RPC(self, faults)
-        self.log.debug('document binding (%s), not-supported', style)
-        return None 
+            binding = RPC(self, faults)
+        else:
+            raise Exception('binding (%s), not-supported' % style)
+        use = self.get_input_encoding(method)
+        if use == 'literal':
+            binding.use_literal()
+        elif use == 'encoded':
+            binding.use_encoded()
+        else:
+            raise Exception('soap:body (%s), not-supported' % style)
+        return binding 
         
-    def get_binding_style(self):
+    def get_binding_style(self, method):
         """ get the binding style """
-        return self.root.childAtPath('binding/binding').attribute('style')
+        binding = self.root.childAtPath('binding/binding')
+        style = binding.attribute('style', default='document')
+        for operation in self.root.childrenAtPath('binding/operation'):
+            if method == operation.attribute('name'):
+                operation = operation.getChild('operation')
+                style = operation.attribute('style', default=style)
+                break
+        return style
     
     def get_input_encoding(self, method):
         """ get an operation's encoding @use """
@@ -81,7 +95,8 @@ class WSDL:
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""
-        return self.root.childAtPath('service/port/address').attribute('location')
+        port_address = self.root.childAtPath('service/port/address')
+        return port_address.attribute('location')
     
     def get_schema(self):
         """ get a collective schema of all <schema/> nodes """
@@ -89,12 +104,13 @@ class WSDL:
         for sr in self.root.childrenAtPath('types/schema'):
             schema = Schema(sr, self.url, container)
             container.append(schema)
-        self.log.debug('aggregated schema:\n', container)
+        self.log.debug('schema (container):\n', container)
         return container
     
     def get_servicename(self):
         """get the name of the serivce defined in the wsdl"""
-        return self.root.getChild('service').attribute('name')
+        service = self.root.getChild('service')
+        return service.attribute('name')
     
     def get_operation(self, name):
         """get an operation definition by name"""
