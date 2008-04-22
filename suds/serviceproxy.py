@@ -15,7 +15,9 @@
 
 from urllib2 import Request, urlopen, HTTPError
 from suds import *
-from wsdl import WSDL
+from suds.builder import Builder
+from suds.wsdl import WSDL
+
 
 class ServiceProxy(object):
     
@@ -24,36 +26,56 @@ class ServiceProxy(object):
     def __init__(self, url, faults=True):
         self.faults = faults
         self.wsdl = WSDL(url)
-        self.binding = self.wsdl.get_binding(faults)
+        self.schema = self.wsdl.get_schema()
+        self.builder = Builder(self.schema)
         self.log = logger('serviceproxy')
         
     def get_methods(self):
         """get a list of methods provided by this service"""
-        return self.binding.get_method_descriptions()
+        list = []
+        for op in self.wsdl.get_operations():
+            method = op.attribute('name')
+            binding = self.wsdl.get_binding(method, self.faults)
+            ptypes = binding.get_ptypes(method)
+            params = ['%s{%s}' % (t[0], t[1].asref()[0]) for t in ptypes]
+            m = '%s(%s)' % (method, ', '.join(params))
+            list.append(m)
+        return list
     
     def get_instance(self, type):
-        """get an instance of the specified object type"""
-        return self.binding.get_instance(type)
+        """get an instance of an meta-object by type."""
+        try:
+            return self.builder.build(type)
+        except TypeNotFound, e:
+            raise e
+        except:
+            raise BuildError(type)
     
     def get_enum(self, type):
-        """get an enumeration of the specified object type"""
-        return self.binding.get_enum(type)
+        """ get an enumeration """
+        result = None
+        type = self.schema.find(name)
+        if type is not None:
+            result = Property()
+            for e in type.get_children():
+                result.dict()[e.get_name()] = e.get_name()
+        return result
         
     def _send(self, method, *args):
         """"send the required soap message to invoke the specified method"""
         result = None
-        self.__set_encoding(method)
+        binding = self.wsdl.get_binding(method.name, self.faults)
         headers = self.__headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
-        msg = self.binding.get_message(method.name, *args)
+        msg = binding.get_message(method.name, *args)
         self.log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             request = Request(location, msg, headers)
             fp = urlopen(request)
             reply = fp.read()
-            result = self.__succeeded(method, reply)
+            result = self.__succeeded(binding, method, reply)
         except HTTPError, e:
-            result = self.__failed(method, e)
+            result = self.__failed(binding, method, e)
         return result
     
     def __headers(self, method):
@@ -63,11 +85,11 @@ class ServiceProxy(object):
             { 'SOAPAction': action,
                'Content-Type' : 'text/xml' }
     
-    def __succeeded(self, method, reply):
+    def __succeeded(self, binding, method, reply):
         """ request succeeded, process reply """
         self.log.debug('http succeeded:\n%s', reply)
         if len(reply) > 0:
-            p = self.binding.get_reply(method.name, reply)
+            p = binding.get_reply(method.name, reply)
             if self.faults:
                 return p
             else:
@@ -75,30 +97,20 @@ class ServiceProxy(object):
         else:
             return (200, None)
         
-    def __failed(self, method, error):
+    def __failed(self, binding, method, error):
         """ request failed, process reply based on reason """
         status, reason = (error.code, error.msg)
         reply = error.fp.read()
         self.log.debug('http failed:\n%s', reply)
         if status == 500:
             if len(reply) > 0:
-                return (status, self.binding.get_fault(reply))
+                return (status, binding.get_fault(reply))
             else:
                 return (status, None)
         if self.faults:
             raise Exception((status, reason))
         else:
             return (status, None)
-        
-    def __set_encoding(self, method):
-        """ set the input message encoding """
-        use = self.wsdl.get_input_encoding(method.name)
-        if use == 'literal':
-            self.binding.use_literal()
-        elif use == 'encoded':
-            self.binding.use_encoded()
-        else:
-            raise Exception('method (%s) has unknown encoding (%s)' % (method, use))
         
     def __str__(self):
         return unicode(self).encode('utf-8')

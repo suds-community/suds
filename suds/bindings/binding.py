@@ -18,7 +18,6 @@ from suds.sax import Parser, Element, xsins
 from suds.property import Property
 from suds.bindings.literal.marshaller import Marshaller as Literal
 from suds.bindings.encoded.marshaller import Marshaller as Encoded
-from builder import Builder
 from unmarshaller import Unmarshaller
 
 docfmt = """
@@ -43,7 +42,6 @@ class Binding:
     def __init__(self, wsdl, faults):
         self.wsdl = wsdl
         self.schema = wsdl.get_schema()
-        self.builder = Builder(self.schema)
         self.faults = faults
         self.log = logger('binding')
         self.parser = Parser()
@@ -58,17 +56,6 @@ class Binding:
     def use_encoded(self):
         """ set the input message encoding to "encoded" """
         self.marshaller = Encoded(self)
-        
-    def get_method_descriptions(self):
-        """get a list of methods provided by this service"""
-        list = []
-        ops = self.wsdl.get_operations()
-        for op in self.wsdl.get_operations():
-            ptypes = self.get_ptypes(op.attribute('name'))
-            params = ['%s{%s}' % (t[0], t[1].asref()[0]) for t in ptypes]
-            m = '%s(%s)' % (op.attribute('name'), ', '.join(params))
-            list.append(m)
-        return list
 
     def get_message(self, method_name, *args):
         """get the soap message for the specified method and args"""
@@ -114,25 +101,6 @@ class Binding:
             raise WebFault(unicode(p))
         else:
             return p.detail
-        
-    def get_instance(self, typename, *args):
-        """get an instance of an meta-object by type."""
-        try:
-            return self.builder.build(typename)
-        except TypeNotFound, e:
-            raise e
-        except:
-            raise BuildError(typename)
-    
-    def get_enum(self, name):
-        """ get an enumeration """
-        result = None
-        type = self.schema.find(name)
-        if type is not None:
-            result = Property()
-            for e in type.get_children():
-                result.dict()[e.get_name()] = e.get_name()
-        return result
                     
     def translate_node(self, node):
         """translate the specified node into a property object"""
