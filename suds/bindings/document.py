@@ -56,7 +56,8 @@ class Document(Binding):
         result = False
         for p in msg.getChildren('part'):
             ref = p.attribute('element')
-            type = self.schema.find(ref)
+            qref = qualified_reference(ref, p, self.wsdl.tns)
+            type = self.schema.find(qref)
             elements = type.get_children(empty=[])
             result = ( len(elements) > 0 and elements[0].unbounded() )
             break
