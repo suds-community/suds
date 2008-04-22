@@ -49,7 +49,7 @@ class Test:
         
         service = ServiceProxy('http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL')
         print service
-        sys.exit()
+        return
         
         service = ServiceProxy(get_url('test'))
         
@@ -360,6 +360,7 @@ class Test:
             print token
         except Exception, e:
             print e
+
             
         print '************ JEFF ***************'
         
@@ -618,11 +619,11 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    #test.test_misc()
+    test.test_misc()
     test.basic_test()
     test.rpc_test()
     test.rpc_enctest()
-    #test.auth_test()
+    test.auth_test()
     #test.resource_test()
     #test.perspectives_test()
     #test.contentsource_test()

@@ -33,28 +33,37 @@ def qualified_reference(ref, resolvers, tns=defns):
                 break 
     return (n, ns)
 
+def isqref(object):
+    """ get whether the object is a qualified reference """
+    return (\
+        isinstance(object, tuple) and \
+        len(object) == 2 and \
+        isinstance(object[0], basestring) and \
+        isinstance(object[1], tuple) and \
+        len(object[1]) == 2 )
+
 
 class SchemaCollection(list):
     
     """ a collection of schemas providing a wrapper """
     
-    def __init__(self):
-        self.root = None
-        self.tns = defns
+    def __init__(self, wsdl):
+        self.root = wsdl.root
+        self.tns = wsdl.tns
         self.log = logger('schema')
-        self.content = []
-    
-    def append(self, schema):
-        self.content.append(schema)
-        if self.root is None:
-            self.root = schema.root
-            self.tns = schema.tns
+        
+    def imported(self, ns):
+        """ find schema imported by namespace """
+        for s in self:
+            if s.tns[1] == ns[1]:
+                return s
+        return None
 
     def find(self, path, history=None):
         """ see Schema.find() """
         if history is None:
             history = []
-        for s in self.content:
+        for s in self:
             result = s.find(path, history)
             if result is not None:
                 return result
@@ -76,12 +85,13 @@ class Schema:
         'element' : lambda x,y: Element(x, y)
     }
     
-    def __init__(self, root, baseurl=None):
+    def __init__(self, root, baseurl=None, container=None):
         """ construct the sequence object with a schema """
+        self.log = logger('schema')
         self.root = root
         self.tns = self.__tns()
         self.baseurl = baseurl
-        self.log = logger('schema')
+        self.container = container
         self.hints = {}
         self.types = {}
         self.children = []
@@ -103,6 +113,13 @@ class Schema:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
         
+    def imported(self, ns):
+        """ find schema imported by namespace """
+        if self.container is not None:
+            return self.container.imported(ns)
+        else:
+            return None
+        
     def find(self, path, history=None):
         """
         get the definition object for the schema type located at the specified path.
@@ -116,10 +133,9 @@ class Schema:
             cached = self.types.get(path, None)
             if cached is not None:
                 return cached
-            if self.builtin(path):
-                b = XBuiltin(self, path)
-                self.types[path] = b
-                return b
+        if self.builtin(path):
+            b = XBuiltin(self, path)
+            return b
         result = self.__find_path(path, history)
         if result is not None and \
             isinstance(path, basestring):
@@ -135,14 +151,22 @@ class Schema:
     
     def builtin(self, ref, context=None):
         """ get whether the specified type reference is an (xsd) builtin """
+        w3 = 'http://www.w3.org'
         try:
+            if self.isqref(ref):
+                ns = ref[1]
+                return ns[1].startswith(w3)
             if context is None:
-                context = self.root
+                context = self.root    
             prefix = splitPrefix(ref)[0]
-            prefixes = context.findPrefixes('http://www.w3.org', 'startswith')
+            prefixes = context.findPrefixes(w3, 'startswith')
             return ( prefix in prefixes )
         except:
             return False
+    
+    def isqref(self, object):
+        """ get whether the object is a qualified reference """
+        return isqref(object)
     
     def __find_path(self, path, history):
         """
@@ -185,10 +209,7 @@ class Schema:
                     p = qualified_reference(p, self.root, self.tns)
                     qualified.append(p)
             return qualified
-        if isinstance(path, tuple) and \
-            len(path) == 2 and \
-            isinstance(path[0], basestring) and \
-            isinstance(path[1], tuple):
+        if self.isqref(path):
             path = (path,)
         return path
     
@@ -241,6 +262,18 @@ class SchemaProperty:
             return qualified_reference(ref, self.root, self.schema.tns)
         else:
             return (None, defns)
+        
+    def asref(self):
+        """ get the types true type as need for external qualified reference """
+        ref = self.ref()
+        if ref is None:
+            name = self.get_name()
+            ns = self.namespace()
+        else:
+            qref = qualified_reference(ref, self.root, self.schema.tns)
+            name = qref[0]
+            ns = qref[1]
+        return (':'.join((ns[0], name)), ns)
     
     def get_children(self, empty=None):
         """ get child (nested) schema definition nodes """ 
@@ -265,9 +298,10 @@ class SchemaProperty:
         if history is None:
             history = []
         result = self
-        reftype = self.ref()
+        ref = self.ref()
         if self.custom():
-            resolved = self.schema.find(reftype, history)
+            ref = qualified_reference(ref, self.root, self.namespace())
+            resolved = self.schema.find(ref, history)
             if resolved is not None:
                 result = resolved
         return result
@@ -286,7 +320,7 @@ class SchemaProperty:
         return unicode(self).encode('utf-8')
             
     def __unicode__(self):
-        return u'ns=%s, name=(%s), qref=(%s)' \
+        return u'ns=%s, name=(%s), qref=%s' \
             % (self.namespace(),
                   self.get_name(),
                   self.qref())
@@ -455,9 +489,9 @@ class Import(SchemaProperty):
         """ create the object with a schema and root node """
         SchemaProperty.__init__(self, schema, root)
         self.imported = None
+        ns = (None, root.attribute('namespace'))
         location = root.attribute('schemaLocation')
-        if location is not None:
-            self.__import(location)
+        self.__import(ns, location)
         self.__add_children()
 
     def namespace(self):
@@ -470,20 +504,35 @@ class Import(SchemaProperty):
             for ic in self.imported.children:
                 self.children.append(ic)
 
-    def __import(self, uri):
+    def __import(self, ns, location):
         """ import the xsd content at the specified url """
-        p = Parser()
-        try:           
-            if '://' not in uri:
-                uri = urljoin(self.schema.baseurl, uri)
-            imp_root = p.parse(url=uri).root()
-            self.imported = Schema(imp_root, uri)
-            self.__update_tns(imp_root)
-            self.root.parent.replaceChild(self.root, imp_root)
-            self.root = imp_root
-            self.log.debug('schema at (%s)\n\timported with tns=%s', uri, self.namespace())
-        except tuple, e:
-            self.log.error('imported schema at (%s), not-found\n\t%s', uri, unicode(e))
+        try:
+            if location is None:
+                schema = self.schema.imported(ns)
+                if schema is not None:
+                    imp_root = schema.root.clone()
+                    self.__process_import(imp_root, ns[1])
+                    return
+                else:
+                    location = ns[1]
+            if '://' not in location:
+                location = urljoin(self.schema.baseurl, location)
+            imp_root = Parser().parse(url=location).root()
+            self.__process_import(imp_root, location)
+        except Exception, e:
+            self.log.debug(
+                'imported schema at (%s), not-found\n\t%s', 
+                location, unicode(e))
+            
+    def __process_import(self, imp_root, location):
+        """ process the imported schema """
+        self.imported = Schema(imp_root, location)
+        self.__update_tns(imp_root)
+        self.root.parent.replaceChild(self.root, imp_root)
+        self.root = imp_root
+        self.log.debug(
+            'schema at (%s)\n\timported with tns=%s\n%s',
+            location, self.namespace(), self.schema.root)       
             
     def __update_tns(self, imp_root):
         """
@@ -528,7 +577,11 @@ class XBuiltin(SchemaProperty):
     
     def __init__(self, schema, name):
         SchemaProperty.__init__(self, schema, schema.root)
-        self.name = name
+        if schema.isqref(name):
+            ns = name[1]
+            self.name = ':'.join((ns[0], name[0]))
+        else:
+            self.name = name
         
     def builtin(self, ref, context=None):
         return True

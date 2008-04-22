@@ -16,7 +16,7 @@
 from suds import *
 from suds.schema import XBuiltin
 from suds.bindings.binding import Binding
-
+from suds.schema import qualified_reference
 
 class RPC(Binding):
     
@@ -38,9 +38,10 @@ class RPC(Binding):
         msg = self.wsdl.get_message(input.attribute('message'))
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
-            type = self.schema.find(ref)
+            qref = qualified_reference(ref, p, self.wsdl.tns)
+            type = self.schema.find(qref)
             if type is None:
-                raise TypeNotFound(ref)
+                raise TypeNotFound(qref)
             params.append((p.attribute('name'), type))
         self.log.debug('parameters %s for method %s', tostr(params), method)
         return params
@@ -54,7 +55,8 @@ class RPC(Binding):
         result = False
         for p in msg.getChildren('part'):
             ref = p.attribute('type')
-            type = self.schema.find(ref)
+            qref = qualified_reference(ref, p, self.wsdl.tns)
+            type = self.schema.find(qref)
             elements = type.get_children(empty=[])
             result = ( len(elements) > 0 and elements[0].unbounded() )
             break

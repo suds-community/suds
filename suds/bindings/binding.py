@@ -65,7 +65,7 @@ class Binding:
         ops = self.wsdl.get_operations()
         for op in self.wsdl.get_operations():
             ptypes = self.get_ptypes(op.attribute('name'))
-            params = ['%s{%s}' % (t[0], t[1].qref()[0]) for t in ptypes]
+            params = ['%s{%s}' % (t[0], t[1].asref()[0]) for t in ptypes]
             m = '%s(%s)' % (op.attribute('name'), ', '.join(params))
             list.append(m)
         return list

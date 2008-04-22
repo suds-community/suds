@@ -85,12 +85,12 @@ class WSDL:
     
     def get_schema(self):
         """ get a collective schema of all <schema/> nodes """
-        result = SchemaCollection()
+        container = SchemaCollection(self)
         for sr in self.root.childrenAtPath('types/schema'):
-            schema = Schema(sr, self.url)
-            result.append(schema)
-        self.log.debug('aggregated schema:\n', result)
-        return result
+            schema = Schema(sr, self.url, container)
+            container.append(schema)
+        self.log.debug('aggregated schema:\n', container)
+        return container
     
     def get_servicename(self):
         """get the name of the serivce defined in the wsdl"""

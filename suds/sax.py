@@ -40,6 +40,12 @@ class Attribute:
         self.prefix, self.name = splitPrefix(name)
         self.value = encode(value)
         
+    def clone(self, parent=None):
+        """ clone the object """
+        a = Attribute(self.qname(), self.value)
+        a.parent = parent
+        return a
+        
     def resolvePrefix(self, prefix):
         """ resolve the specified prefix to a known namespace """
         ns = defns
@@ -121,6 +127,17 @@ class Element:
             self.parent = None
         self.children = []
         self.applyns(ns)
+        
+    def clone(self, parent=None):
+        """ deep clone of this node """
+        root = Element(self.qname(), parent, self.namespace())
+        for a in self.attributes:
+            root.append(a.clone(self))
+        for c in self.children:
+            root.append(c.clone(self))
+        for item in self.nsprefixes.items():
+            root.addPrefix(item[0], item[1])
+        return root
         
     def getRoot(self):
         """ get the root of the tree """
