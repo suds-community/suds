@@ -176,5 +176,4 @@ class Binding:
         """get method fragment"""
         prefix = self.wsdl.tns[0]
         method = Element('%s:%s' % (prefix, name))
-        method.attribute('xsi:type', '%s:%s' % (prefix, name))
         return method
