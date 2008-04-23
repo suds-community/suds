@@ -15,6 +15,7 @@
 
 from urllib2 import Request, urlopen, HTTPError
 from suds import *
+from suds.property import Property
 from suds.builder import Builder
 from suds.wsdl import WSDL
 
