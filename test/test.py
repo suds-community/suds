@@ -51,16 +51,13 @@ class Test:
         print service
         print service.genSSHA('hello', 'sha1')
         
-        #service = ServiceProxy('http://ws.strikeiron.com/OptionsOnTrack/OptionData3?WSDL')
-        service = ServiceProxy('file:///home/jortel/Desktop/OptionData3.wsdl.xml')
-        print service
-        sys.exit()
-        
         service = ServiceProxy('http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL')
         print service
-        d = dict(authCode='abc', userId='123', vendorPassword='xx', vendorUserName='yy')
-        #bean = service.getUserBean('abc', '123', 'mypassword', 'myusername')
-        bean = service.getUserBean(d)
+        try:
+            bean = service.getUserBean('abc', '123', 'mypassword', 'myusername')
+        except WebFault, f:
+            print f
+            
         return
         
         service = ServiceProxy(get_url('test'))
@@ -373,7 +370,6 @@ class Test:
             print token
         except Exception, e:
             print e
-
             
         print '************ JEFF ***************'
         
@@ -428,9 +424,6 @@ class Test:
         print 'login()'
         subject = service.login('rhqadmin', 'rhqadmin')
         print '\nreply(\n%s\n)\n' % str(subject)
-        
-        marshaller = Marshaller(service.binding)
-        print marshaller.process('subject', subject)
         
         #
         # create page control and get all subjects
@@ -632,7 +625,7 @@ if __name__ == '__main__':
     #test5()
     #test3()
     test = Test()
-    #test.test_misc()
+    test.test_misc()
     test.basic_test()
     test.rpc_test()
     test.rpc_enctest()

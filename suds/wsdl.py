@@ -135,7 +135,7 @@ class WSDL:
             
     def mapped_prefixes(self):
         """ get a list of mapped prefixes """
-        return self.root.flattened_nsprefixes()
+        return self.root.flattenedPrefixes()
     
     def __str__(self):
         return unicode(self).encode('utf-8')

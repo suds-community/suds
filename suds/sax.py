@@ -326,15 +326,6 @@ class Element:
             else:
                 attr.setValue(value)
             return attr
-                
-    def flattenedAttributes(self):
-        """ get flattened list of attributes for branch in the tree """
-        result = []
-        for a in self.attributes:
-            result.append(a)
-        for c in self.children:
-            result += c.flattenedAttributes()
-        return result
 
     def flattenedTree(self, addSelf=True):
         """ get flattened list of attributes for this branch in the tree """
@@ -345,7 +336,7 @@ class Element:
             result.append(c, False)
         return result
     
-    def flattened_nsprefixes(self):
+    def flattenedPrefixes(self):
         """ get a flattened list of all ns prefixes for this branch in the tree """
         result = []
         for item in self.nsprefixes.items():
@@ -353,7 +344,7 @@ class Element:
                 continue
             result.append((item[0], item[1]))
         for c in self.children:
-            cp = c.flattened_nsprefixes()
+            cp = c.flattenedPrefixes()
             result += [item for item in cp if item not in result]
         return result
         
@@ -398,6 +389,17 @@ class Element:
         for c in self.children:
             c.updatePrefix(p, u)
             
+    def replaceNamespace(self, uA, uB):
+        """ replace uri {uA} with uri {uB} (recursive) """
+        if self.expns is not None and \
+            self.expns[1] == uA:
+            self.expns = (None, uB)
+        for item in self.nsprefixes.items():
+            if item[1] == uA:
+                self.nsprefixes[item[0]] = uB
+        for c in self.children:
+            c.replaceNamespace(uA, uB)
+            
     def clearPrefix(self, prefix):
         """ clear the specified prefix from the mapping """
         if prefix in self.nsprefixes:
@@ -440,7 +442,7 @@ class Element:
                     del self.nsprefixes[p]
             else:
                 self.parent.nsprefixes[p] = u
-                del self.nsprefixes[p]
+                del self.nsprefixes[p]       
 
     def isempty(self):
         """ get whether the element has no children """

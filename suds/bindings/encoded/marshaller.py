@@ -46,26 +46,30 @@ class Marshaller(Base):
         """ create the root node """
         type = pdef[1]
         ns = type.namespace()
-        tag = ':'.join((ns[0], pdef[0]))
+        if len(type):
+            tag = ':'.join((ns[0], pdef[0]))
+        else:
+            tag = pdef[0]
         node = Element(tag)
         node.addPrefix(ns[0], ns[1])
-        ref,refns = type.asref()
-        node.attribute('xsi:type', ref)
-        node.addPrefix(refns[0], refns[1])
+        self.set_type(node, type)
         return node
     
     def write(self, parent, property, tag, object):
         """ write the content of the property object using the specified tag """
         self.path.append(tag)
-        st = self.soaptype(tag)
-        self.write_content(parent, property, tag, object, st)
+        path = '.'.join(self.path)
+        type = self.schema.find(path)
+        if type is None:
+            raise TypeNotFound(path)
+        self.write_content(parent, property, tag, object, type)
         self.path.pop()         
        
-    def write_content(self, parent, property, tag, object, st):
+    def write_content(self, parent, property, tag, object, type):
         """ write the content of the property object using the specified tag """
         if object is None:
             child = Element(tag)
-            self.set_type(child, st)
+            self.set_type(child, type)
             if self.binding.nil_supported:
                 child.setnil()
             parent.append(child)
@@ -74,7 +78,7 @@ class Marshaller(Base):
             object = Property(object)
         if isinstance(object, Property):
             child = Element(tag)
-            self.set_type(child, st)
+            self.set_type(child, type)
             self.process_metadata(object, child)
             parent.append(child)
             for item in object.get_items():
@@ -91,31 +95,14 @@ class Marshaller(Base):
             parent.attribute(tag[1:], unicode(object))
         else:
             child = Element(tag)
-            self.set_type(child, st)
+            self.set_type(child, type)
             child.setText(unicode(object))
             parent.append(child)
-            
-    def soaptype(self, tag):
-        """ get the soap type for the specified type """
-        path = '.'.join(self.path)
-        type = self.schema.find(path)
-        if type is None:
-            raise TypeNotFound(path)
-        ref = type.ref()
-        if ref is None:
-            ref = tag
-        p,v = splitPrefix(ref)
-        if p is None:
-            ns = type.namespace()
-        else:
-            ref = v
-            ns = type.root.resolvePrefix(p)
-        return (ref, ns)
     
-    def set_type(self, node, st):
+    def set_type(self, node, type):
         """ set the node's soap type """
-        name, ns = st
-        node.attribute('xsi:type', ':'.join((ns[0], name)))
+        name, ns = type.asref()
+        node.attribute('xsi:type', name)
         node.addPrefix(ns[0], ns[1])       
 
     def process_metadata(self, p, node):

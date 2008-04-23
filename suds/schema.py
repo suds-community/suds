@@ -37,10 +37,10 @@ def isqref(object):
     """ get whether the object is a qualified reference """
     return (\
         isinstance(object, tuple) and \
-        len(object) == 2 and \
+        len(object) == len(defns) and \
         isinstance(object[0], basestring) and \
         isinstance(object[1], tuple) and \
-        len(object[1]) == 2 )
+        len(object[1]) == len(defns) )
 
 
 class SchemaCollection(list):
@@ -68,6 +68,15 @@ class SchemaCollection(list):
             if result is not None:
                 return result
         return None
+    
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
+        result = []
+        for s in self:
+            result.append(unicode(s))
+        return '\n'.join(result)
 
 
 class Schema:
@@ -103,7 +112,10 @@ class Schema:
             if node.name in self.factory:
                 cls = self.factory[node.name]
                 child = cls(self, node)
-                self.children.append(child)
+                if isinstance(child, Import):
+                    self.children += child.children
+                else:
+                    self.children.append(child)
         self.children.sort()
                 
     def __tns(self):
@@ -167,6 +179,14 @@ class Schema:
     def isqref(self, object):
         """ get whether the object is a qualified reference """
         return isqref(object)
+    
+    def reset_tns(self, ns):
+        """ reset the target namespace """
+        uA = self.tns[1]
+        uB = ns[1]
+        if uA != uB:
+            self.root.replaceNamespace(uA, uB)
+            self.tns = (None, uB)      
     
     def __find_path(self, path, history):
         """
@@ -298,9 +318,8 @@ class SchemaProperty:
         if history is None:
             history = []
         result = self
-        ref = self.ref()
         if self.custom():
-            ref = qualified_reference(ref, self.root, self.namespace())
+            ref = qualified_reference(self.ref(), self.root, self.namespace())
             resolved = self.schema.find(ref, history)
             if resolved is not None:
                 result = resolved
@@ -309,12 +328,18 @@ class SchemaProperty:
     def custom(self):
         """ get whether this object schema type is custom """
         ref = self.ref()
-        return self.schema.custom(ref)
+        if ref is not None:
+            return self.schema.custom(ref)
+        else:
+            return False
     
     def builtin(self):
         """ get whether this object schema type is an (xsd) builtin """
         ref = self.ref()
-        return self.schema.builtin(ref)
+        if ref is None:
+            return self.schema.builtin(ref)
+        else:
+            return False
         
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -327,6 +352,9 @@ class SchemaProperty:
     
     def __repr__(self):
         return unicode(self).encode('utf-8')
+    
+    def __len__(self):
+        return len(self.children)
 
 
 class Complex(SchemaProperty):
@@ -511,60 +539,25 @@ class Import(SchemaProperty):
                 schema = self.schema.imported(ns)
                 if schema is not None:
                     imp_root = schema.root.clone()
-                    self.__process_import(imp_root, ns[1])
+                    location = ns[1]
+                    self.__process_import(imp_root, ns, location)
                     return
                 else:
                     location = ns[1]
             if '://' not in location:
                 location = urljoin(self.schema.baseurl, location)
             imp_root = Parser().parse(url=location).root()
-            self.__process_import(imp_root, location)
+            self.__process_import(imp_root, ns, location)
         except Exception, e:
             self.log.debug(
                 'imported schema at (%s), not-found\n\t%s', 
                 location, unicode(e))
             
-    def __process_import(self, imp_root, location):
+    def __process_import(self, imp_root, ns, location):
         """ process the imported schema """
-        self.imported = Schema(imp_root, location)
-        self.__update_tns(imp_root)
-        self.root.parent.replaceChild(self.root, imp_root)
-        self.root = imp_root
-        self.log.debug(
-            'schema at (%s)\n\timported with tns=%s\n%s',
-            location, self.namespace(), self.schema.root)       
-            
-    def __update_tns(self, imp_root):
-        """
-        update the target namespace when the schema is imported
-        specifying another namespace
-        """
-        impuri = self.root.attribute('namespace')
-        if impuri is None:
-            return
-        prefixes = (imp_root.findPrefix(impuri), self.root.findPrefix(impuri))
-        if prefixes[1] is None:
-            return
-        self.log.debug('imported (%s), prefix remapped as (%s)', impuri, prefixes[1])
-        self.imported.tns = (prefixes[1], impuri)
-        if prefixes[0] is None:
-            return
-        if prefixes[0] == prefixes[1]:
-            return
-        imp_root.clearPrefix(prefixes[0])
-        imp_root.addPrefix(prefixes[1], impuri)
-        self.__update_references(imp_root, prefixes)
-        
-    def __update_references(self, imp_root, prefixes):
-        """ update all attributes with references to the old prefix to the new prefix """
-        for a in imp_root.flattenedAttributes():
-            value = a.getValue()
-            if value is None: continue
-            if ':' in value:
-                p = value.split(':')
-                if p[0] == prefixes[0]:
-                    value = ':'.join((prefixes[1], value[1]))
-                    a.setValue(value)
+        schema = Schema(imp_root, location)
+        schema.reset_tns(ns)
+        self.imported = schema
         
     def __cmp__(self, other):
         """ <import/> first """
@@ -583,8 +576,11 @@ class XBuiltin(SchemaProperty):
         else:
             self.name = name
         
-    def builtin(self, ref, context=None):
-        return True
+    def builtin(self):
+        return False
+    
+    def custom(self):
+        return False
         
     def ref(self):
         return self.name
