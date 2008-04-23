@@ -42,16 +42,16 @@ class ServiceProxy(object):
             list.append(m)
         return list
     
-    def get_instance(self, type):
+    def get_instance(self, name):
         """get an instance of an meta-object by type."""
         try:
-            return self.builder.build(type)
+            return self.builder.build(name)
         except TypeNotFound, e:
             raise e
         except:
-            raise BuildError(type)
+            raise BuildError(name)
     
-    def get_enum(self, type):
+    def get_enum(self, name):
         """ get an enumeration """
         result = None
         type = self.schema.find(name)
