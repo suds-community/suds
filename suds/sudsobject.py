@@ -12,16 +12,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-#
-# EXPERIMENTAL alternative to the Property object and is highly
-# subject to change/removal.
-# The (Base) class is a {simpler} replacement for the Property class.
-# The (Factory) class is an experiment on dynamically creating a class
-#   and not sure if there is any value in the factory or not.
-#
-
 from suds import *
 from new import classobj, function, instancemethod
+
 
 class Object:
     
@@ -166,45 +159,3 @@ class Printer:
                     return True
             return False
         return False
-
-#
-# Experimental
-# Just testing some random things here
-#
-
-if __name__ == '__main__':
-
-    A = Object.subclass('A')
-    a = A()
-    a.name='jeff'
-    print a
-    
-    class B(A):
-        def __init__(self):
-            A.__init__(self)
-    
-    b = B()
-    b.age=10
-    print b
-    
-    class C(Object):
-        def __init__(self):
-            Object.__init__(self)
-            
-    c = C()
-    c.doors = 4
-    c.hatchback=True
-    c.mpg = 30
-    c.b = b
-    print c
-    
-    c = C()
-    c.name = 'funny car'
-    setattr(c, 'doors', 2)
-    setattr(c, 'hatchback', True)
-    print c
-    
-    d = Object.instance('D', dict(jeff=10))
-    d.name = 'Elvis'
-    d.age = '66'
-    print d
