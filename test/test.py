@@ -47,7 +47,7 @@ class Test:
     
     def test_misc(self):
         
-        service = ServiceProxy('https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl')
+        service = ServiceProxy('https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl', faults=True, nil_supported=False)
         print service
         print service.genSSHA('hello', 'sha1')
         
@@ -618,8 +618,10 @@ def test5():
     print 'hint_____________________'
     for p in hint.sequences:
         print p
-        
+
+
 if __name__ == '__main__':
+    
     #logger('serviceproxy').setLevel(logging.DEBUG)
     #test4()
     #test5()
