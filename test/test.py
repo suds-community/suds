@@ -18,7 +18,7 @@ sys.path.append('../')
 from suds import *
 from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
-from suds.property import Property
+from suds.sudsobject import Object
 from suds.wsdl import WSDL
 from suds.bindings.binding import Binding
 from suds.bindings.literal.marshaller import Marshaller
@@ -100,14 +100,14 @@ class Test:
         service.binding.nil_supported = False
         print marshaller.process('dog', p)
 
-        p = Property()
-        p2 = Property()
+        p = Object()
+        p2 = Object()
         p2.msg='hello'
         p2.xx =10
         p.name = ['jeff', p2]
         print p
 
-        p = Property()
+        p = Object()
         p.first = u'jeff'+unichr(1234)
         p.age = u'44'
         x = str(p)
