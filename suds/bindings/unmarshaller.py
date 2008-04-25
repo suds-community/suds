@@ -14,11 +14,11 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.property import Property
+from suds.sudsobject import Object
 from suds.sax import xsins
 
 class Unmarshaller:
-    """ property unmarshaller """
+    """ object unmarshaller """
     
     reserved = { 'class':'cls', 'def':'dfn', }
     
@@ -32,9 +32,9 @@ class Unmarshaller:
     def process(self, node):
         """
         process the specified node and convert the XML document into
-        a property object.
+        an object.
         """
-        data = Property()
+        data = Object.instance(node.name)
         self.path.append(node.name)
         self.import_attrs(data, node)
         self.import_children(data, node)
@@ -47,15 +47,15 @@ class Unmarshaller:
         xsprefixes = node.findPrefixes(xsins[1])
         for attr in node.attributes:
             if attr.prefix in xsprefixes:
-                md = data.get_metadata()
-                md.xsd = Property()
+                md = data.__metadata__
+                md.xsd = Object.metadata()
                 md.xsd.type = attr.value
                 continue
             key = attr.name
             key = '_%s' % self.reserved.get(key, key)
             value = attr.getValue()
             value = self.booleans.get(value.lower(), value)
-            data[key] = value
+            setattr(data, key, value)
 
     def import_children(self, data, node):
         """import child nodes into the data structure"""
@@ -63,19 +63,19 @@ class Unmarshaller:
             cdata = self.process(child)
             key = self.reserved.get(child.name, child.name)
             if key in data:
-                v = data[key]
+                v = getattr(data, key)
                 if isinstance(v, list):
-                    data[key].append(cdata)
+                    v.append(cdata)
                 else:
-                    data[key] = [v, cdata]
+                    setattr(data, key, [v, cdata])
                 continue
             if self.unbounded(key):
                 if cdata is None:
-                    data[key] = []
+                    setattr(data, key, [])
                 else:
-                    data[key] = [cdata,]
+                    setattr(data, key, [cdata,])
             else:
-                data[key] = cdata
+                setattr(data, key, cdata)
     
     def import_text(self, data, node):
         """import text nodes into the data structure"""
@@ -83,7 +83,19 @@ class Unmarshaller:
         if len(node.text):
             value = node.getText()
             value = self.booleans.get(value.lower(), value)
-            data['__text__'] = value
+            self.text(data, value)
+            
+    def text(self, data, value=None):
+        """ manage a data object's text information """
+        md = data.__metadata__
+        if value is None:
+            try:
+                return md.xml.text
+            except AttributeError:
+                return None
+        else:
+            md.xml = Object.metadata()
+            md.xml.text = value
             
     def result(self, data, node):
         """
@@ -92,17 +104,19 @@ class Unmarshaller:
         result equal to the value of the text node.
         """
         try:
+            text = self.text(data)
             if self.binding.nil_supported:
                 if node.isnil():
                     return None
-                if len(data) == 0:
+                if len(data) == 0 and \
+                    text is None:
                     return ''
             else:
-                 if len(data) == 0:
+                 if len(data) == 0 and text is None:
                      return None
-            if len(data) == 1 and self.bounded(node.name):
-                return data['__text__']
-        except Exception, e:
+            if len(data) == 0 and text is not None and self.bounded(node.name):
+                return text
+        except AttributeError, e:
             pass
         return data
     

@@ -14,32 +14,31 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.property import Property
+from suds.sudsobject import Object
 
 
 class Builder:
-    """ Builder used to construct property object for types defined in the schema """
+    """ Builder used to construct an object for types defined in the schema """
     
     def __init__(self, schema):
         """ initialize with a schema object """
         self.schema = schema
         
     def build(self, typename):
-        """ build a property object for the specified typename as defined in the schema """
+        """ build a an object for the specified typename as defined in the schema """
         type = self.schema.find(typename)
         if type is None:
             raise TypeNotFound(typename)
-        p = Property()
-        p.__type__ = type.get_name()
-        md = p.get_metadata()
-        md.xsd = Property()
+        data = Object.instance(type.get_name())
+        md = data.__metadata__
+        md.xsd = Object.metadata()
         md.xsd.type = type.get_name()
         md.xsd.ns = type.namespace()
         for c in type.get_children():
-            self.process(p, c)
-        return p
+            self.process(data, c)
+        return data
             
-    def process(self, p, type):
+    def process(self, data, type):
         """ process the specified type then process its children """
         history = [type]
         resolved = type.resolve(history)
@@ -49,10 +48,10 @@ class Builder:
         else:
             children = resolved.get_children()
             if len(children) > 0:
-                value = Property()
-        p.set(type.get_name(), value)
+                value = Object()
+        setattr(data, type.get_name(), value)
         if value is not None:
-            p = value
-        if not isinstance(p, list):
+            data = value
+        if not isinstance(data, list):
             for c in resolved.get_children():
-                self.process(p, c)
+                self.process(data, c)

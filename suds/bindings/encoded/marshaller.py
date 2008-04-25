@@ -14,32 +14,32 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.property import Property
+from suds.sudsobject import Object
 from suds.bindings.marshaller import Marshaller as Base
 from suds.sax import Element, splitPrefix
 
 
 class Marshaller(Base):
 
-    """ marshal a property object."""
+    """ marshal a data object."""
 
     def __init__(self, binding):
         """constructor """
         Base.__init__(self, binding)
         self.path = []
 
-    def process(self, pdef, property):
-        """ get the xml fragment for the property and root name """
+    def process(self, pdef, data):
+        """ get the xml fragment for the data and root name """
         type = pdef[1]
         self.path = [type.get_name()]
         root = self.__root(pdef)
-        if isinstance(property, dict):
-            property = Property(property)
-        if isinstance(property, Property):
-            for item in property.get_items():
-                self.write(root, property, item[0], item[1])
+        if isinstance(data, dict):
+            data = Object.instance(dict=data)
+        if isinstance(data, Object):
+            for item in data.items():
+                self.write(root, data, item[0], item[1])
         else:
-            root.setText(tostr(property))
+            root.setText(tostr(data))
         return root
     
     def __root(self, pdef):
@@ -55,18 +55,18 @@ class Marshaller(Base):
         self.set_type(node, type)
         return node
     
-    def write(self, parent, property, tag, object):
-        """ write the content of the property object using the specified tag """
+    def write(self, parent, data, tag, object):
+        """ write the content of the data object using the specified tag """
         self.path.append(tag)
         path = '.'.join(self.path)
         type = self.schema.find(path)
         if type is None:
             raise TypeNotFound(path)
-        self.write_content(parent, property, tag, object, type)
+        self.write_content(parent, data, tag, object, type)
         self.path.pop()         
        
-    def write_content(self, parent, property, tag, object, type):
-        """ write the content of the property object using the specified tag """
+    def write_content(self, parent, data, tag, object, type):
+        """ write the content of the data object using the specified tag """
         if object is None:
             child = Element(tag)
             self.set_type(child, type)
@@ -75,19 +75,19 @@ class Marshaller(Base):
             parent.append(child)
             return
         if isinstance(object, dict):
-            object = Property(object)
-        if isinstance(object, Property):
+            object = Object.instance(dict=object)
+        if isinstance(object, Object):
             child = Element(tag)
             self.set_type(child, type)
             self.process_metadata(object, child)
             parent.append(child)
-            for item in object.get_items():
+            for item in object.items():
                 self.write(child, object, item[0], item[1])
             return
         if isinstance(object, (list,tuple)):
             for item in object:
                 self.path.pop()
-                self.write(parent, property, tag, item)
+                self.write(parent, data, tag, item)
             return
         if tag == '__text__':
             parent.setText(unicode(object))
@@ -105,9 +105,11 @@ class Marshaller(Base):
         node.attribute('xsi:type', name)
         node.addPrefix(ns[0], ns[1])       
 
-    def process_metadata(self, p, node):
+    def process_metadata(self, data, node):
         """ process the (xsd) within the metadata """
-        md = p.get_metadata()
-        md = md.xsd
-        if md is not None:
-            self.set_type(node, (md.type, md.ns))
+        md = data.__metadata__
+        try:
+            xsd = md.xsd
+            self.set_type(node, (xsd.type, xsd.ns))
+        except AttributeError:
+            pass

@@ -47,7 +47,7 @@ class BuildError(Exception):
             """
             An error occured while building a instance of (%s).  As a result
             the object you requested could not be constructed.  It is recommended
-            that you construct the type manually uisng a Property object.
+            that you construct the type manually uisng a Suds object.
             Please notify the project mantainer of this error.
             """ % unicode(self.type)
     
