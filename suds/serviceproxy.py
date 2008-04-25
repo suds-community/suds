@@ -15,7 +15,7 @@
 
 from urllib2 import Request, urlopen, HTTPError
 from suds import *
-from suds.property import Property
+from suds.sudsobject import Object
 from suds.builder import Builder
 from suds.wsdl import WSDL
 
@@ -54,13 +54,14 @@ class ServiceProxy(object):
     
     def get_enum(self, name):
         """ get an enumeration """
-        result = None
         type = self.__schema.find(name)
-        if type is not None:
-            result = Property()
-            for e in type.get_children():
-                result.dict()[e.get_name()] = e.get_name()
-        return result
+        if type is None:
+            raise TypeNotFound(name)
+        data = Object.instance(name)
+        for e in type.get_children():
+            enum = e.get_name()
+            setattr(data, enum, enum)
+        return data
         
     def _send(self, method, *args):
         """"send the required soap message to invoke the specified method"""

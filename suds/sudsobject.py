@@ -27,6 +27,7 @@ class Object:
     
     @classmethod
     def subclass(cls, name):
+        name = name.encode('utf-8')
         myclass = classobj(name,(cls,),{})
         init = '__init__'
         src = 'def %s(self):\n' % init
@@ -37,11 +38,24 @@ class Object:
         m =  instancemethod(fn, None, myclass)
         setattr(myclass, name, m)
         return myclass
+    
+    @classmethod
+    def instance(cls, classname=None, dict={}):
+        if classname is not None:
+            subclass = cls.subclass(classname)
+            inst = subclass()
+        else:
+            inst = Object()
+        for a in dict.items():
+            setattr(inst, a[0], a[1])
+        return inst
+    
+    class metadata: pass
 
     def __init__(self):
         self.__keylist__ = []
         self.__printer__ = Printer()
-        self.__metadata__ = {}
+        self.__metadata__ = Object.metadata()
 
     def items(self):
         for k in self.__keylist__:
@@ -63,6 +77,9 @@ class Object:
 
     def __len__(self):
         return len(self.__keylist__)
+    
+    def __contains__(self, name):
+        return name in self.__keylist__
 
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -187,7 +204,7 @@ if __name__ == '__main__':
     setattr(c, 'hatchback', True)
     print c
     
-    d = Object.subclass('D')()
+    d = Object.instance('D', dict(jeff=10))
     d.name = 'Elvis'
     d.age = '66'
     print d

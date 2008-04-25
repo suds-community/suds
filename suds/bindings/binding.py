@@ -15,7 +15,7 @@
 
 from suds import *
 from suds.sax import Parser, Element, xsins
-from suds.property import Property
+from suds.sudsobject import Object
 from suds.bindings.literal.marshaller import Marshaller as Literal
 from suds.bindings.encoded.marshaller import Marshaller as Encoded
 from unmarshaller import Unmarshaller
@@ -35,6 +35,7 @@ docfmt = """
 
 encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
 envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
+
 
 class Binding:
     """ The soap binding base class """
@@ -103,7 +104,7 @@ class Binding:
             return p.detail
                     
     def translate_node(self, node):
-        """translate the specified node into a property object"""
+        """translate the specified node into a object"""
         result = None
         if len(node.children) == 0:
             result = node.text
@@ -112,8 +113,8 @@ class Binding:
         return result
     
     def param(self, method, pdef, object):
-        """encode and return the specified property within the named root tag"""
-        if isinstance(object, (Property, dict)):
+        """encode and return the specified object within the named root tag"""
+        if isinstance(object, (Object, dict)):
             return self.marshaller.process(pdef, object)
         if isinstance(object, (list, tuple)):
             tags = []
