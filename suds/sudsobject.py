@@ -23,7 +23,7 @@
 from suds import *
 from new import classobj, function, instancemethod
 
-class Base(object):
+class Object:
     
     @classmethod
     def subclass(cls, name):
@@ -54,12 +54,12 @@ class Base(object):
             d[item[0]] = item[1]
         return d
 
-    def __setattr__(self, k, v):
-        builtin =  k.startswith('__') and k.endswith('__')
+    def __setattr__(self, name, value):
+        builtin =  name.startswith('__') and name.endswith('__')
         if not builtin and \
-            k not in self.__keylist__:
-            self.__keylist__.append(k)
-        self.__dict__[k] = v
+            name not in self.__keylist__:
+            self.__keylist__.append(name)
+        self.__dict__[name] = value
 
     def __len__(self):
         return len(self.__keylist__)
@@ -75,7 +75,7 @@ class Base(object):
 
 class Printer:
     
-    """ Pretty printing of a Base object. """
+    """ Pretty printing of a Object object. """
     
     def __init__(self):
         self.indent = (lambda n :  '%*s'%(n*3,' '))
@@ -89,11 +89,11 @@ class Printer:
         if object is None:
             return 'None'
         if self.complex(object):
-            if isinstance(object, (Base, dict)):
+            if isinstance(object, (Object, dict)):
                 return self.print_complex(object, n+2, nl)
             if isinstance(object, (list,tuple)):
                 return self.print_collection(object, n+2)
-        if isinstance(object, Base):
+        if isinstance(object, Object):
             object = object.dict()
         if isinstance(object, (dict,list,tuple)):
             if len(object) > 0:
@@ -136,7 +136,7 @@ class Printer:
     
     def complex(self, object):
         """ get whether the object is a complex type """
-        if isinstance(object, (Base, dict)):
+        if isinstance(object, (Object, dict)):
             if len(object) > 1:
                 return True
             for item in object.items():
@@ -157,7 +157,7 @@ class Printer:
 
 if __name__ == '__main__':
 
-    A = Base.subclass('A')
+    A = Object.subclass('A')
     a = A()
     a.name='jeff'
     print a
@@ -170,9 +170,9 @@ if __name__ == '__main__':
     b.age=10
     print b
     
-    class C(Base):
+    class C(Object):
         def __init__(self):
-            Base.__init__(self)
+            Object.__init__(self)
             
     c = C()
     c.doors = 4
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     setattr(c, 'hatchback', True)
     print c
     
-    d = Base.subclass('D')()
+    d = Object.subclass('D')()
     d.name = 'Elvis'
     d.age = '66'
     print d
