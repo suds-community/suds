@@ -24,9 +24,9 @@ class Document(Binding):
     Document/Literal binding style.
     """
 
-    def __init__(self, wsdl, faults=True):
+    def __init__(self, wsdl, **kwargs):
         """constructor """
-        Binding.__init__(self, wsdl, faults)
+        Binding.__init__(self, wsdl, **kwargs)
         
     def get_ptypes(self, method):
         """get a list of parameter types defined for the specified method"""

@@ -46,14 +46,14 @@ class WSDL:
             self.warn('tns (%s), not mapped to a prefix', uri)
         return ns
         
-    def get_binding(self, method, faults):
+    def get_binding(self, method, **kwargs):
         """ get the binding object """
         binding = None
         style = self.get_binding_style(method)
         if style == 'document':
-            binding = Document(self, faults)
+            binding = Document(self, **kwargs)
         elif style == 'rpc':
-            binding = RPC(self, faults)
+            binding = RPC(self, **kwargs)
         else:
             raise Exception('binding (%s), not-supported' % style)
         use = self.get_input_encoding(method)
