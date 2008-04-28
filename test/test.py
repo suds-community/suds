@@ -47,7 +47,10 @@ class Test:
     
     def test_misc(self):
         
-        service = ServiceProxy('https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl', faults=True, nil_supported=False)
+        service = ServiceProxy('https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl',
+                            faults=True,
+                            nil_supported=False,
+                            proxy={'http':'10.1.1.1'})
         print service
         print service.genSSHA('hello', 'sha1')
         

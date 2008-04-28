@@ -372,5 +372,44 @@ version-0.1.7 (04-08-08):
     for lots of collaboration on #suds.
 
 
-version-0.1.8 (in-progress):
+version-0.1.8 (04-28-08):
 
+  * Contains the first cut at the rpc/encoded soap style.
+ 
+  * Replaced Property class with suds.sudsobject.Object.  The Property class was developed a long time
+     ago with a slightly different purpose.  The suds Object is a simpler (more straight forward) approach that 
+     requires less code and works better in the debugger. 
+
+  * The Binding and the encoding is selected on a per-method basis which is more consistent with the wsdl.
+ 
+  * The (nil_supported) and (faults) flag(s) passed into the service proxy using **kwargs.  In addition to these
+     flags, a (http_proxy) flag has been added and is passed to the urllib2.Request object.  The following args
+     are supported:
+       * faults = Raise faults raised by server (default:True), else return tuple from service method invocation
+                        as (http code, object).
+       * nil_supported = The bindings will set the xsi:nil="true" on nodes that have a value=None when this
+                                      flag is True (default:True).  Otherwise, an empty node <x/> is sent.
+       * proxy = An http proxy to be specified on requests (default:{}).
+                       The proxy is defined as {protocol:proxy,}
+                                      
+  * Http proxy supported (see above).
+  
+  * ServiceProxy refactored to delegate to a SoapClient.  Since the service proxy exposes web services via getattr(),
+     any attribute (including methods) provided by the ServiceProxy class hides WS operations defined by the
+     wsdl.  So, by moving everything to the SoapClient, wsdl operations are no longer hidden without
+     having to use *hoky* names for attributes and methods in the service proxy.  Instead, the service proxy has
+     __client__ and __factory__ attributes (which really should be at low risk for name collision).  For now the 
+     get_instance() and get_enum() methods have not been moved to preserve backward compatibility.  Although,
+     the prefered API change would to replace:
+     
+     > service = ServiceProxy('myurl')
+     > person = service.get_instance('person')
+     
+     ... with something like ...
+     
+     > service = ServiceProxy('myurl')
+     > factory = service.__factory__
+     > person = factory.get_instance('person')
+     
+     After a few releases giving time for users to switch the new API, the get_instance() and get_enum()
+     methods may be removed with a notice in big letters.
