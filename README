@@ -413,3 +413,6 @@ version-0.1.8 (04-28-08):
      
      After a few releases giving time for users to switch the new API, the get_instance() and get_enum()
      methods may be removed with a notice in big letters.
+     
+   * Fixed problem where a wsdl doesn't define a <schema/> section and Suds can't resolve the prefixes for the
+      http://www.w3.org/2001/XMLSchema namespace to detect builtin types such as (xs:string).
