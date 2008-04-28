@@ -24,26 +24,47 @@ class ServiceProxy(object):
     
     """ 
     A lightweight soap based web service proxy.
-    Flags:
-       * faults = Raise faults raised by server (default:True), else return tuple from service method invocation
-                        as (http code, object).
-       * nil_supported = The bindings will set the xsi:nil="true" on nodes that have a value=None when this
-                                      flag is True (default:True).  Otherwise, an empty node <x/> is sent.
-       * proxy = An http proxy to be specified on requests (default:{}).
-                       The proxy is defined as {protocol:proxy,}
+    @ivar __client__: The embedded soap client.
+    @ivar __factory__: The embedded type factory.
     """
 
     def __init__(self, url, **kwargs):
+        """
+        @param url: The URL for the WSDL.
+        @type url: str
+        @param kwargs: keyword arguments.
+        @keyword faults: Raise faults raised by server (default:True), else return tuple from service method invocation
+                            as (http code, object).
+        @type faults: boolean
+        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes that have a value=None when this
+                            flag is True (default:True).  Otherwise, an empty node <x/> is sent.
+        @type nil_supported: boolean
+        @keyword proxy: An http proxy to be specified on requests (default:{}).
+                           The proxy is defined as {protocol:proxy,}
+        @type proxy: dict
+        """
         client = Client(url, **kwargs)
         self.__client__ = client
         self.__factory__ = Factory(client.schema)
     
     def get_instance(self, name):
-        """get an instance of an meta-object by type."""
+        """
+        Get an instance of a WSDL type by name
+        @param name: The name of a type defined in the WSDL.
+        @type name: str
+        @return: An instance on success, else None
+        @rtype: I{subclass of} L{Object}
+        """
         return self.__factory__.get_instance(name)
     
     def get_enum(self, name):
-        """ get an enumeration """
+        """
+        Get an instance of an enumeration defined in the WSDL by name.
+        @param name: The name of a enumeration defined in the WSDL.
+        @type name: str
+        @return: An instance on success, else None
+        @rtype: I{subclass of} L{Object}
+        """
         return self.__factory__.get_enum(name)
  
     def __str__(self):
@@ -65,9 +86,15 @@ class ServiceProxy(object):
 
 class Method(object):
     
-    """method wrapper""" 
+    """Method invocation wrapper""" 
     
     def __init__(self, client, name):
+        """
+        @param client: A client object.
+        @type client: L{Client}
+        @param name: The method's name.
+        @type name: str
+        """
         self.client = client
         self.name = name
         self.log = client.log
@@ -92,11 +119,21 @@ class Factory:
     """ A factory for instantiating types defined in the wsdl """
     
     def __init__(self, schema):
+        """
+        @param schema: A schema object.
+        @type schema: L{suds.schema.Schema}
+        """
         self.schema = schema
         self.builder = Builder(schema)
         
     def get_instance(self, name):
-        """get an instance of an meta-object by type."""
+        """
+        Get an instance of a WSDL type by name
+        @param name: The name of a type defined in the WSDL.
+        @type name: str
+        @return: An instance on success, else I{None}
+        @rtype: I{subclass of} L{Object}
+        """
         try:
             return self.builder.build(name)
         except TypeNotFound, e:
@@ -105,7 +142,13 @@ class Factory:
             raise BuildError(name)
     
     def get_enum(self, name):
-        """ get an enumeration """
+        """
+        Get an instance of an enumeration defined in the WSDL by name.
+        @param name: The name of a enumeration defined in the WSDL.
+        @type name: str
+        @return: An instance on success, else I{None}
+        @rtype: I{subclass of} L{Object}
+        """
         type = self.schema.find(name)
         if type is None:
             raise TypeNotFound(name)
@@ -118,9 +161,33 @@ class Factory:
 
 class Client:
     
-    """ a lightweight soap based web client"""
+    """
+    A lightweight soap based web client B{**not intended for external use}
+    @ivar faults: Indicates how I{web faults} are to be handled.
+    @type faults: boolean
+    @ivar wsdl: A WSDL object.
+    @type wsdl: L{WSDL}
+    @ivar schema: A schema object.
+    @type schema: L{suds.schema.Schema}
+    @ivar builder: A builder object used to build schema types.
+    @type builder: L{Builder}
+    """
 
     def __init__(self, url, **kwargs):
+        """
+        @param url: The URL for a WSDL.
+        @type url: str
+        @param kwargs: Keyword Arguments.
+        @keyword faults: Raise faults raised by server (default:True), else return tuple from service method invocation
+                            as (http code, object).
+        @type faults: boolean
+        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes that have a value=None when this
+                            flag is True (default:True).  Otherwise, an empty node <x/> is sent.
+        @type nil_supported: boolean
+        @keyword proxy: An http proxy to be specified on requests (default:{}).
+                           The proxy is defined as {protocol:proxy,}
+        @type proxy: dict
+        """
         self.kwargs = kwargs
         self.faults = self.kwargs.get('faults', True)
         self.wsdl = WSDL(url)
@@ -129,7 +196,13 @@ class Client:
         self.log = logger('serviceproxy')
         
     def send(self, method, *args):
-        """"send the required soap message to invoke the specified method"""
+        """
+        Send the required soap message to invoke the specified method
+        @param method: A method object to be invoked.
+        @type method: L{Method}
+        @return: The result of the method invocation.
+        @rtype: I{builtin} or I{subclass of} L{Object}
+        """
         result = None
         binding = self.wsdl.get_binding(method.name, **self.kwargs)
         headers = self.__headers(method.name)
@@ -147,7 +220,7 @@ class Client:
         return result
     
     def __set_proxies(self, location, request):
-        """ set the proxies for the request """
+        """Set the proxies for the request. """
         proxies = self.kwargs.get('proxy', {})
         protocol = urlparse.urlparse(location).scheme       
         proxy = proxies.get(protocol, None)
