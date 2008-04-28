@@ -8,10 +8,10 @@ The primary classes in the package are the:
   * no class generation
   * provides an object-like API.
   * reads wsdl at runtime for encoding/decoding
-  * provides for the following SOAP (style) binding:
+  * provides for the following SOAP (style) binding/encoding:
      * Document/Literal
      * RPC/Literal
-     * RPC/Encoded (section 5) ... under construction
+     * RPC/Encoded (section 5)
   
 Logging:
 
@@ -20,7 +20,7 @@ All messages are at level DEBUG or ERROR so, no messages are written
 unless the user does the following: suds.logger(<desired package>).setLevel(logging.<desired-level>)
 A common example (show sent/received soap messages):
   >
-  > suds.logger('suds.serviceproxy').setLevel(logging.DEBUG)
+  > suds.logger('serviceproxy').setLevel(logging.DEBUG)
   >
 
 
@@ -36,20 +36,28 @@ a proxy for that service as follows:
   > myservice = ServiceProxy(url)
 
 
-You can inspect service object with: __str()__ or __repr()__ as follows to get a list of
+You can inspect service object with: __str()__ as follows to get a list of
 methods provide by the service:
 
   >
   > print myservice
   >
 service (WebServiceTestBeanService)
-methods:
-  addPerson(person{person})
-  echo(arg0{string})
-  getPersonByName(name{name})
-  hello()
-  testExceptions()
-  updatePerson(person{anotherPerson}, name{name})
+   prefixes:
+      SOAP-ENC = "http://schemas.xmlsoap.org/soap/encoding/"
+      SOAP-ENV = "http://schemas.xmlsoap.org/soap/envelope/"
+      soap = "http://schemas.xmlsoap.org/wsdl/soap/"
+      tns = "http://myservice/namespace"
+      wsdl = "http://schemas.xmlsoap.org/wsdl/"
+      xsd = "http://www.w3.org/2001/XMLSchema"
+      xsi = "http://www.w3.org/2001/XMLSchema-instance"
+  methods:
+    addPerson(person{tns:person})
+    echo(arg0{xsd:string})
+    getPersonByName(name{tns:name})
+    hello()
+    testExceptions()
+    updatePerson(person{tns:anotherPerson}, name{tns:name})
   
  The sample ouput lists that the service named "WebServiceTestBeanService"
  has methods such as addPerson() which takes a 'person' argument of type: 'person'.
@@ -62,7 +70,8 @@ methods:
  as follows:
  
  >
- > person = myservice.get_instance('person')
+ > factory = myservice.__factory__
+ > person = factory.get_instance('person')
  > print person
  >
   {
@@ -79,7 +88,7 @@ methods:
  number is empty so we'll have to create one:
  
   >
-  > phone = service.get_instance('phone')
+  > phone = factory.get_instance('phone')
   > phone.npa = 202
   > phone.nxx = 555
   > phone.number = 1212
@@ -89,7 +98,7 @@ methods:
  name object first:
  
   >
-  > name = service.get_instance('name')
+  > name = factory.get_instance('name')
   > name.first = 'Elmer'
   > name.last = 'Fudd'
   >
@@ -139,7 +148,7 @@ Let's say the wsdl defines the following enumeration,
  AttrError exception as:
  
   >
-  > resourceCategory = myservice.get_enum('resourceCategory')   <--- None if not found.
+  > resourceCategory = factory.get_enum('resourceCategory')   <--- None if not found.
   > myservice.getResourceByCategory(resourceCategory.PLATFORM)
   >
 
@@ -151,54 +160,8 @@ In this case creating a (name) object would have to be quanified by it's parent'
 dot notation as follows:
 
   >
-  > name = service.get_instance('person.name') 
+  > name = factory.get_instance('person.name') 
   >
-
-PROPERTY OBJECT
-
-    Property object used to provide an object wrapper around a complex dictionary.
-    These (meta) objects are used to represent object passed between the web
-    service provider (server) and service consumer (client).
-    
-    Eg::
-
-        { 'name':{'first':'Elvis', 'middle':'Grant', 'last':'Prestley'},
-           'age':30, 
-           'address':{'address':'123 Lakepines Dr.','city':'Memphis', 'state':'TN', 'zip':'87373'},
-           'phone':'919-555-1212',
-           'records':[{'name':'Elvis', 'year':'1956'}, 
-                          {'name':'Just for You', 'year':'1957'},
-                          {'name':'GI Blues', 'year':'1960'}],
-           'born':'1935',
-        }
-        p = Property(data)
-        p.died = '1977'   # assign value
-        hair = p.get(haircolor='black') # get value and specify a default.
-        print p.age
-        print 'name= %s, %s, %s' % (p.name.first, p.name.last, p.name.middle)
-        print 'city=%s' % p.address.city
-        print 'state=%s' % p.address.state
-        print [r.name for r in p.records]
-        print 'born %s died %s' % (p.born, p.died)
-
-        p = Property()
-        p.name = Property()
-        p.name.first = 'Elvis'
-        p.name.last = 'Presley'
-
-        # using lazy mode, intermediate nodes are created automatically.
-        # The lazy mode is intended for building property objects.  Since nodes
-        # are created automaically, it is switched OFF by any read access.  This is
-        # to prevent a consumer of the object from accidentally adding nodes when
-        # attempting to access (read) attributes.
- 
-         p = Property(lazy=True)
-         p.name.first = 'Elvis'
-         p.name.last = 'Presley'
-         p.address.street = '25 King Lane'
-         p.address.city = 'Memphis'
-         p.address.state = 'TN'
-
 
 NOTE FOR AXIS USERS
 
@@ -246,8 +209,45 @@ as follows:
   > 
   > pagehandle = urllib2.urlopen(protocol + theurl)
 
-Since suds uses urlopen(), basic http authentication is handles
+Since suds uses urllib2.urlopen(), basic http authentication is handles
 automatically for you.
+
+PROXIES:
+
+  Suds handles proxies using urllib2.Request.set_proxy().  The proxy
+  flag can be passed to the ServiceProxy constructor as kwarg.  The proxy
+  arg must contain a dictionary where keys=protocols and values are
+  the hostname (or IP) and port of the proxy. 
+  
+> proxy = dict(http='host:80', https='host:443', ...)
+> myservice = ServiceProxy(url, proxy=proxy)
+>
+
+NIL VALUES:
+
+ Some web service endpoints can handle nil values as <tag xsi:nil="true"/> and
+ others cannot.  The nil_supported flag (default: True) on the
+ ServiceProxy specifies weather Object values = None are sent to the
+ WS server in the soap message as <tag xsi:nil="true"/> or <tag/>.
+ 
+ 
+ TECHNICAL (FYI) NOTES:
+ 
+ * XML namespaces are represented as a tuple (prefix, URI).
+   The default namespace is (None,None).
+ * The suds.sax module was written becuase elementtree and other
+    python XML packages either: have a DOM API which is very unfriendly
+    or: (in the case of elementtree) do not deal with namespaces and
+    especially prefixes sufficiently.
+ * A qualified reference is a type that is referenced in the WSDL such as <tag type="tns:Person/>
+    where the qualified reference is a tuple ('Person', ('tns','http://myservce/namespace'))
+    where the namespace is the 2nd part of the tuple.  When a prefix is not supplied as in
+    <tag type="Person/>, the namespace is the targetNamespace for the defining fragment.
+    This ensures that all lookups and comparisons are fully qualified.
+    
+ TIPS:
+  * Cache the ServiceProxy because reading and digesting the WSDL can be expensive.
+  * TBD ...
 
 
 
@@ -380,7 +380,10 @@ version-0.1.8 (04-28-08):
      ago with a slightly different purpose.  The suds Object is a simpler (more straight forward) approach that 
      requires less code and works better in the debugger. 
 
-  * The Binding and the encoding is selected on a per-method basis which is more consistent with the wsdl.
+  * The Binding (and the encoding) is selected on a per-method basis which is more consistent with the wsdl.
+     In <= 0.1.7, the binding was selected when the ServiceProxy was constructed and used for all service
+     methods.  The binding was stored as self.binding.  Since the WSDL provides for a separate binding style and
+     encoding for each operation, Suds needed to be change to work the same way.
  
   * The (nil_supported) and (faults) flag(s) passed into the service proxy using **kwargs.  In addition to these
      flags, a (http_proxy) flag has been added and is passed to the urllib2.Request object.  The following args
