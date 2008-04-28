@@ -101,10 +101,14 @@ class WSDL:
     def get_schema(self):
         """ get a collective schema of all <schema/> nodes """
         container = SchemaCollection(self)
-        for sr in self.root.childrenAtPath('types/schema'):
-            schema = Schema(sr, self.url, container)
+        for root in self.root.childrenAtPath('types/schema'):
+            schema = Schema(root, self.url, container)
             container.append(schema)
-        self.log.debug('schema (container):\n', container)
+        if not len(container): # empty
+            root = Element.buildPath(self.root, 'types/schema')
+            schema = Schema(root, self.url, container)
+            container.append(schema)
+        self.log.debug('schema (container):\n%s', container)
         return container
     
     def get_servicename(self):
