@@ -14,7 +14,6 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.property import Property
 from sax import Parser, splitPrefix, defns
 from urlparse import urljoin
 
