@@ -111,6 +111,19 @@ class Element:
         'endswith' : lambda a,b: a.endswith(b),
         'contains' : lambda a,b: b in a 
     }
+    
+    @classmethod
+    def buildPath(self, parent, path):
+        """
+        build the specifed path as a/b/c where missing intermediate nodes are built
+        automatically
+        """
+        for tag in path.split('/'):
+            child = parent.getChild(tag)
+            if child is None:
+                child = Element(tag, parent)
+            parent = child
+        return child
 
     def __init__(self, name, parent=None, ns=None):
         self.prefix, self.name = splitPrefix(name)
