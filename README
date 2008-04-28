@@ -209,21 +209,22 @@ as follows:
   > 
   > pagehandle = urllib2.urlopen(protocol + theurl)
 
-Since suds uses urllib2.urlopen(), basic http authentication is handles
-automatically for you.
+Since suds uses urllib2.urlopen(), basic http authentication is handled
+automatically for you if you setup the urllib2 library correctly.
 
-PROXIES:
+PROXIES
 
   Suds handles proxies using urllib2.Request.set_proxy().  The proxy
   flag can be passed to the ServiceProxy constructor as kwarg.  The proxy
   arg must contain a dictionary where keys=protocols and values are
   the hostname (or IP) and port of the proxy. 
-  
+
+> ...
 > proxy = dict(http='host:80', https='host:443', ...)
 > myservice = ServiceProxy(url, proxy=proxy)
->
+> ...
 
-NIL VALUES:
+NIL VALUES
 
  Some web service endpoints can handle nil values as <tag xsi:nil="true"/> and
  others cannot.  The nil_supported flag (default: True) on the
@@ -231,7 +232,7 @@ NIL VALUES:
  WS server in the soap message as <tag xsi:nil="true"/> or <tag/>.
  
  
- TECHNICAL (FYI) NOTES:
+ TECHNICAL (FYI) NOTES
  
  * XML namespaces are represented as a tuple (prefix, URI).
    The default namespace is (None,None).
@@ -245,7 +246,7 @@ NIL VALUES:
     <tag type="Person/>, the namespace is the targetNamespace for the defining fragment.
     This ensures that all lookups and comparisons are fully qualified.
     
- TIPS:
+ TIPS
   * Cache the ServiceProxy because reading and digesting the WSDL can be expensive.
   * TBD ...
 
