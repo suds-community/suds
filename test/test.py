@@ -636,5 +636,5 @@ if __name__ == '__main__':
     test.rpc_enctest()
     test.auth_test()
     test.resource_test()
-    test.perspectives_test()
-    test.contentsource_test()
+    #test.perspectives_test()
+    #test.contentsource_test()

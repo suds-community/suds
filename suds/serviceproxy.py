@@ -34,11 +34,12 @@ class ServiceProxy(object):
         @param url: The URL for the WSDL.
         @type url: str
         @param kwargs: keyword arguments.
-        @keyword faults: Raise faults raised by server (default:True), else return tuple from service method invocation
-                            as (http code, object).
+        @keyword faults: Raise faults raised by server (default:True),
+                else return tuple from service method invocation as (http code, object).
         @type faults: boolean
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes that have a value=None when this
-                            flag is True (default:True).  Otherwise, an empty node <x/> is sent.
+        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
+                that have a value=None when this flag is True (default:True).
+                Otherwise, an empty node <x/> is sent.
         @type nil_supported: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
                            The proxy is defined as {protocol:proxy,}
@@ -181,11 +182,12 @@ class Client:
         @param url: The URL for a WSDL.
         @type url: str
         @param kwargs: Keyword Arguments.
-        @keyword faults: Raise faults raised by server (default:True), else return tuple from service method invocation
-                            as (http code, object).
+        @keyword faults: Raise faults raised by server (default:True),
+                else return tuple from service method invocation as (http code, object).
         @type faults: boolean
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes that have a value=None when this
-                            flag is True (default:True).  Otherwise, an empty node <x/> is sent.
+        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
+                that have a value=None when this flag is True (default:True).
+                Otherwise, an empty node <x/> is sent.
         @type nil_supported: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
                            The proxy is defined as {protocol:proxy,}

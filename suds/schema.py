@@ -354,6 +354,9 @@ class SchemaProperty:
     
     def __len__(self):
         return len(self.children)
+    
+    def __getitem__(self, index):
+        return self.children[index]
 
 
 class Complex(SchemaProperty):

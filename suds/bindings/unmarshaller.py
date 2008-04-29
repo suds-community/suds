@@ -110,12 +110,14 @@ class Unmarshaller:
                     return None
                 if len(data) == 0 and \
                     text is None:
-                    return ''
+                        return ''
             else:
                  if len(data) == 0 and text is None:
                      return None
-            if len(data) == 0 and text is not None and self.bounded(node.name):
-                return text
+            if len(data) == 0 and \
+                text is not None and \
+                self.bounded(node.name):
+                    return text
         except AttributeError, e:
             pass
         return data
