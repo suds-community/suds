@@ -257,7 +257,7 @@ class Client:
         """
         Request succeeded, process the reply
         @param binding: The binding to be used to process the reply.
-        @type binding: L{Binding}
+        @type binding: L{suds.bindings.binding.Binding}
         @param method: The service method that was invoked.
         @type method: L{Method}
         @return: The method result.
@@ -278,7 +278,7 @@ class Client:
         """
         Request failed, process reply based on reason
         @param binding: The binding to be used to process the reply.
-        @type binding: L{Binding}
+        @type binding: L{suds.bindings.binding.Binding}
         @param method: The service method that was invoked.
         @type method: L{Method}
         @param error: The http error message
@@ -300,6 +300,8 @@ class Client:
     def get_methods(self):
         """
         Get a list of methods provided by this service
+        @return: A list of method descriptions.
+        @rtype: [str,]
         """
         list = []
         for op in self.wsdl.get_operations():
