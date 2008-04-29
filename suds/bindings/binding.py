@@ -76,19 +76,19 @@ class Binding:
         env.promotePrefixes()
         return str(env)
     
-    def get_reply(self, method_name, msg):
+    def get_reply(self, method, msg):
         """extract the content from the specified soap reply message"""
         replyroot = self.parser.parse(string=msg)
         soapenv = replyroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         nodes = soapbody[0].children
-        if self.returns_collection(method_name):
+        if self.returns_collection(method):
             list = []
             for node in nodes:
-                list.append(self.translate_node(node))
+                list.append(self.unmarshal(node, method))
             return list
         if len(nodes) > 0:
-            return self.translate_node(nodes[0])
+            return self.unmarshal(nodes[0], method)
         return None
     
     def get_fault(self, msg):
@@ -97,19 +97,22 @@ class Binding:
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
-        p = self.translate_node(fault)
+        p = self.unmarshal(fault)
         if self.faults:
             raise WebFault(unicode(p))
         else:
             return p.detail
                     
-    def translate_node(self, node):
-        """translate the specified node into a object"""
+    def unmarshal(self, node, method=None):
+        """unmarshal the specified node into a object"""
         result = None
-        if len(node.children) == 0:
-            result = node.text
-        else:
+        if len(node.children) > 0:
+            if method is not None:
+                rt = self.returned_type(method)
+                node.rename(rt)
             result = self.unmarshaller.process(node)
+        else:
+            result = node.text
         return result
     
     def param(self, method, pdef, object):

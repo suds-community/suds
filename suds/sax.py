@@ -141,6 +141,10 @@ class Element:
         self.children = []
         self.applyns(ns)
         
+    def rename(self, name):
+        """ rename the node """
+        self.prefix, self.name = splitPrefix(name)
+        
     def clone(self, parent=None):
         """ deep clone of this node """
         root = Element(self.qname(), parent, self.namespace())
