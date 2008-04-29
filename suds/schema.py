@@ -58,12 +58,12 @@ class SchemaCollection(list):
                 return s
         return None
 
-    def find(self, path, history=None):
+    def find(self, path, history=None, resolved=True):
         """ see Schema.find() """
         if history is None:
             history = []
         for s in self:
-            result = s.find(path, history)
+            result = s.find(path, history, resolved)
             if result is not None:
                 return result
         return None
@@ -100,7 +100,6 @@ class Schema:
         self.tns = self.__tns()
         self.baseurl = baseurl
         self.container = container
-        self.hints = {}
         self.types = {}
         self.children = []
         self.__add_children()
@@ -131,26 +130,28 @@ class Schema:
         else:
             return None
         
-    def find(self, path, history=None):
+    def find(self, path, history=None, resolved=True):
         """
         get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
         The cached type is returned, else find_type() is used.  The history prevents
         cyclic graphs.
         """
+        key = None
         if history is None:
             history = []
         if isinstance(path, basestring):
-            cached = self.types.get(path, None)
+            key = '/'.join((str(resolved),path))
+            cached = self.types.get(key, None)
             if cached is not None:
                 return cached
         if self.builtin(path):
             b = XBuiltin(self, path)
             return b
-        result = self.__find_path(path, history)
+        result = self.__find_path(path, history, resolved)
         if result is not None and \
-            isinstance(path, basestring):
-            self.types[path] = result
+            key is not None:
+                self.types[key] = result
         return result
 
     def custom(self, ref, context=None):
@@ -187,7 +188,7 @@ class Schema:
             self.root.replaceNamespace(uA, uB)
             self.tns = (None, uB)      
     
-    def __find_path(self, path, history):
+    def __find_path(self, path, history, resolved):
         """
         get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
@@ -210,13 +211,15 @@ class Schema:
                         break
         if result is not None:
             history.append(result)
-            result = result.resolve(history)
+            if resolved or len(parts) > 1:
+                result = result.resolve(history)
             for part in parts[1:]:
                 ref, ns = part
                 result = result.get_child(ref, ns)
                 if result is None:
                     break
-                result = result.resolve(history)
+                if resolved:
+                    result = result.resolve(history)
         return result
     
     def __qualify(self, path):
