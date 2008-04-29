@@ -373,7 +373,7 @@ version-0.1.7 (04-08-08):
     for lots of collaboration on #suds.
 
 
-version-0.1.8 (04-28-08):
+version-0.2 (04-28-08):
 
   * Contains the first cut at the rpc/encoded soap style.
  
