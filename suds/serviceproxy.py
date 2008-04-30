@@ -123,7 +123,7 @@ class Factory:
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{suds.schema.Schema}
+        @type schema: L{schema.Schema}
         """
         self.schema = schema
         self.builder = Builder(schema)
@@ -170,7 +170,7 @@ class Client:
     @ivar wsdl: A WSDL object.
     @type wsdl: L{WSDL}
     @ivar schema: A schema object.
-    @type schema: L{suds.schema.Schema}
+    @type schema: L{schema.Schema}
     @ivar builder: A builder object used to build schema types.
     @type builder: L{Builder}
     @ivar cookiejar: A cookie jar.
@@ -259,7 +259,7 @@ class Client:
         """
         Request succeeded, process the reply
         @param binding: The binding to be used to process the reply.
-        @type binding: L{suds.bindings.binding.Binding}
+        @type binding: L{bindings.binding.Binding}
         @param method: The service method that was invoked.
         @type method: L{Method}
         @return: The method result.
