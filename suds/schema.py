@@ -19,7 +19,20 @@ from urlparse import urljoin
 
 
 def qualified_reference(ref, resolvers, tns=defns):
-    """ get type reference *qualified* by prefix and namespace """
+    """
+    Get type reference I{qualified} by pnamespace.
+    @param ref: A referenced type name such as <person type="tns:person"/>
+    @type ref: str
+    @param resolvers: A list of objects to be used to resolve types.
+    @type resolvers: [L{sax.Element},]
+    @param tns: An optional target namespace used to qualify references
+        when no prefix is specified.
+    @type tns: A namespace I{tuple: (prefix,uri)}
+    @return: A qualified reference.
+    @rtype: (name, ns)
+    @note: Suds namespaces are tuples: I{(prefix,URI)}.  An example
+        qualified reference would be: ("myname",("tns", "http://..."))
+    """
     ns = tns
     p, n = splitPrefix(ref)
     if p is not None:
@@ -33,10 +46,15 @@ def qualified_reference(ref, resolvers, tns=defns):
     return (n, ns)
 
 def isqref(object):
-    """ get whether the object is a qualified reference """
+    """
+    Get whether the object is a qualified reference.
+    @param object: An object to be tested.
+    @type object: I{any}
+    @rtype: boolean
+    """
     return (\
         isinstance(object, tuple) and \
-        len(object) == len(defns) and \
+        len(object) == 2 and \
         isinstance(object[0], basestring) and \
         isinstance(object[1], tuple) and \
         len(object[1]) == len(defns) )
@@ -44,22 +62,40 @@ def isqref(object):
 
 class SchemaCollection(list):
     
-    """ a collection of schemas providing a wrapper """
+    """
+    A collection of schema objects.  This class is needed because WSDLs may contain
+    more then one <schema/> node.
+    @ivar root: A root node used for ns prefix resolution (set to WSDL's root).
+    @type root: L{Element}
+    @ivar tns: The target namespace (set to WSDL's target namesapce)
+    @type tns: (prefix,URI)
+    """
     
     def __init__(self, wsdl):
+        """
+        @param wsdl: A WSDL object.
+        @type wsdl: L{wsdl.WSDL}
+        """
         self.root = wsdl.root
         self.tns = wsdl.tns
         self.log = logger('schema')
         
     def imported(self, ns):
-        """ find schema imported by namespace """
+        """
+        Find an imported schema by namespace.  Only the URI portion of
+        the namespace is compared to each schema's I{targetNamespace}
+        @param ns: A namespace.
+        @type ns: (prefix,URI)
+        @return: The schema matching the namesapce, else None.
+        @rtype: L{Schema}
+        """
         for s in self:
             if s.tns[1] == ns[1]:
                 return s
         return None
 
     def find(self, path, history=None, resolved=True):
-        """ see Schema.find() """
+        """ @see: L{Schema.find()} """
         if history is None:
             history = []
         for s in self:
@@ -82,7 +118,19 @@ class Schema:
     
     """
     The schema is an objectification of a <schema/> (xsd) definition.
-    It provides inspection, lookup and type resolution. 
+    It provides inspection, lookup and type resolution.
+    @cvar factory: A factory to create property objects based on tag.
+    @type factory: {tag:fn,}
+    @ivar root: The root node.
+    @type root: L{sax.Element}
+    @ivar tns: The target namespace.
+    @type tns: (prefix,URI)
+    @ivar baseurl: The I{base} URL for this schema.
+    @type baseurl: str
+    @ivar container: A schema collection containing this schema.
+    @type container: L{SchemaCollection}
+    @ivar types: A schema types cache.
+    @type types: {path:L{SchemaProperty}}
     """
 
     factory =\
@@ -94,7 +142,8 @@ class Schema:
     }
     
     def __init__(self, root, baseurl=None, container=None):
-        """ construct the sequence object with a schema """
+        """
+        """
         self.log = logger('schema')
         self.root = root
         self.tns = self.__tns()
@@ -132,16 +181,26 @@ class Schema:
         
     def find(self, path, history=None, resolved=True):
         """
-        get the definition object for the schema type located at the specified path.
-        The path may contain (.) dot notation to specify nested types.
-        The cached type is returned, else find_type() is used.  The history prevents
-        cyclic graphs.
+        Find a I{type} defined in one of the contained schemas.
+        @param path: The path to the requested type.
+        @type path: (str|[qref,])
+        @param history: A list of found path segments used to prevent either
+            cyclic graphs and/or type self references.
+        @type history: [L{SchemaProperty},]
+        @param resolved: A flag that controls whether or not types are resolved
+            automatically to their I{true} types.
+        @type resolved: boolean
+        @note: I{qref} = qualified reference
+        @see: L{qualified_reference()}
         """
         key = None
         if history is None:
             history = []
-        if isinstance(path, basestring):
-            key = '/'.join((str(resolved),path))
+        try:
+            key = '/'.join((str(resolved),unicode(path)))
+        except:
+            pass
+        if key is not None:
             cached = self.types.get(key, None)
             if cached is not None:
                 return cached
