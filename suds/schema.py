@@ -108,9 +108,9 @@ class SchemaCollection(list):
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        result = []
+        result = ['\nschema collection']
         for s in self:
-            result.append(unicode(s))
+            result.append(s.str(1))
         return '\n'.join(result)
 
 
@@ -245,7 +245,17 @@ class Schema:
         uB = ns[1]
         if uA != uB:
             self.root.replaceNamespace(uA, uB)
-            self.tns = (None, uB)      
+            self.tns = (None, uB)
+
+    def str(self, indent=0):
+        tab = '%*s'%(indent*3,'')
+        result = []
+        result.append('%s(raw)' % tab)
+        result.append(self.root.parent.str(indent+1))
+        result.append('%s(model)' % tab)
+        for c in self.children:
+            result.append(c.str(indent+1))
+        return '\n'.join(result) 
     
     def __find_path(self, path, history, resolved):
         """
@@ -298,7 +308,7 @@ class Schema:
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        return unicode(self.root.str())
+        return self.str()
 
 
 class SchemaProperty:
@@ -313,6 +323,7 @@ class SchemaProperty:
         self.root = root
         self.schema = schema
         self.log = schema.log
+        self.parent = None
         self.children = []
         
     def match(self, name, ns=None):
@@ -345,7 +356,7 @@ class SchemaProperty:
             return (None, defns)
         
     def asref(self):
-        """ get the types true type as need for external qualified reference """
+        """ get the true type as need for external qualified reference """
         ref = self.ref()
         if ref is None:
             name = self.get_name()
@@ -369,6 +380,18 @@ class SchemaProperty:
             if child.match(name, ns):
                 return child
         return None
+    
+    def add_child(self, child, index=None):
+        """ add child; set parent """
+        if not isinstance(child, (list,tuple)):
+            child = (child,)
+        for c in child:
+            c.parent = self
+            if index is None:
+                self.children.append(c)
+            else:
+                self.children.insert(index, c)
+                index += 1
     
     def unbounded(self):
         """ get whether this node's specifes that it is unbounded (collection) """
@@ -402,14 +425,29 @@ class SchemaProperty:
         else:
             return False
         
+    def str(self, indent=0):
+        tag = self.__class__.__name__
+        tab = '%*s'%(indent*3,'')
+        result  = []
+        result.append('%s<%s ' % (tab,tag))
+        result.append('name="%s"' % self.get_name())
+        ref = self.asref()
+        result.append(', type="%s (%s)"' % (ref[0], ref[1][1]))
+        if len(self):
+            for c in self.children:
+                result.append('\n')
+                result.append(c.str(indent+1))
+            result.append('\n%s' % tab)
+            result.append('</%s>' % tag)
+        else:
+            result.append(' />')
+        return ''.join(result)
+        
     def __str__(self):
         return unicode(self).encode('utf-8')
             
     def __unicode__(self):
-        return u'ns=%s, name=(%s), qref=%s' \
-            % (self.namespace(),
-                  self.get_name(),
-                  self.qref())
+        return unicode(self.str())
     
     def __repr__(self):
         return unicode(self).encode('utf-8')
@@ -438,12 +476,10 @@ class Complex(SchemaProperty):
         """ add <xs:sequence/> and <xs:complexContent/> nested types """
         for s in self.root.getChildren('sequence'):
             seq = Sequence(self.schema, s)
-            for sc in seq.children:
-                self.children.append(sc)
+            self.add_child(seq.children)
         for s in self.root.getChildren('complexContent'):
             cont = ComplexContent(self.schema, s)
-            for cc in cont.children:
-                self.children.append(cc)
+            self.add_child(cont.children)
 
 
 class Simple(SchemaProperty):
@@ -467,7 +503,7 @@ class Simple(SchemaProperty):
         """ add <xs:enumeration/> nested types """
         for e in self.root.childrenAtPath('restriction/enumeration'):
             enum = Enumeration(self.schema, e)
-            self.children.append(enum)
+            self.add_child(enum)
 
 
 class Sequence(SchemaProperty):
@@ -483,7 +519,7 @@ class Sequence(SchemaProperty):
         """ add <xs:element/> nested types """
         for e in self.root.getChildren('element'):
             element = Element(self.schema, e)
-            self.children.append(element)
+            self.add_child(element)
 
 
 class ComplexContent(SchemaProperty):
@@ -499,8 +535,7 @@ class ComplexContent(SchemaProperty):
         """ add <xs:extension/> nested types """
         for e in self.root.getChildren('extension'):
             extension = Extension(self.schema, e)
-            for ec in extension.children:
-                self.children.append(ec)
+            self.add_child(extension.children)
 
 
 class Enumeration(SchemaProperty):
@@ -537,8 +572,7 @@ class Element(SchemaProperty):
         """ add <complexType/>/* nested nodes """
         for c in self.root.getChildren('complexType'):
             complex = Complex(self.schema, c)
-            for cc in complex.children:
-                self.children.append(cc)
+            self.add_child(complex.children)
     
     def unbounded(self):
         """ get whether the element has a maxOccurs > 1 or unbounded """
@@ -568,9 +602,7 @@ class Extension(Complex):
         if super is None:
             return
         index = 0
-        for sc in super.children:
-            self.children.insert(index, sc)
-            index += 1
+        self.add_child(super.children, 0)
 
 
 class Import(SchemaProperty):
@@ -593,8 +625,7 @@ class Import(SchemaProperty):
     def __add_children(self):
         """ add imported children """
         if self.imported is not None:
-            for ic in self.imported.children:
-                self.children.append(ic)
+            self.add_child(self.imported.children)
 
     def __import(self, ns, location):
         """ import the xsd content at the specified url """

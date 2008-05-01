@@ -534,27 +534,25 @@ class Element:
         return self.str()
         
     def str(self, indent=0):
-        result = ''
-        for i in range(0, indent):
-            result += '  '
-        result += '<%s' % self.qname()
-        result += self.nsdeclarations()
+        tab = '%*s'%(indent*3,'')
+        result = []
+        result.append('%s<%s' % (tab, self.qname()))
+        result.append(self.nsdeclarations())
         for a in [unicode(a) for a in self.attributes]:
-            result += ' %s' % a
+            result.append(' %s' % a)
         if self.isempty():
-            result += '/>'
-            return result
-        result += '>'
+            result.append('/>')
+            return ''.join(result)
+        result.append('>')
         if self.text is not None:
-            result += self.text
+            result.append(self.text)
         for c in self.children:
-            result += '\n'
-            result += c.str(indent+1)
-        if len(self.children) > 0:
-            result += '\n'
-            for i in range(0, indent):
-                result += '  '
-        result += '</%s>' % self.qname()
+            result.append('\n')
+            result.append(c.str(indent+1))
+        if len(self.children):
+            result.append('\n%s' % tab)
+        result.append('</%s>' % self.qname())
+        result = ''.join(result)
         return result
 
 
