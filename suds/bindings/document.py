@@ -54,9 +54,9 @@ class Document(Binding):
         if operation is None:
             raise NoSuchMethod(method)
         input = operation.getChild('input')
-        msg = self.wsdl.get_message(input.attribute('message'))
+        msg = self.wsdl.get_message(input.get('message'))
         for p in msg.getChildren('part'):
-            ref = p.attribute('element')
+            ref = p.get('element')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             type = self.schema.find(qref)
             if type is None:
@@ -77,10 +77,10 @@ class Document(Binding):
         if operation is None:
             raise NoSuchMethod(method)
         output = operation.getChild('output')
-        msg = self.wsdl.get_message(output.attribute('message'))
+        msg = self.wsdl.get_message(output.get('message'))
         result = False
         for p in msg.getChildren('part'):
-            ref = p.attribute('element')
+            ref = p.get('element')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             type = self.schema.find(qref)
             if len(type):
@@ -100,10 +100,10 @@ class Document(Binding):
         if operation is None:
             raise NoSuchMethod(method)
         output = operation.getChild('output')
-        msg = self.wsdl.get_message(output.attribute('message'))
+        msg = self.wsdl.get_message(output.get('message'))
         result = False
         for p in msg.getChildren('part'):
-            ref = p.attribute('element')
+            ref = p.get('element')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             result = self.schema.find(qref)
             if len(result):

@@ -54,14 +54,14 @@ class RPC(Binding):
         if operation is None:
             raise NoSuchMethod(method)
         input = operation.getChild('input')
-        msg = self.wsdl.get_message(input.attribute('message'))
+        msg = self.wsdl.get_message(input.get('message'))
         for p in msg.getChildren('part'):
-            ref = p.attribute('type')
+            ref = p.get('type')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             type = self.schema.find(qref)
             if type is None:
                 raise TypeNotFound(qref)
-            params.append((p.attribute('name'), type))
+            params.append((p.get('name'), type))
         self.log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
@@ -76,10 +76,10 @@ class RPC(Binding):
         if operation is None:
             raise NoSuchMethod(method)
         output = operation.getChild('output')
-        msg = self.wsdl.get_message(output.attribute('message'))
+        msg = self.wsdl.get_message(output.get('message'))
         result = False
         for p in msg.getChildren('part'):
-            ref = p.attribute('type')
+            ref = p.get('type')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             type = self.schema.find(qref)
             elements = type.get_children(empty=[])
@@ -99,10 +99,10 @@ class RPC(Binding):
         if operation is None:
             raise NoSuchMethod(method)
         output = operation.getChild('output')
-        msg = self.wsdl.get_message(output.attribute('message'))
+        msg = self.wsdl.get_message(output.get('message'))
         result = False
         for p in msg.getChildren('part'):
-            ref = p.attribute('type')
+            ref = p.get('type')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             result = self.schema.find(qref)
             result = result.ref()

@@ -13,70 +13,140 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The sax module contains a collection of classes that provide a
+(D)ocument (O)bject (M)odel representation of an XML document.
+The goal is to provide an easy, intuative interface for managing XML
+documents.  Although, the term, DOM, is used above, this model is
+B{far} better.
+
+XML namespaces in suds are represented using a (2) element tuple
+containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
+
+@var defns: The default namespace
+@type defns: namespace : (I{prefix},I{URI})
+@var xsdns: The I{schema} namespace
+@type xsdns: namespace : (I{prefix},I{URI})
+@var xsins: The I{schema-instance} namespace.
+@type xsins: namespace : (I{prefix},I{URI})
+"""
+
 from urllib import urlopen
 from xml.sax import parse, parseString, ContentHandler
 
-
 def splitPrefix(name):
-    """ split the name into a tuple (prefix, name) """
+    """
+    Split the name into a tuple (I{prefix}, I{name}).  The first element in
+    the tuple is I{None} when the name does't have a prefix.
+    @param name: A node name containing an optional prefix.
+    @type name: basestring
+    @return: A tuple containing the (2) parts of I{name}
+    @rtype: (I{prefix}, I{name}) 
+    """
     if isinstance(name, basestring) \
         and ':' in name:
             return tuple(name.split(':', 1))
     else:
         return (None, name)
 
-"""
-well known namespaces
-"""
+
 defns = (None, None)
 xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
 xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
 
 
 class Attribute:
-    """ simple attribute """
+    """
+    An XML attribute object.
+    @ivar parent: The node containing this attribute
+    @type parent: L{Element}
+    @ivar prefix: The I{optional} namespace prefix.
+    @type prefix: basestring
+    @ivar name: The I{unqualified} name of the attribute
+    @type name: basestring
+    @ivar value: The attribute's value
+    @type value: basestring
+    """
     def __init__(self, name, value=None):
+        """
+        @param name: The attribute's name with I{optional} namespace prefix.
+        @type name: basestring
+        @param value: The attribute's value
+        @type value: basestring 
+        """
         self.parent = None
         self.prefix, self.name = splitPrefix(name)
         self.value = encode(value)
         
     def clone(self, parent=None):
-        """ clone the object """
+        """
+        Clone this object.
+        @param parent: The parent for the clone.
+        @type parent: L{Element}
+        @return: A copy of this object assigned to the new parent.
+        @rtype: L{Attribute}
+        """
         a = Attribute(self.qname(), self.value)
         a.parent = parent
         return a
-        
-    def resolvePrefix(self, prefix):
-        """ resolve the specified prefix to a known namespace """
-        ns = defns
-        if self.parent is not None:
-            ns = self.parent.resolvePrefix(prefix)
-        return ns
     
     def qname(self):
-        """ get the fully qualified name """
+        """
+        Get the B{fully} qualified name of this attribute
+        @return: The fully qualified name.
+        @rtype: basestring
+        """
         if self.prefix is None:
             return self.name
         else:
             return ':'.join((self.prefix, self.name))
         
     def setValue(self, value):
-        """ set the attributes value """
+        """
+        Set the attributes value
+        @param value: The new value (may be None)
+        @type value: basestring
+        """
         self.value = encode(value)
         
     def getValue(self, default=''):
-        """ get the attributes value with optional default """
+        """
+        Get the attributes value with optional default.
+        @param default: An optional value to be return when the
+            attribute's has not been set.
+        @type default: basestring
+        @return: The attribute's value, or I{default}
+        @rtype: basestring
+        """
         result = decode(self.value)
         if result is None:
             result = default
         return result
         
     def namespace(self):
-        """ get the attributes namespace """
+        """
+        Get the attributes namespace.  This may either be the namespace
+        defined by an optional prefix, or its parent's namespace.
+        @return: The attribute's namespace
+        @rtype: (I{prefix}, I{name})
+        """
         if self.prefix is None:
             return defns
         else:
             return self.resolvePrefix(self.prefix)
+        
+    def resolvePrefix(self, prefix):
+        """
+        Resolve the specified prefix to a known namespace.
+        @param prefix: A declared prefix
+        @type prefix: basestring
+        @return: The namespace that has been mapped to I{prefix}
+        @rtype: (I{prefix}, I{name})
+        """
+        ns = defns
+        if self.parent is not None:
+            ns = self.parent.resolvePrefix(prefix)
+        return ns
     
     def __eq__(self, rhs):
         """ equals operator """
@@ -102,7 +172,26 @@ class Attribute:
 
 class Element:
     
-    """ simple xml element """
+    """
+    An XML element object.
+    @ivar parent: The node containing this attribute
+    @type parent: L{Element}
+    @ivar prefix: The I{optional} namespace prefix.
+    @type prefix: basestring
+    @ivar name: The I{unqualified} name of the attribute
+    @type name: basestring
+    @ivar expns: An explicit namespace (xmlns="...").
+    @type expns: (I{prefix}, I{name})
+    @ivar nsprefixes: A mapping of prefixes to namespaces.
+    @type nsprefixes: dict
+    @ivar attributes: A list of XML attributes.
+    @type attributes: [I{Attribute},]
+    @ivar text: The element's I{text} content.
+    @type text: basestring
+    @ivar children: A list of child elements.
+    @type children: [I{Element},]
+    @cvar matcher: A collection of I{lambda} for string matching.
+    """
 
     matcher = \
     {
@@ -115,8 +204,14 @@ class Element:
     @classmethod
     def buildPath(self, parent, path):
         """
-        build the specifed path as a/b/c where missing intermediate nodes are built
-        automatically
+        Build the specifed pat as a/b/c where missing intermediate nodes are built
+        automatically.
+        @param parent: A parent element on which the path is built.
+        @type parent: I{Element}
+        @param path: A simple path separated by (/).
+        @type path: basestring
+        @return: The leaf node of I{path}.
+        @rtype: L{Element}
         """
         for tag in path.split('/'):
             child = parent.getChild(tag)
@@ -126,6 +221,14 @@ class Element:
         return child
 
     def __init__(self, name, parent=None, ns=None):
+        """
+        @param name: The element's (tag) name.  May cotain a prefix.
+        @type name: basestring
+        @param parent: An optional parent element.
+        @type parent: I{Element}
+        @param ns: An optional namespace
+        @type ns: (I{prefix}, I{name})
+        """
         self.prefix, self.name = splitPrefix(name)
         self.expns = None
         self.nsprefixes = {}
@@ -142,11 +245,43 @@ class Element:
         self.applyns(ns)
         
     def rename(self, name):
-        """ rename the node """
+        """
+        Rename the element.
+        @param name: A new name for the element.
+        @type name: basestring 
+        """
         self.prefix, self.name = splitPrefix(name)
+
+    def qname(self):
+        """
+        Get the B{fully} qualified name of this element
+        @return: The fully qualified name.
+        @rtype: basestring
+        """
+        if self.prefix is None:
+            return self.name
+        else:
+            return '%s:%s' % (self.prefix, self.name)
+        
+    def getRoot(self):
+        """
+        Get the root (top) node of the tree.
+        @return: The I{top} node of this tree.
+        @rtype: I{Element}
+        """
+        if self.parent is None:
+            return self
+        else:
+            return self.parent.getRoot()
         
     def clone(self, parent=None):
-        """ deep clone of this node """
+        """
+        Deep clone of this element and children.
+        @param parent: An optional parent for the copied fragment.
+        @type parent: I{Element}
+        @return: A deep copy parented by I{parent}
+        @rtype: I{Element}
+        """
         root = Element(self.qname(), parent, self.namespace())
         for a in self.attributes:
             root.append(a.clone(self))
@@ -155,18 +290,132 @@ class Element:
         for item in self.nsprefixes.items():
             root.addPrefix(item[0], item[1])
         return root
+    
+    def detach(self):
+        """
+        Detach from parent.
+        @return: This element removed from its parent's
+            child list and I{parent}=I{None}
+        @rtype: L{Element}
+        """
+        if self.parent is not None:
+            if self in self.parent.children:
+                self.parent.children.remove(self)
+            self.parent = None
+        return self
         
-    def getRoot(self):
-        """ get the root of the tree """
-        if self.parent is None:
-            return self
+    def set(self, name, value, ns=None):
+        """
+        Set an attribute's value.
+        @param name: The name of the attribute.
+        @type name: basestring
+        @param value: The attribute value.
+        @type value: basestring
+        @param ns: The optional attribute's namespace.
+        @type ns: (I{prefix}, I{name})
+        @see: __setitem__()
+        """
+        attr = self.attrib(name, ns)
+        if attr is None:
+            attr = Attribute(name, value)
+            self.append(attr)
         else:
-            return self.parent.getRoot()
+            attr.setValue(value)
+            
+    def get(self, name, ns=None, default=None):
+        """
+        Get the value of an attribute by name.
+        @param name: The name of the attribute.
+        @type name: basestring
+        @param ns: The optional attribute's namespace.
+        @type ns: (I{prefix}, I{name})
+        @param default: An optional value to be returned when either
+            the attribute does not exist of has not value.
+        @type default: basestring
+        @return: The attribute's value or I{default}
+        @rtype: basestring
+        @see: __getitem__()
+        """
+        attr = self.attrib(name, ns)
+        if attr is None or attr.value is None:
+            return default
+        else:
+            return attr.getValue()   
+
+    def setText(self, value):
+        """
+        Set the element's text content.
+        @param value: The element's text value.
+        @type value: basestring
+        @return: self
+        @rtype: I{Element}
+        """
+        self.text = encode(value)
+        return self
+        
+    def getText(self, default=None):
+        """
+        Get the element's text content with optional default
+        @param default: A value to be returned when no text content exists.
+        @type default: basestring
+        @return: The text content, or I{default}
+        @rtype: basestring
+        """
+        result = decode(self.text)
+        if result is None:
+            result = default
+        return result
+    
+    def attrib(self, name, ns=None):
+        """
+        Get an attribute by name and (optional) namespace
+        @param name: The name of a contained attribute (may contain prefix).
+        @type name: basestring
+        @param ns: An optional namespace
+        @type ns: (I{prefix}, I{name})
+        @return: The requested attribute object.
+        @rtype: L{Attribute}
+        """
+        result = None
+        if len(self.attributes) == 0:
+            return result
+        if ns is None:
+            p, n = splitPrefix(name)
+            p = [p]
+        else:
+            prefixes = self.findPrefixes(ns[1])
+            p, n = (prefixes, name)
+        for a in self.attributes:
+            if a.prefix in p and a.name == n:
+                result = a
+                break
+        return result
+        
+    def namespace(self):
+        """
+        Get the element's namespace.
+        @return: The element's namespace by resolving the prefix, the explicit 
+            namespace or the inherited namespace.
+        @rtype: (I{prefix}, I{name})
+        """
+        if self.prefix is None:
+            p = self.parent
+            while p is not None:
+                if p.expns is not None:
+                    return (None, p.expns)
+                else:
+                    p = p.parent
+        else:
+            return self.resolvePrefix(self.prefix)
             
     def append(self, objects):
         """
-        append the specified child based on whether it is an
+        Append the specified child based on whether it is an
         element or an attrbuite.
+        @param objects: A (single|collection) of attribute(s) or element(s)
+            to be added as children.
+        @return: self
+        @rtype: L{Element}
         """
         if not isinstance(objects, (list, tuple)):
             objects = (objects,)
@@ -181,33 +430,25 @@ class Element:
                 continue
             raise Exception('append %s not-valid', child.__class__.__name__)
         return self
-            
-    def detach(self):
-        """ detach from parent """
-        if self.parent is not None:
-            if self in self.parent.children:
-                self.parent.children.remove(self)
-            self.parent = None
-        return self
-
-    def setText(self, value):
-        """ set the element's text """
-        self.text = encode(value)
-        return self
-        
-    def getText(self, default=None):
-        """ get the element's text with optional default """
-        result = decode(self.text)
-        if result is None:
-            result = default
-        return result
     
     def removeChild(self, child):
-        """ remove the specified child """
+        """
+        Remove the specified child element.
+        @param child: A child.
+        @type child: L{Element}
+        @return: The I{child} that has been removed.
+        @rtype: L{Element}
+        """
         return child.detach()
             
     def replaceChild(self, child, content):
-        """ replace the specified content (content may be a list|tuple) """
+        """
+        Replace I{child} with the specified I{content}.
+        @param child: A child element.
+        @type child: L{Element}
+        @param content: An element or collection of elements.
+        @type content: L{Element} or [L{Element},]
+        """
         if child not in self.children:
             raise Exception('child not-found')
         index = self.children.index(child)
@@ -220,7 +461,17 @@ class Element:
             index += 1
 
     def getChild(self, name, ns=None, default=None):
-        """ get a child by name and (optional) namespace """
+        """
+        Get a child by name and (optional) namespace.
+        @param name: The name of a child element (may contain prefix).
+        @type name: basestring
+        @param ns: An optional namespace used to match the child.
+        @type ns: (I{prefix}, I{name})
+        @param default: Returned when child not-found.
+        @type default: L{Element}
+        @return: The requested child, or I{default} when not-found.
+        @rtype: L{Element}
+        """
         prefix, name = splitPrefix(name)
         if prefix is not None:
             ns = self.resolvePrefix(prefix)
@@ -232,8 +483,12 @@ class Element:
     
     def childAtPath(self, path):
         """
-        get a child at the specifed path where path is a (/) separated
-        list of element names.
+        Get a child at I{path} where I{path} is a (/) separated
+        list of element names that are expected to be children.
+        @param path: A (/) separated list of element names.
+        @type path: basestring
+        @return: The leaf node at the end of I{path}
+        @rtype: L{Element}
         """
         result = None
         node = self
@@ -251,20 +506,331 @@ class Element:
 
     def childrenAtPath(self, path):
         """
-        get a list of children at the specified path where path is a (/)
-        separated list of element names.
+        Get a list of children at I{path} where I{path} is a (/) separated
+        list of element names that are expected to be children.
+        @param path: A (/) separated list of element names.
+        @type path: basestring
+        @return: The collection leaf nodes at the end of I{path}
+        @rtype: [L{Element},...]
         """
-        result = []
-        child = None
         parts = [p for p in path.split('/') if len(p) > 0]
         if len(parts) == 1:
-            child = self.getChild(path)
-            if child is not None:
-                result.append(child)
+            result = self.getChildren(path)
         else:
             result = self.__childrenAtPath(parts)
         return result
+        
+    def getChildren(self, name=None, ns=None):
+        """
+        Get a list of children by name and (optional) namespace.
+        @param name: The name of a child element (may contain prefix).
+        @type name: basestring
+        @param ns: An optional namespace used to match the child.
+        @type ns: (I{prefix}, I{name})
+        @return: The list of matching children.
+        @rtype: [L{Element},...]
+        """
+        result = []
+        prefix, name = splitPrefix(name)
+        if prefix is not None:
+            ns = self.resolvePrefix(prefix)
+        if name is None and ns is None:
+            return self.children
+        for c in self.children:
+            if c.name == name and \
+                ( ns is None or c.namespace()[1] == ns[1] ):
+                result.append(c)
+        return result
     
+    def detachChildren(self):
+        """
+        Detach and return this element's children.
+        @return: The element's children (detached).
+        @rtype: [L{Element},...]
+        """
+        detached = self.children
+        self.children = []
+        for child in detached:
+            child.parent = None
+        return detached
+    
+    def flattenedTree(self, addSelf=True):
+        """
+        Get I{flattened} list of elements for this branch in the tree.
+        @param addSelf: A flag that indicates that the result 
+            contains B{this} element.
+        @type addSelf: boolean
+        @return: A I{flattened} list of all elements.
+        @rtype: [L{Element},...]
+        """
+        result = []
+        if addSelf:
+            result.append(self)
+        for c in self.children:
+            result.append(c, False)
+        return result
+    
+    def flattenedPrefixes(self):
+        """
+        Get a I{flattened} list of all namespace prefixes 
+        mappings for this branch in the tree.  This includes mapping in this
+        element and those mapped by child elements.  Mapping is: (I{prefix},I{URI})
+        @return: A list of B{all} prefix => URI mappings in this branch.
+        @rtype: [I{item},...]
+        """
+        result = []
+        for item in self.nsprefixes.items():
+            if item in result:
+                continue
+            result.append((item[0], item[1]))
+        for c in self.children:
+            cp = c.flattenedPrefixes()
+            result += [item for item in cp if item not in result]
+        return result
+        
+    def resolvePrefix(self, prefix, default=defns):
+        """
+        Resolve the specified prefix to a namespace.  The I{nsprefixes} is
+        searched.  If not found, it walks up the tree until either resolved or
+        the top of the tree is reached.  Searching up the tree provides for
+        inherited mappings.
+        @param prefix: A namespace prefix to resolve.
+        @type prefix: basestring
+        @param default: An optional value to be returned when the prefix
+            cannot be resolved.
+        @type default: (I{prefix},I{URI})
+        @return: The namespace that is mapped to I{prefix} in this context.
+        @rtype: (I{prefix},I{URI})
+        """
+        n = self
+        while n is not None:
+            if prefix in n.nsprefixes:
+                return (prefix, n.nsprefixes[prefix])
+            else:
+                n = n.parent
+        return default
+    
+    def addPrefix(self, p, u):
+        """
+        Add or update a prefix mapping.
+        @param p: A prefix.
+        @type p: basestring
+        @param u: A namespace URI.
+        @type u: basestring
+        @return: self
+        @rtype: L{Element}
+        """
+        self.nsprefixes[p] = u
+        return self
+ 
+    def updatePrefix(self, p, u):
+        """
+        Update (redefine) a prefix mapping for the branch. 
+        @param p: A prefix.
+        @type p: basestring
+        @param u: A namespace URI.
+        @type u: basestring
+        @return: self
+        @rtype: L{Element}
+        @note: This method traverses down the entire branch!
+        """
+        if p in self.nsprefixes:
+            self.nsprefixes[p] = u
+        for c in self.children:
+            c.updatePrefix(p, u)
+        return self
+            
+    def replaceNamespace(self, uA, uB):
+        """
+        Replace namespace URI I{uA} with namespace URI I{uB}.
+        @param uA: A namespace URI to be replaced.
+        @type uA: basestring
+        @param uB: A namespace URI to replace all occurances of I{Ua} with.
+        @type uB: basestring
+        @return: self
+        @rtype: L{Element}
+        @note: This method traverses down the entire branch!
+        """
+        if self.expns is not None and \
+            self.expns[1] == uA:
+            self.expns = (None, uB)
+        for item in self.nsprefixes.items():
+            if item[1] == uA:
+                self.nsprefixes[item[0]] = uB
+        for c in self.children:
+            c.replaceNamespace(uA, uB)
+        return self
+            
+    def clearPrefix(self, prefix):
+        """
+        Clear the specified prefix from the prefix mappings.
+        @param prefix: A prefix to clear.
+        @type prefix: basestring
+        @return: self
+        @rtype: L{Element}
+        """
+        if prefix in self.nsprefixes:
+            del self.nsprefixes[prefix]
+        return self
+    
+    def findPrefix(self, uri):
+        """
+        Find the first prefix that has been mapped to a namespace URI.
+        The local mapping is searched, then it walks up the tree until
+        it reaches the top or finds a match.
+        @param uri: A namespace URI.
+        @type uri: basestring
+        @return: A mapped prefix.
+        @rtype: basestring
+        """
+        for item in self.nsprefixes.items():
+            if item[1] == uri:
+                prefix = item[0]
+                return prefix
+        if self.parent is not None:
+            return self.parent.findPrefix(uri)
+        else:
+            return None
+
+    def findPrefixes(self, uri, match='eq'):
+        """
+        Find all prefixes that has been mapped to a namespace URI.
+        The local mapping is searched, then it walks up the tree until
+        it reaches the top collecting all matches.
+        @param uri: A namespace URI.
+        @type uri: basestring
+        @param match: A matching function L{Element.matcher}.
+        @type match: basestring
+        @return: A list of mapped prefixes.
+        @rtype: [basestring,...]
+        """
+        result = []
+        for item in self.nsprefixes.items():
+            if self.matcher[match](item[1], uri):
+                prefix = item[0]
+                result.append(prefix)
+        if self.parent is not None:
+            result += self.parent.findPrefixes(uri, match)
+        return result
+    
+    def promotePrefixes(self):
+        """
+        Push prefix declarations up the tree as far as possible.  Prefix
+        mapping are pushed to its parent unless the parent has the
+        prefix mapped to another URI.  This is propagated up the tree
+        until the top is reached.
+        """
+        for c in self.children:
+            c.promotePrefixes()
+        if self.parent is None:
+            return
+        for p,u in self.nsprefixes.items():
+            if isinstance(self.parent, tuple):
+                print self.parent.__class__.__name__
+            if p in self.parent.nsprefixes:
+                pu = self.parent.nsprefixes[p]
+                if pu == u:
+                    del self.nsprefixes[p]
+            else:
+                self.parent.nsprefixes[p] = u
+                del self.nsprefixes[p]       
+
+    def isempty(self):
+        """
+        Get whether the element has no children.
+        @return: True when element has not children.
+        @rtype: boolean
+        """
+        return len(self.children) == 0 and \
+            self.text is None
+            
+    def isnil(self):
+        """
+        Get whether the element is I{nil} as defined by having
+        an attribute in the I{xsi:nil="true"}
+        @return: True if I{nil}, else False
+        @rtype: boolean
+        """
+        nilattr = self.attrib('nil', ns=xsins)
+        if nilattr is None:
+            return False
+        else:
+            return ( nilattr.getValue().lower() == 'true' )
+        
+    def setnil(self, flag=True):
+        """
+        Set this node to I{nil} as defined by having an
+        attribute I{xsi:nil}=I{flag}.
+        @param flag: A flag inidcating how I{xsi:nil} will be set.
+        @type flag: boolean
+        @return: self
+        @rtype: L{Element}
+        """
+        self.set('%s:nil' % xsins[0], flag)
+        self.addPrefix(xsins[0], xsins[1])
+        if flag:
+            self.text = None
+        return self
+            
+    def applyns(self, ns):
+        """
+        Apply the namespace to this node.  If the prefix is I{None} then
+        this element's explicit namespace I{expns} is set to the
+        URI defined by I{ns}.  Otherwise, the I{ns} is simply mapped.
+        @param ns: A namespace.
+        @type ns: (I{prefix},I{URI})
+        """
+        if ns is None:
+            return
+        if not isinstance(ns, (tuple,list)):
+            raise Exception('namespace must be tuple')
+        if ns[0] is None:
+            self.expns = ns[1]
+        else:
+            self.nsprefixes[ns[0]] = ns[1]
+            
+    def str(self, indent=0):
+        """
+        Get a string representation of this XML fragment.
+        @param indent: The indent to be used in formatting the output.
+        @type indent: int
+        @return: A I{pretty} string.
+        @rtype: basestring
+        """
+        tab = '%*s'%(indent*3,'')
+        result = []
+        result.append('%s<%s' % (tab, self.qname()))
+        result.append(self.nsdeclarations())
+        for a in [unicode(a) for a in self.attributes]:
+            result.append(' %s' % a)
+        if self.isempty():
+            result.append('/>')
+            return ''.join(result)
+        result.append('>')
+        if self.text is not None:
+            result.append(self.text)
+        for c in self.children:
+            result.append('\n')
+            result.append(c.str(indent+1))
+        if len(self.children):
+            result.append('\n%s' % tab)
+        result.append('</%s>' % self.qname())
+        result = ''.join(result)
+        return result
+
+    def nsdeclarations(self):
+        """ get namespace declarations """
+        result = ''
+        if self.expns is not None:
+            result += ' xmlns="%s"' % self.expns
+        for (p,u) in self.nsprefixes.items():
+            if self.parent is not None:
+                ns = self.parent.resolvePrefix(p)
+                if ns[1] == u: # already declared
+                    continue
+            result += ' xmlns:%s="%s"' % (p, u)
+        return result
+            
     def __childrenAtPath(self, parts):
         result = []
         node = self
@@ -288,221 +854,23 @@ class Element:
                 ns = node.resolvePrefix(prefix)
             result = child.getChildren(leaf)
         return result
-        
-    def getChildren(self, name=None, ns=None):
-        """ get list of child elements by name and (optional) namespace """
-        result = []
-        prefix, name = splitPrefix(name)
-        if prefix is not None:
-            ns = self.resolvePrefix(prefix)
-        if name is None and ns is None:
-            return self.children
-        for c in self.children:
-            if c.name == name and \
-                ( ns is None or c.namespace()[1] == ns[1] ):
-                result.append(c)
-        return result
-    
-    def detachChildren(self):
-        """ detach and return the list of children """
-        detached = self.children
-        self.children = []
-        for child in detached:
-            child.parent = None
-        return detached
-    
-    def attrib(self, name, ns=None):
-        """ get an attribute by name and (optional) namespace """
-        result = None
-        if len(self.attributes) == 0:
-            return result
-        if ns is None:
-            p, n = splitPrefix(name)
-            p = [p]
-        else:
-            prefixes = self.findPrefixes(ns[1])
-            p, n = (prefixes, name)
-        for a in self.attributes:
-            if a.prefix in p and a.name == n:
-                result = a
-                break
-        return result
-    
-    def attribute(self, name, value=None, default=None, ns=None):
-        """ get/set an attribute by name and optional namespace """
-        attr = self.attrib(name, ns)
-        if value is None:
-            if attr is None or attr.value is None:
-                return default
-            else:
-                return attr.getValue()
-        else:
-            if attr is None:
-                attr = Attribute(name, value)
-                self.append(attr)
-            else:
-                attr.setValue(value)
-            return attr
-
-    def flattenedTree(self, addSelf=True):
-        """ get flattened list of attributes for this branch in the tree """
-        result = []
-        if addSelf:
-            result.append(self)
-        for c in self.children:
-            result.append(c, False)
-        return result
-    
-    def flattenedPrefixes(self):
-        """ get a flattened list of all ns prefixes for this branch in the tree """
-        result = []
-        for item in self.nsprefixes.items():
-            if item in result:
-                continue
-            result.append((item[0], item[1]))
-        for c in self.children:
-            cp = c.flattenedPrefixes()
-            result += [item for item in cp if item not in result]
-        return result
-        
-    def qname(self):
-        """ get the fully qualified name """
-        if self.prefix is None:
-            return self.name
-        else:
-            return '%s:%s' % (self.prefix, self.name)
-        
-    def namespace(self):
-        """ get the namespace """
-        if self.prefix is None:
-            p = self.parent
-            while p is not None:
-                if p.expns is not None:
-                    return (None, p.expns)
-                else:
-                    p = p.parent
-        else:
-            return self.resolvePrefix(self.prefix)
-        
-    def resolvePrefix(self, prefix, default=defns):
-        """ resolve the specified prefix into a namespace """
-        n = self
-        while n is not None:
-            if prefix in n.nsprefixes:
-                return (prefix, n.nsprefixes[prefix])
-            else:
-                n = n.parent
-        return default
-    
-    def addPrefix(self, p, u):
-        """ add/update a prefix mapping """
-        self.nsprefixes[p] = u
-        return self
- 
-    def updatePrefix(self, p, u):
-        """ update a prefix mapping (recursive) """
-        if p in self.nsprefixes:
-            self.nsprefixes[p] = u
-        for c in self.children:
-            c.updatePrefix(p, u)
-            
-    def replaceNamespace(self, uA, uB):
-        """ replace uri {uA} with uri {uB} (recursive) """
-        if self.expns is not None and \
-            self.expns[1] == uA:
-            self.expns = (None, uB)
-        for item in self.nsprefixes.items():
-            if item[1] == uA:
-                self.nsprefixes[item[0]] = uB
-        for c in self.children:
-            c.replaceNamespace(uA, uB)
-            
-    def clearPrefix(self, prefix):
-        """ clear the specified prefix from the mapping """
-        if prefix in self.nsprefixes:
-            del self.nsprefixes[prefix]     
-    
-    def findPrefix(self, uri):
-        """ find a mapped prefix for the specified namespace URI """
-        for item in self.nsprefixes.items():
-            if item[1] == uri:
-                prefix = item[0]
-                return prefix
-        if self.parent is not None:
-            return self.parent.findPrefix(uri)
-        else:
-            return None
-
-    def findPrefixes(self, uri, match='eq'):
-        """ find all mapped prefixes for the specified namespace URI """
-        result = []
-        for item in self.nsprefixes.items():
-            if self.matcher[match](item[1], uri):
-                prefix = item[0]
-                result.append(prefix)
-        if self.parent is not None:
-            result += self.parent.findPrefixes(uri, match)
-        return result
-    
-    def promotePrefixes(self):
-        """ push prefix declarations up the tree as far as possible """
-        for c in self.children:
-            c.promotePrefixes()
-        if self.parent is None:
-            return
-        for p,u in self.nsprefixes.items():
-            if isinstance(self.parent, tuple):
-                print self.parent.__class__.__name__
-            if p in self.parent.nsprefixes:
-                pu = self.parent.nsprefixes[p]
-                if pu == u:
-                    del self.nsprefixes[p]
-            else:
-                self.parent.nsprefixes[p] = u
-                del self.nsprefixes[p]       
-
-    def isempty(self):
-        """ get whether the element has no children """
-        return len(self.children) == 0 and \
-            self.text is None
-            
-    def isnil(self):
-        """ get whether the element is xsi:nil """
-        nilattr = self.attrib('nil', ns=xsins)
-        if nilattr is None:
-            return False
-        else:
-            return ( nilattr.getValue().lower() == 'true' )
-        
-    def setnil(self, flag=True):
-        """ set the value of this node nil based on flag """
-        self.attribute('%s:nil' % xsins[0], flag)
-        self.addPrefix(xsins[0], xsins[1])
-        if flag:
-            self.text = None
-        return self
-            
-    def applyns(self, ns):
-        """ apply the namespace to this node """
-        if ns is None:
-            return
-        if not isinstance(ns, (tuple,list)):
-            raise Exception('namespace must be tuple')
-        if ns[0] is None:
-            self.expns = ns[1]
-        else:
-            self.nsprefixes[ns[0]] = ns[1]
                 
     def __getitem__(self, index):
-        if index < len(self.children):
-            return self.children[index]
+        if isinstance(index, basestring):
+            return self.get(index)
         else:
-            return None
+            if index < len(self.children):
+                return self.children[index]
+            else:
+                return None
         
-    def __setitem__(self, index, child):
-        if index < len(self.children) and \
-            isinstance(child, Element):
-            self.children.insert(index, child)
+    def __setitem__(self, index, value):
+        if isinstance(index, basestring):
+            self.set(index, value)
+        else:
+            if index < len(self.children) and \
+                isinstance(value, Element):
+                self.children.insert(index, value)
 
     def __eq__(self, rhs):
         return  rhs is not None and \
@@ -514,47 +882,12 @@ class Element:
         return \
             'element (prefix=%s, name=%s)' % (self.prefix, self.name)
     
-    def nsdeclarations(self):
-        """ get namespace declarations """
-        result = ''
-        if self.expns is not None:
-            result += ' xmlns="%s"' % self.expns
-        for (p,u) in self.nsprefixes.items():
-            if self.parent is not None:
-                ns = self.parent.resolvePrefix(p)
-                if ns[1] == u: # already declared
-                    continue
-            result += ' xmlns:%s="%s"' % (p, u)
-        return result
-    
     def __str__(self):
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
         return self.str()
         
-    def str(self, indent=0):
-        tab = '%*s'%(indent*3,'')
-        result = []
-        result.append('%s<%s' % (tab, self.qname()))
-        result.append(self.nsdeclarations())
-        for a in [unicode(a) for a in self.attributes]:
-            result.append(' %s' % a)
-        if self.isempty():
-            result.append('/>')
-            return ''.join(result)
-        result.append('>')
-        if self.text is not None:
-            result.append(self.text)
-        for c in self.children:
-            result.append('\n')
-            result.append(c.str(indent+1))
-        if len(self.children):
-            result.append('\n%s' % tab)
-        result.append('</%s>' % self.qname())
-        result = ''.join(result)
-        return result
-
 
 class Document(Element):
     """ simple document """
