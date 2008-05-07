@@ -239,7 +239,7 @@ class Client:
         protocol = urlparse.urlparse(location)[0]
         proxy = proxies.get(protocol, None)
         if proxy is not None:
-            self.log.info('proxy %s used for %s', proxy, location)
+            self.log.debug('proxy %s used for %s', proxy, location)
             request.set_proxy(proxy, protocol)
     
     def headers(self, method):

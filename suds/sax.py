@@ -819,7 +819,12 @@ class Element:
         return result
 
     def nsdeclarations(self):
-        """ get namespace declarations """
+        """
+        Get a string representation for all namespace declarations
+        as xmlns="" and xmlns:p="".
+        @return: A separated list of declarations.
+        @rtype: basestring
+        """
         result = ''
         if self.expns is not None:
             result += ' xmlns="%s"' % self.expns
