@@ -14,6 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
+from suds.sudsobject import Object
 from sax import Parser, splitPrefix, defns
 from urlparse import urljoin
 
@@ -36,7 +37,7 @@ def qualified_reference(ref, resolvers, tns=defns):
     ns = tns
     p, n = splitPrefix(ref)
     if p is not None:
-        if not isinstance(resolvers, (list,tuple)):
+        if not isinstance(resolvers, (list, tuple)):
             resolvers = (resolvers,)
         for r in resolvers:
             resolved = r.resolvePrefix(p)
@@ -57,10 +58,10 @@ def isqref(object):
         len(object) == 2 and \
         isinstance(object[0], basestring) and \
         isinstance(object[1], tuple) and \
-        len(object[1]) == len(defns) )
+        len(object[1]) == len(defns))
 
 
-class SchemaCollection(list):
+class SchemaCollection:
     
     """
     A collection of schema objects.  This class is needed because WSDLs may contain
@@ -78,7 +79,28 @@ class SchemaCollection(list):
         """
         self.root = wsdl.root
         self.tns = wsdl.tns
+        self.baseurl = wsdl.url
+        self.children = []
+        self.namespaces = {}
         self.log = logger('schema')
+        
+    def add(self, node):
+        """
+        Add a schema node to the collection.
+        @param node: A <schema/> root node.
+        @type node: L{Element}
+        """
+        child = [node, None]
+        self.children.append(child)
+        tns = node.get('targetNamespace')
+        self.namespaces[tns] = child
+        
+    def load(self):
+        """
+        Load the schema objects for the root nodes.
+        """
+        for child in self.children:
+            self.build(child)
         
     def imported(self, ns):
         """
@@ -89,27 +111,45 @@ class SchemaCollection(list):
         @return: The schema matching the namesapce, else None.
         @rtype: L{Schema}
         """
-        for s in self:
-            if s.tns[1] == ns[1]:
-                return s
-        return None
+        child = self.namespaces.get(ns[1], None)
+        if child is not None:
+            return self.build(child)
+        else:
+            return None
 
     def find(self, path, history=None, resolved=True):
         """ @see: L{Schema.find()} """
         if history is None:
             history = []
-        for s in self:
+        for s in [c[1] for c in self.children]:
             result = s.find(path, history, resolved)
             if result is not None:
                 return result
         return None
+    
+    def build(self, child):
+        """
+        Build a L{Schema} object for each node for which one has not already
+        been built.
+        @param child: A child.
+        @type child: [L{Element}, L{Schema}]
+        @return: child[1]
+        @rtype: L{Schema}
+        """
+        if child[1] is None:
+            schema = Schema(child[0], self.baseurl, self)
+            child[1] = schema
+        return child[1]
+    
+    def __len__(self):
+        return len(self.children)
     
     def __str__(self):
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
         result = ['\nschema collection']
-        for s in self:
+        for s in [c[1] for c in self.children]:
             result.append(s.str(1))
         return '\n'.join(result)
 
@@ -135,10 +175,14 @@ class Schema:
 
     factory =\
     {
-        'import' : lambda x, y: Import(x, y),
-        'complexType' : lambda x,y: Complex(x, y),
-        'simpleType' : lambda x,y: Simple(x, y),
-        'element' : lambda x,y: Element(x, y)
+        'import' : lambda x,y,z=None: Import(x,y,z), 
+        'complexType' : lambda x,y,z=None: Complex(x,y,z), 
+        'simpleType' : lambda x,y,z=None: Simple(x,y,z), 
+        'element' : lambda x,y,z=None: Element(x,y,z),
+        'sequence' : lambda x,y,z=None: Sequence(x,y,z),
+        'complexContent' : lambda x,y,z=None: ComplexContent(x,y,z),
+        'enumeration' : lambda x,y,z=None: Enumeration(x,y,z),
+        'extension' : lambda x,y,z=None: Extension(x,y,z),
     }
     
     def __init__(self, root, baseurl=None, container=None):
@@ -152,25 +196,32 @@ class Schema:
         self.types = {}
         self.children = []
         self.__add_children()
+        self.__load_children()
                 
     def __add_children(self):
         """ populate the list of children """
         for node in self.root.children:
             if node.name in self.factory:
-                cls = self.factory[node.name]
-                child = cls(self, node)
+                fn = self.factory[node.name]
+                child = fn(self, node)
                 if isinstance(child, Import):
                     self.children += child.children
                 else:
                     self.children.append(child)
-        self.children.sort()
                 
     def __tns(self):
         """ get the target namespace """
-        tns = [None, self.root.attribute('targetNamespace')]
+        tns = [None, self.root.get('targetNamespace')]
         if tns[1] is not None:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
+    
+    def __load_children(self):
+        """ run children through depsolving and child promotion """
+        for c in self.children:
+            c.depsolve()
+        for c in self.children:
+            c.promote()
         
     def imported(self, ns):
         """ find schema imported by namespace """
@@ -197,13 +248,14 @@ class Schema:
         if history is None:
             history = []
         try:
-            key = '/'.join((str(resolved),unicode(path)))
+            key = '/'.join((str(resolved), unicode(path)))
         except:
             pass
         if key is not None:
             cached = self.types.get(key, None)
-            if cached is not None:
-                return cached
+            if cached is not None and \
+                cached not in history:
+                    return cached
         if self.builtin(path):
             b = XBuiltin(self, path)
             return b
@@ -218,7 +270,7 @@ class Schema:
         if ref is None:
             return False
         else:
-            return ( not self.builtin(ref, context) )
+            return (not self.builtin(ref, context))
     
     def builtin(self, ref, context=None):
         """ get whether the specified type reference is an (xsd) builtin """
@@ -231,7 +283,7 @@ class Schema:
                 context = self.root    
             prefix = splitPrefix(ref)[0]
             prefixes = context.findPrefixes(w3, 'startswith')
-            return ( prefix in prefixes )
+            return (prefix in prefixes)
         except:
             return False
     
@@ -248,7 +300,7 @@ class Schema:
             self.tns = (None, uB)
 
     def str(self, indent=0):
-        tab = '%*s'%(indent*3,'')
+        tab = '%*s'%(indent*3, '')
         result = []
         result.append('%s(raw)' % tab)
         result.append(self.root.parent.str(indent+1))
@@ -270,13 +322,16 @@ class Schema:
             if name is None:
                 result = child.get_child(ref, ns)
                 if result in history:
+                    result = None
                     continue
                 if result is not None:
                     break
             else:
                 if child.match(ref, ns):
                     result = child
-                    if result not in history:
+                    if result in history:
+                        result = None
+                    else:
                         break
         if result is not None:
             history.append(result)
@@ -316,24 +371,30 @@ class SchemaProperty:
     """
     A schema property is an extension to property object with
     with schema awareness.
-    """   
+    """
 
-    def __init__(self, schema, root):
+    def __init__(self, schema, root, parent):
         """ create the object with a schema and root node """
         self.root = root
         self.schema = schema
+        self.parent = parent
         self.log = schema.log
-        self.parent = None
+        self.state = Object()
+        self.state.depsolved = False
+        self.state.promoted = False
         self.children = []
         
-    def match(self, name, ns=None):
+    def match(self, name, ns=None, classes=()):
         """ match by name and optional namespace """
         myns = self.namespace()
         myname = self.get_name()
         if ns is None:
-            return ( myname == name )
+            matched = ( myname == name )
         else:
-            return ( myns[1] == ns[1] and myname == name )
+            matched = ( myns[1] == ns[1] and myname == name )
+        if matched and len(classes):
+            matched = ( self.__class__ in classes )
+        return matched
         
     def namespace(self):
         """ get this properties namespace """
@@ -381,18 +442,6 @@ class SchemaProperty:
                 return child
         return None
     
-    def add_child(self, child, index=None):
-        """ add child; set parent """
-        if not isinstance(child, (list,tuple)):
-            child = (child,)
-        for c in child:
-            c.parent = self
-            if index is None:
-                self.children.append(c)
-            else:
-                self.children.insert(index, c)
-                index += 1
-    
     def unbounded(self):
         """ get whether this node's specifes that it is unbounded (collection) """
         return False
@@ -425,13 +474,55 @@ class SchemaProperty:
         else:
             return False
         
+    def find(self, ref, classes=()):
+        """ find a referenced type in self or child """
+        if isqref(ref):
+            n, ns = ref
+        else:
+            n, ns = qualified_reference(ref, self.root, self.namespace())
+        if self.match(n, ns, classes):
+            return self
+        qref = (n, ns)
+        for c in self.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                return p
+        return None
+    
+    def add_children(self, *paths):
+        """ add (sax) children at the specified paths as properties """
+        for path in paths:
+            for root in self.root.childrenAtPath(path):
+                fn = Schema.factory[root.name]
+                child = fn(self.schema, root, self)
+                self.children.append(child)
+                
+    def replace_child(self, child, replacements):
+        """ replace (child) with specified replacements """
+        index = self.children.index(child)
+        self.children.remove(child)
+        for c in replacements:
+            c.parent = self
+            self.children.insert(index, c)
+            index += 1
+            
+    def promote_grandchildren(self):
+        """ promote grand-children to replace the parents """
+        children = list(self.children)
+        for c in children:
+            c.promote()
+            self.replace_child(c, c.children)
+        
     def str(self, indent=0):
         tag = self.__class__.__name__
-        tab = '%*s'%(indent*3,'')
+        tab = '%*s'%(indent*3, '')
         result  = []
-        result.append('%s<%s ' % (tab,tag))
+        result.append('%s<%s ' % (tab, tag))
         result.append('name="%s"' % self.get_name())
-        ref = self.asref()
+        try:
+            ref = self.asref()
+        except: 
+            ref = (None,(None,None))
         result.append(', type="%s (%s)"' % (ref[0], ref[1][1]))
         if len(self):
             for c in self.children:
@@ -442,6 +533,30 @@ class SchemaProperty:
         else:
             result.append(' />')
         return ''.join(result)
+    
+    def depsolve(self):
+        if not self.state.depsolved:
+            self.__depsolve__()
+            self.state.depsolved = True
+        for c in self.children:
+            c.depsolve()
+        return self
+
+    def promote(self):
+        if not self.state.promoted:
+            self.__promote__()
+            self.state.promoted = True
+        for c in self.children:
+            c.promote()
+        return self
+    
+    def __depsolve__(self):
+        """ overridden by subclasses """
+        pass
+    
+    def __promote__(self):
+        """ overridden by subclasses """
+        pass
         
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -463,158 +578,158 @@ class Complex(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:complexType/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
-        self.__add_children()
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
+        self.add_children('sequence', 'complexContent')
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
-        return self.root.attribute('name')
+        return self.root.get('name')
         
-    def __add_children(self):
-        """ add <xs:sequence/> and <xs:complexContent/> nested types """
-        for s in self.root.getChildren('sequence'):
-            seq = Sequence(self.schema, s)
-            self.add_child(seq.children)
-        for s in self.root.getChildren('complexContent'):
-            cont = ComplexContent(self.schema, s)
-            self.add_child(cont.children)
+    def __promote__(self):
+        """ promote grand-children """
+        self.promote_grandchildren()
 
 
 class Simple(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:simpleType/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
-        self.__add_children()
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
+        self.add_children('restriction/enumeration')
 
     def get_name(self):
         """ gets the <xs:simpleType name=""/> attribute value """
-        return self.root.attribute('name')
+        return self.root.get('name')
 
     def ref(self):
         """ gets the <xs:simpleType xsi:type=""/> attribute value """
-        return self.root.attribute('type')
-        
-    def __add_children(self):
-        """ add <xs:enumeration/> nested types """
-        for e in self.root.childrenAtPath('restriction/enumeration'):
-            enum = Enumeration(self.schema, e)
-            self.add_child(enum)
+        return self.root.get('type')
 
 
 class Sequence(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:sequence/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
-        self.__add_children()
-
-    def __add_children(self):
-        """ add <xs:element/> nested types """
-        for e in self.root.getChildren('element'):
-            element = Element(self.schema, e)
-            self.add_child(element)
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
+        self.add_children('element')
 
 
 class ComplexContent(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:complexContent/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
-        self.__add_children()
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
+        self.add_children('extension')
 
-    def __add_children(self):
-        """ add <xs:extension/> nested types """
-        for e in self.root.getChildren('extension'):
-            extension = Extension(self.schema, e)
-            self.add_child(extension.children)
+    def __promote__(self):
+        """ promote grand-children """
+        self.promote_grandchildren()
 
 
 class Enumeration(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:enumeration/> node """
 
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
         
     def get_name(self):
         """ gets the <xs:enumeration value=""/> attribute value """
-        return self.root.attribute('value')
+        return self.root.get('value')
 
     
 class Element(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:element/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
-        self.__add_children()
+    valid_children = ('complexType',)
+    
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
+        self.add_children(*Element.valid_children)
+        self.referenced = None
         
     def get_name(self):
         """ gets the <xs:element name=""/> attribute value """
-        return self.root.attribute('name')
+        return self.root.get('name')
     
     def ref(self):
         """ gets the <xs:element type=""/> attribute value """
-        return self.root.attribute('type')
-    
-    def __add_children(self):
-        """ add <complexType/>/* nested nodes """
-        for c in self.root.getChildren('complexType'):
-            complex = Complex(self.schema, c)
-            self.add_child(complex.children)
+        return self.root.get('type')
     
     def unbounded(self):
         """ get whether the element has a maxOccurs > 1 or unbounded """
-        max = self.root.attribute('maxOccurs', default=1)
-        return ( max > 1 or max == 'unbounded' )
+        max = self.root.get('maxOccurs', default=1)
+        return (max > 1 or max == 'unbounded')
+
+    def __depsolve__(self):
+        """ load based on @ref (reference) found """
+        ref = self.root.get('ref')
+        if ref is not None:
+            self.__find_referenced(ref)
     
-    def __cmp__(self, other):
-        """ <element/> before types """
-        if not isinstance(other, Import):
-            return -1
+    def __promote__(self):
+        """
+        if referenced (@ref) then promote the referenced
+        node; then replace my children with those of the
+        referenced node; otherwise, promote my grand-children
+        """
+        if self.referenced is not None:
+            self.referenced.promote()
+            self.root = self.referenced.root
+            self.children = self.referenced.children
         else:
-            return 0
+            self.promote_grandchildren()
+        
+    def __find_referenced(self, ref):
+        """ find the referenced element """
+        for c in self.schema.children:
+            p = c.find(ref, (Element,))
+            if p is not None:
+                self.referenced = p
+                return
+        raise TypeNotFound(ref)
 
 
 class Extension(Complex):
     
     """ Represents an (xsd) schema <xs:extension/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        Complex.__init__(self, schema, root)
-        self.__add_children()
-
-    def __add_children(self):
-        """ lookup extended type and add its children then add nested types """
-        super = self.schema.find(self.root.attribute('base'))
-        if super is None:
-            return
+    def __init__(self, schema, root, parent=None):
+        Complex.__init__(self, schema, root, parent)
+        self.super = None
+        
+    def __depsolve__(self):
+        """ lookup superclass  """
+        Complex.__depsolve__(self)
+        base = self.root.get('base')
+        self.super = self.schema.find(base)
+        if self.super is None:
+            raise TypeNotFound(base)
+        
+    def __promote__(self):
+        """ add base type's children as my own """
+        Complex.__promote__(self)
         index = 0
-        self.add_child(super.children, 0)
+        self.super.promote()
+        for c in self.super.children:
+            self.children.insert(index, c)
+            index += 1
 
 
 class Import(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:import/> node """
     
-    def __init__(self, schema, root):
-        """ create the object with a schema and root node """
-        SchemaProperty.__init__(self, schema, root)
+    def __init__(self, schema, root, parent=None):
+        SchemaProperty.__init__(self, schema, root, parent)
         self.imported = None
-        ns = (None, root.attribute('namespace'))
-        location = root.attribute('schemaLocation')
+        ns = (None, root.get('namespace'))
+        location = root.get('schemaLocation')
         self.__import(ns, location)
         self.__add_children()
 
@@ -625,7 +740,9 @@ class Import(SchemaProperty):
     def __add_children(self):
         """ add imported children """
         if self.imported is not None:
-            self.add_child(self.imported.children)
+            for c in self.imported.children:
+                c.parent = self
+                self.children.append(c)
 
     def __import(self, ns, location):
         """ import the xsd content at the specified url """
@@ -653,18 +770,14 @@ class Import(SchemaProperty):
         schema = Schema(imp_root, location)
         schema.reset_tns(ns)
         self.imported = schema
-        
-    def __cmp__(self, other):
-        """ <import/> first """
-        return -1
 
 
 class XBuiltin(SchemaProperty):
     
     """ Represents an (xsd) schema <xs:*/> node """
     
-    def __init__(self, schema, name):
-        SchemaProperty.__init__(self, schema, schema.root)
+    def __init__(self, schema, name, parent=None):
+        SchemaProperty.__init__(self, schema, schema.root, parent)
         if schema.isqref(name):
             ns = name[1]
             self.name = ':'.join((ns[0], name[0]))

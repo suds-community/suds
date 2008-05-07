@@ -127,6 +127,7 @@ class Factory:
         """
         self.schema = schema
         self.builder = Builder(schema)
+        self.log = logger('serviceproxy')
         
     def get_instance(self, name):
         """
@@ -138,9 +139,8 @@ class Factory:
         """
         try:
             return self.builder.build(name)
-        except TypeNotFound, e:
-            raise e
-        except:
+        except Exception, e:
+            self.log.exception('name')
             raise BuildError(name)
     
     def get_enum(self, name):
@@ -196,7 +196,7 @@ class Client:
         self.kwargs = kwargs
         self.faults = self.kwargs.get('faults', True)
         self.wsdl = WSDL(url)
-        self.schema = self.wsdl.get_schema()
+        self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
         self.cookiejar = CookieJar()
         self.log = logger('serviceproxy')
@@ -307,7 +307,7 @@ class Client:
         """
         list = []
         for op in self.wsdl.get_operations():
-            method = op.attribute('name')
+            method = op.get('name')
             binding = self.wsdl.get_binding(method, **self.kwargs)
             ptypes = binding.get_ptypes(method)
             params = ['%s{%s}' % (t[0], t[1].asref()[0]) for t in ptypes]

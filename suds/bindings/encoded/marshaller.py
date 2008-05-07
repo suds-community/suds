@@ -92,7 +92,7 @@ class Marshaller(Base):
         if tag == '__text__':
             parent.setText(unicode(object))
         elif tag.startswith('_'):
-            parent.attribute(tag[1:], unicode(object))
+            parent.set(tag[1:], unicode(object))
         else:
             child = Element(tag)
             self.set_type(child, type)
@@ -102,7 +102,7 @@ class Marshaller(Base):
     def set_type(self, node, type):
         """ set the node's soap type """
         name, ns = type.asref()
-        node.attribute('xsi:type', name)
+        node.set('xsi:type', name)
         node.addPrefix(ns[0], ns[1])       
 
     def process_metadata(self, data, node):

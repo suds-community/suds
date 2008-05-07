@@ -42,7 +42,7 @@ class Binding:
 
     def __init__(self, wsdl, **kwargs):
         self.wsdl = wsdl
-        self.schema = wsdl.get_schema()
+        self.schema = wsdl.schema
         self.faults = kwargs.get('faults', True)
         self.log = logger('binding')
         self.parser = Parser()

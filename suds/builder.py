@@ -49,6 +49,8 @@ class Builder:
             children = resolved.get_children()
             if len(children) > 0:
                 value = Object()
+        if type.get_name() is None:
+            pass
         setattr(data, type.get_name(), value)
         if value is not None:
             data = value

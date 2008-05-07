@@ -42,7 +42,7 @@ class Marshaller(Base):
         if object is None:
             child = Element(tag)
             if self.binding.nil_supported:
-                child.attribute('xsi:nil', 'true')
+                child.set('xsi:nil', 'true')
             parent.append(child)
             return
         if isinstance(object, dict):
@@ -65,7 +65,7 @@ class Marshaller(Base):
             pass
         if isinstance(tag, basestring) and \
                 tag.startswith('_'):
-            parent.attribute(tag[1:], unicode(object))
+            parent.set(tag[1:], unicode(object))
         else:
             child = Element(tag)
             child.setText(unicode(object))
@@ -76,6 +76,6 @@ class Marshaller(Base):
         md = data.__metadata__
         try:
             xsd = md.xsd
-            node.attribute('xsi:type', xsd.type)
+            node.set('xsi:type', xsd.type)
         except AttributeError:
             pass

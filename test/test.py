@@ -47,6 +47,12 @@ class Test:
     
     def test_misc(self):
         
+        service = ServiceProxy('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
+        print service
+        #print service.__client__.schema
+        print service.get_instance('person')
+        print service.get_instance('person.jeff')
+        
         service = ServiceProxy('http://soa.ebrev.info/service.wsdl')
         print service
         
@@ -164,7 +170,7 @@ class Test:
         person.name = name
         person.age = 43
         person.phone.append(phoneA)
-        person.phone.append(phoneB)
+        #person.phone.append(phoneB)
         
         #
         # inspect person
@@ -505,7 +511,9 @@ class Test:
         #
         # create a service proxy using the wsdl.
         #
-        service = ServiceProxy(get_url('perspectives'))
+        url = get_url('perspectives')
+        print url
+        service = ServiceProxy(url)
 
         #
         # print the service (introspection)
@@ -516,7 +524,9 @@ class Test:
         # login
         #
         print 'login()'
-        subject = ServiceProxy(get_url('auth')).login('rhqadmin', 'rhqadmin')
+        auth = ServiceProxy(get_url('auth'))
+        print auth
+        subject = auth.login('rhqadmin', 'rhqadmin')
 
         #
         # get all perspectives
@@ -542,6 +552,7 @@ class Test:
         # print the service (introspection)
         #
         print service
+        print service.__client__.schema
         
         configuration = service.get_instance('configuration')
         entry = service.get_instance('configuration.tns:properties.entry')
@@ -636,5 +647,5 @@ if __name__ == '__main__':
     test.rpc_enctest()
     test.auth_test()
     test.resource_test()
-    #test.perspectives_test()
-    #test.contentsource_test()
+    test.perspectives_test()
+    test.contentsource_test()

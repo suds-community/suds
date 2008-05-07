@@ -32,6 +32,7 @@ class WSDL:
             self.log.debug('reading wsdl at: %s ...', url)
             self.root = Parser().parse(url=url).root()
             self.tns = self.__tns()
+            self.schema = self.__get_schema()
             self.log.debug('parsed content:\n%s', unicode(self.root))
         except Exception, e:
             self.log.exception(e)
@@ -39,12 +40,24 @@ class WSDL:
            
     def __tns(self):
         """get the target namespace defined in the wsdl"""
-        uri = self.root.attribute('targetNamespace')
+        uri = self.root.get('targetNamespace')
         prefix = self.root.findPrefix(uri)
         ns = (prefix, uri)
         if ns[0] is None:
             self.warn('tns (%s), not mapped to a prefix', uri)
         return ns
+    
+    def __get_schema(self):
+        """ get a collective schema of all <schema/> nodes """
+        container = SchemaCollection(self)
+        for root in self.root.childrenAtPath('types/schema'):
+            container.add(root)
+        if not len(container): # empty
+            root = Element.buildPath(self.root, 'types/schema')
+            container.add(root)
+        container.load()
+        self.log.debug('schema (container):\n%s', container)
+        return container
         
     def get_binding(self, method, **kwargs):
         """ get the binding object """
@@ -68,58 +81,45 @@ class WSDL:
     def get_binding_style(self, method):
         """ get the binding style """
         binding = self.root.childAtPath('binding/binding')
-        style = binding.attribute('style', default='document')
+        style = binding.get('style', default='document')
         for operation in self.root.childrenAtPath('binding/operation'):
-            if method == operation.attribute('name'):
+            if method == operation.get('name'):
                 operation = operation.getChild('operation')
-                style = operation.attribute('style', default=style)
+                style = operation.get('style', default=style)
                 break
         return style
     
     def get_input_encoding(self, method):
         """ get an operation's encoding @use """
         for operation in self.root.childrenAtPath('binding/operation'):
-            if method == operation.attribute('name'):
+            if method == operation.get('name'):
                 body = operation.childAtPath('input/body')
                 self.log.debug('input encoding for (%s) found as (%s)', method, body)
-                return body.attribute('use')
+                return body.get('use')
         return None
     
     def get_soap_action(self, method):
         """ get an operation's soap action @soapAction """
         for operation in self.root.childrenAtPath('binding/operation'):
-            if method == operation.attribute('name'):
+            if method == operation.get('name'):
                 operation = operation.getChild('operation')
-                return operation.attribute('soapAction')
+                return operation.get('soapAction')
         return 'none'
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""
         port_address = self.root.childAtPath('service/port/address')
-        return port_address.attribute('location')
-    
-    def get_schema(self):
-        """ get a collective schema of all <schema/> nodes """
-        container = SchemaCollection(self)
-        for root in self.root.childrenAtPath('types/schema'):
-            schema = Schema(root, self.url, container)
-            container.append(schema)
-        if not len(container): # empty
-            root = Element.buildPath(self.root, 'types/schema')
-            schema = Schema(root, self.url, container)
-            container.append(schema)
-        self.log.debug('schema (container):\n%s', container)
-        return container
+        return port_address.get('location')
     
     def get_servicename(self):
         """get the name of the serivce defined in the wsdl"""
         service = self.root.getChild('service')
-        return service.attribute('name')
+        return service.get('name')
     
     def get_operation(self, name):
         """get an operation definition by name"""
         for op in self.root.childrenAtPath('portType/operation'):
-            if name == op.attribute('name'):
+            if name == op.get('name'):
                 self.log.debug('operation by name (%s) found:\n%s', name, op)
                 return op
         return None
@@ -132,7 +132,7 @@ class WSDL:
         """get the definition of a specified message by name"""
         name = splitPrefix(name)[1]
         for m in self.root.getChildren('message'):
-            if name == m.attribute('name'):
+            if name == m.get('name'):
                 self.log.debug('message by name (%s) found:\n%s', name, m)
                 return m
         return None
