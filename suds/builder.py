@@ -16,6 +16,8 @@
 from suds import *
 from suds.sudsobject import Object
 
+log = logger(__name__)
+
 
 class Builder:
     """ Builder used to construct an object for types defined in the schema """

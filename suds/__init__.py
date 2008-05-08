@@ -68,12 +68,13 @@ def logger(name=None):
         return logging.getLogger()
     fmt =\
         '%(asctime)s {%(process)d} (%(filename)s, %(lineno)d) [%(levelname)s] %(message)s'
-    logger = logging.getLogger('suds.%s' % name)
-    if not logger.handlers:
-        logger.setLevel(logging.INFO)
+    logger = logging.getLogger(name)
+    root = logging.getLogger()
+    if not root.handlers:
+        root.setLevel(logging.INFO)
         __handler = logging.StreamHandler()
         __handler.setFormatter(logging.Formatter(fmt))
-        logger.addHandler(__handler)
+        root.addHandler(__handler)
     return logger
 
 

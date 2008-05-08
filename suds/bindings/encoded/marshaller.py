@@ -18,6 +18,8 @@ from suds.sudsobject import Object
 from suds.bindings.marshaller import Marshaller as Base
 from suds.sax import Element, splitPrefix
 
+log = logger(__name__)
+
 
 class Marshaller(Base):
 

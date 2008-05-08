@@ -25,6 +25,9 @@ from suds import *
 from suds.sudsobject import Object
 from sax import Parser, splitPrefix, defns
 from urlparse import urljoin
+import logging
+
+log = logger(__name__)
 
 
 def qualified_reference(ref, resolvers, tns=defns):
@@ -91,7 +94,6 @@ class SchemaCollection:
         self.baseurl = wsdl.url
         self.children = []
         self.namespaces = {}
-        self.log = logger('schema')
         
     def add(self, node):
         """
@@ -110,6 +112,8 @@ class SchemaCollection:
         """
         for child in self.children:
             self.build(child)
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('schema (%s):\n%s', self.baseurl, str(self))
         
     def imported(self, ns):
         """
@@ -198,7 +202,6 @@ class Schema:
     def __init__(self, root, baseurl=None, container=None):
         """
         """
-        self.log = logger('schema')
         self.root = root
         self.tns = self.__tns()
         self.baseurl = baseurl
@@ -411,7 +414,6 @@ class SchemaProperty:
         self.root = root
         self.schema = schema
         self.parent = parent
-        self.log = schema.log
         self.state = Object()
         self.state.depsolved = False
         self.state.promoted = False
@@ -1065,7 +1067,7 @@ class Import(SchemaProperty):
             imp_root = Parser().parse(url=location).root()
             self.__process_import(imp_root, ns, location)
         except Exception, e:
-            self.log.debug(
+            log.debug(
                 'imported schema at (%s), not-found\n\t%s', 
                 location, unicode(e))
             

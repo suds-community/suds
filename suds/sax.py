@@ -31,8 +31,11 @@ containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
 @type xsins: namespace : (I{prefix},I{URI})
 """
 
+from suds import *
 from urllib import urlopen
 from xml.sax import parse, parseString, ContentHandler
+
+log = logger(__name__)
 
 def splitPrefix(name):
     """

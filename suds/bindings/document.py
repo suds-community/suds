@@ -17,6 +17,7 @@ from suds import *
 from suds.bindings.binding import Binding
 from suds.schema import qualified_reference
 
+log = logger(__name__)
 
 class Document(Binding):
     
@@ -63,7 +64,7 @@ class Document(Binding):
                 raise TypeNotFound(ref)
             for c in type.get_children():
                 params.append((c.get_name(), c))
-        self.log.debug('parameters %s for method %s', tostr(params), method)
+        log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
     def returns_collection(self, method):

@@ -18,6 +18,8 @@ from suds.schema import XBuiltin
 from suds.bindings.binding import Binding
 from suds.schema import qualified_reference
 
+log = logger(__name__)
+
 class RPC(Binding):
     
     """
@@ -62,7 +64,7 @@ class RPC(Binding):
             if type is None:
                 raise TypeNotFound(qref)
             params.append((p.get('name'), type))
-        self.log.debug('parameters %s for method %s', tostr(params), method)
+        log.debug('parameters %s for method %s', tostr(params), method)
         return params
 
     def returns_collection(self, method):

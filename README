@@ -20,7 +20,7 @@ All messages are at level DEBUG or ERROR so, no messages are written
 unless the user does the following: suds.logger(<desired package>).setLevel(logging.<desired-level>)
 A common example (show sent/received soap messages):
   >
-  > suds.logger('serviceproxy').setLevel(logging.DEBUG)
+  > suds.logger('suds.serviceproxy').setLevel(logging.DEBUG)
   >
 
 

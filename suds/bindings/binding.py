@@ -20,6 +20,8 @@ from suds.bindings.literal.marshaller import Marshaller as Literal
 from suds.bindings.encoded.marshaller import Marshaller as Encoded
 from unmarshaller import Unmarshaller
 
+log = logger(__name__)
+
 docfmt = """
 <SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
       xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
@@ -44,7 +46,6 @@ class Binding:
         self.wsdl = wsdl
         self.schema = wsdl.schema
         self.faults = kwargs.get('faults', True)
-        self.log = logger('binding')
         self.parser = Parser()
         self.nil_supported = kwargs.get('nil_supported', True)
         self.marshaller = None
