@@ -440,6 +440,14 @@ version 0.2.1 (5-8-08):
 
    * fix logging by: NOT setting to info in suds.__init__.logger(); set handler on root logger 
       only; moved logger (log) from classes to modules and use __name__ for logger name.
+      NOTE: This means that to enable soap message logging:
+           >
+           > logger('suds.serviceproxy').setLevel(logging.DEBUG)
+           > 
+         -- instead of --
+           >
+           > logger('serviceproxy').setLevel(logging.DEBUG)
+           >
       
    * Add support for (xsd) schema <attribute/> nodes which primarily affects objects returned by the Builder
    
