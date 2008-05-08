@@ -20,6 +20,7 @@ from suds.sudsobject import Object
 from suds.builder import Builder
 from suds.wsdl import WSDL
 
+log = logger(__name__)
 
 class ServiceProxy(object):
     
@@ -99,7 +100,6 @@ class Method(object):
         """
         self.client = client
         self.name = name
-        self.log = client.log
         
     def __call__(self, *args):
         """call the method"""
@@ -108,10 +108,10 @@ class Method(object):
             result = self.client.send(self, *args)
         except WebFault, e:
             if self.client.faults:
-                self.log.debug('raising (%s)', e)
+                log.debug('raising (%s)', e)
                 raise e
             else:
-                self.log.debug('fault (%s)', e)
+                log.debug('fault (%s)', e)
                 result = (500, e)
         return result
 
@@ -127,7 +127,6 @@ class Factory:
         """
         self.schema = schema
         self.builder = Builder(schema)
-        self.log = logger('serviceproxy')
         
     def get_instance(self, name):
         """
@@ -140,7 +139,7 @@ class Factory:
         try:
             return self.builder.build(name)
         except Exception, e:
-            self.log.exception('name')
+            log.exception('name')
             raise BuildError(name)
     
     def get_enum(self, name):
@@ -199,7 +198,6 @@ class Client:
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
         self.cookiejar = CookieJar()
-        self.log = logger('serviceproxy')
         
     def send(self, method, *args):
         """
@@ -214,7 +212,7 @@ class Client:
         headers = self.headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
         msg = binding.get_message(method.name, *args)
-        self.log.debug('sending to (%s)\nmessage:\n%s', location, msg)
+        log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             request = Request(location, msg, headers)
             self.cookiejar.add_cookie_header(request) 
@@ -239,7 +237,7 @@ class Client:
         protocol = urlparse.urlparse(location)[0]
         proxy = proxies.get(protocol, None)
         if proxy is not None:
-            self.log.debug('proxy %s used for %s', proxy, location)
+            log.debug('proxy %s used for %s', proxy, location)
             request.set_proxy(proxy, protocol)
     
     def headers(self, method):
@@ -266,7 +264,7 @@ class Client:
         @rtype: I{builtin}, L{Object}
         @raise WebFault: On server.
         """
-        self.log.debug('http succeeded:\n%s', reply)
+        log.debug('http succeeded:\n%s', reply)
         if len(reply) > 0:
             p = binding.get_reply(method.name, reply)
             if self.faults:
@@ -288,7 +286,7 @@ class Client:
         """
         status, reason = (error.code, error.msg)
         reply = error.fp.read()
-        self.log.debug('http failed:\n%s', reply)
+        log.debug('http failed:\n%s', reply)
         if status == 500:
             if len(reply) > 0:
                 return (status, binding.get_fault(reply))
@@ -331,5 +329,5 @@ class Client:
                 s += '\t\t%s\n' % m
             return unicode(s)
         except Exception, e:
-            self.log.exception(e)
+            log.exception(e)
             return u'service not available'

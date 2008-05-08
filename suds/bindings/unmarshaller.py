@@ -17,6 +17,8 @@ from suds import *
 from suds.sudsobject import Object
 from suds.sax import xsins
 
+log = logger(__name__)
+
 class Unmarshaller:
     """ object unmarshaller """
     

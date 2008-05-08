@@ -15,6 +15,7 @@
 from suds import *
 from new import classobj, function, instancemethod
 
+log = logger(__name__)
 
 class Object:
     

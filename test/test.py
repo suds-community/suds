@@ -591,7 +591,7 @@ class Test:
 
 if __name__ == '__main__':
     
-    #logger('serviceproxy').setLevel(logging.DEBUG)
+    #logger('suds.serviceproxy').setLevel(logging.DEBUG)
     test = Test()
     test.test_misc()
     test.basic_test()

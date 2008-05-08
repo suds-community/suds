@@ -20,22 +20,23 @@ from bindings.rpc import RPC
 from schema import Schema, SchemaCollection
 from urlparse import urlparse
 
+log = logger(__name__)
+
 class WSDL:
     """
     a web services definition language inspection object
     """
     
     def __init__(self, url):
-        self.log = logger('wsdl')
         self.url = url
         try:
-            self.log.debug('reading wsdl at: %s ...', url)
+            log.debug('reading wsdl at: %s ...', url)
             self.root = Parser().parse(url=url).root()
             self.tns = self.__tns()
             self.schema = self.__get_schema()
-            self.log.debug('parsed content:\n%s', unicode(self.root))
+            log.debug('parsed content:\n%s', unicode(self.root))
         except Exception, e:
-            self.log.exception(e)
+            log.exception(e)
             raise e
            
     def __tns(self):
@@ -56,7 +57,7 @@ class WSDL:
             root = Element.buildPath(self.root, 'types/schema')
             container.add(root)
         container.load()
-        self.log.debug('schema (container):\n%s', container)
+        log.debug('schema (container):\n%s', container)
         return container
         
     def get_binding(self, method, **kwargs):
@@ -94,7 +95,7 @@ class WSDL:
         for operation in self.root.childrenAtPath('binding/operation'):
             if method == operation.get('name'):
                 body = operation.childAtPath('input/body')
-                self.log.debug('input encoding for (%s) found as (%s)', method, body)
+                log.debug('input encoding for (%s) found as (%s)', method, body)
                 return body.get('use')
         return None
     
@@ -120,7 +121,7 @@ class WSDL:
         """get an operation definition by name"""
         for op in self.root.childrenAtPath('portType/operation'):
             if name == op.get('name'):
-                self.log.debug('operation by name (%s) found:\n%s', name, op)
+                log.debug('operation by name (%s) found:\n%s', name, op)
                 return op
         return None
     
@@ -133,7 +134,7 @@ class WSDL:
         name = splitPrefix(name)[1]
         for m in self.root.getChildren('message'):
             if name == m.get('name'):
-                self.log.debug('message by name (%s) found:\n%s', name, m)
+                log.debug('message by name (%s) found:\n%s', name, m)
                 return m
         return None
             
