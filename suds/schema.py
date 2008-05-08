@@ -13,6 +13,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The I{schema} module provides a intelligent representation of
+an XSD schema.  The I{raw} model is the XML tree and the I{model}
+is the denormalized, objectified and intelligent view of the schema.
+Most of the I{value-add} provided by the model is centered around
+tranparent referenced type resolution and targeted denormalization.
+"""
+
 from suds import *
 from suds.sudsobject import Object
 from sax import Parser, splitPrefix, defns
@@ -48,10 +56,11 @@ def qualified_reference(ref, resolvers, tns=defns):
 
 def isqref(object):
     """
-    Get whether the object is a qualified reference.
+    Get whether the object is a I{qualified reference}.
     @param object: An object to be tested.
     @type object: I{any}
     @rtype: boolean
+    @see: L{qualified_reference()}
     """
     return (\
         isinstance(object, tuple) and \
@@ -179,6 +188,7 @@ class Schema:
         'complexType' : lambda x,y,z=None: Complex(x,y,z), 
         'simpleType' : lambda x,y,z=None: Simple(x,y,z), 
         'element' : lambda x,y,z=None: Element(x,y,z),
+        'attribute' : lambda x,y,z=None: Attribute(x,y,z),
         'sequence' : lambda x,y,z=None: Sequence(x,y,z),
         'complexContent' : lambda x,y,z=None: ComplexContent(x,y,z),
         'enumeration' : lambda x,y,z=None: Enumeration(x,y,z),
@@ -371,10 +381,33 @@ class SchemaProperty:
     """
     A schema property is an extension to property object with
     with schema awareness.
+    @ivar root: The XML root element.
+    @type root: L{sax.Element}
+    @ivar schema: The schema containing this object.
+    @type schema: L{Schema}
+    @ivar parent: The parent object.
+    @type parent: L{SchemaProperty}
+    @ivar state: The transient states for the property
+    @type state: L{Object}
+    @ivar state.depsolve: The dependancy resolved flag.
+    @type state.depsolve: boolean
+    @ivar state.promoted: The child promoted flag.
+    @type state.promoted: boolean
+    @ivar children: A list of child xsd I{(non-attribute)} nodes
+    @type children: [L{SchemaProperty},...]
+    @ivar attributes: A list of child xsd I{(attribute)} nodes
+    @type attributes: [L{SchemaProperty},...]
     """
 
     def __init__(self, schema, root, parent):
-        """ create the object with a schema and root node """
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         self.root = root
         self.schema = schema
         self.parent = parent
@@ -383,9 +416,22 @@ class SchemaProperty:
         self.state.depsolved = False
         self.state.promoted = False
         self.children = []
+        self.attributes = []
         
     def match(self, name, ns=None, classes=()):
-        """ match by name and optional namespace """
+        """
+        Match by name, optional namespace and list of classes.  When a list of
+        classes is specified, this object must be in the list.  Otherwise, the
+        class list is ignored.
+        @param name: The name of the property
+        @type name: basestring
+        @param ns: An optional namespace
+        @type ns: (I{prefix},I{URI})
+        @param classes: A list of classes used to qualify the match.
+        @type classes: [I{class},...]
+        @return: True on match, else False
+        @rtype: boolean
+        """
         myns = self.namespace()
         myname = self.get_name()
         if ns is None:
@@ -397,19 +443,39 @@ class SchemaProperty:
         return matched
         
     def namespace(self):
-        """ get this properties namespace """
+        """
+        Get this properties namespace
+        @return: The schema's target namespace
+        @rtype: (I{prefix},I{URI})
+        """
         return self.schema.tns
         
     def get_name(self):
-        """ get the object's name """
+        """
+        Get the object's name
+        @return: The object's name
+        @rtype: basestring
+        """
         return None
     
     def ref(self):
-        """ get the referenced (xsi) type as defined by the schema """
+        """
+        Get the referenced (xsi) type as defined by the schema.
+        This is usually the value of the I{type} attribute.
+        @return: The object's type reference
+        @rtype: basestring
+        """
         return None
     
     def qref(self):
-        """ get the qualified referenced (xsi) type as defined by the schema """
+        """
+        Get the B{qualified} referenced (xsi) type as defined by the schema.
+        This is usually the value of the I{type} attribute that has been
+        qualified by L{qualified_reference()}
+        @return: The object's (qualified) type reference
+        @rtype: I{qualified reference}
+        @see: L{qualified_reference()}
+        """
         ref = self.ref()
         if ref is not None:
             return qualified_reference(ref, self.root, self.schema.tns)
@@ -417,7 +483,16 @@ class SchemaProperty:
             return (None, defns)
         
     def asref(self):
-        """ get the true type as need for external qualified reference """
+        """
+        Get the B{qualified} referenced (xsi) type as defined by the schema.
+        This is usually the value of the I{type} attribute that has been
+        qualified by L{qualified_reference()}.  The diffrerence between this
+        method and L{qref()} is the first element in the returned tuple has a
+        namespace prefix.
+        @return: The object's (qualified) type reference
+        @rtype: I{qualified reference}
+        @see: L{qualified_reference()}
+        """
         ref = self.ref()
         if ref is None:
             name = self.get_name()
@@ -429,25 +504,59 @@ class SchemaProperty:
         return (':'.join((ns[0], name)), ns)
     
     def get_children(self, empty=None):
-        """ get child (nested) schema definition nodes """ 
+        """
+        Get child (nested) schema definition nodes (excluding attributes).
+        @param empty: An optional value to be returned when the
+        list of children is empty.
+        @type empty: I{any}
+        @return: A list of children.
+        @rtype: [L{SchemaProperty},...]
+        """ 
         list = self.children
         if len(list) == 0 and empty is not None:
             list = empty
         return list
     
+    def get_attributes(self):
+        """
+        Get a list of schema attribute nodes.
+        @return: A list of attributes.
+        @rtype: [L{Attribute},...]
+        """ 
+        return self.attributes
+    
     def get_child(self, name, ns):
-        """ get a child by name """
+        """
+        Get (find) a I{non-attribute} child by name and namespace.
+        @param name: A child name.
+        @type name: basestring
+        @param ns: The child's namespace.
+        @type ns: (I{prefix},I{URI})
+        @return: The requested child.
+        @rtype: L{SchemaProperty}
+        """
         for child in self.get_children():
             if child.match(name, ns):
                 return child
         return None
     
     def unbounded(self):
-        """ get whether this node's specifes that it is unbounded (collection) """
+        """
+        Get whether this node is unbounded I{(a collection)}
+        @return: True if unbounded, else False.
+        @rtype: boolean
+        """
         return False
     
     def resolve(self, history):
-        """ return the nodes true type when another named type is referenced. """
+        """
+        Resolve and return the nodes true type when another
+        named type is referenced.
+        @param history: The history of matched items.
+        @type history: [L{SchemaProperty},...]
+        @return: The resolved (true) type.
+        @rtype: L{SchemaProperty}
+        """
         if history is None:
             history = []
         result = self
@@ -459,7 +568,14 @@ class SchemaProperty:
         return result
     
     def custom(self):
-        """ get whether this object schema type is custom """
+        """
+        Get whether this object's schema type is a I{custom} type.
+        Custom types are those types that are not I{built-in}.
+        The result is based on the value of get_type() and not
+        on the object's class.
+        @return: True if custom, else False.
+        @rtype: boolean
+        """
         ref = self.ref()
         if ref is not None:
             return self.schema.custom(ref)
@@ -467,7 +583,13 @@ class SchemaProperty:
             return False
     
     def builtin(self):
-        """ get whether this object schema type is an (xsd) builtin """
+        """
+        Get whether this object's schema type is a I{built-in} type.
+        The result is based on the value of get_type() and not
+        on the object's class.
+        @return: True if built-in, else False.
+        @rtype: boolean
+        """
         ref = self.ref()
         if ref is None:
             return self.schema.builtin(ref)
@@ -475,7 +597,18 @@ class SchemaProperty:
             return False
         
     def find(self, ref, classes=()):
-        """ find a referenced type in self or child """
+        """
+        Find a referenced type in self or children.
+        @param ref: Either a I{qualified reference} or the
+        name of a referenced type.
+        @type ref: (I{str}|I{qualified reference})
+        @param classes: A list of classes used to qualify the match.
+        @type classes: [I{class},...] 
+        @return: The referenced type.
+        @rtype: L{SchemaProperty}
+        @see: L{qualified_reference()}
+        @see: L{Schema.find()}
+        """
         if isqref(ref):
             n, ns = ref
         else:
@@ -490,15 +623,33 @@ class SchemaProperty:
         return None
     
     def add_children(self, *paths):
-        """ add (sax) children at the specified paths as properties """
+        """
+        Add (sax) children at the specified paths as child
+        schema property objects.  Each path is a I{simple} XML
+        string containing element names separated by (/) and is not
+        to be confused with an XPATH expression.  Children are stored
+        in either the I{children} collection of the I{attributes} collection.
+        @param paths: A I{vararg} list of paths.
+        @type paths: basestring
+        @see: L{Schema.factory}
+        """
         for path in paths:
             for root in self.root.childrenAtPath(path):
                 fn = Schema.factory[root.name]
                 child = fn(self.schema, root, self)
-                self.children.append(child)
+                if child.isattr():
+                    self.attributes.append(child)
+                else:
+                    self.children.append(child)
                 
     def replace_child(self, child, replacements):
-        """ replace (child) with specified replacements """
+        """
+        Replace a (child) with specified replacement objects.
+        @param child: A child of this property.
+        @type child: L{SchemaProperty}
+        @param replacements: A list of replacement properties.
+        @type replacements: [L{SchemaProperty},...]
+        """
         index = self.children.index(child)
         self.children.remove(child)
         for c in replacements:
@@ -507,13 +658,25 @@ class SchemaProperty:
             index += 1
             
     def promote_grandchildren(self):
-        """ promote grand-children to replace the parents """
+        """
+        Promote grand-children as direct children.  Promoted children
+        replace their parents.
+        @see: replace_child()
+        """
         children = list(self.children)
         for c in children:
             c.promote()
+            self.attributes += c.attributes
             self.replace_child(c, c.children)
         
     def str(self, indent=0):
+        """
+        Get a string representation of this property.
+        @param indent: The indent.
+        @type indent: int
+        @return: A string.
+        @rtype: str
+        """
         tag = self.__class__.__name__
         tab = '%*s'%(indent*3, '')
         result  = []
@@ -525,7 +688,7 @@ class SchemaProperty:
             ref = (None,(None,None))
         result.append(', type="%s (%s)"' % (ref[0], ref[1][1]))
         if len(self):
-            for c in self.children:
+            for c in ( self.attributes + self.children ):
                 result.append('\n')
                 result.append(c.str(indent+1))
             result.append('\n%s' % tab)
@@ -535,6 +698,13 @@ class SchemaProperty:
         return ''.join(result)
     
     def depsolve(self):
+        """
+        Perform dependancy solving.
+        Dependancies are resolved to their I{true} types during
+        schema loading.
+        @note: Propagated to children.
+        @see: L{__depsolve__()}
+        """
         if not self.state.depsolved:
             self.__depsolve__()
             self.state.depsolved = True
@@ -543,6 +713,12 @@ class SchemaProperty:
         return self
 
     def promote(self):
+        """
+        Promote grand-children as need for proper denormalization
+        of the object model.
+        @note: Propagated to children.
+        @see: L{__promote__()}
+        """
         if not self.state.promoted:
             self.__promote__()
             self.state.promoted = True
@@ -550,12 +726,35 @@ class SchemaProperty:
             c.promote()
         return self
     
+    def isattr(self):
+        """
+        Get whether the property is a schema I{attribute} definition.
+        @return: True if an attribute, else False.
+        @rtype: boolean
+        """
+        return False
+    
     def __depsolve__(self):
-        """ overridden by subclasses """
+        """
+        Perform dependancy solving.
+        Dependancies are resolved to their I{true} types during
+        schema loading.  Should only be invoked by L{depsolve()}
+        @precondition: The model must be initialized.
+        @note: subclasses override here!
+        @see: L{depsolve()}
+        """
         pass
     
     def __promote__(self):
-        """ overridden by subclasses """
+        """
+        Perform dependancy solving.
+        Dependancies are resolved to their I{true} types during
+        schema loading.  Should only be invoked by L{promote()}
+        @precondition: The model must be initialized.
+        @precondition: L{__depsolve__()} have been invoked.
+        @note: subclasses override here!
+        @see: L{promote()}
+        """
         pass
         
     def __str__(self):
@@ -572,15 +771,70 @@ class SchemaProperty:
     
     def __getitem__(self, index):
         return self.children[index]
+    
+
+class Polymorphic(SchemaProperty):
+    
+    """
+    Represents a polymorphic property which is an xsd construct
+    that may reference another by name.  Once the reference is
+    resolved, the object transforms into the referenced property.
+    """
+    
+    def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
+        SchemaProperty.__init__(self, schema, root, parent)
+        self.referenced = None
+        
+    def __depsolve__(self):
+        """
+        Resolve based on @ref (reference) found
+        @see: L{SchemaProperty.__depsolve__()}
+        """
+        ref = self.root.get('ref')
+        if ref is not None:
+            self.__find_referenced(ref)
+        
+    def __find_referenced(self, ref):
+        """ find the referenced property """
+        for c in self.schema.children:
+            p = c.find(ref, (self.__class__,))
+            if p is not None:
+                self.referenced = p
+                return
+        raise TypeNotFound(ref)
 
 
 class Complex(SchemaProperty):
+    """
+    Represents an (xsd) schema <xs:complexType/> node.
+    @cvar valid_children: A list of valid child node names
+    @type valid_children: (I{str},...)
+    """
     
-    """ Represents an (xsd) schema <xs:complexType/> node """
+    valid_children =\
+        ('attribute',
+          'sequence', 
+          'complexContent')
     
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, root, parent)
-        self.add_children('sequence', 'complexContent')
+        self.add_children(*Complex.valid_children)
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
@@ -592,10 +846,19 @@ class Complex(SchemaProperty):
 
 
 class Simple(SchemaProperty):
-    
-    """ Represents an (xsd) schema <xs:simpleType/> node """
+    """
+    Represents an (xsd) schema <xs:simpleType/> node
+    """
     
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, root, parent)
         self.add_children('restriction/enumeration')
 
@@ -609,19 +872,37 @@ class Simple(SchemaProperty):
 
 
 class Sequence(SchemaProperty):
-    
-    """ Represents an (xsd) schema <xs:sequence/> node """
+    """
+    Represents an (xsd) schema <xs:sequence/> node.
+    """
     
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, root, parent)
         self.add_children('element')
 
 
 class ComplexContent(SchemaProperty):
-    
-    """ Represents an (xsd) schema <xs:complexContent/> node """
+    """
+    Represents an (xsd) schema <xs:complexContent/> node.
+    """
     
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, root, parent)
         self.add_children('extension')
 
@@ -631,10 +912,19 @@ class ComplexContent(SchemaProperty):
 
 
 class Enumeration(SchemaProperty):
-    
-    """ Represents an (xsd) schema <xs:enumeration/> node """
+    """
+    Represents an (xsd) schema <xs:enumeration/> node
+    """
 
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, root, parent)
         
     def get_name(self):
@@ -642,16 +932,26 @@ class Enumeration(SchemaProperty):
         return self.root.get('value')
 
     
-class Element(SchemaProperty):
+class Element(Polymorphic):
+    """
+    Represents an (xsd) schema <xs:element/> node.
+    @cvar valid_children: A list of valid child node names
+    @type valid_children: (I{str},...)
+    """
     
-    """ Represents an (xsd) schema <xs:element/> node """
-    
-    valid_children = ('complexType',)
+    valid_children = ('attribute', 'complexType',)
     
     def __init__(self, schema, root, parent=None):
-        SchemaProperty.__init__(self, schema, root, parent)
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
+        Polymorphic.__init__(self, schema, root, parent)
         self.add_children(*Element.valid_children)
-        self.referenced = None
         
     def get_name(self):
         """ gets the <xs:element name=""/> attribute value """
@@ -665,18 +965,13 @@ class Element(SchemaProperty):
         """ get whether the element has a maxOccurs > 1 or unbounded """
         max = self.root.get('maxOccurs', default=1)
         return (max > 1 or max == 'unbounded')
-
-    def __depsolve__(self):
-        """ load based on @ref (reference) found """
-        ref = self.root.get('ref')
-        if ref is not None:
-            self.__find_referenced(ref)
     
     def __promote__(self):
         """
         if referenced (@ref) then promote the referenced
         node; then replace my children with those of the
         referenced node; otherwise, promote my grand-children
+        @see: L{SchemaProperty.__promote__()}
         """
         if self.referenced is not None:
             self.referenced.promote()
@@ -684,22 +979,22 @@ class Element(SchemaProperty):
             self.children = self.referenced.children
         else:
             self.promote_grandchildren()
-        
-    def __find_referenced(self, ref):
-        """ find the referenced element """
-        for c in self.schema.children:
-            p = c.find(ref, (Element,))
-            if p is not None:
-                self.referenced = p
-                return
-        raise TypeNotFound(ref)
 
 
 class Extension(Complex):
-    
-    """ Represents an (xsd) schema <xs:extension/> node """
+    """
+    Represents an (xsd) schema <xs:extension/> node.
+    """
     
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         Complex.__init__(self, schema, root, parent)
         self.super = None
         
@@ -722,10 +1017,19 @@ class Extension(Complex):
 
 
 class Import(SchemaProperty):
-    
-    """ Represents an (xsd) schema <xs:import/> node """
+    """
+    Represents an (xsd) schema <xs:import/> node
+    """
     
     def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, root, parent)
         self.imported = None
         ns = (None, root.get('namespace'))
@@ -773,10 +1077,17 @@ class Import(SchemaProperty):
 
 
 class XBuiltin(SchemaProperty):
-    
-    """ Represents an (xsd) schema <xs:*/> node """
+    """
+    Represents an (xsd) schema <xs:*/> node
+    """
     
     def __init__(self, schema, name, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
         SchemaProperty.__init__(self, schema, schema.root, parent)
         if schema.isqref(name):
             ns = name[1]
@@ -792,3 +1103,53 @@ class XBuiltin(SchemaProperty):
         
     def ref(self):
         return self.name
+    
+
+class Attribute(Polymorphic):
+    """
+    Represents an (xsd) <attribute/> node
+    """
+
+    def __init__(self, schema, root, parent=None):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        @param parent: The parent.
+        @type parent: L{SchemaProperty}
+        """
+        Polymorphic.__init__(self, schema, root, parent)
+        
+    def isattr(self):
+        """ get whether the property is an attribute """
+        return True
+        
+    def get_name(self):
+        """ gets the <xs:attribute name=""/> attribute value """
+        return self.root.get('name')
+    
+    def ref(self):
+        """ gets the <xs:attribute type=""/> attribute value """
+        return self.root.get('type')
+
+    def get_default(self):
+        """ gets the <xs:attribute default=""/> attribute value """
+        return self.root.get('default', default='')
+    
+    def required(self):
+        """ gets the <xs:attribute use="required"/> attribute value """
+        use = self.root.get('use', default='')
+        return ( use.lower() == 'required' )
+
+    def __promote__(self):
+        """
+        Replace the root with the referenced root 
+        while preserving @use.
+        @see: L{SchemaProperty.__promote__()}
+        """
+        if self.referenced is not None:
+            myuse = self.root.get('use')
+            self.root = self.referenced.root
+            if myuse is not None:
+                self.root.set('use', myuse)

@@ -34,6 +34,7 @@ class Builder:
         md.xsd = Object.metadata()
         md.xsd.type = type.get_name()
         md.xsd.ns = type.namespace()
+        self.add_attributes(data, type)
         for c in type.get_children():
             self.process(data, c)
         return data
@@ -42,6 +43,7 @@ class Builder:
         """ process the specified type then process its children """
         history = [type]
         resolved = type.resolve(history)
+        self.add_attributes(data, type)
         value = None
         if type.unbounded():
             value = []
@@ -57,3 +59,11 @@ class Builder:
         if not isinstance(data, list):
             for c in resolved.get_children():
                 self.process(data, c)
+
+    def add_attributes(self, data, type):
+        """ add required attributes """
+        for a in type.get_attributes():
+            if a.required():
+                name = '_%s' % a.get_name()
+                value = a.get_default()
+                setattr(data, name, value)

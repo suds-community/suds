@@ -514,6 +514,9 @@ class Test:
         url = get_url('perspectives')
         print url
         service = ServiceProxy(url)
+        
+        gtr = service.get_instance('getTasksResponse.return')
+        print gtr
 
         #
         # print the service (introspection)
@@ -586,60 +589,9 @@ class Test:
         except Exception, e:
             print e
 
-
-def test1():
-    wsdl = WSDL(get_url('test'))
-    schema = Schema(wsdl.definitions_schema())
-    print schema.build('person')
-    
-def test2():
-    wsdl = WSDL(get_url('contentsource'))
-    schema = Schema(wsdl.definitions_schema())
-    print schema.build('configuration')
-    
-def test3():
-    wsdl = WSDL(get_url('contentsource'))
-    schema = Schema(wsdl.definitions_schema())
-    #print schema.build('property')
-    #print schema.build('configuration.properties.entry')
-    simple =  schema.build('propertySimple')
-    print simple
-    simple.name = 'userid'
-    simple.stringValue = 'jortel'
-    simple.id = 43
-    print simple
-    print DocumentWriter().tostring(simple.__type__, simple)
-
-def test4():
-    hint = Hint(addtag = True)
-    hint.sequences = ('/root/test',)
-    xml = '<root><name>jeff</name><age xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="int">20</age><test/></root>'
-    reader = DocumentReader(hint=hint)
-    writer = DocumentWriter()
-    d = reader.read(string=xml)
-    print d
-    print d.age.get_metadata('_type')
-    print writer.tostring('test', d)
-    
-def test5():
-    wsdl = WSDL(get_url('auth'))
-    schema = Schema(wsdl.definitions_schema())
-    hint = schema.get_hint('loginResponse')
-    print 'hint_____________________'
-    for p in hint.sequences:
-        print p
-    hint = schema.get_hint('loginResponse')
-    print 'hint_____________________'
-    for p in hint.sequences:
-        print p
-
-
 if __name__ == '__main__':
     
     #logger('serviceproxy').setLevel(logging.DEBUG)
-    #test4()
-    #test5()
-    #test3()
     test = Test()
     test.test_misc()
     test.basic_test()
