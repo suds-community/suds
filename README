@@ -420,3 +420,29 @@ version-0.2 (04-28-08):
      
    * Fixed problem where a wsdl doesn't define a <schema/> section and Suds can't resolve the prefixes for the
       http://www.w3.org/2001/XMLSchema namespace to detect builtin types such as (xs:string).
+
+version 0.2.1 (5-8-08):
+
+   * Update the schema.py SchemaProperty loading sequence so that the schema is loaded in 3 steps: 
+         1) build the raw tree. 
+         2) resolve dependancies such as @ref and @base.  
+         3) promote grandchildren as needed to flatten (denormalize) the tree.
+         
+       The wsdl was also changed to only load the schema once and store it.  The schema collection was 
+       changed to load schemas in 2 steps:
+         1) create all raw schema objects.
+         2) load schemas.  
+       
+       This ensure that local <import/>'d schemas can be found when referenced out of order.  
+       The sax.py Element interface changed: attribute() replaced by get() and set().  
+       Also, __getitem__ and __setitem__ can be used to access attribute values.  
+       Epydocs updated for sax.py.  And ... last <element ref=/> now supported properly.
+
+   * fix logging by: NOT setting to info in suds.__init__.logger(); set handler on root logger 
+      only; moved logger (log) from classes to modules and use __name__ for logger name.
+      
+   * Add support for (xsd) schema <attribute/> nodes which primarily affects objects returned by the Builder
+   
+   * Update serviceproxy.py:set_proxies() to log DEBUG instead of INFO.
+   
+   * Enhance schema __str__ to show both the raw xml and the model (mostly for debugging).
