@@ -201,6 +201,12 @@ class Schema:
     
     def __init__(self, root, baseurl=None, container=None):
         """
+        @param root: The xml root.
+        @type root: L{sax.Element}
+        @param baseurl: The base url used for importing.
+        @type baseurl: basestring
+        @param container: An optional container.
+        @type container: L{SchemaCollection}
         """
         self.root = root
         self.tns = self.__tns()
