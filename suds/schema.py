@@ -23,7 +23,7 @@ tranparent referenced type resolution and targeted denormalization.
 
 from suds import *
 from suds.sudsobject import Object
-from sax import Parser, splitPrefix, defns
+from sax import *
 from urlparse import urljoin
 import logging
 
@@ -82,17 +82,29 @@ class SchemaCollection:
     @type root: L{Element}
     @ivar tns: The target namespace (set to WSDL's target namesapce)
     @type tns: (prefix,URI)
+    @ivar baseurl: The I{base} URL for this schema.
+    @type baseurl: str
+    @ivar children: A list contained schemas.
+    @type children: [L{Schema},...]
+    @ivar impfilter: A list of namespaces B{not} to import.
+    @type impfilter: set
     """
     
-    def __init__(self, wsdl):
+    def __init__(self, wsdl, impfilter=None):
         """
         @param wsdl: A WSDL object.
         @type wsdl: L{wsdl.WSDL}
+        @param importfilter: A list of namespaces B{not} to import.
+        @type importfilter: set
         """
         self.root = wsdl.root
         self.tns = wsdl.tns
         self.baseurl = wsdl.url
         self.children = []
+        if impfilter is None:
+            self.impfilter = set([xsdns[1], xsins[1]])
+        else:
+            self.impfilter = impfilter
         self.namespaces = {}
         
     def add(self, node):
@@ -150,7 +162,8 @@ class SchemaCollection:
         @rtype: L{Schema}
         """
         if child[1] is None:
-            schema = Schema(child[0], self.baseurl, self)
+            schema = \
+                Schema(child[0], self.baseurl, self, self.impfilter)
             child[1] = schema
         return child[1]
     
@@ -178,28 +191,34 @@ class Schema:
     @type root: L{sax.Element}
     @ivar tns: The target namespace.
     @type tns: (prefix,URI)
+    @ivar efdq: The @B{e}lementB{F}ormB{D}efault="B{q}ualified" flag. 
+    @type efdq: boolean
     @ivar baseurl: The I{base} URL for this schema.
     @type baseurl: str
     @ivar container: A schema collection containing this schema.
     @type container: L{SchemaCollection}
     @ivar types: A schema types cache.
     @type types: {path:L{SchemaProperty}}
+    @ivar children: A list of child properties.
+    @type children: [L{SchemaProperty},...]
+    @ivar impfilter: A list of namespaces B{not} to import.
+    @type impfilter: set
     """
 
     factory =\
     {
-        'import' : lambda x,y,z=None: Import(x,y,z), 
-        'complexType' : lambda x,y,z=None: Complex(x,y,z), 
-        'simpleType' : lambda x,y,z=None: Simple(x,y,z), 
-        'element' : lambda x,y,z=None: Element(x,y,z),
-        'attribute' : lambda x,y,z=None: Attribute(x,y,z),
-        'sequence' : lambda x,y,z=None: Sequence(x,y,z),
-        'complexContent' : lambda x,y,z=None: ComplexContent(x,y,z),
-        'enumeration' : lambda x,y,z=None: Enumeration(x,y,z),
-        'extension' : lambda x,y,z=None: Extension(x,y,z),
+        'import' : lambda x,y=None: Import(x,y), 
+        'complexType' : lambda x,y=None: Complex(x,y), 
+        'simpleType' : lambda x,y=None: Simple(x,y), 
+        'element' : lambda x,y=None: Element(x,y),
+        'attribute' : lambda x,y=None: Attribute(x,y),
+        'sequence' : lambda x,y=None: Sequence(x,y),
+        'complexContent' : lambda x,y=None: ComplexContent(x,y),
+        'enumeration' : lambda x,y=None: Enumeration(x,y),
+        'extension' : lambda x,y=None: Extension(x,y),
     }
     
-    def __init__(self, root, baseurl=None, container=None):
+    def __init__(self, root, baseurl=None, container=None, impfilter=None):
         """
         @param root: The xml root.
         @type root: L{sax.Element}
@@ -207,13 +226,20 @@ class Schema:
         @type baseurl: basestring
         @param container: An optional container.
         @type container: L{SchemaCollection}
+        @param impfilter: A list of namespaces B{not} to import.
+        @type impfilter: set
         """
         self.root = root
         self.tns = self.__tns()
+        self.efdq = self.__efdq()
         self.baseurl = baseurl
         self.container = container
         self.types = {}
         self.children = []
+        if impfilter is None:
+            self.impfilter = set([xsdns[1], xsins[1]])
+        else:
+            self.impfilter = impfilter
         self.__add_children()
         self.__load_children()
                 
@@ -234,6 +260,14 @@ class Schema:
         if tns[1] is not None:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
+    
+    def __efdq(self):
+        """ get whether @elementFromDefualt = \"qualified\" """
+        efd = self.root.get('elementFormDefault')
+        if efd is None:
+            return False
+        else:
+            return ( efd.lower() == 'qualified' )
     
     def __load_children(self):
         """ run children through depsolving and child promotion """
@@ -336,6 +370,7 @@ class Schema:
         result = None
         parts = self.__qualify(path)
         ref, ns = parts[0]
+        log.debug('finding (%s)', ref)
         for child in self.children:           
             name = child.get_name()
             if name is None:
@@ -353,16 +388,21 @@ class Schema:
                     else:
                         break
         if result is not None:
+            log.debug('found (%s) as:\n%s', ref, result)
             history.append(result)
             if resolved or len(parts) > 1:
                 result = result.resolve(history)
+                log.debug('resolved (%s) as:\n%s', ref, result)
             for part in parts[1:]:
                 ref, ns = part
+                log.debug('find-child (%s)', ref)
                 result = result.get_child(ref, ns)
                 if result is None:
                     break
+                log.debug('found (%s) as:\n%s', ref, result)
                 if resolved:
                     result = result.resolve(history)
+                log.debug('resolved (%s) as:\n%s', ref, result)
         return result
     
     def __qualify(self, path):
@@ -394,8 +434,6 @@ class SchemaProperty:
     @type root: L{sax.Element}
     @ivar schema: The schema containing this object.
     @type schema: L{Schema}
-    @ivar parent: The parent object.
-    @type parent: L{SchemaProperty}
     @ivar state: The transient states for the property
     @type state: L{Object}
     @ivar state.depsolve: The dependancy resolved flag.
@@ -408,18 +446,15 @@ class SchemaProperty:
     @type attributes: [L{SchemaProperty},...]
     """
 
-    def __init__(self, schema, root, parent):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        self.root = root
         self.schema = schema
-        self.parent = parent
+        self.root = root
         self.state = Object()
         self.state.depsolved = False
         self.state.promoted = False
@@ -644,7 +679,7 @@ class SchemaProperty:
         for path in paths:
             for root in self.root.childrenAtPath(path):
                 fn = Schema.factory[root.name]
-                child = fn(self.schema, root, self)
+                child = fn(self.schema, root)
                 if child.isattr():
                     self.attributes.append(child)
                 else:
@@ -661,7 +696,6 @@ class SchemaProperty:
         index = self.children.index(child)
         self.children.remove(child)
         for c in replacements:
-            c.parent = self
             self.children.insert(index, c)
             index += 1
             
@@ -742,6 +776,15 @@ class SchemaProperty:
         """
         return False
     
+    def must_qualify(self):
+        """
+        Get whether the schema specifies that the
+        default element form is (qualified).
+        @return: True, if qualified
+        @rtype: boolean
+        """
+        return self.schema.efdq
+    
     def __depsolve__(self):
         """
         Perform dependancy solving.
@@ -789,16 +832,14 @@ class Polymorphic(SchemaProperty):
     resolved, the object transforms into the referenced property.
     """
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         self.referenced = None
         
     def __depsolve__(self):
@@ -832,16 +873,14 @@ class Complex(SchemaProperty):
           'sequence', 
           'complexContent')
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         self.add_children(*Complex.valid_children)
         
     def get_name(self):
@@ -858,16 +897,14 @@ class Simple(SchemaProperty):
     Represents an (xsd) schema <xs:simpleType/> node
     """
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         self.add_children('restriction/enumeration')
 
     def get_name(self):
@@ -884,16 +921,14 @@ class Sequence(SchemaProperty):
     Represents an (xsd) schema <xs:sequence/> node.
     """
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         self.add_children('element')
 
 
@@ -902,16 +937,14 @@ class ComplexContent(SchemaProperty):
     Represents an (xsd) schema <xs:complexContent/> node.
     """
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         self.add_children('extension')
 
     def __promote__(self):
@@ -924,16 +957,14 @@ class Enumeration(SchemaProperty):
     Represents an (xsd) schema <xs:enumeration/> node
     """
 
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         
     def get_name(self):
         """ gets the <xs:enumeration value=""/> attribute value """
@@ -949,16 +980,14 @@ class Element(Polymorphic):
     
     valid_children = ('attribute', 'complexType',)
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        Polymorphic.__init__(self, schema, root, parent)
+        Polymorphic.__init__(self, schema, root)
         self.add_children(*Element.valid_children)
         
     def get_name(self):
@@ -994,16 +1023,14 @@ class Extension(Complex):
     Represents an (xsd) schema <xs:extension/> node.
     """
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        Complex.__init__(self, schema, root, parent)
+        Complex.__init__(self, schema, root)
         self.super = None
         
     def __depsolve__(self):
@@ -1029,31 +1056,38 @@ class Import(SchemaProperty):
     Represents an (xsd) schema <xs:import/> node
     """
     
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, root, parent)
+        SchemaProperty.__init__(self, schema, root)
         self.imported = None
         ns = (None, root.get('namespace'))
         location = root.get('schemaLocation')
+        log.debug('import (%s) at: (%s)', ns[1], location)
+        if self.skip(ns):
+            log.debug('import (%s) skipped', ns[1])
+            return
         self.__import(ns, location)
         self.__add_children()
 
     def namespace(self):
         """ get this properties namespace """
         return self.imported.tns
+    
+    def skip(self, ns):
+        """ skip this namespace """
+        return \
+            ns[1] == self.schema.tns or \
+            ns[1] in self.schema.impfilter
 
     def __add_children(self):
         """ add imported children """
         if self.imported is not None:
             for c in self.imported.children:
-                c.parent = self
                 self.children.append(c)
 
     def __import(self, ns, location):
@@ -1072,14 +1106,16 @@ class Import(SchemaProperty):
                 location = urljoin(self.schema.baseurl, location)
             imp_root = Parser().parse(url=location).root()
             self.__process_import(imp_root, ns, location)
-        except Exception, e:
+        except:
+            self.schema.impfilter.add(ns[1])
             log.debug(
-                'imported schema at (%s), not-found\n\t%s', 
-                location, unicode(e))
+                'imported schema (%s) at (%s), not-found\n', 
+                ns[1], location)
             
     def __process_import(self, imp_root, ns, location):
         """ process the imported schema """
-        schema = Schema(imp_root, location)
+        schema = \
+            Schema(imp_root, location, impfilter=self.schema.impfilter)
         schema.reset_tns(ns)
         self.imported = schema
 
@@ -1089,14 +1125,12 @@ class XBuiltin(SchemaProperty):
     Represents an (xsd) schema <xs:*/> node
     """
     
-    def __init__(self, schema, name, parent=None):
+    def __init__(self, schema, name):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        SchemaProperty.__init__(self, schema, schema.root, parent)
+        SchemaProperty.__init__(self, schema, schema.root)
         if schema.isqref(name):
             ns = name[1]
             self.name = ':'.join((ns[0], name[0]))
@@ -1118,16 +1152,14 @@ class Attribute(Polymorphic):
     Represents an (xsd) <attribute/> node
     """
 
-    def __init__(self, schema, root, parent=None):
+    def __init__(self, schema, root):
         """
         @param schema: The containing schema.
         @type schema: L{Schema}
         @param root: The xml root node.
         @type root: L{sax.Element}
-        @param parent: The parent.
-        @type parent: L{SchemaProperty}
         """
-        Polymorphic.__init__(self, schema, root, parent)
+        Polymorphic.__init__(self, schema, root)
         
     def isattr(self):
         """ get whether the property is an attribute """
