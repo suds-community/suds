@@ -44,7 +44,9 @@ class Object:
             setattr(inst, a[0], a[1])
         return inst
     
-    class metadata: pass
+    @classmethod
+    def metadata(cls):
+        return Metadata()
 
     def __init__(self):
         self.__keylist__ = []
@@ -82,11 +84,18 @@ class Object:
         cls = self.__class__.__name__
         rep = self.__printer__.tostr(self)
         return u'(%s)%s' % (cls,rep)
+    
+    
+class Metadata(Object):
+    def __init__(self):
+        self.__keylist__ = []
+        self.__printer__ = Printer()
 
 
 class Printer:
-    
-    """ Pretty printing of a Object object. """
+    """ 
+    Pretty printing of a Object object.
+    """
     
     def __init__(self):
         self.indent = (lambda n :  '%*s'%(n*3,' '))
