@@ -18,7 +18,7 @@ from logging import Logger
 
 log = logger(__name__)
 
-class Stack():
+class Stack:
     
     def __init__(self, log=log):
         """
@@ -27,6 +27,15 @@ class Stack():
         """
         self.content = []
         self.log = log
+        
+    def clear(self):
+        """
+        Clear the stack.
+        @return: self
+        @rtype: L{Stack}
+        """
+        self.content = []
+        return self
             
     def top(self):
         """
