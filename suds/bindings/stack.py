@@ -14,24 +14,19 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
+from logging import Logger
 
 log = logger(__name__)
 
-
-class Stack(list):
+class Stack():
     
-    def __init__(self, s=None):
+    def __init__(self, log=log):
         """
-        @param s: Initial content for the stack.
-        @type s: any
+        @param log: An optional logger.
+        @type log: L{Logger}
         """
-        if s is None:
-            list.__init__(self)
-            return
-        if isinstance(s,(list,tuple)):
-            list.__init__(self, s)
-        else:
-            list.__init__(self, (s,))
+        self.content = []
+        self.log = log
             
     def top(self):
         """
@@ -40,7 +35,7 @@ class Stack(list):
         @rtype: any
         """
         if len(self):
-            return self[-1]
+            return self.content[-1]
         else:
             return None
     
@@ -52,7 +47,7 @@ class Stack(list):
         @return: self
         @rtype: L{Stack}
         """
-        self.append(s)
+        self.content.append(s)
         log.debug('push: (%s) %s', s, str(self))
         return self
         
@@ -62,9 +57,27 @@ class Stack(list):
         @return: The popped item, else None.
         @rtype: any
         """
-        if len(self):
-            s = list.pop(self)
+        if len(self.content):
+            s = self.content.pop()
             log.debug('pop: (%s) %s', s, str(self))
         else:
             log.debug('stack empty, not-popped')
         return s
+    
+    def __repr__(self):
+        return repr(self.content)
+    
+    def __len__(self):
+        return len(self.content)
+    
+    def __getitem__(self, index):
+        return self.content[index]
+    
+    def __str__(self):
+        return str(self.content)
+    
+    def __unicode__(self):
+        return unicode(self.content)
+    
+    def __iter__(self):
+        return iter(self.content)
