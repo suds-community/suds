@@ -15,6 +15,7 @@
 
 from suds import *
 from suds.sudsobject import Object
+from suds.bindings.stack import Stack
 from suds.bindings.marshaller import Marshaller as Base
 from suds.sax import Element, splitPrefix
 
@@ -28,12 +29,13 @@ class Marshaller(Base):
     def __init__(self, binding):
         """constructor """
         Base.__init__(self, binding)
-        self.path = []
+        self.path = Stack(log)
 
     def process(self, pdef, data):
         """ get the xml fragment for the data and root name """
         type = pdef[1]
-        self.path = [type.get_name()]
+        self.path.clear()
+        self.path.push(type.get_name())
         root = self.__root(pdef)
         if isinstance(data, dict):
             data = Object.instance(dict=data)
@@ -59,7 +61,7 @@ class Marshaller(Base):
     
     def write(self, parent, data, tag, object):
         """ write the content of the data object using the specified tag """
-        self.path.append(tag)
+        self.path.push(tag)
         path = '.'.join(self.path)
         type = self.schema.find(path)
         if type is None:
