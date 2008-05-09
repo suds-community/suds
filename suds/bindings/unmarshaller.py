@@ -16,6 +16,7 @@
 from suds import *
 from suds.sudsobject import Object
 from suds.sax import xsins
+from suds.bindings.stack import Stack
 
 log = logger(__name__)
 
@@ -29,7 +30,7 @@ class Unmarshaller:
     def __init__(self, binding):
         self.binding = binding
         self.schema = binding.schema
-        self.path = []
+        self.path = Stack(log)
             
     def process(self, node):
         """
@@ -37,7 +38,7 @@ class Unmarshaller:
         an object.
         """
         data = Object.instance(node.name)
-        self.path.append(node.name)
+        self.path.push(node.name)
         self.import_attrs(data, node)
         self.import_children(data, node)
         self.import_text(data, node)
