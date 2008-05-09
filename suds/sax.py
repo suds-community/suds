@@ -790,6 +790,7 @@ class Element:
         if ns[0] is None:
             self.expns = ns[1]
         else:
+            self.prefix = ns[0]
             self.nsprefixes[ns[0]] = ns[1]
             
     def str(self, indent=0):
