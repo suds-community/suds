@@ -568,7 +568,7 @@ class SchemaProperty:
         """ 
         return self.attributes
     
-    def get_child(self, name, ns):
+    def get_child(self, name, ns=None):
         """
         Get (find) a I{non-attribute} child by name and namespace.
         @param name: A child name.
