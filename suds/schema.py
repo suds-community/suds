@@ -591,7 +591,7 @@ class SchemaProperty:
         """
         return False
     
-    def resolve(self, history):
+    def resolve(self, history=None):
         """
         Resolve and return the nodes true type when another
         named type is referenced.
@@ -601,7 +601,7 @@ class SchemaProperty:
         @rtype: L{SchemaProperty}
         """
         if history is None:
-            history = []
+            history = [self]
         result = self
         if self.custom():
             ref = qualified_reference(self.ref(), self.root, self.namespace())
