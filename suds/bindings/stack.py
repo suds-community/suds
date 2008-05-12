@@ -67,11 +67,12 @@ class Stack:
         @rtype: any
         """
         if len(self.content):
-            s = self.content.pop()
-            log.debug('pop: (%s) %s', s, str(self))
+            popped = self.content.pop()
+            log.debug('pop: (%s) %s', popped, str(self))
+            return popped
         else:
             log.debug('stack empty, not-popped')
-        return s
+        return None
     
     def __repr__(self):
         return repr(self.content)
