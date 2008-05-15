@@ -232,7 +232,8 @@ class Element:
         @param ns: An optional namespace
         @type ns: (I{prefix}, I{name})
         """
-        self.prefix, self.name = splitPrefix(name)
+        
+        self.rename(name)
         self.expns = None
         self.nsprefixes = {}
         self.attributes = []
@@ -253,7 +254,10 @@ class Element:
         @param name: A new name for the element.
         @type name: basestring 
         """
-        self.prefix, self.name = splitPrefix(name)
+        if name is None:
+            raise Exception('name (%s) not-valid' % name)
+        else:
+            self.prefix, self.name = splitPrefix(name)
 
     def qname(self):
         """
@@ -966,9 +970,7 @@ class Handler(ContentHandler):
             raise Exception('malformed document')
  
     def characters(self, content):
-        text = unicode(content).strip()
-        if len(content) == 0:
-            return
+        text = unicode(content)
         node = self.top()
         if node.text is None:
             node.text = text
