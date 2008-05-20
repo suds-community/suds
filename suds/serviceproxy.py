@@ -153,7 +153,7 @@ class Factory:
         type = self.schema.find(name)
         if type is None:
             raise TypeNotFound(name)
-        data = Object.instance(name)
+        data = Object.__factory__.instance(name)
         for e in type.get_children():
             enum = e.get_name()
             setattr(data, enum, enum)

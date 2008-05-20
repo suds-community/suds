@@ -16,55 +16,119 @@
 from suds import *
 from suds.sudsobject import Object
 from suds.sax import xsins
-from suds.bindings.stack import Stack
+from suds.resolver import NodeResolver
 
 log = logger(__name__)
 
+
+reserved = \
+    { 'class':'cls', 'def':'dfn', }
+    
+booleans = \
+    { 'true':True, 'false':False }
+    
+
 class Unmarshaller:
-    """ object unmarshaller """
+    """
+    An unmarshaller object.
+    @ivar basic: A basic I{plain} (untyped) marshaller.
+    @type basic: L{Basic}
+    @ivar typed: A I{typed} marshaller.
+    @type typed: L{Typed}
+    """
     
-    reserved = { 'class':'cls', 'def':'dfn', }
-    
-    booleans = { 'true':True, 'false':False }
-    
-    def __init__(self, binding):
-        self.binding = binding
-        self.schema = binding.schema
-        self.path = Stack(log)
-            
-    def process(self, node):
+    def __init__(self, schema, **kwargs):
         """
-        process the specified node and convert the XML document into
-        an object.
+        @param schema: A schema object
+        @type schema: L{schema.Schema}
+        @param kwargs: keyword args
         """
-        data = Object.instance(node.name)
-        self.path.push(node.name)
+        self.basic = \
+            Basic(schema, **kwargs)
+        self.typed = \
+            Typed(schema, **kwargs)
+
+    
+class Basic:
+    """
+    A object builder (unmarshaller).
+    @ivar schema: A schema object
+    @type schema: L{schema.Schema}
+    """
+    def __init__(self, schema, **kwargs):
+        """
+        @param schema: A schema object
+        @type schema: L{schema.Schema}
+        @param kwargs: keyword args
+        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
+                that have a value=None when this flag is True (default:True).
+                Otherwise, an empty node <x/> is sent.
+        @type nil_supported: boolean
+        """
+        self.schema = schema
+        self.nil_supported = kwargs.get('nil_supported', True)
+        
+    def process(self, node, type=None):
+        """
+        Process an object graph representation of the xml L{node}.
+        @param node: An XML tree.
+        @type node: L{sax.Element}
+        @param type: The I{optional} schema type.
+        @type type: L{schema.SchemaProperty}
+        @return: A suds object.
+        @rtype: L{Object}
+        """
+        self.reset()
+        return self.__process(node, type)
+    
+    def __process(self, node, type=None):
+        """
+        Process the specified node and convert the XML document into
+        a L{suds} object.
+        @param node: An XML fragment.
+        @type node: L{sax.Element}
+        @param type: The I{optional} schema type.
+        @type type: L{schema.SchemaProperty}
+        @return: A suds object.
+        @rtype: L{Object}
+        @note: This is not the proper entry point.
+        @see: L{process()}
+        """
+        data = self.start(node, type)
         self.import_attrs(data, node)
         self.import_children(data, node)
         self.import_text(data, node)
-        self.path.pop()
+        self.end(node, data)
         return self.result(data, node)
     
     def import_attrs(self, data, node):
-        """import attribute nodes into the data structure"""
-        xsprefixes = node.findPrefixes(xsins[1])
+        """
+        Import attribute nodes into L{data}.
+        @param data: The current object being built.
+        @type data: L{Object}
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        """
         for attr in node.attributes:
-            if attr.prefix in xsprefixes:
-                md = data.__metadata__
-                md.xsd = Object.metadata()
-                md.xsd.type = attr.value
+            if attr.namespace()[1] == xsins[1]:
                 continue
             key = attr.name
-            key = '_%s' % self.reserved.get(key, key)
+            key = '_%s' % reserved.get(key, key)
             value = attr.getValue()
-            value = self.booleans.get(value.lower(), value)
+            value = booleans.get(value.lower(), value)
             setattr(data, key, value)
-
+            
     def import_children(self, data, node):
-        """import child nodes into the data structure"""
+        """
+        Import child nodes into L{data}
+        @param data: The current object being built.
+        @type data: L{Object}
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        """
         for child in node.children:
-            cdata = self.process(child)
-            key = self.reserved.get(child.name, child.name)
+            cdata = self.__process(child)
+            key = reserved.get(child.name, child.name)
             if key in data:
                 v = getattr(data, key)
                 if isinstance(v, list):
@@ -72,7 +136,7 @@ class Unmarshaller:
                 else:
                     setattr(data, key, [v, cdata])
                 continue
-            if self.unbounded(key):
+            if self.unbounded(cdata):
                 if cdata is None:
                     setattr(data, key, [])
                 else:
@@ -81,34 +145,52 @@ class Unmarshaller:
                 setattr(data, key, cdata)
     
     def import_text(self, data, node):
-        """import text nodes into the data structure"""
+        """
+        Import text nodes into L{data}
+        @param data: The current object being built.
+        @type data: L{Object}
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        """
         if node.text is None: return
         if len(node.text):
             value = node.getText()
-            value = self.booleans.get(value.lower(), value)
+            value = booleans.get(value.lower(), value)
             self.text(data, value)
             
     def text(self, data, value=None):
-        """ manage a data object's text information """
+        """
+        Manage a data object's text information
+        @param data: The current object being built.
+        @type data: L{Object}
+        @param value: Text content.
+        @type value: unicode
+        """
         md = data.__metadata__
         if value is None:
             try:
-                return md.xml.text
+                return md.__xml__.text
             except AttributeError:
                 return None
         else:
-            md.xml = Object.metadata()
-            md.xml.text = value
+            md.__xml__ = Object.__factory__.metadata()
+            md.__xml__.text = value
             
     def result(self, data, node):
         """
-        perform final processing of the resulting data structure as follows:
+        Perform final processing of the resulting data structure as follows:
         simple elements (not attrs or children) with text nodes will have a string 
         result equal to the value of the text node.
+        @param data: The current object being built.
+        @type data: L{Object}
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        @return: The post-processed result.
+        @rtype: (L{Object}|I{list}|I{str}) 
         """
         try:
             text = self.text(data)
-            if self.binding.nil_supported:
+            if self.nil_supported:
                 if node.isnil():
                     return None
                 if len(data) == 0 and \
@@ -119,23 +201,129 @@ class Unmarshaller:
                      return None
             if len(data) == 0 and \
                 text is not None and \
-                self.bounded(node.name):
+                self.bounded(data):
                     return text
         except AttributeError, e:
             pass
         return data
+        
+    def reset(self):
+        pass
+
+    def start(self, node, type=None):
+        """
+        Processing on I{node} has started.  Build and return
+        the proper object.
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        @param type: The I{optional} schema type.
+        @type type: L{schema.SchemaProperty}
+        @return: A subclass of Object.
+        @rtype: L{Object}
+        """
+        return Object()
     
-    def unbounded(self, nodename):
-        """ determine if the named node is unbounded (max > 1) """
+    def end(self, node, data):
+        """
+        Processing on I{node} has ended.
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        @param data: The current object being built.
+        @type data: L{Object}
+        """
+        pass
+    
+    def bounded(self, data):
+        """
+        Get whether the object is bounded (not a list).
+        @param data: The current object being built.
+        @type data: L{Object}
+        @return: True if bounded, else False
+        @rtype: boolean
+        '"""
+        return ( not self.unbounded(data) )
+    
+    def unbounded(self, data):
+        """
+        Get whether the object is unbounded (a list).
+        @param data: The current object being built.
+        @type data: L{Object}
+        @return: True if unbounded, else False
+        @rtype: boolean
+        '"""
+        return False
+
+
+class Typed(Basic):
+    """
+    A I{typed} XML unmarshaller
+    @ivar resolver: A schema type resolver.
+    @type resolver: L{NodeResolver}
+    """
+    
+    def __init__(self, binding):
+        """
+        @param binding: A binding object.
+        @type binding: L{binding.Binding}
+        """
+        Basic.__init__(self, binding)
+        self.resolver = NodeResolver(self.schema)
+
+    def reset(self):
+        """
+        Reset the resolver.
+        """
+        log.debug('reset')
+        self.resolver.reset()
+    
+    def start(self, node, type=None):
+        """ 
+        Resolve to the schema type; build an object and setup metadata.
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        @param type: The I{optional} schema type.
+        @type type: L{schema.SchemaProperty}
+        @return: A subclass of Object.
+        @rtype: L{Object}
+        """
+        if type is None:
+            if node.name == 'pathmatches':
+                pass
+            found = self.resolver.find(node)
+            if found is None:
+                raise TypeNotFound(node.qname())
+            type = found
+        else:
+            self.resolver.push(type.resolve())
+        data = Object.__factory__.instance(type.get_name())
+        md = data.__metadata__
+        md.__type__ = type
+        return data
+        
+    def end(self, node, data):
+        """
+        Backup (pop) the resolver.
+        @param node: The current node being proecessed.
+        @type node: L{sax.Element}
+        @param data: The current object being built.
+        @type data: L{Object}
+        """
+        self.resolver.pop()
+        
+    def unbounded(self, data):
+        """
+        Get whether the object is unbounded (a list) by looking at
+        the type embedded in the data's metadata.
+        @param data: The current object being built.
+        @type data: L{Object}
+        @return: True if unbounded, else False
+        @rtype: boolean
+        '"""
         try:
-            path = list(self.path)
-            path.append(nodename)
-            path = '.'.join(path)
-            type = self.schema.find(path, resolved=False)
-            return type.unbounded()
+            if isinstance(data, Object):
+                md = data.__metadata__
+                type = md.__type__
+                return type.unbounded()
         except:
-            return False
-    
-    def bounded(self, nodename):
-        """ determine if the named node is bounded (max=1) """
-        return (not self.unbounded(nodename))
+            log.error('metadata error:\n%s', tostr(data), exc_info=True)
+        return False

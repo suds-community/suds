@@ -107,6 +107,5 @@ class RPC(Binding):
             ref = p.get('type')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             result = self.schema.find(qref)
-            result = result.ref()
             break
         return result

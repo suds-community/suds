@@ -23,7 +23,7 @@ tranparent referenced type resolution and targeted denormalization.
 
 from suds import *
 from suds.sudsobject import Object
-from sax import *
+from sax import Parser, splitPrefix, defns, xsdns, xsins
 from urlparse import urljoin
 import logging
 
@@ -94,8 +94,8 @@ class SchemaCollection:
         """
         @param wsdl: A WSDL object.
         @type wsdl: L{wsdl.WSDL}
-        @param importfilter: A list of namespaces B{not} to import.
-        @type importfilter: set
+        @param impfilter: A list of namespaces B{not} to import.
+        @type impfilter: set
         """
         self.root = wsdl.root
         self.tns = wsdl.tns
@@ -142,12 +142,12 @@ class SchemaCollection:
         else:
             return None
 
-    def find(self, path, history=None, resolved=True):
+    def find(self, name, history=None, resolved=True):
         """ @see: L{Schema.find()} """
         if history is None:
             history = []
         for s in [c[1] for c in self.children]:
-            result = s.find(path, history, resolved)
+            result = s.find(name, history, resolved)
             if result is not None:
                 return result
         return None
@@ -198,7 +198,7 @@ class Schema:
     @ivar container: A schema collection containing this schema.
     @type container: L{SchemaCollection}
     @ivar types: A schema types cache.
-    @type types: {path:L{SchemaProperty}}
+    @type types: {name:L{SchemaProperty}}
     @ivar children: A list of child properties.
     @type children: [L{SchemaProperty},...]
     @ivar impfilter: A list of namespaces B{not} to import.
@@ -242,6 +242,7 @@ class Schema:
             self.impfilter = impfilter
         self.__add_children()
         self.__load_children()
+        self.children.sort()
                 
     def __add_children(self):
         """ populate the list of children """
@@ -283,45 +284,36 @@ class Schema:
         else:
             return None
         
-    def find(self, path, history=None, resolved=True):
+    def find(self, name, history=None, resolved=True):
         """
         Find a I{type} defined in one of the contained schemas.
-        @param path: The path to the requested type.
-        @type path: (str|[qref,])
-        @param history: A list of found path segments used to prevent either
+        @param name: The name to the requested type.
+        @type name: (str|[qref,])
+        @param history: A list of found name segments used to prevent either
             cyclic graphs and/or type self references.
         @type history: [L{SchemaProperty},]
-        @param resolved: A flag that controls whether or not types are resolved
-            automatically to their I{true} types.
-        @type resolved: boolean
         @note: I{qref} = qualified reference
         @see: L{qualified_reference()}
         """
-        key = None
         if history is None:
             history = []
-        try:
-            key = '/'.join((str(resolved), unicode(path)))
-        except:
-            pass
-        if key is not None:
-            cached = self.types.get(key, None)
-            if cached is not None and \
-                cached not in history:
-                    return cached
-        if self.builtin(path):
-            b = XBuiltin(self, path)
+        key = '/'.join((str(resolved), unicode(name)))
+        cached = self.types.get(key, None)
+        if cached is not None and \
+            cached not in history:
+                return cached
+        if self.builtin(name):
+            b = XBuiltin(self, name)
             return b
-        result = self.__find_path(path, history, resolved)
-        if result is not None and \
-            key is not None:
-                self.types[key] = result
+        result = self.__find(name, history, resolved)
+        if result is not None:
+            self.types[key] = result
         return result
 
     def custom(self, ref, context=None):
         """ get whether specified type reference is custom """
         if ref is None:
-            return False
+            return True
         else:
             return (not self.builtin(ref, context))
     
@@ -329,7 +321,7 @@ class Schema:
         """ get whether the specified type reference is an (xsd) builtin """
         w3 = 'http://www.w3.org'
         try:
-            if self.isqref(ref):
+            if isqref(ref):
                 ns = ref[1]
                 return ns[1].startswith(w3)
             if context is None:
@@ -339,18 +331,6 @@ class Schema:
             return (prefix in prefixes)
         except:
             return False
-    
-    def isqref(self, object):
-        """ get whether the object is a qualified reference """
-        return isqref(object)
-    
-    def reset_tns(self, ns):
-        """ reset the target namespace """
-        uA = self.tns[1]
-        uB = ns[1]
-        if uA != uB:
-            self.root.replaceNamespace(uA, uB)
-            self.tns = (None, uB)
 
     def str(self, indent=0):
         tab = '%*s'%(indent*3, '')
@@ -362,16 +342,12 @@ class Schema:
             result.append(c.str(indent+1))
         return '\n'.join(result) 
     
-    def __find_path(self, path, history, resolved):
-        """
-        get the definition object for the schema type located at the specified path.
-        The path may contain (.) dot notation to specify nested types.
-        """
+    def __find(self, name, history, resolved):
+        """ find a schema object by name. """
         result = None
-        parts = self.__qualify(path)
-        ref, ns = parts[0]
+        ref, ns = self.__qualify(name)
         log.debug('finding (%s)', ref)
-        for child in self.children:           
+        for child in self.children: 
             name = child.get_name()
             if name is None:
                 result = child.get_child(ref, ns)
@@ -388,35 +364,20 @@ class Schema:
                     else:
                         break
         if result is not None:
-            log.debug('found (%s) as:\n%s', ref, result)
+            log.debug('found (%s) as (%s)', ref, repr(result))
+            if resolved:
+                result = result.resolve()
             history.append(result)
-            if resolved or len(parts) > 1:
-                result = result.resolve(history)
-                log.debug('resolved (%s) as:\n%s', ref, result)
-            for part in parts[1:]:
-                ref, ns = part
-                log.debug('find-child (%s)', ref)
-                result = result.get_child(ref, ns)
-                if result is None:
-                    break
-                log.debug('found (%s) as:\n%s', ref, result)
-                if resolved:
-                    result = result.resolve(history)
-                log.debug('resolved (%s) as:\n%s', ref, result)
+        else:
+            log.debug('(%s) not-found', ref)
         return result
     
-    def __qualify(self, path):
-        """ convert the path into a list of qualified references """
-        if isinstance(path, basestring):
-            qualified = []
-            for p in path.split('.'):
-                if isinstance(p, basestring):
-                    p = qualified_reference(p, self.root, self.tns)
-                    qualified.append(p)
-            return qualified
-        if self.isqref(path):
-            path = (path,)
-        return path
+    def __qualify(self, name):
+        """ convert the name a qualified reference """
+        if isinstance(name, basestring):
+            return qualified_reference(name, self.root, self.tns)
+        else:
+            return name
     
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -623,7 +584,7 @@ class SchemaProperty:
         if ref is not None:
             return self.schema.custom(ref)
         else:
-            return False
+            return True
     
     def builtin(self):
         """
@@ -815,7 +776,10 @@ class SchemaProperty:
         return unicode(self.str())
     
     def __repr__(self):
-        return unicode(self).encode('utf-8')
+        myrep = \
+            '<%s name="%s"/>' % \
+                (self.__class__.__name__, self.get_name())
+        return myrep.encode('utf-8')
     
     def __len__(self):
         return len(self.children)
@@ -1002,6 +966,10 @@ class Element(Polymorphic):
         """ get whether the element has a maxOccurs > 1 or unbounded """
         max = self.root.get('maxOccurs', default=1)
         return (max > 1 or max == 'unbounded')
+
+    def __lt__(self, other):
+        """ <simpleType/> first """
+        return ( not isinstance(other, Simple) )
     
     def __promote__(self):
         """
@@ -1116,8 +1084,9 @@ class Import(SchemaProperty):
         """ process the imported schema """
         schema = \
             Schema(imp_root, location, impfilter=self.schema.impfilter)
-        schema.reset_tns(ns)
         self.imported = schema
+        if ns[0] is not None:
+            self.schema.root.addPrefix(ns[0], ns[1])
 
 
 class XBuiltin(SchemaProperty):
@@ -1131,7 +1100,7 @@ class XBuiltin(SchemaProperty):
         @type schema: L{Schema}
         """
         SchemaProperty.__init__(self, schema, schema.root)
-        if schema.isqref(name):
+        if isqref(name):
             ns = name[1]
             self.name = ':'.join((ns[0], name[0]))
         else:

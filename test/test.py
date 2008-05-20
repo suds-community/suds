@@ -21,9 +21,8 @@ from suds.schema import Schema
 from suds.sudsobject import Object
 from suds.wsdl import WSDL
 from suds.bindings.binding import Binding
-from suds.bindings.literal.marshaller import Marshaller
-from suds.bindings.encoded.marshaller import Marshaller as Encoder
-from suds.bindings.unmarshaller import Unmarshaller
+from suds.bindings.marshaller import Marshaller
+from suds.bindings.unmarshaller import *
 from suds.sax import Parser
 
 
@@ -51,6 +50,7 @@ class Test:
         print service
         #print service.__client__.schema
         print service.get_instance('person')
+        print service.get_instance('person.name.first')
         print service.get_instance('person.jeff')
         
         service = ServiceProxy('http://soa.ebrev.info/service.wsdl')
@@ -73,7 +73,7 @@ class Test:
         
         marshaller = Marshaller(service.binding)
         encoder = Encoder(service.binding)
-        unmarshaller = Unmarshaller(service.binding)
+        unmarshaller = TypedBuilder(service.binding)
         
         p = service.get_instance('person')
         p.name.first='jeff'
@@ -141,7 +141,6 @@ class Test:
         #
         name = service.get_instance('tns:name')
         name.first = u'jeff'+unichr(1234)
-        name.middle = None
         name.last = 'ortel'
         
         #
@@ -390,7 +389,7 @@ class Test:
         #
         # print the service (introspection)
         #
-        print service
+        #print service
         
         #
         # create a person object using the wsdl
@@ -493,6 +492,7 @@ class Test:
         # get resource by category
         #
         print 'getResourcesByCategory()'
+        #logger('suds.resolver').setLevel(logging.DEBUG)
         platforms = service.getResourcesByCategory(subject, resourceCategory.PLATFORM, 'COMMITTED', pc)
         print 'Reply:\n(\n%s\n)\n' % str(platforms)
         
@@ -558,7 +558,7 @@ class Test:
         print service.__client__.schema
         
         configuration = service.get_instance('configuration')
-        entry = service.get_instance('configuration.tns:properties.entry')
+        entry = service.get_instance('configuration.tns:properties.tns:entry')
         simple = service.get_instance('propertySimple')
         entry.key = 'location'
         simple.name = 'location'
@@ -591,7 +591,9 @@ class Test:
 
 if __name__ == '__main__':
     
+    #logger('suds.resolver').setLevel(logging.DEBUG)
     #logger('suds.serviceproxy').setLevel(logging.DEBUG)
+    #logger('suds.bindings.marshaller').setLevel(logging.DEBUG)
     test = Test()
     test.test_misc()
     test.basic_test()

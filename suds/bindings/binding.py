@@ -16,9 +16,8 @@
 from suds import *
 from suds.sax import Parser, Element, xsins
 from suds.sudsobject import Object
-from suds.bindings.literal.marshaller import Marshaller as Literal
-from suds.bindings.encoded.marshaller import Marshaller as Encoded
-from unmarshaller import Unmarshaller
+from suds.bindings.marshaller import Marshaller
+from suds.bindings.unmarshaller import Unmarshaller
 
 log = logger(__name__)
 
@@ -44,20 +43,21 @@ class Binding:
 
     def __init__(self, wsdl, **kwargs):
         self.wsdl = wsdl
+        self.kwargs = kwargs
         self.schema = wsdl.schema
         self.faults = kwargs.get('faults', True)
         self.parser = Parser()
-        self.nil_supported = kwargs.get('nil_supported', True)
-        self.marshaller = None
-        self.unmarshaller = Unmarshaller(self)
+        self.unmarshaller = Unmarshaller(self.schema, **kwargs)
+        self.marshaller = Marshaller(self.schema, **kwargs)
+        self.encoded = False
         
     def use_literal(self):
         """ set the input message encoding to "literal" """
-        self.marshaller = Literal(self)
+        self.encoded = False
     
     def use_encoded(self):
         """ set the input message encoding to "encoded" """
-        self.marshaller = Encoded(self)
+        self.encoded = True
 
     def get_message(self, method_name, *args):
         """get the soap message for the specified method and args"""
@@ -109,23 +109,30 @@ class Binding:
         result = None
         if len(node.children) > 0:
             if method is not None:
-                rt = self.returned_type(method)
-                node.rename(rt)
-            result = self.unmarshaller.process(node)
+                type = self.returned_type(method)
+                result = \
+                    self.unmarshaller.typed.process(node, type)
+            else:
+                result = \
+                    self.unmarshaller.basic.process(node)
         else:
             result = node.text
         return result
     
     def param(self, method, pdef, object):
         """encode and return the specified object within the named root tag"""
+        if self.encoded:
+            marshaller = self.marshaller.encoded
+        else:
+            marshaller = self.marshaller.literal
         if isinstance(object, (Object, dict)):
-            return self.marshaller.process(pdef, object)
+            return marshaller.process(pdef[0], object, pdef[1])
         if isinstance(object, (list, tuple)):
             tags = []
             for item in object:
                 tags.append(self.param(method, pdef, item))
             return tags
-        return self.marshaller.process(pdef, object)
+        return marshaller.process(pdef[0], object, pdef[1])
             
     def envelope(self, body=None):
         """ get soap envelope """
