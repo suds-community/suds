@@ -109,6 +109,6 @@ class Document(Binding):
             result = self.schema.find(qref)
             if result is None:
                 raise TypeNotFound(ref)
-            result = result[0].resolve()
+            result = result[0]
             break
         return result
