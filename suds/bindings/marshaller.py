@@ -102,10 +102,7 @@ class Basic:
         @param content: The content to append.
         @type content: L{Object}
         """
-        log.debug(
-            'appending parent:\n%s\ncontent:\n%s',
-            parent,
-            content)
+        log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
         self.start(content)
         self.__append(parent, content)
         self.end(content)         
@@ -116,10 +113,7 @@ class Basic:
         @param content: The content to append.
         @type content: L{Object}
         """
-        log.debug(
-            'appending parent:\n%s\ncontent:\n%s',
-            parent,
-            content)
+        log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
         if content.value is None:
             child = self.node(content.tag, content.type)
             if self.nil_supported:
