@@ -17,15 +17,14 @@ from new import classobj, function, instancemethod
 
 log = logger(__name__)
 
-class Object:
+class Factory:
     
-    @classmethod
-    def subclass(cls, name):
+    def subclass(self, name):
         name = name.encode('utf-8')
-        myclass = classobj(name,(cls,),{})
+        myclass = classobj(name,(Object,),{})
         init = '__init__'
         src = 'def %s(self):\n' % init
-        src += '\t%s.%s(self)\n' % (cls.__name__,init)
+        src += '\t%s.%s(self)\n' % (Object.__name__,init)
         code = compile(src, '', 'exec')
         code = code.co_consts[0]
         fn = function(code, globals())
@@ -33,10 +32,9 @@ class Object:
         setattr(myclass, name, m)
         return myclass
     
-    @classmethod
-    def instance(cls, classname=None, dict={}):
+    def instance(self, classname=None, dict={}):
         if classname is not None:
-            subclass = cls.subclass(classname)
+            subclass = self.subclass(classname)
             inst = subclass()
         else:
             inst = Object()
@@ -44,25 +42,18 @@ class Object:
             setattr(inst, a[0], a[1])
         return inst
     
-    @classmethod
-    def metadata(cls):
+    def metadata(self):
         return Metadata()
+
+
+class Object:
+    
+    __factory__ = Factory()
 
     def __init__(self):
         self.__keylist__ = []
         self.__printer__ = Printer()
-        self.__metadata__ = Object.metadata()
-
-    def items(self):
-        for k in self.__keylist__:
-            v = self.__dict__[k]
-            yield (k,v)
-            
-    def dict(self):
-        d = {}
-        for item in self.items():
-            d[item[0]] = item[1]
-        return d
+        self.__metadata__ = Metadata()
 
     def __setattr__(self, name, value):
         builtin =  name.startswith('__') and name.endswith('__')
@@ -70,6 +61,12 @@ class Object:
             name not in self.__keylist__:
             self.__keylist__.append(name)
         self.__dict__[name] = value
+        
+    def __getitem__(self, name):
+        return getattr(self, name)
+        
+    def __iter__(self):
+        return iter(self.__keylist__)
 
     def __len__(self):
         return len(self.__keylist__)
@@ -81,9 +78,7 @@ class Object:
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        cls = self.__class__.__name__
-        rep = self.__printer__.tostr(self)
-        return u'(%s)%s' % (cls,rep)
+        return self.__printer__.tostr(self)
     
     
 class Metadata(Object):
@@ -114,7 +109,10 @@ class Printer:
             if isinstance(object, (list,tuple)):
                 return self.print_collection(object, n+2)
         if isinstance(object, Object):
-            object = object.dict()
+            d = {}
+            for key in object:
+                d[key] = object[key]
+            object = d
         if isinstance(object, (dict,list,tuple)):
             if len(object) > 0:
                 return tostr(object)
@@ -128,8 +126,15 @@ class Printer:
         if nl:
             s.append('\n')
             s.append(self.indent(n))
+        if isinstance(d, Object):
+            cls = d.__class__
+            if cls != Object:
+                s.append('(')
+                s.append(cls.__name__)
+                s.append(')')
         s.append('{')
-        for item in d.items():
+        for k in d:
+            item = (k, d[k])
             s.append('\n')
             s.append(self.indent(n+1))
             if isinstance(item[1], (list,tuple)):            
@@ -159,7 +164,8 @@ class Printer:
         if isinstance(object, (Object, dict)):
             if len(object) > 1:
                 return True
-            for item in object.items():
+            for k in object:
+                item = (k, object[k])
                 if self.complex(item[1]):
                     return True
         if isinstance(object, (list,tuple)):

@@ -72,13 +72,18 @@ class Attribute:
     """
     def __init__(self, name, value=None):
         """
-        @param name: The attribute's name with I{optional} namespace prefix.
+        @param name: The attribute's name with I{optional} namespace prefix -OR-
+            a tuple as: (I{prefix},I{name})
         @type name: basestring
         @param value: The attribute's value
         @type value: basestring 
         """
         self.parent = None
-        self.prefix, self.name = splitPrefix(name)
+        if isinstance(name, basestring):
+            self.prefix, self.name = splitPrefix(name)
+        else:
+            self.prefix = name[0]
+            self.name = name[1]
         self.value = encode(value)
         
     def clone(self, parent=None):
@@ -647,27 +652,6 @@ class Element:
             c.updatePrefix(p, u)
         return self
             
-    def replaceNamespace(self, uA, uB):
-        """
-        Replace namespace URI I{uA} with namespace URI I{uB}.
-        @param uA: A namespace URI to be replaced.
-        @type uA: basestring
-        @param uB: A namespace URI to replace all occurances of I{Ua} with.
-        @type uB: basestring
-        @return: self
-        @rtype: L{Element}
-        @note: This method traverses down the entire branch!
-        """
-        if self.expns is not None and \
-            self.expns[1] == uA:
-            self.expns = (None, uB)
-        for item in self.nsprefixes.items():
-            if item[1] == uA:
-                self.nsprefixes[item[0]] = uB
-        for c in self.children:
-            c.replaceNamespace(uA, uB)
-        return self
-            
     def clearPrefix(self, prefix):
         """
         Clear the specified prefix from the prefix mappings.
@@ -763,6 +747,16 @@ class Element:
             return False
         else:
             return ( nilattr.getValue().lower() == 'true' )
+        
+    def trim(self):
+        """
+        Trim the formatting characters.
+        @return: self
+        @rtype: L{Element}
+        """
+        if self.text is not None:
+            self.text = self.text.strip()
+        return self
         
     def setnil(self, flag=True):
         """
@@ -963,8 +957,10 @@ class Handler(ContentHandler):
  
     def endElement(self, name):
         name = unicode(name)
-        topqname = self.top().qname()
-        if name == topqname:
+        current = self.top()
+        current.trim()
+        currentqname = current.qname()
+        if name == currentqname:
             self.pop()
         else:
             raise Exception('malformed document')

@@ -107,9 +107,8 @@ class Document(Binding):
             ref = p.get('element')
             qref = qualified_reference(ref, p, self.wsdl.tns)
             result = self.schema.find(qref)
-            if len(result):
-                result = result[0].ref()
-            else:
-                result = result.ref()
+            if result is None:
+                raise TypeNotFound(ref)
+            result = result[0].resolve()
             break
         return result

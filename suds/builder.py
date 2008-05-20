@@ -15,6 +15,7 @@
 
 from suds import *
 from suds.sudsobject import Object
+from suds.resolver import PathResolver
 
 log = logger(__name__)
 
@@ -23,19 +24,21 @@ class Builder:
     """ Builder used to construct an object for types defined in the schema """
     
     def __init__(self, schema):
-        """ initialize with a schema object """
-        self.schema = schema
+        """
+        @param schema: A schema object.
+        @type schema: L{schema.Schema}
+        """
+        self.resolver = PathResolver(schema)
         
     def build(self, typename):
         """ build a an object for the specified typename as defined in the schema """
-        type = self.schema.find(typename)
+        type = self.resolver.find(typename)
         if type is None:
             raise TypeNotFound(typename)
-        data = Object.instance(type.get_name())
+        data = Object.__factory__.instance(type.get_name())
         md = data.__metadata__
-        md.xsd = Object.metadata()
-        md.xsd.type = type.get_name()
-        md.xsd.ns = type.namespace()
+        md.__type__ = type
+        md.xsd = Object.__factory__.metadata()
         self.add_attributes(data, type)
         for c in type.get_children():
             self.process(data, c)
@@ -43,8 +46,7 @@ class Builder:
             
     def process(self, data, type):
         """ process the specified type then process its children """
-        history = [type]
-        resolved = type.resolve(history)
+        resolved = type.resolve()
         self.add_attributes(data, type)
         value = None
         if type.unbounded():
@@ -52,9 +54,7 @@ class Builder:
         else:
             children = resolved.get_children()
             if len(children) > 0:
-                value = Object()
-        if type.get_name() is None:
-            pass
+                value = Object.__factory__.instance(type.get_name())
         setattr(data, type.get_name(), value)
         if value is not None:
             data = value
