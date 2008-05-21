@@ -249,9 +249,11 @@ class Client:
         @rtype: dict
         """
         action = self.wsdl.get_soap_action(method)
-        return \
+        result = \
             { 'SOAPAction': action, 
                'Content-Type' : 'text/xml' }
+        log.debug('headers = %s', result)
+        return result
     
     def succeeded(self, binding, method, reply):
         """
