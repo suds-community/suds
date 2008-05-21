@@ -300,9 +300,9 @@ class Literal(Basic):
         ns = type.namespace()
         if type.must_qualify():
             node = Element(tag, ns=ns)
+            node.addPrefix(ns[0], ns[1])
         else:
             node = Element(tag)
-        node.addPrefix(ns[0], ns[1])
         self.encode(node, type)
         log.debug('created - node:\n%s', node)
         return node
