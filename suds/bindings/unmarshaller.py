@@ -261,12 +261,12 @@ class Typed(Basic):
     @type resolver: L{NodeResolver}
     """
     
-    def __init__(self, binding):
+    def __init__(self, binding, **kwargs):
         """
         @param binding: A binding object.
         @type binding: L{binding.Binding}
         """
-        Basic.__init__(self, binding)
+        Basic.__init__(self, binding, **kwargs)
         self.resolver = NodeResolver(self.schema)
 
     def reset(self):
