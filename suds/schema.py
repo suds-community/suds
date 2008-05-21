@@ -824,9 +824,17 @@ class Polymorphic(SchemaProperty):
             self.__find_referenced(ref)
         
     def __find_referenced(self, ref):
-        """ find the referenced property """
+        """ 
+        find the referenced property in top level elements
+        first, then look deeper.
+        """
+        classes = (self.__class__,)
         for c in self.schema.children:
-            p = c.find(ref, (self.__class__,))
+            if c.match(ref, classes=classes):
+                self.referenced = c
+                return
+        for c in self.schema.children:
+            p = c.find(ref, classes)
             if p is not None:
                 self.referenced = p
                 return
