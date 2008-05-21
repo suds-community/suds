@@ -600,6 +600,14 @@ class SchemaProperty:
         else:
             return False
         
+    def derived(self):
+        """
+        Get whether this type is derived.
+        @return: True if derived, else False
+        @rtype: boolean
+        """
+        return False
+        
     def find(self, ref, classes=()):
         """
         Find a referenced type in self or children.
@@ -845,15 +853,29 @@ class Complex(SchemaProperty):
         @type root: L{sax.Element}
         """
         SchemaProperty.__init__(self, schema, root)
+        self.__derived = self.__get_derived()
         self.add_children(*Complex.valid_children)
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
         return self.root.get('name')
+    
+    def derived(self):
+        """
+        Get whether this type is derived.
+        @return: True if derived, else False
+        @rtype: boolean
+        """
+        return self.__derived
         
     def __promote__(self):
         """ promote grand-children """
         self.promote_grandchildren()
+        
+    def __get_derived(self):
+        """ get whether this is a derived type """
+        p = 'complexContent/extension'
+        return ( self.root.childAtPath(p) is not None )
 
 
 class Simple(SchemaProperty):

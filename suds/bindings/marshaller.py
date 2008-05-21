@@ -315,7 +315,7 @@ class Literal(Basic):
         @param type: The schema type use for the encoding.
         @type type: L{schema.SchemaProperty}
         """
-        if type.custom():
+        if type.derived():
             name = type.get_name()
             node.set('xsi:type', name)
             log.debug('encoding name=(%s) on:\n\t%s', name, tostr(node))
