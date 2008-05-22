@@ -17,6 +17,50 @@ from new import classobj, function, instancemethod
 
 log = logger(__name__)
 
+
+def get_items(sobject):
+    """
+    Extract the I{items} from a suds object much like the
+    items() method works on I{dict}.
+    @param sobject: A suds object
+    @type sobject: L{Object}
+    @return: A list of items contained in I{sobject}.
+    @rtype: [(key, value),...]
+    """
+    for k in sobject:
+        yield (k, sobject[k])
+
+
+def todict(sobject):
+    """
+    Convert a sudsobject into a dictionary.
+    @param sobject: A suds object
+    @type sobject: L{Object}
+    @return: A python dictionary containing the
+        items contained in I{sobject}.
+    @rtype: dict
+    """
+    return dict(get_items(sobject))
+
+def get_metadata(sobject):
+    """
+    Extract the metadata from a suds object.
+    @param sobject: A suds object
+    @type sobject: L{Object}
+    @return: The object's metadata
+    @rtype: L{Metadata}
+    """
+    return sobject.__metadata__
+
+def factory():
+    """
+    Get an object factory
+    @return: A factory object.
+    @rtype: L{Factory}
+    """
+    return Object.__factory__
+
+
 class Factory:
     
     def subclass(self, name):
@@ -133,8 +177,7 @@ class Printer:
                 s.append(cls.__name__)
                 s.append(')')
         s.append('{')
-        for k in d:
-            item = (k, d[k])
+        for item in get_items(d):
             s.append('\n')
             s.append(self.indent(n+1))
             if isinstance(item[1], (list,tuple)):            
@@ -164,8 +207,7 @@ class Printer:
         if isinstance(object, (Object, dict)):
             if len(object) > 1:
                 return True
-            for k in object:
-                item = (k, object[k])
+            for item in get_items(object):
                 if self.complex(item[1]):
                     return True
         if isinstance(object, (list,tuple)):

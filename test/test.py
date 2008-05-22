@@ -23,7 +23,7 @@ from suds.wsdl import WSDL
 from suds.bindings.binding import Binding
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import *
-from suds.sax import Parser
+from suds.sax import Parser, Element
 
 
 urlfmt = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/%s?wsdl'
@@ -44,7 +44,44 @@ def get_url(name):
 
 class Test:
     
-    def test_misc(self):
+    def test_promote_prefixes(self):
+        
+        nsA = ('tns', 'tnsA')
+        nsC = ('tns', 'tnsC')
+        a = Element('A', ns=nsA)
+        b = Element('tns:B')
+        c = Element('tns:C')
+        c.addPrefix(nsC[0], nsC[1])
+        b.append(c)
+        a.append(b)
+        print a
+        a.promotePrefixes()
+        print a
+
+
+    def test_misc(self): 
+        
+        try:
+            service = ServiceProxy('http://efm.members.corpu.com/ws/projectdata.asmx?WSDL')
+            print service
+        except Exception, e:
+            print e
+
+        
+        service = ServiceProxy('file:///home/jortel/Desktop/misc/suds_files/jespern.wsdl.xml', nil_supported=False)
+        print service
+        try:
+            print "login"
+            print service.login('a','b')
+        except WebFault, f:
+            print f
+        try:
+            print "getCheckbox"
+            user = service.get_instance('ns2:UserID')
+            service.getCheckbox(user, 1)
+        except WebFault, f:
+            print f
+
         
         service = ServiceProxy('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
         print service
@@ -263,7 +300,7 @@ class Test:
         #
         # create a service proxy using the wsdl.
         #
-        service = ServiceProxy(get_url('rpc'))
+        service = ServiceProxy(get_url('rpc'), nil_supported=True)
         
         #
         # print the service (introspection)

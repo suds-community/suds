@@ -13,6 +13,10 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The service proxy provides access to web services.
+"""
+
 from cookielib import CookieJar
 from urllib2 import Request, urlopen, urlparse, HTTPError
 from suds import *
@@ -21,6 +25,19 @@ from suds.builder import Builder
 from suds.wsdl import WSDL
 
 log = logger(__name__)
+
+
+def get_factory(p):
+    """
+    Get an object factory that is associated with the specified service proxy.
+    The factory is used to create instances of object defined in the wsdl.
+    @param p: A service proxy.
+    @type p: L{ServiceProxy}
+    @return: A factory that is associated with I{p}.
+    @rtype: L{Factory}
+    """
+    return p.__factory__
+    
 
 class ServiceProxy(object):
     
