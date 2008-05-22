@@ -29,7 +29,7 @@ Basic usage:
 You will need to know the url for WSDL for each service used.  Simply create
 a proxy for that service as follows:
 
-  > from serviceproxy import ServiceProxy, get_factory
+  > from serviceproxy import ServiceProxy
   >
   > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
   >
@@ -70,8 +70,7 @@ service (WebServiceTestBeanService)
  as follows:
  
  >
- > factory = get_factory(myservice)
- > person = factory.create('person')
+ > person = myservice.get_instance('person')
  > print person
  >
   {
@@ -88,7 +87,7 @@ service (WebServiceTestBeanService)
  number is empty so we'll have to create one:
  
   >
-  > phone = factory.create('phone')
+  > phone = myservice.get_instance('phone')
   > phone.npa = 202
   > phone.nxx = 555
   > phone.number = 1212
@@ -98,7 +97,7 @@ service (WebServiceTestBeanService)
  name object first:
  
   >
-  > name = factory.create('name')
+  > name = myservice.get_instance('name')
   > name.first = 'Elmer'
   > name.last = 'Fudd'
   >
@@ -148,7 +147,7 @@ Let's say the wsdl defines the following enumeration,
  AttrError exception as:
  
   >
-  > resourceCategory = factory.create('resourceCategory')
+  > resourceCategory = myservice.get_enum('resourceCategory')
   > myservice.getResourceByCategory(resourceCategory.PLATFORM)
   >
 
@@ -160,7 +159,7 @@ In this case creating a (name) object would have to be quanified by it's parent'
 dot notation as follows:
 
   >
-  > name = factory.create('person.name') 
+  > name = myservice.get_instance('person.name') 
   >
 
 NOTE FOR AXIS USERS
@@ -411,9 +410,8 @@ version-0.2 (04-28-08):
      
      ... with something like ...
      
-     > service = ServiceProxy('myurl')
-     > factory = get_factory(service)
-     > person = factory.create('person')
+     > proxy = Proxy('myurl')
+     > person = proxy.factory.create('person')
      
      After a few releases giving time for users to switch the new API, the get_instance() and get_enum()
      methods may be removed with a notice in big letters.
