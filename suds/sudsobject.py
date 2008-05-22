@@ -42,6 +42,7 @@ def todict(sobject):
     """
     return dict(get_items(sobject))
 
+
 def get_metadata(sobject):
     """
     Extract the metadata from a suds object.
@@ -52,6 +53,7 @@ def get_metadata(sobject):
     """
     return sobject.__metadata__
 
+
 def factory():
     """
     Get an object factory
@@ -59,6 +61,7 @@ def factory():
     @rtype: L{Factory}
     """
     return Object.__factory__
+
 
 
 class Factory:

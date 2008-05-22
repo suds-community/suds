@@ -21,6 +21,8 @@ from cookielib import CookieJar
 from urllib2 import Request, urlopen, urlparse, HTTPError
 from suds import *
 from suds.sudsobject import Object
+from suds.schema import Enumeration
+from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import WSDL
 
@@ -75,7 +77,7 @@ class ServiceProxy(object):
         @return: An instance on success, else None
         @rtype: I{subclass of} L{Object}
         """
-        return self.__factory__.get_instance(name)
+        return self.__factory__.create(name)
     
     def get_enum(self, name):
         """
@@ -85,7 +87,7 @@ class ServiceProxy(object):
         @return: An instance on success, else None
         @rtype: I{subclass of} L{Object}
         """
-        return self.__factory__.get_enum(name)
+        return self.__factory__.create(name)
  
     def __str__(self):
         return str(self.__client__)
@@ -143,38 +145,34 @@ class Factory:
         @type schema: L{schema.Schema}
         """
         self.schema = schema
+        self.resolver = PathResolver(schema)
         self.builder = Builder(schema)
-        
-    def get_instance(self, name):
+    
+    def create(self, name):
         """
-        Get an instance of a WSDL type by name
+        create a WSDL type by name
         @param name: The name of a type defined in the WSDL.
         @type name: str
-        @return: An instance on success, else I{None}
-        @rtype: I{subclass of} L{Object}
+        @return: The requested object.
+        @rtype: L{Object}
         """
-        try:
-            return self.builder.build(name)
-        except Exception, e:
-            log.exception('name')
-            raise BuildError(name)
-    
-    def get_enum(self, name):
-        """
-        Get an instance of an enumeration defined in the WSDL by name.
-        @param name: The name of a enumeration defined in the WSDL.
-        @type name: str
-        @return: An instance on success, else I{None}
-        @rtype: I{subclass of} L{Object}
-        """
-        type = self.schema.find(name)
+        type = self.resolver.find(name)
         if type is None:
             raise TypeNotFound(name)
-        data = Object.__factory__.instance(name)
-        for e in type.get_children():
-            enum = e.get_name()
-            setattr(data, enum, enum)
-        return data
+        if isinstance(type, Enumeration):
+            result = Object.__factory__.instance(name)
+            for e in type.get_children():
+                enum = e.get_name()
+                setattr(result, enum, enum)
+        else:
+            try:
+                result = self.builder.build(type=type)
+            except Exception, e:
+                msg = repr(type)
+                log.exception(msg)
+                raise BuildError(msg)
+        return result
+
 
 
 class Client:

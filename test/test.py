@@ -16,7 +16,7 @@ import sys
 sys.path.append('../')
 
 from suds import *
-from suds.serviceproxy import ServiceProxy
+from suds.serviceproxy import ServiceProxy, get_factory
 from suds.schema import Schema
 from suds.sudsobject import Object
 from suds.wsdl import WSDL
@@ -77,7 +77,8 @@ class Test:
             print f
         try:
             print "getCheckbox"
-            user = service.get_instance('ns2:UserID')
+            factory = get_factory(service)
+            user = factory.create('ns2:UserID')
             service.getCheckbox(user, 1)
         except WebFault, f:
             print f
@@ -521,7 +522,8 @@ class Test:
         #
         # get enumerations
         #
-        resourceCategory = service.get_enum('resourceCategory')
+        factory = get_factory(service)
+        resourceCategory = factory.create('resourceCategory')
         print 'Enumeration (resourceCategory):\n%s' % resourceCategory
         
         

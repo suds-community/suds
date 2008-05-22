@@ -30,11 +30,12 @@ class Builder:
         """
         self.resolver = PathResolver(schema)
         
-    def build(self, typename):
+    def build(self, name=None, type=None):
         """ build a an object for the specified typename as defined in the schema """
-        type = self.resolver.find(typename)
         if type is None:
-            raise TypeNotFound(typename)
+            type = self.resolver.find(name)
+        if type is None:
+            raise TypeNotFound(name)
         data = Object.__factory__.instance(type.get_name())
         md = data.__metadata__
         md.__type__ = type
