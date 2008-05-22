@@ -70,7 +70,7 @@ service (WebServiceTestBeanService)
  as follows:
  
  >
- > factory = serviceproxy.factory(myservice)
+ > factory = serviceproxy.get_factory(myservice)
  > person = factory.get_instance('person')
  > print person
  >
@@ -412,7 +412,7 @@ version-0.2 (04-28-08):
      ... with something like ...
      
      > service = ServiceProxy('myurl')
-     > factory = factory(service)
+     > factory = get_factory(service)
      > person = factory.get_instance('person')
      
      After a few releases giving time for users to switch the new API, the get_instance() and get_enum()
