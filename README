@@ -29,7 +29,7 @@ Basic usage:
 You will need to know the url for WSDL for each service used.  Simply create
 a proxy for that service as follows:
 
-  > from serviceproxy import ServiceProxy
+  > from serviceproxy import ServiceProxy, get_factory
   >
   > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
   >
@@ -70,8 +70,8 @@ service (WebServiceTestBeanService)
  as follows:
  
  >
- > factory = serviceproxy.get_factory(myservice)
- > person = factory.get_instance('person')
+ > factory = get_factory(myservice)
+ > person = factory.create('person')
  > print person
  >
   {
@@ -88,7 +88,7 @@ service (WebServiceTestBeanService)
  number is empty so we'll have to create one:
  
   >
-  > phone = factory.get_instance('phone')
+  > phone = factory.create('phone')
   > phone.npa = 202
   > phone.nxx = 555
   > phone.number = 1212
@@ -98,7 +98,7 @@ service (WebServiceTestBeanService)
  name object first:
  
   >
-  > name = factory.get_instance('name')
+  > name = factory.create('name')
   > name.first = 'Elmer'
   > name.last = 'Fudd'
   >
@@ -148,19 +148,19 @@ Let's say the wsdl defines the following enumeration,
  AttrError exception as:
  
   >
-  > resourceCategory = factory.get_enum('resourceCategory')   <--- None if not found.
+  > resourceCategory = factory.create('resourceCategory')
   > myservice.getResourceByCategory(resourceCategory.PLATFORM)
   >
 
-The get_instance() method should always be used becuase it returns objects that already
+The create() method should always be used becuase it returns objects that already
 have the proper structure and xsi:type="" attribute defined.  Since xsd supports nested type
-definition, so does get_instance() using the (.) dot notation.  For example suppose the (name)
+definition, so does create() using the (.) dot notation.  For example suppose the (name)
 type was not defined as a top level "named" type but rather defined within the (person) type.
 In this case creating a (name) object would have to be quanified by it's parent's name using the
 dot notation as follows:
 
   >
-  > name = factory.get_instance('person.name') 
+  > name = factory.create('person.name') 
   >
 
 NOTE FOR AXIS USERS
@@ -413,7 +413,7 @@ version-0.2 (04-28-08):
      
      > service = ServiceProxy('myurl')
      > factory = get_factory(service)
-     > person = factory.get_instance('person')
+     > person = factory.create('person')
      
      After a few releases giving time for users to switch the new API, the get_instance() and get_enum()
      methods may be removed with a notice in big letters.
