@@ -16,7 +16,8 @@ import sys
 sys.path.append('../')
 
 from suds import *
-from suds.serviceproxy import ServiceProxy, get_factory
+from suds.proxy import Proxy
+from suds.serviceproxy import ServiceProxy
 from suds.schema import Schema
 from suds.sudsobject import Object
 from suds.wsdl import WSDL
@@ -42,6 +43,9 @@ services = \
 def get_url(name):
     return urlfmt % services[name]
 
+def get_factory(sp):
+    return sp.__factory__
+
 class Test:
     
     def test_promote_prefixes(self):
@@ -62,46 +66,45 @@ class Test:
     def test_misc(self): 
         
         try:
-            service = ServiceProxy('http://efm.members.corpu.com/ws/projectdata.asmx?WSDL')
-            print service
+            proxy = Proxy('http://efm.members.corpu.com/ws/projectdata.asmx?WSDL')
+            print proxy.service
         except Exception, e:
             print e
 
         
-        service = ServiceProxy('file:///home/jortel/Desktop/misc/suds_files/jespern.wsdl.xml', nil_supported=False)
-        print service
+        proxy = Proxy('file:///home/jortel/Desktop/misc/suds_files/jespern.wsdl.xml', nil_supported=False)
+        print proxy
         try:
             print "login"
-            print service.login('a','b')
+            print proxy.service.login('a','b')
         except WebFault, f:
             print f
         try:
             print "getCheckbox"
-            factory = get_factory(service)
-            user = factory.create('ns2:UserID')
-            service.getCheckbox(user, 1)
+            user = proxy.factory.create('ns2:UserID')
+            proxy.service.getCheckbox(user, 1)
         except WebFault, f:
             print f
 
         
-        service = ServiceProxy('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
-        print service
-        #print service.__client__.schema
-        print service.get_instance('person')
-        print service.get_instance('person.name.first')
-        print service.get_instance('person.jeff')
+        proxy = Proxy('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
+        print proxy
+        #print proxy.service.__client__.schema
+        print proxy.factory.create('person')
+        print proxy.factory.create('person.name.first')
+        print proxy.factory.create('person.jeff')
         
-        service = ServiceProxy('http://soa.ebrev.info/service.wsdl')
-        print service
+        proxy = Proxy('http://soa.ebrev.info/service.wsdl')
+        print proxy
         
         service = ServiceProxy('https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl')
         print service
         print service.genSSHA('hello', 'sha1')
         
-        service = ServiceProxy('http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL')
-        print service
+        proxy = Proxy('http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL')
+        print proxy
         try:
-            bean = service.getUserBean('abc', '123', 'mypassword', 'myusername')
+            bean = proxy.service.getUserBean('abc', '123', 'mypassword', 'myusername')
         except WebFault, f:
             print f
             
@@ -167,29 +170,29 @@ class Test:
         #
         # create a service proxy using the wsdl.
         #
-        service = ServiceProxy(get_url('test'))
+        proxy = Proxy(get_url('test'))
         
         #
         # print the service (introspection)
         #
-        print service
+        print proxy
         
         #
         # create a name object using the wsdl
         #
-        name = service.get_instance('tns:name')
+        name = proxy.factory.create('tns:name')
         name.first = u'jeff'+unichr(1234)
         name.last = 'ortel'
         
         #
         # create a phone object using the wsdl
         #
-        phoneA = service.get_instance('phone')
+        phoneA = proxy.factory.create('phone')
         phoneA.npa = 410
         phoneA.nxx = 822
         phoneA.number = 5138
 
-        phoneB = service.get_instance('phone')
+        phoneB = proxy.factory.create('phone')
         phoneB.npa = 919
         phoneB.nxx = 606
         phoneB.number = 4406
@@ -197,7 +200,7 @@ class Test:
         #
         # create a person object using the wsdl
         #
-        person = service.get_instance('person')
+        person = proxy.factory.create('person')
         
         #
         # inspect empty person
@@ -218,13 +221,13 @@ class Test:
         # add the person (using the webservice)
         #
         print 'addPersion()'
-        result = service.addPerson(person)
+        result = proxy.service.addPerson(person)
         print '\nreply(\n%s\n)\n' % result.encode('utf-8')
         
         #
         # create a new name object used to update the person
         #
-        newname = service.get_instance('name')
+        newname = proxy.factory.create('name')
         newname.first = 'Todd'
         newname.last = None
         
@@ -232,9 +235,9 @@ class Test:
         # update the person's name (using the webservice) and print return person object
         #
         print 'updatePersion()'
-        result = service.updatePerson(person, newname)
+        result = proxy.service.updatePerson(person, newname)
         print '\nreply(\n%s\n)\n' % str(result)
-        result = service.updatePerson(person, None)
+        result = proxy.service.updatePerson(person, None)
         print '\nreply(\n%s\n)\n' % str(result)
         
         
@@ -242,14 +245,14 @@ class Test:
         # invoke the echo service
         #
         print 'echo()'
-        result = service.echo('this is cool')
+        result = proxy.service.echo('this is cool')
         print '\nreply( %s )\n' % str(result)
         
         #
         # invoke the hello service
         #
         print 'hello()'
-        result = service.hello()
+        result = proxy.service.hello()
         print '\nreply( %s )\n' % str(result)
         
         #
@@ -257,7 +260,7 @@ class Test:
         #
         try:
             print 'testVoid()'
-            result = service.testVoid()
+            result = proxy.service.testVoid()
             print '\nreply( %s )\n' % str(result)
         except Exception, e:
             print e
@@ -267,23 +270,23 @@ class Test:
         #
         print 'testListArgs(list)'
         mylist = ['my', 'dog', 'likes', 'steak']
-        result = service.testListArg(mylist)
+        result = proxy.service.testListArg(mylist)
         print '\nreply( %s )\n' % str(result)
         # tuple
         print 'testListArgs(tuple)'
         mylist = ('my', 'dog', 'likes', 'steak')
-        result = service.testListArg(mylist)
+        result = proxy.service.testListArg(mylist)
         print '\nreply( %s )\n' % str(result)
         
         #
         # test list returned
         #
         print 'getList(str, 1)'
-        result = service.getList('hello', 1)
+        result = proxy.service.getList('hello', 1)
         print '\nreply( %s )\n' % str(result)
         
         print 'getList(str, 3)'
-        result = service.getList('hello', 3)
+        result = proxy.service.getList('hello', 3)
         print '\nreply( %s )\n' % str(result)
         
         #
@@ -291,7 +294,7 @@ class Test:
         #
         try:
             print 'testExceptions()'
-            result = service.testExceptions()
+            result = proxy.service.testExceptions()
             print '\nreply( %s )\n' % tostr(result)
         except Exception, e:
             print e
@@ -634,7 +637,7 @@ if __name__ == '__main__':
     #logger('suds.serviceproxy').setLevel(logging.DEBUG)
     #logger('suds.bindings.marshaller').setLevel(logging.DEBUG)
     test = Test()
-    test.test_misc()
+    #test.test_misc()
     test.basic_test()
     test.rpc_test()
     test.rpc_enctest()

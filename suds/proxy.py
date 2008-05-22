@@ -14,27 +14,29 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The service proxy provides access to web services.
+The B{2nd generation} service proxy provides access to web services.
 """
 
 from cookielib import CookieJar
 from urllib2 import Request, urlopen, urlparse, HTTPError
 from suds import *
-from suds.sudsobject import Object
+from suds.sudsobject import *
 from suds.schema import Enumeration
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import WSDL
 
 log = logger(__name__)
-    
 
-class ServiceProxy(object):
+
+class Proxy(object):
     
     """ 
-    A lightweight soap based web service proxy.
-    @ivar __client__: The embedded soap client.
-    @ivar __factory__: The embedded type factory.
+    A lightweight soap based web service proxy. (2nd generation)
+    @ivar service: The service proxy used to invoke operations.
+    @type service: L{Service}
+    @ivar factory: The factory used to create objects.
+    @type factory: L{Factory}
     """
 
     def __init__(self, url, **kwargs):
@@ -54,34 +56,59 @@ class ServiceProxy(object):
         @type proxy: dict
         """
         client = Client(url, **kwargs)
-        self.__client__ = client
-        self.__factory__ = Factory(client.schema)
+        self.service = Service(client)
+        self.factory = Factory(client.schema)
+        
+    def items(self, sobject):
+        """
+        Extract the I{items} from a suds object much like the
+        items() method works on I{dict}.
+        @param sobject: A suds object
+        @type sobject: L{Object}
+        @return: A list of items contained in I{sobject}.
+        @rtype: [(key, value),...]
+        """
+        for k in sobject:
+            yield (k, sobject[k])
     
-    def get_instance(self, name):
+    def dict(self, sobject):
         """
-        Get an instance of a WSDL type by name
-        @param name: The name of a type defined in the WSDL.
-        @type name: str
-        @return: An instance on success, else None
-        @rtype: I{subclass of} L{Object}
+        Convert a sudsobject into a dictionary.
+        @param sobject: A suds object
+        @type sobject: L{Object}
+        @return: A python dictionary containing the
+            items contained in I{sobject}.
+        @rtype: dict
         """
-        return self.__factory__.create(name)
+        return dict(self.items(sobject))
     
-    def get_enum(self, name):
+    def metadata(self, sobject):
         """
-        Get an instance of an enumeration defined in the WSDL by name.
-        @param name: The name of a enumeration defined in the WSDL.
-        @type name: str
-        @return: An instance on success, else None
-        @rtype: I{subclass of} L{Object}
+        Extract the metadata from a suds object.
+        @param sobject: A suds object
+        @type sobject: L{Object}
+        @return: The object's metadata
+        @rtype: L{Metadata}
         """
-        return self.__factory__.create(name)
+        return sobject.__metadata__
  
     def __str__(self):
-        return str(self.__client__)
+        return str(self.service)
         
     def __unicode__(self):
-        return unicode(self.__client__)
+        return unicode(self.service)
+
+
+class Service:
+    
+    """ Service wrapper object """
+    
+    def __init__(self, client):
+        """
+        @param client: A service client.
+        @type client: L{Client}
+        """
+        self.__client__ = client
     
     def __getattr__(self, name):
         builtin =  name.startswith('__') and name.endswith('__')
@@ -92,6 +119,12 @@ class ServiceProxy(object):
             raise MethodNotFound(name)
         method = Method(self.__client__, name)
         return method
+    
+    def __str__(self):
+        return str(self.__client__)
+        
+    def __unicode__(self):
+        return unicode(self.__client__)
 
 
 class Method(object):
