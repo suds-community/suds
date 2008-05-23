@@ -15,6 +15,8 @@
 
 """
 The B{2nd generation} service proxy provides access to web services.
+@note: B{This API is EXPERIMENTAL and subject to change.  It is included in trunk as
+    a means of exposing for trial and comments.} client.util.dict(x)
 """
 
 from cookielib import CookieJar
@@ -29,10 +31,11 @@ from suds.wsdl import WSDL
 log = logger(__name__)
 
 
-class Proxy(object):
+class Client(object):
     
     """ 
-    A lightweight soap based web service proxy. (2nd generation)
+    A lightweight web services client.
+    I{(2nd generation)} API.
     @ivar service: The service proxy used to invoke operations.
     @type service: L{Service}
     @ivar factory: The factory used to create objects.
@@ -55,7 +58,7 @@ class Proxy(object):
                            The proxy is defined as {protocol:proxy,}
         @type proxy: dict
         """
-        client = Client(url, **kwargs)
+        client = SoapClient(url, **kwargs)
         self.service = Service(client)
         self.factory = Factory(client.schema)
         
@@ -106,7 +109,7 @@ class Service:
     def __init__(self, client):
         """
         @param client: A service client.
-        @type client: L{Client}
+        @type client: L{SoapClient}
         """
         self.__client__ = client
     
@@ -134,7 +137,7 @@ class Method(object):
     def __init__(self, client, name):
         """
         @param client: A client object.
-        @type client: L{Client}
+        @type client: L{SoapClient}
         @param name: The method's name.
         @type name: str
         """
@@ -196,7 +199,7 @@ class Factory:
 
 
 
-class Client:
+class SoapClient:
     
     """
     A lightweight soap based web client B{**not intended for external use}
