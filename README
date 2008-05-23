@@ -410,8 +410,8 @@ version-0.2 (04-28-08):
      
      ... with something like ...
      
-     > proxy = Proxy('myurl')
-     > person = proxy.factory.create('person')
+     > service = ServiceProxy('myurl')
+     > person = service.__factory__.get_instance('person')
      
      After a few releases giving time for users to switch the new API, the get_instance() and get_enum()
      methods may be removed with a notice in big letters.
