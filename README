@@ -1,7 +1,7 @@
-The "Suds" web services client is a lightweight soap-based client for python.
-The primary classes in the package are the:
-  * ServiceProxy (serviceproxy.py)
-  * WSDL  (wsdl.py)
+OVERVIEW
+
+The "Suds" web services client is a lightweight soap-based client for python
+the is licensed under GPL.
    
  Basic features:
  
@@ -24,7 +24,7 @@ A common example (show sent/received soap messages):
   >
 
 
-Basic usage:
+BASIC USAGE:
 
 You will need to know the url for WSDL for each service used.  Simply create
 a proxy for that service as follows:
@@ -151,7 +151,7 @@ Let's say the wsdl defines the following enumeration,
   > myservice.getResourceByCategory(resourceCategory.PLATFORM)
   >
 
-The create() method should always be used becuase it returns objects that already
+The get_instance() method should always be used becuase it returns objects that already
 have the proper structure and xsi:type="" attribute defined.  Since xsd supports nested type
 definition, so does create() using the (.) dot notation.  For example suppose the (name)
 type was not defined as a top level "named" type but rather defined within the (person) type.
@@ -160,6 +160,156 @@ dot notation as follows:
 
   >
   > name = myservice.get_instance('person.name') 
+  >
+  
+  
+BASIC USAGE (2nd generation API):  ** EXPERIMENTAL**
+
+The "suds" Client class provides a consolidated API for consuming
+web services.  The object contains a number of namespaces:
+
+The (service) namespace provides a proxy for the consumed service.  This object
+is used to invoke operations (methods) provided by the service endpoint.
+
+The (factory) namespace provides a factory that may be used to create instances
+of objects and types defined in the WSDL.
+
+You will need to know the url for WSDL for each service used.  Simply create
+a client for that service as follows:
+
+  > from client import Client
+  >
+  > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+  >
+  > client = Client(url)
+
+
+You can inspect service object with: __str()__ as follows to get a list of
+methods provide by the service:
+
+  >
+  > print client
+  >
+service (WebServiceTestBeanService)
+   prefixes:
+      SOAP-ENC = "http://schemas.xmlsoap.org/soap/encoding/"
+      SOAP-ENV = "http://schemas.xmlsoap.org/soap/envelope/"
+      soap = "http://schemas.xmlsoap.org/wsdl/soap/"
+      tns = "http://myservice/namespace"
+      wsdl = "http://schemas.xmlsoap.org/wsdl/"
+      xsd = "http://www.w3.org/2001/XMLSchema"
+      xsi = "http://www.w3.org/2001/XMLSchema-instance"
+  methods:
+    addPerson(person{tns:person})
+    echo(arg0{xsd:string})
+    getPersonByName(name{tns:name})
+    hello()
+    testExceptions()
+    updatePerson(person{tns:anotherPerson}, name{tns:name})
+  
+ The sample ouput lists that the service named "WebServiceTestBeanService"
+ has methods such as addPerson() which takes a 'person' argument of type: 'person'.
+ This is listed as:
+ 
+ addPerson(person{person}) where parameter name is listed and followed by it's
+ type as {person}.  There is a type (or class) named 'person'.
+ 
+ So, to get person object to pass as an argument we need to get a person argument
+ as follows:
+ 
+ >
+ > person = client.factory.create('person')
+ > print person
+ >
+  {
+    phone = []
+    age = NONE
+    name(Name) = 
+        {
+            last = NONE
+            first = NONE
+        }
+   }
+ 
+ As you can see, the object is created as defined by the WSDL.  The list of phone
+ number is empty so we'll have to create one:
+ 
+  >
+  > phone = client.factory.create('phone')
+  > phone.npa = 202
+  > phone.nxx = 555
+  > phone.number = 1212
+  >
+ 
+ ... and the name and age need to be set and we need to create a
+ name object first:
+ 
+  >
+  > name = client.factory.create('name')
+  > name.first = 'Elmer'
+  > name.last = 'Fudd'
+  >
+
+Now, let's set the properties of our person object
+
+  >
+  > person.name = name
+  > person.age = 35
+  > person.phone = [phone]
+   --- or --
+  > person.phone.append(phone)
+  >
+
+... and invoke our method named addPerson() as follows:
+
+  >
+  > try:
+  >    person_added = client.service.addPerson(person)
+  > except WebFault, e:
+  >    print e
+  >
+
+It's that easy.
+
+The Client can be configured to throw web faults as WebFault or
+to return a tuple (<status>, <returned-value>) instead as follows:
+
+  >
+  > client = client(url, faults=False)
+  > result = client.service.addPerson(person)
+  > print result
+  ( 200, person ...)
+
+Enumerations are handled as follows:
+
+Let's say the wsdl defines the following enumeration,
+
+<xs:simpleType name="resourceCategory">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="PLATFORM"/>
+    <xs:enumeration value="SERVER"/>
+    <xs:enumeration value="SERVICE"/>
+  </xs:restriction>
+</xs:simpleType>
+
+ The client can instantiate the enumeration so it can be 
+ used.  Misspelled references to elements of the enum will raise a
+ AttrError exception as:
+ 
+  >
+  > resourceCategory = client.factory.create('resourceCategory')
+  > client.service.getResourceByCategory(resourceCategory.PLATFORM)
+  >
+
+The create() method should always be used becuase it returns objects that already
+have the proper structure and schema-type information.  Since xsd supports nested type
+definition, so does create() using the (.) dot notation.  For example suppose the (name)
+type was not defined as a top level "named" type but rather defined within the (person) type.
+In this case creating a (name) object would have to be quanified by it's parent's name using the
+dot notation as follows:
+
+  >
+  > name = client.factory.create('person.name') 
   >
 
 NOTE FOR AXIS USERS
