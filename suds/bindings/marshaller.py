@@ -298,7 +298,7 @@ class Literal(Basic):
         @rtype: L{Element}
         """
         ns = type.namespace()
-        if type.must_qualify():
+        if type.form_qualified:
             node = Element(tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
         else:

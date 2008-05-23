@@ -231,7 +231,6 @@ class Schema:
         """
         self.root = root
         self.tns = self.__tns()
-        self.efdq = self.__efdq()
         self.baseurl = baseurl
         self.container = container
         self.types = {}
@@ -240,6 +239,8 @@ class Schema:
             self.impfilter = set([xsdns[1], xsins[1]])
         else:
             self.impfilter = impfilter
+        self.element_form_default = \
+            root.get('elementFormDefault', default='unqualified')
         self.__add_children()
         self.__load_children()
         self.children.sort()
@@ -261,14 +262,6 @@ class Schema:
         if tns[1] is not None:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
-    
-    def __efdq(self):
-        """ get whether @elementFromDefualt = \"qualified\" """
-        efd = self.root.get('elementFormDefault')
-        if efd is None:
-            return False
-        else:
-            return ( efd.lower() == 'qualified' )
     
     def __load_children(self):
         """ run children through depsolving and child promotion """
@@ -419,6 +412,8 @@ class SchemaProperty:
         self.state = Object()
         self.state.depsolved = False
         self.state.promoted = False
+        self.form_qualified = False
+        self.nillable = False
         self.children = []
         self.attributes = []
         
@@ -745,15 +740,6 @@ class SchemaProperty:
         """
         return False
     
-    def must_qualify(self):
-        """
-        Get whether the schema specifies that the
-        default element form is (qualified).
-        @return: True, if qualified
-        @rtype: boolean
-        """
-        return self.schema.efdq
-    
     def __depsolve__(self):
         """
         Perform dependancy solving.
@@ -982,6 +968,10 @@ class Element(Polymorphic):
         @type root: L{sax.Element}
         """
         Polymorphic.__init__(self, schema, root)
+        form = root.get('form', default=self.schema.element_form_default)
+        self.form_qualified = ( form.lower() == 'qualified' )
+        nillable = root.get('nillable', default='0')
+        self.nillable = ( nillable.lower() in ('1', 'true') )
         self.add_children(*Element.valid_children)
         
     def get_name(self):

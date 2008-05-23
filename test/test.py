@@ -70,7 +70,6 @@ class Test:
             print client
         except Exception, e:
             print e
-
         
         client = Client('file:///home/jortel/Desktop/misc/suds_files/jespern.wsdl.xml', nil_supported=False)
         print client
@@ -85,7 +84,6 @@ class Test:
             client.service.getCheckbox(user, 1)
         except WebFault, f:
             print f
-
         
         client = Client('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
         print client
@@ -638,7 +636,7 @@ if __name__ == '__main__':
     #logger('suds.client').setLevel(logging.DEBUG)
     #logger('suds.bindings.marshaller').setLevel(logging.DEBUG)
     test = Test()
-    #test.test_misc()
+    test.test_misc()
     test.basic_test()
     test.rpc_test()
     test.rpc_enctest()
