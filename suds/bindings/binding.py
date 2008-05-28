@@ -41,14 +41,13 @@ envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
 class Binding:
     """ The soap binding base class """
 
-    def __init__(self, wsdl, **kwargs):
+    def __init__(self, wsdl):
         self.wsdl = wsdl
-        self.kwargs = kwargs
         self.schema = wsdl.schema
-        self.faults = kwargs.get('faults', True)
+        self.faults = True
         self.parser = Parser()
-        self.unmarshaller = Unmarshaller(self.schema, **kwargs)
-        self.marshaller = Marshaller(self.schema, **kwargs)
+        self.unmarshaller = Unmarshaller(self.schema)
+        self.marshaller = Marshaller(self.schema)
         self.encoded = False
         
     def use_literal(self):

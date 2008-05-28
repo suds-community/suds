@@ -14,9 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The B{2nd generation} service proxy provides access to web services.
-@note: B{This API is EXPERIMENTAL and subject to change.  It is included in trunk as
-    a means of exposing for trial and comments.} client.util.dict(x)
+The I{2nd generation} service proxy provides access to web services.
 """
 
 from cookielib import CookieJar
@@ -50,15 +48,11 @@ class Client(object):
         @keyword faults: Raise faults raised by server (default:True),
                 else return tuple from service method invocation as (http code, object).
         @type faults: boolean
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
                            The proxy is defined as {protocol:proxy,}
         @type proxy: dict
         """
-        client = SoapClient(url, **kwargs)
+        client = SoapClient(url, kwargs)
         self.service = Service(client)
         self.factory = Factory(client.schema)
         
@@ -215,7 +209,7 @@ class SoapClient:
     @type cookiejar: libcookie.CookieJar
     """
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, kwargs):
         """
         @param url: The URL for a WSDL.
         @type url: str
@@ -223,16 +217,12 @@ class SoapClient:
         @keyword faults: Raise faults raised by server (default:True),
                 else return tuple from service method invocation as (http code, object).
         @type faults: boolean
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
                            The proxy is defined as {protocol:proxy,}
         @type proxy: dict
         """
-        self.kwargs = kwargs
-        self.faults = self.kwargs.get('faults', True)
+        self.faults = kwargs.get('faults', True)
+        self.proxies = kwargs.get('proxy', {})
         self.wsdl = WSDL(url)
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
@@ -247,7 +237,8 @@ class SoapClient:
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         result = None
-        binding = self.wsdl.get_binding(method.name, **self.kwargs)
+        binding = self.wsdl.get_binding(method.name)
+        binding.faults = self.faults
         headers = self.headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
         msg = binding.get_message(method.name, *args)
@@ -272,9 +263,8 @@ class SoapClient:
         @param request: A soap request object to be sent.
         @type request: urllib2.Request
         """
-        proxies = self.kwargs.get('proxy', {})
         protocol = urlparse.urlparse(location)[0]
-        proxy = proxies.get(protocol, None)
+        proxy = self.proxies.get(protocol, None)
         if proxy is not None:
             log.debug('proxy %s used for %s', proxy, location)
             request.set_proxy(proxy, protocol)
@@ -347,7 +337,7 @@ class SoapClient:
         list = []
         for op in self.wsdl.get_operations():
             method = op.get('name')
-            binding = self.wsdl.get_binding(method, **self.kwargs)
+            binding = self.wsdl.get_binding(method)
             ptypes = binding.get_ptypes(method)
             params = ['%s{%s}' % (t[0], t[1].asref()[0]) for t in ptypes]
             m = '%s(%s)' % (method, ', '.join(params))
