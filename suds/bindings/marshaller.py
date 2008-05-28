@@ -32,17 +32,14 @@ class Marshaller:
     @type encoded: L{Encoded} 
     """
 
-    def __init__(self, schema, **kwargs):
+    def __init__(self, schema):
         """
         @param schema: A schema object
         @type schema: L{schema.Schema}
-        @param kwargs: keyword args
         """
         self.basic = Basic()
-        self.literal = \
-            Literal(schema, **kwargs)
-        self.encoded = \
-            Encoded(schema, **kwargs)
+        self.literal =  Literal(schema)
+        self.encoded = Encoded(schema)
 
 
 class Content(Object):
@@ -59,18 +56,12 @@ class Basic:
     A I{basic} (untyped) marshaller.
     """
 
-    def __init__(self, schema=None, **kwargs):
+    def __init__(self, schema=None):
         """
         @param schema: A schema object
         @type schema: L{schema.Schema}
-        @param kwargs: keyword args
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         """
         self.schema = schema
-        self.nil_supported = kwargs.get('nil_supported', True)
 
     def process(self, tag, value, type=None):
         """
@@ -116,7 +107,7 @@ class Basic:
         log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
         if content.value is None:
             child = self.node(content.tag, content.type)
-            if self.nil_supported:
+            if content.type.nillable:
                 child.setnil()
             parent.append(child)
             return
@@ -157,7 +148,6 @@ class Basic:
         @rtype: L{Element}
         """
         log.debug('reset type=:\n%s', type)
-        self.nil_supported = False
         pass
 
     def node(self, tag, type):
@@ -211,17 +201,12 @@ class Literal(Basic):
     document/literal and rpc/literal soap styles.
     """
 
-    def __init__(self, schema, **kwargs):
+    def __init__(self, schema):
         """
         @param schema: A schema object
         @type schema: L{schema.Schema}
-        @param kwargs: keyword args
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         """
-        Basic.__init__(self, schema, **kwargs)
+        Basic.__init__(self, schema)
         self.resolver = GraphResolver(self.schema)
     
     def reset(self, type):
@@ -348,17 +333,12 @@ class Encoded(Literal):
     This marshaller supports rpc/encoded soap styles.
     """
     
-    def __init__(self, schema, **kwargs):
+    def __init__(self, schema):
         """
         @param schema: A schema object
         @type schema: L{schema.Schema}
-        @param kwargs: keyword args
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         """
-        Literal.__init__(self, schema, **kwargs)
+        Literal.__init__(self, schema)
         
     def encode(self, node, type):
         """

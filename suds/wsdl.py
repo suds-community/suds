@@ -45,6 +45,9 @@ class WSDL:
         except Exception, e:
             log.exception(e)
             raise e
+        self.bindings =dict(
+            document=Document(self),
+            rpc=RPC(self))
            
     def __tns(self):
         """get the target namespace defined in the wsdl"""
@@ -69,23 +72,20 @@ class WSDL:
         log.debug('schema (container):\n%s', container)
         return container
         
-    def get_binding(self, method, **kwargs):
+    def get_binding(self, method):
         """ get the binding object """
         binding = None
         style = self.get_binding_style(method)
-        if style == 'document':
-            binding = Document(self, **kwargs)
-        elif style == 'rpc':
-            binding = RPC(self, **kwargs)
-        else:
-            raise Exception('binding (%s), not-supported' % style)
+        binding = self.bindings.get(style, None)
+        if binding is None:
+            raise Exception('style (%s), not-supported' % style)
         use = self.get_input_encoding(method)
         if use == 'literal':
             binding.use_literal()
         elif use == 'encoded':
             binding.use_encoded()
         else:
-            raise Exception('soap:body (%s), not-supported' % style)
+            raise Exception('use(%s), not-supported' % use)
         return binding 
         
     def get_binding_style(self, method):

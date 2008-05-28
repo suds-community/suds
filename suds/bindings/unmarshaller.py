@@ -37,16 +37,13 @@ class Unmarshaller:
     @type typed: L{Typed}
     """
     
-    def __init__(self, schema, **kwargs):
+    def __init__(self, schema):
         """
         @param schema: A schema object
         @type schema: L{schema.Schema}
-        @param kwargs: keyword args
         """
-        self.basic = \
-            Basic(schema, **kwargs)
-        self.typed = \
-            Typed(schema, **kwargs)
+        self.basic = Basic(schema)
+        self.typed = Typed(schema)
 
     
 class Basic:
@@ -55,18 +52,12 @@ class Basic:
     @ivar schema: A schema object
     @type schema: L{schema.Schema}
     """
-    def __init__(self, schema, **kwargs):
+    def __init__(self, schema):
         """
         @param schema: A schema object
         @type schema: L{schema.Schema}
-        @param kwargs: keyword args
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         """
         self.schema = schema
-        self.nil_supported = kwargs.get('nil_supported', True)
         
     def process(self, node, type=None):
         """
@@ -190,7 +181,7 @@ class Basic:
         """
         try:
             text = self.text(data)
-            if self.nil_supported:
+            if self.nillable(data):
                 if node.isnil():
                     return None
                 if len(data) == 0 and \
@@ -252,6 +243,16 @@ class Basic:
         @rtype: boolean
         '"""
         return False
+    
+    def nillable(self, data):
+        """
+        Get whether the object is nillable.
+        @param data: The current object being built.
+        @type data: L{Object}
+        @return: True if nillable, else False
+        @rtype: boolean
+        '"""
+        return False
 
 
 class Typed(Basic):
@@ -261,12 +262,12 @@ class Typed(Basic):
     @type resolver: L{NodeResolver}
     """
     
-    def __init__(self, binding, **kwargs):
+    def __init__(self, binding):
         """
         @param binding: A binding object.
         @type binding: L{binding.Binding}
         """
-        Basic.__init__(self, binding, **kwargs)
+        Basic.__init__(self, binding)
         self.resolver = NodeResolver(self.schema)
 
     def reset(self):
@@ -324,6 +325,23 @@ class Typed(Basic):
                 md = data.__metadata__
                 type = md.__type__
                 return type.unbounded()
+        except:
+            log.error('metadata error:\n%s', tostr(data), exc_info=True)
+        return False
+    
+    def nillable(self, data):
+        """
+        Get whether the object is nillable.
+        @param data: The current object being built.
+        @type data: L{Object}
+        @return: True if nillable, else False
+        @rtype: boolean
+        '"""
+        try:
+            if isinstance(data, Object):
+                md = data.__metadata__
+                type = md.__type__
+                return type.nillable
         except:
             log.error('metadata error:\n%s', tostr(data), exc_info=True)
         return False

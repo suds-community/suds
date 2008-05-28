@@ -26,21 +26,12 @@ class RPC(Binding):
     RPC/Literal binding style.
     """
 
-    def __init__(self, wsdl, **kwargs):
+    def __init__(self, wsdl):
         """
         @param wsdl: A WSDL object.
         @type wsdl: L{suds.wsdl.WSDL}
-        @param kwargs: keyword arguments.
-        @type kwargs: {}
-        @keyword faults: Raise faults raised by server (default:True),
-                else return tuple from service method invocation as (http code, object).
-        @type faults: boolean
-        @keyword nil_supported: The bindings will set the xsi:nil="true" on nodes
-                that have a value=None when this flag is True (default:True).
-                Otherwise, an empty node <x/> is sent.
-        @type nil_supported: boolean
         """
-        Binding.__init__(self, wsdl, **kwargs)
+        Binding.__init__(self, wsdl)
 
     def get_ptypes(self, method):
         """

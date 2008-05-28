@@ -43,9 +43,6 @@ services = \
 def get_url(name):
     return urlfmt % services[name]
 
-def get_factory(sp):
-    return sp.__factory__
-
 class Test:
     
     def test_promote_prefixes(self):
@@ -71,7 +68,7 @@ class Test:
         except Exception, e:
             print e
         
-        client = Client('file:///home/jortel/Desktop/misc/suds_files/jespern.wsdl.xml', nil_supported=False)
+        client = Client('file:///home/jortel/Desktop/misc/suds_files/jespern.wsdl.xml')
         print client
         try:
             print "login"
@@ -87,7 +84,6 @@ class Test:
         
         client = Client('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
         print client
-        #print client.service.__client__.schema
         print client.factory.create('person')
         print client.factory.create('person.name.first')
         print client.factory.create('person.jeff')
@@ -137,15 +133,11 @@ class Test:
         </person>
         """
         node = Parser().parse(string=x).root()
-        service.binding.nil_supported = True
         p = unmarshaller.process(node)
         print p
-        service.binding.nil_supported = False
         p = unmarshaller.process(node)
         print p
-        service.binding.nil_supported = True
         print marshaller.process('dog', p)
-        service.binding.nil_supported = False
         print marshaller.process('dog', p)
 
         p = Object()
@@ -291,7 +283,18 @@ class Test:
         # test exceptions
         #
         try:
-            print 'testExceptions()'
+            print 'testExceptions() faults=True'
+            result = client.service.testExceptions()
+            print '\nreply( %s )\n' % tostr(result)
+        except Exception, e:
+            print e
+            
+        #
+        # test faults
+        #
+        try:
+            print 'testExceptions() faults=False'
+            client.service.__client__.faults=False
             result = client.service.testExceptions()
             print '\nreply( %s )\n' % tostr(result)
         except Exception, e:
@@ -302,7 +305,7 @@ class Test:
         #
         # create a service client using the wsdl.
         #
-        service = ServiceProxy(get_url('rpc'), nil_supported=True)
+        service = ServiceProxy(get_url('rpc'))
         
         #
         # print the service (introspection)
@@ -523,8 +526,7 @@ class Test:
         #
         # get enumerations
         #
-        factory = get_factory(service)
-        resourceCategory = factory.create('resourceCategory')
+        resourceCategory = service.get_instance('resourceCategory')
         print 'Enumeration (resourceCategory):\n%s' % resourceCategory
         
         
@@ -595,7 +597,7 @@ class Test:
         # print the service (introspection)
         #
         print service
-        print service.__client__.schema
+        print service.__client__.service.__client__.schema
         
         configuration = service.get_instance('configuration')
         entry = service.get_instance('configuration.tns:properties.tns:entry')
