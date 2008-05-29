@@ -77,6 +77,9 @@ class Basic:
         log.debug('processing tag=(%s) value:\n%s', tag, value)
         self.reset(type)
         root = self.node(tag, type)
+        if value is None:
+            self.setnil(root, type)
+            return root
         if isinstance(value, dict):
             value = Object.__factory__.instance(dict=value)
         if isinstance(value, Object):
@@ -107,8 +110,7 @@ class Basic:
         log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
         if content.value is None:
             child = self.node(content.tag, content.type)
-            if content.type.nillable:
-                child.setnil()
+            self.setnil(child, content.type)
             parent.append(child)
             return
         if isinstance(content.value, dict):
@@ -191,7 +193,16 @@ class Basic:
         @type content: L{Object}
         """
         pass
-        
+    
+    def setnil(self, node, type):
+        """
+        Set the value of the I{node} to nill.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param type: The node's schema type
+        @type type: L{SchemaProperty}
+        """
+        pass
 
        
 class Literal(Basic):
@@ -269,6 +280,17 @@ class Literal(Basic):
             raise Exception(
                 'content (end) mismatch: top=(%s) cont=(%s)' % \
                 (current, content))
+            
+    def setnil(self, node, type):
+        """
+        Set the value of the I{node} to nill.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param type: The node's schema type
+        @type type: L{SchemaProperty}
+        """
+        if type.nillable:
+            node.setnil()
     
     def node(self, tag, type):
         """

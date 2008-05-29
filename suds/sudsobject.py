@@ -99,6 +99,9 @@ class Object:
     
     def __contains__(self, name):
         return name in self.__keylist__
+    
+    def __repr__(self):
+        return str(self)
 
     def __str__(self):
         return unicode(self).encode('utf-8')
