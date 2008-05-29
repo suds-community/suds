@@ -58,20 +58,18 @@ class Binding:
         """ set the input message encoding to "encoded" """
         self.encoded = True
 
-    def get_message(self, method_name, *args):
+    def get_message(self, method_name, args, soapheaders):
         """get the soap message for the specified method and args"""
         method = self.method(method_name)
         body = self.body(method)
-        env = self.envelope(body)
+        header = self.header(soapheaders)
+        env = self.envelope(body, header)
         ptypes = self.get_ptypes(method_name)
         n = 0
         for arg in args:
             if n == len(ptypes): break
             pdef = ptypes[n]
-            if arg is None:
-                method.append(Element(pdef[0]).setnil())
-            else:
-                method.append(self.param(method_name, pdef, arg))
+            method.append(self.param(method_name, pdef, arg))
             n += 1
         env.promotePrefixes()
         return str(env)
@@ -133,22 +131,39 @@ class Binding:
             return tags
         return marshaller.process(pdef[0], object, pdef[1])
             
-    def envelope(self, body=None):
+    def envelope(self, body, header):
         """ get soap envelope """
         env = Element('%s:Envelope' % envns[0], ns=envns)
         env.addPrefix(encns[0], encns[1])
         env.addPrefix(xsins[0], xsins[1])
-        if body is not None:
-            env.append(body)
+        env.append(header)
+        env.append(body)
         return env
     
-    def body(self, method=None):
+    def header(self, headers):
+        """ get soap header """
+        hdr = Element('%s:Header' % envns[0], ns=envns)
+        if self.encoded:
+            marshaller = self.marshaller.encoded
+        else:
+            marshaller = self.marshaller.literal
+        for h in headers:
+            tag = h.__class__.__name__
+            if isinstance(h, Object):
+                value = h
+                type = h.__metadata__.__type__
+                node = marshaller.process(tag, value, type)
+                hdr.append(node)
+            else:
+                log.error('soapheader (%s) must be Object', tag)
+        return hdr
+    
+    def body(self, method):
         """ get soap envelope body """
         ns = self.wsdl.tns
         body = Element('%s:Body' % envns[0])
         body.addPrefix(ns[0], ns[1])
-        if method is not None:
-            body.append(method)
+        body.append(method)
         return body
     
     def method(self, name):
@@ -156,3 +171,4 @@ class Binding:
         prefix = self.wsdl.tns[0]
         method = Element('%s:%s' % (prefix, name))
         return method
+

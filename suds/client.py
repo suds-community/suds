@@ -138,11 +138,11 @@ class Method(object):
         self.client = client
         self.name = name
         
-    def __call__(self, *args):
+    def __call__(self, *args, **kwargs):
         """call the method"""
         result = None
         try:
-            result = self.client.send(self, *args)
+            result = self.client.send(self, args, kwargs)
         except WebFault, e:
             if self.client.arg.faults:
                 log.debug('raising (%s)', e)
@@ -219,24 +219,24 @@ class SoapClient:
         @keyword proxy: An http proxy to be specified on requests (default:{}).
                            The proxy is defined as {protocol:proxy,}
         @type proxy: dict
-        @keyword soapheaders: A dictionary of soap headers to be
-            injected into the soap evelope (default:{}).
-        @type soapheaders: dict
         """
         self.arg = Object()
         self.arg.faults = kwargs.get('faults', True)
         self.arg.proxies = kwargs.get('proxy', {})
-        self.arg.soapheaders = kwargs.get('soapheaders', {})
         self.wsdl = WSDL(url)
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
         self.cookiejar = CookieJar()
         
-    def send(self, method, *args):
+    def send(self, method, args, kwargs):
         """
         Send the required soap message to invoke the specified method
         @param method: A method object to be invoked.
         @type method: L{Method}
+        @param args: Arguments
+        @type args: [arg,...]
+        @param kwargs: Keyword Arguments
+        @type kwargs: I{dict}
         @return: The result of the method invocation.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
@@ -245,7 +245,8 @@ class SoapClient:
         binding.faults = self.arg.faults
         headers = self.headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
-        msg = binding.get_message(method.name, *args)
+        soapheaders = kwargs.get('soapheaders', {})
+        msg = binding.get_message(method.name, args, soapheaders)
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             request = Request(location, msg, headers)
