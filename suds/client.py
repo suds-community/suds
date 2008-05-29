@@ -20,7 +20,8 @@ The I{2nd generation} service proxy provides access to web services.
 from cookielib import CookieJar
 from urllib2 import Request, urlopen, urlparse, HTTPError
 from suds import *
-from suds.sudsobject import *
+from suds import sudsobject
+from sudsobject import Object
 from suds.schema import Enumeration
 from suds.resolver import PathResolver
 from suds.builder import Builder
@@ -65,8 +66,7 @@ class Client(object):
         @return: A list of items contained in I{sobject}.
         @rtype: [(key, value),...]
         """
-        for k in sobject:
-            yield (k, sobject[k])
+        return sudsobject.items(sobject)
     
     def dict(self, sobject):
         """
@@ -77,7 +77,7 @@ class Client(object):
             items contained in I{sobject}.
         @rtype: dict
         """
-        return dict(self.items(sobject))
+        return sudsobject.asdict(sobject)
     
     def metadata(self, sobject):
         """
@@ -85,7 +85,7 @@ class Client(object):
         @param sobject: A suds object
         @type sobject: L{Object}
         @return: The object's metadata
-        @rtype: L{Metadata}
+        @rtype: L{sudsobject.Metadata}
         """
         return sobject.__metadata__
  
@@ -144,7 +144,7 @@ class Method(object):
         try:
             result = self.client.send(self, *args)
         except WebFault, e:
-            if self.client.faults:
+            if self.client.arg.faults:
                 log.debug('raising (%s)', e)
                 raise e
             else:
@@ -197,8 +197,8 @@ class SoapClient:
     
     """
     A lightweight soap based web client B{**not intended for external use}
-    @ivar faults: Indicates how I{web faults} are to be handled.
-    @type faults: boolean
+    @ivar arg: A object containing custom args.
+    @type arg: L{Object}
     @ivar wsdl: A WSDL object.
     @type wsdl: L{WSDL}
     @ivar schema: A schema object.
@@ -213,16 +213,20 @@ class SoapClient:
         """
         @param url: The URL for a WSDL.
         @type url: str
-        @param kwargs: Keyword Arguments.
         @keyword faults: Raise faults raised by server (default:True),
                 else return tuple from service method invocation as (http code, object).
         @type faults: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
                            The proxy is defined as {protocol:proxy,}
         @type proxy: dict
+        @keyword soapheaders: A dictionary of soap headers to be
+            injected into the soap evelope (default:{}).
+        @type soapheaders: dict
         """
-        self.faults = kwargs.get('faults', True)
-        self.proxies = kwargs.get('proxy', {})
+        self.arg = Object()
+        self.arg.faults = kwargs.get('faults', True)
+        self.arg.proxies = kwargs.get('proxy', {})
+        self.arg.soapheaders = kwargs.get('soapheaders', {})
         self.wsdl = WSDL(url)
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
@@ -238,7 +242,7 @@ class SoapClient:
         """
         result = None
         binding = self.wsdl.get_binding(method.name)
-        binding.faults = self.faults
+        binding.faults = self.arg.faults
         headers = self.headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
         msg = binding.get_message(method.name, *args)
@@ -264,7 +268,7 @@ class SoapClient:
         @type request: urllib2.Request
         """
         protocol = urlparse.urlparse(location)[0]
-        proxy = self.proxies.get(protocol, None)
+        proxy = self.arg.proxies.get(protocol, None)
         if proxy is not None:
             log.debug('proxy %s used for %s', proxy, location)
             request.set_proxy(proxy, protocol)
@@ -298,7 +302,7 @@ class SoapClient:
         log.debug('http succeeded:\n%s', reply)
         if len(reply) > 0:
             p = binding.get_reply(method.name, reply)
-            if self.faults:
+            if self.arg.faults:
                 return p
             else:
                 return (200, p)
@@ -323,7 +327,7 @@ class SoapClient:
                 return (status, binding.get_fault(reply))
             else:
                 return (status, None)
-        if self.faults:
+        if self.arg.faults:
             raise Exception((status, reason))
         else:
             return (status, None)
