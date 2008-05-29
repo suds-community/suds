@@ -239,8 +239,7 @@ class Schema:
             self.impfilter = set([xsdns[1], xsins[1]])
         else:
             self.impfilter = impfilter
-        self.element_form_default = \
-            root.get('elementFormDefault', default='unqualified')
+        self.form_qualified = self.__form_qualified()
         self.__add_children()
         self.__load_children()
         self.children.sort()
@@ -255,6 +254,14 @@ class Schema:
                     self.children += child.children
                 else:
                     self.children.append(child)
+                    
+    def __form_qualified(self):
+        """ get @elementFormDefault = (qualified) """
+        form = self.root.get('elementFormDefault')
+        if form is None:
+            return False
+        else:
+            return ( form.lower() == 'qualified' )
                 
     def __tns(self):
         """ get the target namespace """
@@ -394,6 +401,12 @@ class SchemaProperty:
     @type state.depsolve: boolean
     @ivar state.promoted: The child promoted flag.
     @type state.promoted: boolean
+    @ivar form_qualified: A flag that inidcates that @elementFormDefault
+        has a value of I{qualified}.
+    @type form_qualified: boolean
+    @ivar nillable: A flag that inidcates that @nillable
+        has a value of I{true}.
+    @type nillable: boolean
     @ivar children: A list of child xsd I{(non-attribute)} nodes
     @type children: [L{SchemaProperty},...]
     @ivar attributes: A list of child xsd I{(attribute)} nodes
@@ -412,7 +425,7 @@ class SchemaProperty:
         self.state = Object()
         self.state.depsolved = False
         self.state.promoted = False
-        self.form_qualified = False
+        self.form_qualified = schema.form_qualified
         self.nillable = False
         self.children = []
         self.attributes = []
@@ -968,10 +981,9 @@ class Element(Polymorphic):
         @type root: L{sax.Element}
         """
         Polymorphic.__init__(self, schema, root)
-        form = root.get('form', default=self.schema.element_form_default)
-        self.form_qualified = ( form.lower() == 'qualified' )
-        nillable = root.get('nillable', default='0')
-        self.nillable = ( nillable.lower() in ('1', 'true') )
+        form = root.get('form')
+        self.form_qualified = self.__form_qualified()
+        self.nillable = self.__nillable()
         self.add_children(*Element.valid_children)
         
     def get_name(self):
@@ -986,6 +998,22 @@ class Element(Polymorphic):
         """ get whether the element has a maxOccurs > 1 or unbounded """
         max = self.root.get('maxOccurs', default=1)
         return (max > 1 or max == 'unbounded')
+    
+    def __form_qualified(self):
+        """ get @form = (qualified) """
+        form = self.root.get('form')
+        if form is None:
+            return self.form_qualified
+        else:
+            return ( form.lower() == 'qualified' )
+        
+    def __nillable(self):
+        """ get @nillable = (1|true) """
+        nillable = self.root.get('nillable')
+        if nillable is None:
+            return self.nillable
+        else:
+            return ( nillable.lower() in ('1', 'true') )
 
     def __lt__(self, other):
         """ <simpleType/> first """

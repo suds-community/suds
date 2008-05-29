@@ -18,6 +18,31 @@ from new import classobj, function, instancemethod
 log = logger(__name__)
 
 
+def items(sobject):
+    """
+    Extract the I{items} from a suds object much like the
+    items() method works on I{dict}.
+    @param sobject: A suds object
+    @type sobject: L{Object}
+    @return: A list of items contained in I{sobject}.
+    @rtype: [(key, value),...]
+    """
+    for k in sobject:
+        yield (k, sobject[k])
+
+
+def asdict(sobject):
+    """
+    Convert a sudsobject into a dictionary.
+    @param sobject: A suds object
+    @type sobject: L{Object}
+    @return: A python dictionary containing the
+        items contained in I{sobject}.
+    @rtype: dict
+    """
+    return dict(items(sobject))
+
+
 class Factory:
     
     def subclass(self, name):
@@ -95,11 +120,6 @@ class Printer:
     
     def __init__(self):
         self.indent = (lambda n :  '%*s'%(n*3,' '))
-        
-    def items(self, sobject):
-        """ extract the I{items} from a suds object. """
-        for k in sobject:
-            yield (k, sobject[k])
     
     def tostr(self, object, indent=-2):
         """ get s string representation of object """
@@ -139,7 +159,7 @@ class Printer:
                 s.append(cls.__name__)
                 s.append(')')
         s.append('{')
-        for item in self.items(d):
+        for item in items(d):
             s.append('\n')
             s.append(self.indent(n+1))
             if isinstance(item[1], (list,tuple)):            
@@ -169,7 +189,7 @@ class Printer:
         if isinstance(object, (Object, dict)):
             if len(object) > 1:
                 return True
-            for item in self.items(object):
+            for item in items(object):
                 if self.complex(item[1]):
                     return True
         if isinstance(object, (list,tuple)):

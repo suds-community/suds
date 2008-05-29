@@ -60,7 +60,22 @@ class Test:
         print a
 
 
-    def test_misc(self): 
+    def test_misc(self):
+
+        client = Client('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
+        print client
+        person = client.factory.create('person')
+        print person
+        print client.factory.create('person.name.first')
+        print client.factory.create('person.jeff')
+        try:
+            print 'addPersion()'
+            result = client.service.addPerson(person)
+            print '\nreply(\n%s\n)\n' % result.encode('utf-8')
+        except Exception, e:
+            print e
+            
+        return
         
         try:
             client = Client('http://efm.members.corpu.com/ws/projectdata.asmx?WSDL')
@@ -81,12 +96,6 @@ class Test:
             client.service.getCheckbox(user, 1)
         except WebFault, f:
             print f
-        
-        client = Client('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
-        print client
-        print client.factory.create('person')
-        print client.factory.create('person.name.first')
-        print client.factory.create('person.jeff')
         
         client = Client('http://soa.ebrev.info/service.wsdl')
         print client
