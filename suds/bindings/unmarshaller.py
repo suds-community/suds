@@ -70,7 +70,8 @@ class Basic:
         @rtype: L{Object}
         """
         self.reset()
-        return self.__process(node, type)
+        data, result = self.__process(node, type)
+        return result
     
     def __process(self, node, type=None):
         """
@@ -90,7 +91,7 @@ class Basic:
         self.import_children(data, node)
         self.import_text(data, node)
         self.end(node, data)
-        return self.result(data, node)
+        return data, self.result(data, node)
     
     def import_attrs(self, data, node):
         """
@@ -118,22 +119,22 @@ class Basic:
         @type node: L{sax.Element}
         """
         for child in node.children:
-            cdata = self.__process(child)
+            cdata, cval = self.__process(child)
             key = reserved.get(child.name, child.name)
             if key in data:
                 v = getattr(data, key)
                 if isinstance(v, list):
-                    v.append(cdata)
+                    v.append(cval)
                 else:
-                    setattr(data, key, [v, cdata])
+                    setattr(data, key, [v, cval])
                 continue
             if self.unbounded(cdata):
-                if cdata is None:
+                if cval is None:
                     setattr(data, key, [])
                 else:
-                    setattr(data, key, [cdata,])
+                    setattr(data, key, [cval,])
             else:
-                setattr(data, key, cdata)
+                setattr(data, key, cval)
     
     def import_text(self, data, node):
         """
@@ -147,23 +148,7 @@ class Basic:
         if len(node.text):
             value = node.getText()
             value = booleans.get(value.lower(), value)
-            self.text(data, value)
-            
-    def text(self, data, value=None):
-        """
-        Manage a data object's text information
-        @param data: The current object being built.
-        @type data: L{Object}
-        @param value: Text content.
-        @type value: unicode
-        """
-        md = data.__metadata__
-        if value is None:
-            try:
-                return md.__xml__.text
-            except AttributeError:
-                return None
-        else:
+            md = data.__metadata__
             md.__xml__ = Object.__factory__.metadata()
             md.__xml__.text = value
             
@@ -179,24 +164,19 @@ class Basic:
         @return: The post-processed result.
         @rtype: (L{Object}|I{list}|I{str}) 
         """
+        if len(data): return data
+        text = None
         try:
-            text = self.text(data)
-            if self.nillable(data):
-                if node.isnil():
-                    return None
-                if len(data) == 0 and \
-                    text is None:
-                        return ''
-            else:
-                 if len(data) == 0 and text is None:
-                     return None
-            if len(data) == 0 and \
-                text is not None and \
-                self.bounded(data):
-                    return text
-        except AttributeError, e:
+            md = data.__metadata__
+            text = md.__xml__.text
+        except AttributeError:
             pass
-        return data
+        if text is None:
+            if self.nillable(data) and node.isnil():
+                return None
+            else:
+                return ''
+        return text
         
     def reset(self):
         pass
