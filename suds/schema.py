@@ -22,7 +22,7 @@ tranparent referenced type resolution and targeted denormalization.
 """
 
 from suds import *
-from suds.sudsobject import Object
+from suds.sudsobject import Factory
 from sax import Parser, splitPrefix, defns, xsdns, xsins
 from urlparse import urljoin
 import logging
@@ -396,7 +396,7 @@ class SchemaProperty:
     @ivar schema: The schema containing this object.
     @type schema: L{Schema}
     @ivar state: The transient states for the property
-    @type state: L{Object}
+    @type state: L{sudsobject.Object}
     @ivar state.depsolve: The dependancy resolved flag.
     @type state.depsolve: boolean
     @ivar state.promoted: The child promoted flag.
@@ -422,7 +422,7 @@ class SchemaProperty:
         """
         self.schema = schema
         self.root = root
-        self.state = Object()
+        self.state = Factory.object('state')
         self.state.depsolved = False
         self.state.promoted = False
         self.form_qualified = schema.form_qualified

@@ -70,7 +70,8 @@ class Test:
         print client.factory.create('person.jeff')
         try:
             print 'addPersion()'
-            result = client.service.addPerson(person)
+            hdr = (client.factory.create('authdog'),)
+            result = client.service.addPerson(person, soapheaders=hdr)
             print '\nreply(\n%s\n)\n' % result.encode('utf-8')
         except Exception, e:
             print e
@@ -245,6 +246,10 @@ class Test:
         #
         print 'echo()'
         result = client.service.echo('this is cool')
+        print '\nreply( %s )\n' % str(result)
+        
+        print 'echo() with {none}'
+        result = client.service.echo(None)
         print '\nreply( %s )\n' % str(result)
         
         #

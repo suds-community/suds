@@ -45,12 +45,13 @@ def asdict(sobject):
 
 class Factory:
     
-    def subclass(self, name):
+    @classmethod
+    def subclass(cls, name, super):
         name = name.encode('utf-8')
-        myclass = classobj(name,(Object,),{})
+        myclass = classobj(name,(super,),{})
         init = '__init__'
         src = 'def %s(self):\n' % init
-        src += '\t%s.%s(self)\n' % (Object.__name__,init)
+        src += '\t%s.%s(self)\n' % (super.__name__,init)
         code = compile(src, '', 'exec')
         code = code.co_consts[0]
         fn = function(code, globals())
@@ -58,9 +59,10 @@ class Factory:
         setattr(myclass, name, m)
         return myclass
     
-    def instance(self, classname=None, dict={}):
+    @classmethod
+    def object(cls, classname=None, dict={}):
         if classname is not None:
-            subclass = self.subclass(classname)
+            subclass = cls.subclass(classname, Object)
             inst = subclass()
         else:
             inst = Object()
@@ -68,13 +70,12 @@ class Factory:
             setattr(inst, a[0], a[1])
         return inst
     
-    def metadata(self):
+    @classmethod
+    def metadata(cls):
         return Metadata()
 
 
 class Object:
-    
-    __factory__ = Factory()
 
     def __init__(self):
         self.__keylist__ = []

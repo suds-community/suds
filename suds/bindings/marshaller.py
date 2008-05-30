@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sudsobject import Object
+from suds.sudsobject import Factory, Object
 from suds.resolver import GraphResolver
 from suds.sax import Element, Attribute, splitPrefix, xsins
 
@@ -81,7 +81,7 @@ class Basic:
             self.setnil(root, type)
             return root
         if isinstance(value, dict):
-            value = Object.__factory__.instance(dict=value)
+            value = Facotry.object(dict=value)
         if isinstance(value, Object):
             for key in value:
                 cont = Content(key, value[key])
@@ -115,7 +115,7 @@ class Basic:
             return
         if isinstance(content.value, dict):
             content.value = \
-                Object.__factory__.instance(dict=content.value)
+                Facotry.object(dict=content.value)
         if isinstance(content.value, Object):
             object = content.value
             child = self.node(content.tag, content.type)
@@ -200,7 +200,7 @@ class Basic:
         @param node: A I{nil} node.
         @type node: L{Element}
         @param type: The node's schema type
-        @type type: L{SchemaProperty}
+        @type type: L{schema.SchemaProperty}
         """
         pass
 
@@ -287,7 +287,7 @@ class Literal(Basic):
         @param node: A I{nil} node.
         @type node: L{Element}
         @param type: The node's schema type
-        @type type: L{SchemaProperty}
+        @type type: L{schema.SchemaProperty}
         """
         if type.nillable:
             node.setnil()

@@ -21,7 +21,7 @@ from cookielib import CookieJar
 from urllib2 import Request, urlopen, urlparse, HTTPError
 from suds import *
 from suds import sudsobject
-from sudsobject import Object
+from sudsobject import Factory as InstFactory, Object
 from suds.schema import Enumeration
 from suds.resolver import PathResolver
 from suds.builder import Builder
@@ -178,7 +178,7 @@ class Factory:
         if type is None:
             raise TypeNotFound(name)
         if isinstance(type, Enumeration):
-            result = Object.__factory__.instance(name)
+            result = InstFactory.object(name)
             for e in type.get_children():
                 enum = e.get_name()
                 setattr(result, enum, enum)

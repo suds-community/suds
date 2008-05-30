@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sudsobject import Object
+from suds.sudsobject import Factory
 from suds.resolver import PathResolver
 
 log = logger(__name__)
@@ -36,10 +36,10 @@ class Builder:
             type = self.resolver.find(name)
         if type is None:
             raise TypeNotFound(name)
-        data = Object.__factory__.instance(type.get_name())
+        data = Factory.object(type.get_name())
         md = data.__metadata__
         md.__type__ = type
-        md.xsd = Object.__factory__.metadata()
+        md.xsd = Factory.metadata()
         self.add_attributes(data, type)
         for c in type.get_children():
             self.process(data, c)
@@ -55,7 +55,7 @@ class Builder:
         else:
             children = resolved.get_children()
             if len(children) > 0:
-                value = Object.__factory__.instance(type.get_name())
+                value = Factory.object(type.get_name())
         setattr(data, type.get_name(), value)
         if value is not None:
             data = value
