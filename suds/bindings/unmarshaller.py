@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sudsobject import Object
+from suds.sudsobject import Factory, Object
 from suds.sax import xsins
 from suds.resolver import NodeResolver
 
@@ -149,7 +149,7 @@ class Basic:
             value = node.getText()
             value = booleans.get(value.lower(), value)
             md = data.__metadata__
-            md.__xml__ = Object.__factory__.metadata()
+            md.__xml__ = Factory.metadata()
             md.__xml__.text = value
             
     def result(self, data, node):
@@ -192,7 +192,7 @@ class Basic:
         @return: A subclass of Object.
         @rtype: L{Object}
         """
-        return Object()
+        return Factory.object(node.name)
     
     def end(self, node, data):
         """
@@ -276,7 +276,7 @@ class Typed(Basic):
             type = found
         else:
             self.resolver.push(type.resolve())
-        data = Object.__factory__.instance(type.get_name())
+        data = Factory.object(type.get_name())
         md = data.__metadata__
         md.__type__ = type
         return data
