@@ -77,7 +77,10 @@ class PathResolver(Resolver):
         for part in parts[1:]:
             name = splitPrefix(part)[1]
             log.debug('searching parent (%s) for (%s)', repr(result), name)
-            result = result.get_child(name)
+            if name.startswith('@'):
+                result = result.get_attribute(name[1:])
+            else:
+                result = result.get_child(name)
             if result is None:
                 log.error('(%s) not-found', name)
                 break
@@ -156,7 +159,10 @@ class TreeResolver(Resolver):
             result = self.schema.find(name, resolved=False)
         else:
             log.debug('searching parent (%s) for (%s)', repr(parent), name)
-            result = parent.get_child(name)
+            if name.startswith('@'):
+                result = parent.get_attribute(name[1:])
+            else:
+                result = parent.get_child(name)
         if result is None:
             log.error('(%s) not-found', name)
         else:

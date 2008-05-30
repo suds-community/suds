@@ -529,14 +529,6 @@ class SchemaProperty:
             list = empty
         return list
     
-    def get_attributes(self):
-        """
-        Get a list of schema attribute nodes.
-        @return: A list of attributes.
-        @rtype: [L{Attribute},...]
-        """ 
-        return self.attributes
-    
     def get_child(self, name, ns=None):
         """
         Get (find) a I{non-attribute} child by name and namespace.
@@ -550,6 +542,29 @@ class SchemaProperty:
         for child in self.get_children():
             if child.match(name, ns):
                 return child
+        return None
+    
+    def get_attributes(self):
+        """
+        Get a list of schema attribute nodes.
+        @return: A list of attributes.
+        @rtype: [L{Attribute},...]
+        """ 
+        return self.attributes
+    
+    def get_attribute(self, name, ns=None):
+        """
+        Get (find) a I{non-attribute} child by name and namespace.
+        @param name: A child name.
+        @type name: basestring
+        @param ns: The child's namespace.
+        @type ns: (I{prefix},I{URI})
+        @return: The requested child.
+        @rtype: L{SchemaProperty}
+        """
+        for a in self.get_attributes():
+            if a.match(name, ns):
+                return a
         return None
     
     def unbounded(self):
