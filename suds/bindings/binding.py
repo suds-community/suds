@@ -143,6 +143,8 @@ class Binding:
     def header(self, headers):
         """ get soap header """
         hdr = Element('%s:Header' % envns[0], ns=envns)
+        if not isinstance(headers, (list,tuple)):
+            headers = (headers,)
         if self.encoded:
             marshaller = self.marshaller.encoded
         else:

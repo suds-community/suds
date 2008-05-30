@@ -245,7 +245,7 @@ class SoapClient:
         binding.faults = self.arg.faults
         headers = self.headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
-        soapheaders = kwargs.get('soapheaders', {})
+        soapheaders = kwargs.get('soapheaders', ())
         msg = binding.get_message(method.name, args, soapheaders)
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
