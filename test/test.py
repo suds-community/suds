@@ -66,16 +66,23 @@ class Test:
         print client
         person = client.factory.create('person')
         print person
-        print client.factory.create('person.name.first')
-        print client.factory.create('person.jeff')
+        first = client.factory.create('person.name.first')
+        print first
+        jeff = client.factory.create('person.jeff')
+        print jeff
+        authdog_id = client.factory.create('authdog.@id')
+        print authdog_id
         try:
+            logger('suds.client').setLevel(logging.DEBUG)
             print 'addPersion()'
-            hdr = (client.factory.create('authdog'),)
-            result = client.service.addPerson(person, soapheaders=hdr)
+            h = client.factory.create('authdog')
+            h.set('hello doggy')
+            h._id = 100
+            result = client.service.addPerson(person, soapheaders=(h,))
             print '\nreply(\n%s\n)\n' % result.encode('utf-8')
         except Exception, e:
             print e
-            
+        logger('suds.client').setLevel(logging.ERROR)
         return
         
         try:

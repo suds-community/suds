@@ -36,10 +36,13 @@ class Builder:
             type = self.resolver.find(name)
         if type is None:
             raise TypeNotFound(name)
-        data = Factory.object(type.get_name())
+        cls = type.get_name()
+        if len(type):
+            data = Factory.object(cls)
+        else:
+            data = Factory.property(cls)
         md = data.__metadata__
         md.__type__ = type
-        md.xsd = Factory.metadata()
         self.add_attributes(data, type)
         for c in type.get_children():
             self.process(data, c)

@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sudsobject import Factory, Object
+from suds.sudsobject import Factory, Object, Property, items
 from suds.resolver import GraphResolver
 from suds.sax import Element, Attribute, splitPrefix, xsins
 
@@ -82,9 +82,12 @@ class Basic:
             return root
         if isinstance(value, dict):
             value = Facotry.object(dict=value)
-        if isinstance(value, Object):
-            for key in value:
-                cont = Content(key, value[key])
+        if isinstance(value, Property):
+            cont = Content(tag, value)
+            self.append(root, cont)
+        elif isinstance(value, Object):
+            for item in items(value):
+                cont = Content(item[0], item[1])
                 self.append(root, cont)
         else:
             root.setText(tostr(value))
@@ -116,12 +119,19 @@ class Basic:
         if isinstance(content.value, dict):
             content.value = \
                 Facotry.object(dict=content.value)
+        if isinstance(content.value, Property):
+            p = content.value
+            parent.setText(p.get())
+            for item in p.items():
+                cont = Content(item[0], item[1])
+                self.append(parent, cont)
+            return
         if isinstance(content.value, Object):
             object = content.value
             child = self.node(content.tag, content.type)
             parent.append(child)
-            for key in object:
-                cont = Content(key, object[key])
+            for item in items(object):
+                cont = Content(item[0], item[1])
                 self.append(child, cont)
             return
         if isinstance(content.value, (list,tuple)):
@@ -243,8 +253,13 @@ class Literal(Basic):
         if isinstance(content.value, Object):
             content.type = self.__metatype(content)
         if content.type is None:
+            name = content.tag
+            if name.startswith('_'):
+                name = '@'+name[1:]
             content.type = \
-                self.resolver.find(content.tag, content.value)
+                self.resolver.find(name, content.value)
+        else:
+            self.resolver.push(content.type.resolve())
         if content.type is None:
             raise TypeNotFound(content.tag)
         
@@ -345,7 +360,7 @@ class Literal(Basic):
             log.debug('type (%s) found in metadata', result.get_name())
         except AttributeError:
             pass
-        return None
+        return result
 
 
 

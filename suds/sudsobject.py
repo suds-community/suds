@@ -73,6 +73,11 @@ class Factory:
     @classmethod
     def metadata(cls):
         return Metadata()
+    
+    @classmethod
+    def property(cls, name, value=None):
+        subclass = cls.subclass(name, Property)
+        return subclass(value)
 
 
 class Object:
@@ -115,6 +120,25 @@ class Metadata(Object):
     def __init__(self):
         self.__keylist__ = []
         self.__printer__ = Printer()
+        
+        
+class Property(Object):
+
+    def __init__(self, value):
+        Object.__init__(self)
+        self.value = value
+        
+    def items(self):
+        for item in items(self):
+            if item[0] != 'value':
+                yield item
+        
+    def get(self):
+        return self.value
+    
+    def set(self, value):
+        self.value = value
+        return self
 
 
 class Printer:
@@ -138,17 +162,26 @@ class Printer:
                 return self.print_complex(object, n+2, nl)
             if isinstance(object, (list,tuple)):
                 return self.print_collection(object, n+2)
+        if isinstance(object, Property):
+            return self.print_property(object)
         if isinstance(object, Object):
-            d = {}
-            for key in object:
-                d[key] = object[key]
-            object = d
+            object = asdict(object)
         if isinstance(object, (dict,list,tuple)):
             if len(object) > 0:
                 return tostr(object)
             else:
                 return '<empty>'
         return '(%s)' % tostr(object)
+    
+    def print_property(self, d):
+        """ print a property object """
+        s = []
+        cls = d.__class__
+        s.append('property:')
+        s.append(cls.__name__)
+        s.append('=')
+        s.append(self.process(d.value))
+        return ''.join(s)
     
     def print_complex(self, d, n, nl=False):
         """ print complex using the specified indent (n) and newline (nl). """
