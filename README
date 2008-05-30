@@ -172,6 +172,22 @@ dot notation as follows:
   > name = client.factory.create('person.name') 
   >
   
+SOAP headers may be passed during the service invocation by using the
+special (soapheaders) keyword as follows:
+
+ >
+ > client = client(url)
+ > token = client.factory.create('AuthToken')
+ > token.username = 'Elvis'
+ > token.password = 'TheKing'
+ > result = client.service.addPerson(person, soapheaders=token)
+ > 
+ 
+ The keyword (soapheaders) *must* value must be a ( or list/tuple of ) Object
+ (or Property) object(s) obtained from the client.factory.
+ 
+ 
+  
 BASIC USAGE (legacy):
 
 You will need to know the url for WSDL for each service used.  Simply create
