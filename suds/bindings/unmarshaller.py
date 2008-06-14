@@ -275,7 +275,7 @@ class Typed(Basic):
                 raise TypeNotFound(node.qname())
             type = found
         else:
-            self.resolver.push(type.resolve())
+            self.resolver.push(type)
         data = Factory.object(type.get_name())
         md = data.__metadata__
         md.__type__ = type

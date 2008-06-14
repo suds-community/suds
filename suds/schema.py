@@ -22,8 +22,9 @@ tranparent referenced type resolution and targeted denormalization.
 """
 
 from suds import *
-from suds.sudsobject import Factory
+from suds.sudsobject import Factory, Object
 from sax import Parser, splitPrefix, defns, xsdns, xsins
+from sax import Element as Node
 from urlparse import urljoin
 import logging
 
@@ -45,7 +46,7 @@ def qualified_reference(ref, resolvers, tns=defns):
     @note: Suds namespaces are tuples: I{(prefix,URI)}.  An example
         qualified reference would be: ("myname",("tns", "http://..."))
     """
-    ns = tns
+    ns = None
     p, n = splitPrefix(ref)
     if p is not None:
         if not isinstance(resolvers, (list, tuple)):
@@ -54,7 +55,11 @@ def qualified_reference(ref, resolvers, tns=defns):
             resolved = r.resolvePrefix(p)
             if resolved[1] is not None:
                 ns = resolved
-                break 
+                break
+        if ns is None:
+            raise Exception('prefix (%s) not resolved' % p)
+    else:
+        ns = tns
     return (n, ns)
 
 def isqref(object):
@@ -74,7 +79,6 @@ def isqref(object):
 
 
 class SchemaCollection:
-    
     """
     A collection of schema objects.  This class is needed because WSDLs may contain
     more then one <schema/> node.
@@ -98,6 +102,7 @@ class SchemaCollection:
         @type impfilter: set
         """
         self.root = wsdl.root
+        self.id = objid(self)
         self.tns = wsdl.tns
         self.baseurl = wsdl.url
         self.children = []
@@ -113,59 +118,83 @@ class SchemaCollection:
         @param node: A <schema/> root node.
         @type node: L{Element}
         """
-        child = [node, None]
+        child = Schema(node, self.baseurl, self, self.impfilter)
         self.children.append(child)
-        tns = node.get('targetNamespace')
-        self.namespaces[tns] = child
+        self.namespaces[child.tns[1]] = child
         
     def load(self):
         """
         Load the schema objects for the root nodes.
         """
-        for child in self.children:
-            self.build(child)
+        for stage in Schema.init_stages:
+            for child in self.children:
+                child.init(stage)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('schema (%s):\n%s', self.baseurl, str(self))
         
-    def imported(self, ns):
+    def schemabyns(self, ns):
         """
-        Find an imported schema by namespace.  Only the URI portion of
+        Find a schema by namespace.  Only the URI portion of
         the namespace is compared to each schema's I{targetNamespace}
         @param ns: A namespace.
         @type ns: (prefix,URI)
         @return: The schema matching the namesapce, else None.
         @rtype: L{Schema}
         """
-        child = self.namespaces.get(ns[1], None)
-        if child is not None:
-            return self.build(child)
-        else:
-            return None
+        return self.namespaces.get(ns[1], None)
 
-    def find(self, name, history=None, resolved=True):
+    def find(self, query):
         """ @see: L{Schema.find()} """
-        if history is None:
-            history = []
-        for s in [c[1] for c in self.children]:
-            result = s.find(name, history, resolved)
-            if result is not None:
-                return result
-        return None
+        result = None
+        self.start(query)
+        while result is None:
+            for s in self.children:
+                log.debug('%s, finding (%s) in %s', self.id, query.name, repr(s))
+                result = s.find(query)
+                if result is not None:
+                    break
+            if result is None and \
+                query.increment(self.id):
+                    continue
+            else:
+                break
+        return result
     
-    def build(self, child):
+    def start(self, query):
         """
-        Build a L{Schema} object for each node for which one has not already
-        been built.
-        @param child: A child.
-        @type child: [L{Element}, L{Schema}]
-        @return: child[1]
-        @rtype: L{Schema}
+        Start the query by setting myself as the owner and
+        qualifying the query.
+        @param query: A query.
+        @type query: L{Query}
         """
-        if child[1] is None:
-            schema = \
-                Schema(child[0], self.baseurl, self, self.impfilter)
-            child[1] = schema
-        return child[1]
+        if query.owner is None:
+            query.owner = self.id
+        query.qualify(self.root, self.tns)
+        
+    def namedtypes(self):
+        """
+        Get a list of top level named types.
+        @return: A list of types.
+        @rtype: [L{SchemaProperty},...]
+        """
+        result = {}
+        for s in self.flattened_children():
+            for c in s.children:
+                name = c.get_name()
+                if name is None:
+                    continue
+                result[name] = c.resolve()                    
+        return result.values()
+    
+    def flattened_children(self):
+        result = []
+        for s in self.children:
+            if s not in result:
+                result.append(s)
+            for gc in s.grandchildren():
+                if gc not in result:
+                    result.append(gc)
+        return result
     
     def __len__(self):
         return len(self.children)
@@ -175,18 +204,15 @@ class SchemaCollection:
     
     def __unicode__(self):
         result = ['\nschema collection']
-        for s in [c[1] for c in self.children]:
+        for s in self.children:
             result.append(s.str(1))
         return '\n'.join(result)
 
 
 class Schema:
-    
     """
     The schema is an objectification of a <schema/> (xsd) definition.
     It provides inspection, lookup and type resolution.
-    @cvar factory: A factory to create property objects based on tag.
-    @type factory: {tag:fn,}
     @ivar root: The root node.
     @type root: L{sax.Element}
     @ivar tns: The target namespace.
@@ -201,24 +227,15 @@ class Schema:
     @type types: {name:L{SchemaProperty}}
     @ivar children: A list of child properties.
     @type children: [L{SchemaProperty},...]
+    @ivar factory: A property factory.
+    @type factory: L{PropertyFactory}
     @ivar impfilter: A list of namespaces B{not} to import.
     @type impfilter: set
     """
-
-    factory =\
-    {
-        'import' : lambda x,y=None: Import(x,y), 
-        'complexType' : lambda x,y=None: Complex(x,y), 
-        'simpleType' : lambda x,y=None: Simple(x,y), 
-        'element' : lambda x,y=None: Element(x,y),
-        'attribute' : lambda x,y=None: Attribute(x,y),
-        'sequence' : lambda x,y=None: Sequence(x,y),
-        'complexContent' : lambda x,y=None: ComplexContent(x,y),
-        'enumeration' : lambda x,y=None: Enumeration(x,y),
-        'extension' : lambda x,y=None: Extension(x,y),
-    }
     
-    def __init__(self, root, baseurl=None, container=None, impfilter=None):
+    init_stages = range(0,4)
+    
+    def __init__(self, root, baseurl, container=None, impfilter=None):
         """
         @param root: The xml root.
         @type root: L{sax.Element}
@@ -230,30 +247,21 @@ class Schema:
         @type impfilter: set
         """
         self.root = root
+        self.id = objid(self)
         self.tns = self.__tns()
+        self.stage = -1
         self.baseurl = baseurl
         self.container = container
         self.types = {}
         self.children = []
+        self.factory = PropertyFactory(self)
         if impfilter is None:
             self.impfilter = set([xsdns[1], xsins[1]])
         else:
             self.impfilter = impfilter
         self.form_qualified = self.__form_qualified()
-        self.__add_children()
-        self.__load_children()
-        self.children.sort()
-                
-    def __add_children(self):
-        """ populate the list of children """
-        for node in self.root.children:
-            if node.name in self.factory:
-                fn = self.factory[node.name]
-                child = fn(self, node)
-                if isinstance(child, Import):
-                    self.children += child.children
-                else:
-                    self.children.append(child)
+        if container is None:
+            self.init(3)
                     
     def __form_qualified(self):
         """ get @elementFormDefault = (qualified) """
@@ -269,46 +277,102 @@ class Schema:
         if tns[1] is not None:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
-    
-    def __load_children(self):
+            
+    def init(self, stage):
+        """
+        Perform I{stage} initialization.
+        @param stage: The init stage to complete.
+        """
+        for n in range(0, (stage+1)):
+            if self.stage < n:
+                m = '__init%s__' % n
+                self.stage = n
+                log.debug('%s, init (%d)', self.id, n)
+                if not hasattr(self, m): continue
+                method = getattr(self, m)
+                method()
+                for s in self.grandchildren():
+                    s.init(n)
+                
+    def __init0__(self):
+        """ create children """
+        for node in self.root.children:
+            try:
+                child = self.factory.create(node)
+                self.children.append(child)
+            except:
+                pass
+
+    def __init1__(self):
         """ run children through depsolving and child promotion """
-        for c in self.children:
-            c.depsolve()
-        for c in self.children:
-            c.promote()
+        for stage in SchemaProperty.init_stages:
+            for c in self.children:
+                c.init(stage)
+        self.children.sort()
+
+    def __init2__(self):
+        pass
         
-    def imported(self, ns):
-        """ find schema imported by namespace """
+    def schemabyns(self, ns):
+        """ find schema by namespace """
         if self.container is not None:
-            return self.container.imported(ns)
+            return self.container.schemabyns(ns)
         else:
             return None
         
-    def find(self, name, history=None, resolved=True):
+    def grandchildren(self):
+        """ get I{grandchild} schemas that have been imported """
+        for c in self.children:
+            if isinstance(c, Import) and \
+                c.imp.schema is not None:
+                    yield c.imp.schema
+        
+    def find(self, query):
         """
         Find a I{type} defined in one of the contained schemas.
-        @param name: The name to the requested type.
-        @type name: (str|[qref,])
-        @param history: A list of found name segments used to prevent either
-            cyclic graphs and/or type self references.
-        @type history: [L{SchemaProperty},]
-        @note: I{qref} = qualified reference
-        @see: L{qualified_reference()}
+        @param query: A query.
+        @type query: L{Query}
+        @return: The found schema type. 
+        @rtype: L{qualified_reference()}
         """
-        if history is None:
-            history = []
-        key = '/'.join((str(resolved), unicode(name)))
+        key = query.key()
         cached = self.types.get(key, None)
         if cached is not None and \
-            cached not in history:
+            not query.filter(cached):
                 return cached
-        if self.builtin(name):
-            b = XBuiltin(self, name)
+        if self.builtin(query.qname):
+            b = self.factory.create(builtin=query.name)
+            log.debug(
+                '%s, found (%s)\n%s\n%s',
+                self.id, query.name, query, tostr(b))
             return b
-        result = self.__find(name, history, resolved)
+        self.start(query)
+        result = None
+        while result is None:
+            result = self.__find(query)
+            if result is None and query.increment(self.id):
+                continue
+            else:
+                break
         if result is not None:
+            if query.resolved:
+                result = result.resolve()
             self.types[key] = result
+            query.history.append(result)
+            log.debug(
+                '%s, found (%s)\n%s\n%s', self.id, query.name, query, tostr(result))
+        else:
+            log.debug('%s, (%s) not-found:\n%s', self.id, query.name, query)
         return result
+    
+    def start(self, query):
+        """
+        Start the query by setting myself as the owner and
+        qualifying the query.
+        """
+        if query.owner is None:
+            query.owner = self.id
+        query.qualify(self.root, self.tns)
 
     def custom(self, ref, context=None):
         """ get whether specified type reference is custom """
@@ -335,59 +399,131 @@ class Schema:
     def str(self, indent=0):
         tab = '%*s'%(indent*3, '')
         result = []
+        result.append('%s%s' % (tab, self.id))
         result.append('%s(raw)' % tab)
-        result.append(self.root.parent.str(indent+1))
-        result.append('%s(model)' % tab)
+        result.append(self.root.str(indent+1))
+        result.append('%s(model {%d})' % (tab, self.stage))
         for c in self.children:
             result.append(c.str(indent+1))
+        result.append('')
         return '\n'.join(result) 
     
-    def __find(self, name, history, resolved):
+    def __find(self, query):
         """ find a schema object by name. """
         result = None
-        ref, ns = self.__qualify(name)
-        log.debug('finding (%s)', ref)
-        for child in self.children: 
+        query.qualify(self.root, self.tns)
+        ref, ns = query.qname
+        log.debug('%s, finding (%s)\n%s', self.id, query.name, query)
+        for child in self.children:
+            if isinstance(child, Import):
+                log.debug(
+                    '%s, searching (import): %s\nfor:\n%s', 
+                    self.id, repr(child), query)
+                result = child.find(query)
+                if result is not None:
+                    break
             name = child.get_name()
             if name is None:
+                log.debug(
+                    '%s, searching (child): %s\nfor:\n%s',
+                    self.id, repr(child), query)
                 result = child.get_child(ref, ns)
-                if result in history:
+                if query.filter(result):
                     result = None
                     continue
                 if result is not None:
                     break
             else:
+                log.debug(
+                    '%s, matching: %s\nfor:\n%s',
+                    self.id, repr(child), query)
                 if child.match(ref, ns):
                     result = child
-                    if result in history:
+                    if query.filter(result):
                         result = None
                     else:
                         break
-        if result is not None:
-            log.debug('found (%s) as (%s)', ref, repr(result))
-            if resolved:
-                result = result.resolve()
-            history.append(result)
-        else:
-            log.debug('(%s) not-found', ref)
         return result
-    
-    def __qualify(self, name):
-        """ convert the name a qualified reference """
-        if isinstance(name, basestring):
-            return qualified_reference(name, self.root, self.tns)
-        else:
-            return name
+        
+    def __repr__(self):
+        myrep = \
+            '<%s {%d} tns="%s"/>' % (self.id, self.stage, self.tns[1])
+        return myrep.encode('utf-8')
     
     def __str__(self):
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
         return self.str()
+    
+    
+class PropertyFactory:
+    """
+    @cvar tags: A factory to create property objects based on tag.
+    @type tags: {tag:fn,}
+    @cvar builtins: A factory to create property objects based on tag.
+    @type builtins: {tag:fn,}
+    """
+
+    tags =\
+    {
+        'import' : lambda x,y=None: Import(x,y), 
+        'complexType' : lambda x,y=None: Complex(x,y), 
+        'simpleType' : lambda x,y=None: Simple(x,y), 
+        'element' : lambda x,y=None: Element(x,y),
+        'attribute' : lambda x,y=None: Attribute(x,y),
+        'sequence' : lambda x,y=None: Sequence(x,y),
+        'complexContent' : lambda x,y=None: ComplexContent(x,y),
+        'enumeration' : lambda x,y=None: Enumeration(x,y),
+        'extension' : lambda x,y=None: Extension(x,y),
+        'any' : lambda x,y=None: Any(x,y),
+    }
+
+    builtins =\
+    {
+        'anyType' : lambda x,y=None: Any(x,y),
+    }
+    
+    def __init__(self, schema):
+        """
+        @param schema: A schema object.
+        @type schema: L{Schema} 
+        """
+        self.schema = schema
+    
+    def create(self, root=None, builtin=None):
+        """
+        Create an xsd property object
+        @param root: A root node.  When specified, a property is created.
+        @type root: L{Element}
+        @param builtin: The name of an xsd builtin type.  When specified, a 
+            property is created.
+        @type builtin: basestring
+        @return: A I{basic} property when I{root} is specified; An
+            XSD builtin when I{builtin} name is specified.
+        @rtype: L{SchemaProperty}
+        """
+        if root is not None:
+            return self.__create(root)
+        elif builtin is not None:
+            return self.__builtin(builtin)
+
+    def __create(self, root):
+        if root.name in PropertyFactory.tags:
+            fn = PropertyFactory.tags[root.name]
+            return fn(self.schema, root)
+        else:
+            raise Exception('tag (%s) not-found' % root.name)
+        
+    def __builtin(self, name):
+        if name in PropertyFactory.builtins:
+            fn = PropertyFactory.builtins[name]
+            return fn(self.schema, name)
+        else:
+            return XBuiltin(self.schema, name)
 
 
 class SchemaProperty:
-    
     """
     A schema property is an extension to property object with
     with schema awareness.
@@ -411,7 +547,13 @@ class SchemaProperty:
     @type children: [L{SchemaProperty},...]
     @ivar attributes: A list of child xsd I{(attribute)} nodes
     @type attributes: [L{SchemaProperty},...]
+    @ivar derived: Derived type flag.
+    @type derived: boolean
+    @ivar resolve_result: The cached result of L{resolve()}
+    @type resolve_result: L{SchemaProperty}
     """
+    
+    init_stages = range(0,4)
 
     def __init__(self, schema, root):
         """
@@ -422,13 +564,30 @@ class SchemaProperty:
         """
         self.schema = schema
         self.root = root
-        self.state = Factory.object('state')
-        self.state.depsolved = False
-        self.state.promoted = False
+        self.id = objid(self)
+        self.stage = -1
         self.form_qualified = schema.form_qualified
         self.nillable = False
         self.children = []
         self.attributes = []
+        self.derived = False
+        self.resolve_cache = {}
+        
+    def init(self, stage):
+        """
+        Perform I{stage} initialization.
+        @param stage: The init stage to complete.
+        """
+        for n in range(0, (stage+1)):  
+            if self.stage < n:
+                m = '__init%s__' % n
+                self.stage = n
+                log.debug('%s, init (%d)', self.id, n)
+                if not hasattr(self, m): continue
+                method = getattr(self, m)
+                method()
+                for c in self.children:
+                    c.init(n)
         
     def match(self, name, ns=None, classes=()):
         """
@@ -470,6 +629,27 @@ class SchemaProperty:
         """
         return None
     
+    def get_qname(self):
+        """
+        Get a fully qualified name.
+        @return: A qualified name as I{prefix}:I{name}.
+        @rtype: basestring
+        """
+        prefix = self.namespace()[0]
+        name = self.get_name()
+        if name is not None:
+            return ':'.join((prefix, name))
+        else:
+            return None
+    
+    def typed(self):
+        """
+        Get whether this type references another type.
+        @return: True if @type="" is specified
+        @rtype: boolean
+        """
+        return ( self.ref() is not None )
+    
     def ref(self):
         """
         Get the referenced (xsi) type as defined by the schema.
@@ -478,29 +658,12 @@ class SchemaProperty:
         @rtype: basestring
         """
         return None
-    
+        
     def qref(self):
         """
         Get the B{qualified} referenced (xsi) type as defined by the schema.
         This is usually the value of the I{type} attribute that has been
-        qualified by L{qualified_reference()}
-        @return: The object's (qualified) type reference
-        @rtype: I{qualified reference}
-        @see: L{qualified_reference()}
-        """
-        ref = self.ref()
-        if ref is not None:
-            return qualified_reference(ref, self.root, self.schema.tns)
-        else:
-            return (None, defns)
-        
-    def asref(self):
-        """
-        Get the B{qualified} referenced (xsi) type as defined by the schema.
-        This is usually the value of the I{type} attribute that has been
-        qualified by L{qualified_reference()}.  The diffrerence between this
-        method and L{qref()} is the first element in the returned tuple has a
-        namespace prefix.
+        qualified by L{qualified_reference()}.
         @return: The object's (qualified) type reference
         @rtype: I{qualified reference}
         @see: L{qualified_reference()}
@@ -575,58 +738,34 @@ class SchemaProperty:
         """
         return False
     
-    def resolve(self, history=None):
+    def resolve(self, depth=1024):
         """
         Resolve and return the nodes true type when another
         named type is referenced.
-        @param history: The history of matched items.
-        @type history: [L{SchemaProperty},...]
+        @param depth: The resolution depth.
+        @type depth: int
         @return: The resolved (true) type.
         @rtype: L{SchemaProperty}
         """
-        if history is None:
-            history = [self]
+        cached = self.resolve_cache.get(depth, None)
+        if cached is not None:
+            return cached
+        history = [self]
         result = self
-        if self.custom():
-            ref = qualified_reference(self.ref(), self.root, self.namespace())
-            resolved = self.schema.find(ref, history)
-            if resolved is not None:
+        for n in range(0, depth):
+            resolved = self.__resolve(result, history)
+            if resolved != result:
                 result = resolved
+            else:
+                break
+        if result is not None:
+            self.resolve_cache[depth] = result
         return result
-    
-    def custom(self):
-        """
-        Get whether this object's schema type is a I{custom} type.
-        Custom types are those types that are not I{built-in}.
-        The result is based on the value of get_type() and not
-        on the object's class.
-        @return: True if custom, else False.
-        @rtype: boolean
-        """
-        ref = self.ref()
-        if ref is not None:
-            return self.schema.custom(ref)
-        else:
-            return True
-    
-    def builtin(self):
-        """
-        Get whether this object's schema type is a I{built-in} type.
-        The result is based on the value of get_type() and not
-        on the object's class.
-        @return: True if built-in, else False.
-        @rtype: boolean
-        """
-        ref = self.ref()
-        if ref is None:
-            return self.schema.builtin(ref)
-        else:
-            return False
         
-    def derived(self):
+    def any(self):
         """
-        Get whether this type is derived.
-        @return: True if derived, else False
+        Get whether this is an xs:any
+        @return: True if any, else False
         @rtype: boolean
         """
         return False
@@ -648,7 +787,7 @@ class SchemaProperty:
             n, ns = ref
         else:
             n, ns = qualified_reference(ref, self.root, self.namespace())
-        if self.match(n, ns, classes):
+        if self.match(n, ns, classes=classes):
             return self
         qref = (n, ns)
         for c in self.children:
@@ -666,12 +805,12 @@ class SchemaProperty:
         in either the I{children} collection of the I{attributes} collection.
         @param paths: A I{vararg} list of paths.
         @type paths: basestring
-        @see: L{Schema.factory}
+        @see: L{PropertyFactory}
         """
+        factory = PropertyFactory(self.schema)
         for path in paths:
             for root in self.root.childrenAtPath(path):
-                fn = Schema.factory[root.name]
-                child = fn(self.schema, root)
+                child = factory.create(root)
                 if child.isattr():
                     self.attributes.append(child)
                 else:
@@ -699,7 +838,7 @@ class SchemaProperty:
         """
         children = list(self.children)
         for c in children:
-            c.promote()
+            c.init(self.stage)
             self.attributes += c.attributes
             self.replace_child(c, c.children)
         
@@ -711,54 +850,23 @@ class SchemaProperty:
         @return: A string.
         @rtype: str
         """
-        tag = self.__class__.__name__
         tab = '%*s'%(indent*3, '')
         result  = []
-        result.append('%s<%s ' % (tab, tag))
-        result.append('name="%s"' % self.get_name())
-        try:
-            ref = self.asref()
-        except: 
-            ref = (None,(None,None))
-        result.append(', type="%s (%s)"' % (ref[0], ref[1][1]))
+        result.append('%s<%s' % (tab, self.id))
+        result.append(' {%s}' % self.stage)
+        result.append(' name="%s"' % self.get_name())
+        ref = self.ref()
+        if ref is not None:
+            result.append(' type="%s"' % ref)
         if len(self):
             for c in ( self.attributes + self.children ):
                 result.append('\n')
                 result.append(c.str(indent+1))
             result.append('\n%s' % tab)
-            result.append('</%s>' % tag)
+            result.append('</%s>' % self.__class__.__name__)
         else:
             result.append(' />')
         return ''.join(result)
-    
-    def depsolve(self):
-        """
-        Perform dependancy solving.
-        Dependancies are resolved to their I{true} types during
-        schema loading.
-        @note: Propagated to children.
-        @see: L{__depsolve__()}
-        """
-        if not self.state.depsolved:
-            self.__depsolve__()
-            self.state.depsolved = True
-        for c in self.children:
-            c.depsolve()
-        return self
-
-    def promote(self):
-        """
-        Promote grand-children as need for proper denormalization
-        of the object model.
-        @note: Propagated to children.
-        @see: L{__promote__()}
-        """
-        if not self.state.promoted:
-            self.__promote__()
-            self.state.promoted = True
-        for c in self.children:
-            c.promote()
-        return self
     
     def isattr(self):
         """
@@ -768,26 +876,45 @@ class SchemaProperty:
         """
         return False
     
-    def __depsolve__(self):
+    def __resolve(self, t, history):
+        """ resolve the specified type """
+        result = t
+        if t.typed():
+            ref = qualified_reference(t.ref(), t.root, t.namespace())
+            query = Query(ref)
+            query.history = history
+            log.debug('%s, resolving: %s\n using:%s', self.id, ref, query)
+            resolved = t.schema.find(query)
+            if resolved is None:
+                raise TypeNotFound(ref)
+            else:
+                result = resolved
+        return result
+            
+    def __init0__(self):
+        """
+        Load
+        @precondition: The model must be initialized.
+        @note: subclasses override here!
+        """
+        pass   
+    
+    def __init1__(self):
         """
         Perform dependancy solving.
         Dependancies are resolved to their I{true} types during
-        schema loading.  Should only be invoked by L{depsolve()}
+        schema loading.
         @precondition: The model must be initialized.
+        @precondition: I{__init0__()} have been invoked.
         @note: subclasses override here!
-        @see: L{depsolve()}
         """
         pass
     
-    def __promote__(self):
+    def __init2__(self):
         """
-        Perform dependancy solving.
-        Dependancies are resolved to their I{true} types during
-        schema loading.  Should only be invoked by L{promote()}
+        Promote children.
         @precondition: The model must be initialized.
-        @precondition: L{__depsolve__()} have been invoked.
-        @note: subclasses override here!
-        @see: L{promote()}
+        @precondition: I{__init1__()} have been invoked.
         """
         pass
         
@@ -799,8 +926,7 @@ class SchemaProperty:
     
     def __repr__(self):
         myrep = \
-            '<%s name="%s"/>' % \
-                (self.__class__.__name__, self.get_name())
+            '<%s {%d} name="%s"/>' % (self.id, self.stage, self.get_name())
         return myrep.encode('utf-8')
     
     def __len__(self):
@@ -828,10 +954,10 @@ class Polymorphic(SchemaProperty):
         SchemaProperty.__init__(self, schema, root)
         self.referenced = None
         
-    def __depsolve__(self):
+    def __init1__(self):
         """
         Resolve based on @ref (reference) found
-        @see: L{SchemaProperty.__depsolve__()}
+        @see: L{SchemaProperty.__init1__()}
         """
         ref = self.root.get('ref')
         if ref is not None:
@@ -865,7 +991,8 @@ class Complex(SchemaProperty):
     valid_children =\
         ('attribute',
           'sequence', 
-          'complexContent')
+          'complexContent',
+          'any')
     
     def __init__(self, schema, root):
         """
@@ -875,29 +1002,26 @@ class Complex(SchemaProperty):
         @type root: L{sax.Element}
         """
         SchemaProperty.__init__(self, schema, root)
-        self.__derived = self.__get_derived()
         self.add_children(*Complex.valid_children)
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
         return self.root.get('name')
     
-    def derived(self):
-        """
-        Get whether this type is derived.
-        @return: True if derived, else False
-        @rtype: boolean
-        """
-        return self.__derived
+    def __init0__(self):
+        """ update derived flag """
+        for c in self.children:
+            if c.__class__ in (Extension, ComplexContent):
+                self.derived = True
+                break
         
-    def __promote__(self):
+    def __init2__(self):
         """ promote grand-children """
         self.promote_grandchildren()
-        
-    def __get_derived(self):
-        """ get whether this is a derived type """
-        p = 'complexContent/extension'
-        return ( self.root.childAtPath(p) is not None )
+    
+    def __lt__(self, other):
+        """ <element/> first """
+        return ( not isinstance(other, Element) )
 
 
 class Simple(SchemaProperty):
@@ -905,6 +1029,10 @@ class Simple(SchemaProperty):
     Represents an (xsd) schema <xs:simpleType/> node
     """
     
+    valid_children =\
+        ('restriction/enumeration',
+          'any',)
+    
     def __init__(self, schema, root):
         """
         @param schema: The containing schema.
@@ -913,7 +1041,7 @@ class Simple(SchemaProperty):
         @type root: L{sax.Element}
         """
         SchemaProperty.__init__(self, schema, root)
-        self.add_children('restriction/enumeration')
+        self.add_children(*Simple.valid_children)
 
     def get_name(self):
         """ gets the <xs:simpleType name=""/> attribute value """
@@ -929,6 +1057,10 @@ class Sequence(SchemaProperty):
     Represents an (xsd) schema <xs:sequence/> node.
     """
     
+    valid_children =\
+        ('element',
+          'any',)
+    
     def __init__(self, schema, root):
         """
         @param schema: The containing schema.
@@ -937,7 +1069,7 @@ class Sequence(SchemaProperty):
         @type root: L{sax.Element}
         """
         SchemaProperty.__init__(self, schema, root)
-        self.add_children('element')
+        self.add_children(*Sequence.valid_children)
 
 
 class ComplexContent(SchemaProperty):
@@ -955,7 +1087,7 @@ class ComplexContent(SchemaProperty):
         SchemaProperty.__init__(self, schema, root)
         self.add_children('extension')
 
-    def __promote__(self):
+    def __init2__(self):
         """ promote grand-children """
         self.promote_grandchildren()
 
@@ -986,7 +1118,10 @@ class Element(Polymorphic):
     @type valid_children: (I{str},...)
     """
     
-    valid_children = ('attribute', 'complexType',)
+    valid_children = \
+        ('attribute', 
+        'complexType',
+        'any',)
     
     def __init__(self, schema, root):
         """
@@ -1034,19 +1169,20 @@ class Element(Polymorphic):
         """ <simpleType/> first """
         return ( not isinstance(other, Simple) )
     
-    def __promote__(self):
+    def __init2__(self):
         """
         if referenced (@ref) then promote the referenced
         node; then replace my children with those of the
         referenced node; otherwise, promote my grand-children
-        @see: L{SchemaProperty.__promote__()}
+        @see: L{SchemaProperty.__init2__()}
         """
         if self.referenced is not None:
-            self.referenced.promote()
+            self.referenced.init(self.stage)
             self.root = self.referenced.root
             self.children = self.referenced.children
         else:
             self.promote_grandchildren()
+        self.derived = self.resolve().derived
 
 
 class Extension(Complex):
@@ -1064,20 +1200,22 @@ class Extension(Complex):
         Complex.__init__(self, schema, root)
         self.super = None
         
-    def __depsolve__(self):
+    def __init1__(self):
         """ lookup superclass  """
-        Complex.__depsolve__(self)
+        Complex.__init1__(self)
         base = self.root.get('base')
-        self.super = self.schema.find(base)
+        query = Query(base)
+        self.super = self.schema.find(query)
         if self.super is None:
             raise TypeNotFound(base)
         
-    def __promote__(self):
+    def __init2__(self):
         """ add base type's children as my own """
-        Complex.__promote__(self)
+        Complex.__init2__(self)
         index = 0
-        self.super.promote()
-        for c in self.super.children:
+        self.super.init(self.stage)
+        super = self.super.resolve()
+        for c in super.children:
             self.children.insert(index, c)
             index += 1
 
@@ -1095,61 +1233,132 @@ class Import(SchemaProperty):
         @type root: L{sax.Element}
         """
         SchemaProperty.__init__(self, schema, root)
-        self.imported = None
-        ns = (None, root.get('namespace'))
-        location = root.get('schemaLocation')
-        log.debug('import (%s) at: (%s)', ns[1], location)
-        if self.skip(ns):
-            log.debug('import (%s) skipped', ns[1])
-            return
-        self.__import(ns, location)
-        self.__add_children()
+        self.imp = Factory.object('import')
+        self.imp.schema = None
+        self.imp.ns = (None, root.get('namespace'))
+        self.imp.location = root.get('schemaLocation')
+        self.imp.external = False
+    
+    def find(self, query):
+        """ match by name, ns, classes and exclude history """
+        if self.imp.schema is None:
+            return None
+        marker = self.marker(query)
+        if marker in query.history:
+            return None
+        query.history.append(marker)
+        result = None
+        log.debug('%s, finding (%s) in:\n%s',
+            self.id, 
+            query.name,
+            repr(self.imp.schema))
+        result = self.imp.schema.find(query)
+        if result is not None:
+            log.debug('%s, found (%s) as %s',
+                self.id, 
+                query.qname, 
+                repr(result))
+        return result
+    
+    def marker(self, query):
+        """ get unique search marker """
+        name, ns = query.qname
+        marker = tostr(name) \
+            + tostr(ns[1]) \
+            + objid(self.imp.schema)
+        return marker
 
     def namespace(self):
         """ get this properties namespace """
-        return self.imported.tns
+        return self.imp.schema.tns
     
-    def skip(self, ns):
+    def skip(self):
         """ skip this namespace """
         return \
-            ns[1] == self.schema.tns or \
-            ns[1] in self.schema.impfilter
-
-    def __add_children(self):
-        """ add imported children """
-        if self.imported is not None:
-            for c in self.imported.children:
-                self.children.append(c)
-
-    def __import(self, ns, location):
-        """ import the xsd content at the specified url """
-        try:
-            if location is None:
-                schema = self.schema.imported(ns)
-                if schema is not None:
-                    imp_root = schema.root.clone()
-                    location = ns[1]
-                    self.__process_import(imp_root, ns, location)
-                    return
-                else:
-                    location = ns[1]
-            if '://' not in location:
-                location = urljoin(self.schema.baseurl, location)
-            imp_root = Parser().parse(url=location).root()
-            self.__process_import(imp_root, ns, location)
-        except:
-            self.schema.impfilter.add(ns[1])
-            log.debug(
-                'imported schema (%s) at (%s), not-found\n', 
-                ns[1], location)
+            self.imp.ns[1] == self.schema.tns or \
+            self.imp.ns[1] in self.schema.impfilter
             
-    def __process_import(self, imp_root, ns, location):
+    def str(self, indent=0):
+        """
+        Get a string representation of this property.
+        @param indent: The indent.
+        @type indent: int
+        @return: A string.
+        @rtype: str
+        """
+        tab = '%*s'%(indent*3, '')
+        result  = []
+        result.append('%s<%s' % (tab, self.id))
+        result.append(' {%d}' % self.stage)
+        result.append(' location="%s"' % self.imp.location)
+        if self.imp.schema is None:
+            result.append(' schema="n/r"')
+        else:
+            result.append(' schema="%s"' % self.imp.schema.id)
+        result.append('/>')
+        return ''.join(result)
+            
+    def __init0__(self):
+        log.debug('%s, import (%s) at: (%s)', self.id, self.imp.ns[1], self.imp.location)
+        if self.skip():
+            log.debug('%s, import (%s) skipped', self.id, self.imp.ns[1])
+            return
+        schema = self.schema.schemabyns(self.imp.ns)
+        if schema is not None:
+            self.imp.schema = schema
+            self.__import_succeeded()
+        else:
+            self.imp.external = True
+            self.__import()
+
+    def __import(self):
+        """ import the xsd content at the specified url """
+        if self.imp.location is None:
+            url = self.imp.ns[1]
+        else:
+            url = self.imp.location
+        try:
+            if '://' not in url:
+                url = urljoin(self.schema.baseurl, url)
+            p = Parser()
+            root = p.parse(url=url).root()
+            self.imp.schema = Schema(root, url, impfilter=self.schema.impfilter)
+            self.__import_succeeded()
+        except Exception:
+            self.__import_failed(url)
+            
+    def __import_failed(self, url):
+        """ import failed """
+        self.schema.impfilter.add(self.imp.ns[1])
+        msg = \
+            'imported schema (%s) at (%s), not-found' \
+            (self.imp.ns[1], url)
+        log.debug('%s, %s', self.id, msg, exc_info=True)
+        if self.imp.location is not None:
+            raise Exception(msg)
+            
+    def __import_succeeded(self):
         """ process the imported schema """
-        schema = \
-            Schema(imp_root, location, impfilter=self.schema.impfilter)
-        self.imported = schema
-        if ns[0] is not None:
+        self.imp.schema.init(0)
+        if self.imp.ns[0] is not None:
+            ns = self.imp.ns
             self.schema.root.addPrefix(ns[0], ns[1])
+            
+    def __repr__(self):
+        result  = []
+        result.append('<%s' % self.id)
+        result.append(' {%s}' % self.stage)
+        if self.imp.schema is None:
+            result.append(' schema="n/r"')
+        else:
+            result.append(' schema="%s"' % self.imp.schema.id)
+            result.append(' tns="%s"' % self.imp.schema.tns[1])
+        result.append('/>')
+        return ''.join(result)
+            
+    def __lt__(self, other):
+        """ everything else first """
+        return False
 
 
 class XBuiltin(SchemaProperty):
@@ -1162,21 +1371,42 @@ class XBuiltin(SchemaProperty):
         @param schema: The containing schema.
         @type schema: L{Schema}
         """
-        SchemaProperty.__init__(self, schema, schema.root)
-        if isqref(name):
-            ns = name[1]
-            self.name = ':'.join((ns[0], name[0]))
-        else:
-            self.name = name
+        root = Node('xsd-builtin')
+        root.set('name', name)
+        SchemaProperty.__init__(self, schema, root)
         
-    def builtin(self):
-        return False
+    def get_name(self):
+        return self.root.get('name')
+            
+    def namespace(self):
+        return xsdns
     
-    def custom(self):
-        return False
+    def resolve(self, depth=1024):
+        return self
+    
+
+class Any(XBuiltin):
+    """
+    Represents an (xsd) <any/> node
+    """
+
+    def __init__(self, schema, name):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        """
+        XBuiltin.__init__(self, schema, name)
         
-    def ref(self):
-        return self.name
+    def match(self, name, ns=None, classes=()):
+        """ match anything """
+        return True
+    
+    def get_child(self, name, ns=None):
+        """ get any child """
+        return Any(self.schema, name)
+    
+    def any(self):
+        return True
     
 
 class Attribute(Polymorphic):
@@ -1214,14 +1444,80 @@ class Attribute(Polymorphic):
         use = self.root.get('use', default='')
         return ( use.lower() == 'required' )
 
-    def __promote__(self):
+    def __init2__(self):
         """
         Replace the root with the referenced root 
         while preserving @use.
-        @see: L{SchemaProperty.__promote__()}
+        @see: L{SchemaProperty.__init2__()}
         """
         if self.referenced is not None:
             myuse = self.root.get('use')
             self.root = self.referenced.root
             if myuse is not None:
                 self.root.set('use', myuse)
+
+              
+class Query(Object):
+    
+    clsorder = \
+        ((XBuiltin, Simple, Element),
+         (Complex,))
+    
+    def __init__(self, name):
+        Object.__init__(self)
+        self.id = objid(self)
+        self.name = name
+        if isqref(name):
+            self.name = name[0]
+            self.qname = name
+        else:
+            self.name = name  
+            self.qname = None
+        self.history = []
+        self.resolved = False
+        self.cidx = 0
+        self.classes = self.clsorder[self.cidx]
+        self.clsfilter = ()
+        self.owner = None
+        
+    def increment(self, owner):
+        max = len(self.clsorder)-1
+        if self.owner == owner and \
+            self.cidx < max:
+                self.cidx += 1
+                self.classes = self.clsorder[self.cidx]
+                log.debug('%s, targeting %s', self.id, self.classes)
+                self.history = []
+                return True
+        else:
+            return False
+        
+    def filter(self, result):
+        if result is None:
+            return True
+        cls = result.__class__
+        reject = \
+            ( cls  not in self.classes or \
+              ( len(self.clsfilter) and cls not in self.clsfilter ) or \
+              result in self.history )
+        if reject:
+            log.debug('result %s, rejected by\n%s', repr(result), tostr(self))
+        return reject
+    
+    def qualify(self, resolvers, tns):
+        """ convert the name a qualified reference """
+        if self.qname is None:
+            if isinstance(self.name, basestring):
+                self.qname = qualified_reference(self.name, resolvers, tns)
+            elif isqref(self.name):
+                self.qname = name
+                self.name = self.qname[0]
+            else:
+                raise Exception('name must be (str|qref)')
+        
+    def key(self):
+        return \
+            str(self.resolved) \
+            + tostr(self.qname) \
+            + tostr(self.clsfilter)
+

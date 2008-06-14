@@ -51,11 +51,11 @@ class WSDL:
            
     def __tns(self):
         """get the target namespace defined in the wsdl"""
-        uri = self.root.get('targetNamespace')
-        prefix = self.root.findPrefix(uri)
-        ns = (prefix, uri)
+        tns = self.root.get('targetNamespace')
+        prefix = self.root.findPrefix(tns)
+        ns = (prefix, tns)
         if ns[0] is None:
-            self.warn('tns (%s), not mapped to a prefix', uri)
+            log.warn('tns (%s), not mapped to a prefix', tns)
         return ns
     
     def __get_schema(self):
@@ -85,7 +85,7 @@ class WSDL:
         elif use == 'encoded':
             binding.use_encoded()
         else:
-            raise Exception('use(%s), not-supported' % use)
+            raise Exception('%s: use(%s), not-supported' % (method, use))
         return binding 
         
     def get_binding_style(self, method):
@@ -146,10 +146,22 @@ class WSDL:
                 log.debug('message by name (%s) found:\n%s', name, m)
                 return m
         return None
-            
-    def mapped_prefixes(self):
-        """ get a list of mapped prefixes """
-        return self.root.flattenedPrefixes()
+    
+    def get_parts(self, method, input=True):
+        """ get message parts by name and input/output """
+        result = []
+        operation = self.get_operation(method)
+        if operation is None:
+            raise MethodNotFound(method)
+        if input:
+            iotag = 'input'
+        else:
+            iotag = 'output'
+        mp = operation.getChild(iotag)
+        if mp is not None:
+            msg = self.get_message(mp.get('message'))
+            result = msg.getChildren('part')
+        return result
     
     def __str__(self):
         return unicode(self).encode('utf-8')

@@ -16,7 +16,7 @@
 from suds import *
 from suds.sudsobject import Factory, Object, Property, items
 from suds.resolver import GraphResolver
-from suds.sax import Element, Attribute, splitPrefix, xsins
+from suds.sax import Document, Element, Attribute, splitPrefix, xsins
 
 log = logger(__name__)
 
@@ -75,23 +75,25 @@ class Basic:
         @type type: L{schema.SchemaProperty}
         """
         log.debug('processing tag=(%s) value:\n%s', tag, value)
-        self.reset(type)
-        root = self.node(tag, type)
+        self.reset()
+        document = Document()
+        content = Content(tag, value, type)
         if value is None:
-            self.setnil(root, type)
-            return root
+            self.append(document, content)
+            return document.root()
         if isinstance(value, dict):
-            value = Facotry.object(dict=value)
-        if isinstance(value, Property):
-            cont = Content(tag, value)
-            self.append(root, cont)
+            value = Facotry.object(dict=value)  
+        elif isinstance(value, Property):
+            root = self.node(tag, type)
+            document.append(root)
+            self.append(root, content)
         elif isinstance(value, Object):
-            for item in items(value):
-                cont = Content(item[0], item[1])
-                self.append(root, cont)
+            self.append(document, content)
         else:
+            root = self.node(tag, type)
+            document.append(root)
             root.setText(tostr(value))
-        return root
+        return document.root()
     
     def append(self, parent, content):
         """
@@ -150,16 +152,10 @@ class Basic:
         child.setText(unicode(content.value))
         parent.append(child)
 
-    def reset(self, type):
+    def reset(self):
         """
         Reset the marshaller.
-        Since this is a I{basic} resolver, nil is B{not} supported.
-        @param type: A I{parent} schema type.
-        @type type: L{schema.SchemaProperty}
-        @return: A new node.
-        @rtype: L{Element}
         """
-        log.debug('reset type=:\n%s', type)
         pass
 
     def node(self, tag, type):
@@ -230,16 +226,11 @@ class Literal(Basic):
         Basic.__init__(self, schema)
         self.resolver = GraphResolver(self.schema)
     
-    def reset(self, type):
+    def reset(self):
         """
         Reset the resolver.
-        @param type: The I{parent} schema type used to prime
-            the resolver.
-        @type type: L{schema.SchemaProperty}
         """
-        log.debug('reset type=:\n%s', type)
-        resolved = type.resolve()
-        self.resolver.reset((resolved,))
+        self.resolver.reset()
             
     def start(self, content):
         """
@@ -259,7 +250,7 @@ class Literal(Basic):
             content.type = \
                 self.resolver.find(name, content.value)
         else:
-            self.resolver.push(content.type.resolve())
+            self.resolver.push(content.type)
         if content.type is None:
             raise TypeNotFound(content.tag)
         
@@ -288,7 +279,7 @@ class Literal(Basic):
         @type content: L{Object}
         """
         log.debug('ending content:\n%s', content)
-        current = self.resolver.top()
+        current = self.resolver.top()[0]
         if current == content.type:
             self.resolver.pop()
         else:
@@ -337,11 +328,12 @@ class Literal(Basic):
         @param type: The schema type use for the encoding.
         @type type: L{schema.SchemaProperty}
         """
-        if type.derived():
-            name = type.get_name()
-            node.set('xsi:type', name)
-            log.debug('encoding name=(%s) on:\n\t%s', name, tostr(node))
-            node.addPrefix(xsins[0], xsins[1])
+        if not type.any() and \
+            type.derived:
+                name = type.get_name()
+                node.set('xsi:type', name)
+                log.debug('encoding name=(%s) on:\n\t%s', name, tostr(node))
+                node.addPrefix(xsins[0], xsins[1])
     
     def __metatype(self, content):
         """
@@ -385,8 +377,9 @@ class Encoded(Literal):
         @param type: The schema type use for the encoding.
         @type type: L{schema.SchemaProperty}
         """
-        name, ns = type.asref()
-        node.set('xsi:type', name)
-        log.debug('encoding name=(%s)', name)
-        node.addPrefix(ns[0], ns[1])
-        node.addPrefix(xsins[0], xsins[1])
+        if not type.any():
+            name, ns = type.qref()
+            node.set('xsi:type', name)
+            log.debug('encoding name=(%s)', name)
+            node.addPrefix(ns[0], ns[1])
+            node.addPrefix(xsins[0], xsins[1])

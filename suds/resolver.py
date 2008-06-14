@@ -14,9 +14,9 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sax import splitPrefix
+from suds.sax import splitPrefix, xsins
 from suds.sudsobject import Object
-from suds.schema import *
+from suds.schema import Query
 
 log = logger(__name__)
 
@@ -60,12 +60,13 @@ class PathResolver(Resolver):
             should be returned.
         @type resolved: boolean
         @return: The found schema I{type}
-        @rtype: L{SchemaProperty}
+        @rtype: L{schema.SchemaProperty}
         """
         result = None
         parts = path.split('.')
         log.debug('searching schema for (%s)', parts[0])
-        result = self.schema.find(parts[0], resolved=False)
+        query = Query(parts[0])
+        result = self.schema.find(query)
         if result is None:
             log.error('(%s) not-found', parts[0])
             return result
@@ -108,35 +109,38 @@ class TreeResolver(Resolver):
         @type schema: L{schema.Schema}
         """
         Resolver.__init__(self, schema)
-        self.stack = []
+        self.stack = Stack()
         
-    def reset(self, items=()):
+    def reset(self, primer=()):
         """
         Reset the resolver's state.
-        @param items: Items used to initialize the stack.
-        @type items: [L{SchemaProperty},...]
+        @param primer: Items used to initialize the stack.
+        @type primer: [L{schema.SchemaProperty},...]
         """
-        self.stack = []
-        for item in items:
+        self.stack = Stack()
+        for item in primer:
             self.push(item)
             
     def push(self, item):
         """
-        Push a type onto the stack
+        Push a type I{item} onto the stack where I{item} is a tuple
+        as (I{type},I{resolved}).
         @param item: An item to push.
-        @type item: L{SchemaProperty}
-        @return: self
-        @rtype: L{TreeResolver}
+        @type item: L{schema.SchemaProperty}
+        @return: The pushed item.
+        @rtype: (I{type},I{resolved})
         """
+        item = (item, item.resolve())
         self.stack.append(item)
-        log.debug('push: (%s) %s', repr(item), repr(self.stack))
-        return self
+        log.debug('push: (%s)\n%s', repr(item), repr(self.stack))
+        return item
     
     def top(self):
         """
-        Get the item at the top of the stack.
-        @return: The I{top} item, else None.
-        @rtype: any
+        Get the I{item} at the top of the stack where I{item} is a tuple
+        as (I{type},I{resolved}).
+        @return: The top I{item}, else None.
+        @rtype: (I{type},I{resolved})
         """
         if len(self.stack):
             return self.stack[-1]
@@ -144,9 +148,15 @@ class TreeResolver(Resolver):
             return None
         
     def pop(self):
+        """
+        Pop the I{item} at the top of the stack where I{item} is a tuple
+        as (I{type},I{resolved}).
+        @return: The popped I{item}, else None.
+        @rtype: (I{type},I{resolved})
+        """
         if len(self.stack):      
             popped = self.stack.pop()
-            log.debug('pop: (%s) %s', repr(popped), repr(self.stack))
+            log.debug('pop: (%s)\n%s', repr(popped), repr(self.stack))
             return popped
         else:
             log.debug('stack empty, not-popped')
@@ -156,7 +166,8 @@ class TreeResolver(Resolver):
         """ find the type for name and optional parent """
         if parent is None:
             log.debug('searching schema for (%s)', name)
-            result = self.schema.find(name, resolved=False)
+            query = Query(name)
+            result = self.schema.find(query)
         else:
             log.debug('searching parent (%s) for (%s)', repr(parent), name)
             if name.startswith('@'):
@@ -197,22 +208,21 @@ class NodeResolver(TreeResolver):
             pushed onto the stack.
         @type push: boolean
         @return: The found schema I{type}
-        @rtype: L{SchemaProperty}
+        @rtype: L{schema.SchemaProperty}
         """
         name = node.get('type', xsins)
         if name is None:
             name = node.name
-            parent = self.top()
+            parent = self.top()[1]
         else:
             parent = None
         result = self._TreeResolver__find(name, parent)
         if result is None:
             return result
-        resolved = result.resolve()
         if push:
-            self.push(resolved)
+            pushed = self.push(result)
         if resolved:
-            result = result.resolve()
+            result = pushed[1]
         return result
 
 
@@ -244,23 +254,26 @@ class GraphResolver(TreeResolver):
             pushed onto the stack.
         @type push: boolean
         @return: The found schema I{type}
-        @rtype: L{SchemaProperty}
+        @rtype: L{schema.SchemaProperty}
         """
         if isinstance(object, Object):
             result = self.__embedded(object)
             if result is not None:
-                self.push(result.resolve())
-                return result
+                pushed = self.push(result)
+                return pushed[1]
             name = object.__class__.__name__
-        parent = self.top()
+        top = self.top()
+        if top is None:
+            parent = None
+        else:
+            parent = top[1]
         result = self._TreeResolver__find(name, parent)
         if result is None:
             return result
-        resolved = result.resolve()
         if push:
-            self.push(resolved)
+            pushed = self.push(result)
         if resolved:
-            result = result.resolve()
+            result = pushed[1]
         return result
     
     def __embedded(self, object):
@@ -269,3 +282,11 @@ class GraphResolver(TreeResolver):
             return md.__type__
         except:
             pass
+
+
+class Stack(list):
+    def __repr__(self):
+        result = []
+        for item in self:
+            result.append(repr(item))
+        return '\n'.join(result)
