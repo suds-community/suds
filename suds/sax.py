@@ -56,6 +56,7 @@ def splitPrefix(name):
 defns = (None, None)
 xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
 xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+xsall = (xsdns, xsins)
 
 
 class Attribute:
@@ -440,7 +441,7 @@ class Element:
                 self.attributes.append(child)
                 child.parent = self
                 continue
-            raise Exception('append %s not-valid', child.__class__.__name__)
+            raise Exception('append %s not-valid' % child.__class__.__name__)
         return self
     
     def removeChild(self, child):
@@ -565,40 +566,6 @@ class Element:
         for child in detached:
             child.parent = None
         return detached
-    
-    def flattenedTree(self, addSelf=True):
-        """
-        Get I{flattened} list of elements for this branch in the tree.
-        @param addSelf: A flag that indicates that the result 
-            contains B{this} element.
-        @type addSelf: boolean
-        @return: A I{flattened} list of all elements.
-        @rtype: [L{Element},...]
-        """
-        result = []
-        if addSelf:
-            result.append(self)
-        for c in self.children:
-            result.append(c, False)
-        return result
-    
-    def flattenedPrefixes(self):
-        """
-        Get a I{flattened} list of all namespace prefixes 
-        mappings for this branch in the tree.  This includes mapping in this
-        element and those mapped by child elements.  Mapping is: (I{prefix},I{URI})
-        @return: A list of B{all} prefix => URI mappings in this branch.
-        @rtype: [I{item},...]
-        """
-        result = []
-        for item in self.nsprefixes.items():
-            if item in result:
-                continue
-            result.append((item[0], item[1]))
-        for c in self.children:
-            cp = c.flattenedPrefixes()
-            result += [item for item in cp if item not in result]
-        return result
         
     def resolvePrefix(self, prefix, default=defns):
         """
@@ -906,11 +873,6 @@ class Document(Element):
             return self.children[0]
         else:
             return None
-        
-    def flattened_nsprefixes(self):
-        result = {}
-        
-        return result
         
     def __str__(self):
         return unicode(self).encode('utf-8')

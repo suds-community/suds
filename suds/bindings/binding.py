@@ -18,6 +18,7 @@ from suds.sax import Parser, Element, xsins
 from suds.sudsobject import Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
+from suds.schema import Query, qualified_reference
 
 log = logger(__name__)
 
@@ -64,7 +65,7 @@ class Binding:
         body = self.body(method)
         header = self.header(soapheaders)
         env = self.envelope(body, header)
-        ptypes = self.get_ptypes(method_name)
+        ptypes = self.param_defs(method_name)
         n = 0
         for arg in args:
             if n == len(ptypes): break
@@ -173,4 +174,73 @@ class Binding:
         prefix = self.wsdl.tns[0]
         method = Element('%s:%s' % (prefix, name))
         return method
-
+    
+    def part_refattr(self):
+        """
+        Get the part attribute that defines the part's I{type}.
+        @return: An attribute name.
+        @rtype: basestring 
+        """
+        pass
+    
+    def part_types(self, method, input=True):
+        """
+        Get a list of I{parameter definitions} defined for the specified method.
+        Each I{parameter definition} is a tuple: (I{name}, L{schema.SchemaProperty})
+        @param method: The I{name} of a method.
+        @type method: str
+        @param input: Defines input/output message.
+        @type input: boolean
+        @return:  A list of parameter definitions
+        @rtype: [I{definition},]
+        """
+        result = []
+        for p in self.wsdl.get_parts(method, input):
+            ref = p.get(self.part_refattr())
+            qref = qualified_reference(ref, p, self.wsdl.tns)
+            query = Query(qref)
+            pt = self.schema.find(query)
+            if pt is None:
+                raise TypeNotFound(method)
+            if input:
+                result.append((p.get('name'), pt))
+            else:
+                result.append(pt)
+        return result
+    
+    def param_defs(self, method):
+        """
+        Get parameter definitions.
+        @param method: A method name.
+        @type method: basestring
+        @return: A collection of parameter definitions
+        @rtype: [(str, L{schema.SchemaProperty}),..]
+        """
+        return self.part_types(method)
+    
+    def returns_collection(self, method):
+        """
+        Get whether the type defined for the method is a collection
+        @param method: The I{name} of a method.
+        @type method: str
+        @rtype: boolean
+        """
+        result = False
+        rt = self.returned_type(method)
+        if rt is not None:
+            result = rt.unbounded()
+        return result
+    
+    def returned_type(self, method):
+        """
+        Get the referenced type returned by the I{method}.
+        @param method: The name of a method.
+        @type method: str
+        @return: The name of the type return by the method.
+        @rtype: str
+        """
+        result = None
+        for rt in self.part_types(method, False):
+            result = rt
+            break
+        return result

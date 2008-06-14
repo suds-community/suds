@@ -14,8 +14,15 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 import logging
+import socket
 
-VERSION = "0.2.1"
+VERSION = "0.2.2"
+
+#
+# socket timeout - 10 seconds
+#
+
+socket.setdefaulttimeout(10)
 
 #
 # Exceptions
@@ -67,7 +74,7 @@ def logger(name=None):
     if name is None:
         return logging.getLogger()
     fmt =\
-        '%(asctime)s {%(process)d} (%(filename)s, %(lineno)d) [%(levelname)s] %(message)s'
+        '%(asctime)s [%(levelname)s] %(funcName)s() @%(filename)s:%(lineno)d\n%(message)s\n'
     logger = logging.getLogger(name)
     root = logging.getLogger()
     if not root.handlers:
@@ -94,11 +101,8 @@ def tostr(object, encoding=None):
         for item in object:
             if isinstance(item, basestring):
                 s.append(item)
-                continue
-            if hasattr(item, '__unicode__'):
-                s.append(unicode(item))
             else:
-                s.append(str(item))
+                s.append(tostr(item))
             s.append(', ')
         s.append(')')
         return ''.join(s)
@@ -107,33 +111,31 @@ def tostr(object, encoding=None):
         for item in object:
             if isinstance(item, basestring):
                 s.append(item)
-                continue
-            if hasattr(item, '__unicode__'):
-                s.append(unicode(item))
             else:
-                s.append(str(item))
+                s.append(tostr(item))
             s.append(', ')
         s.append(']')
         return ''.join(s)
     if isinstance(object, dict):
         s = ['{']
         for item in object.items():
-            if isinstance(item, basestring):
-                s.append(item)
-                continue
-            if hasattr(item[0], '__unicode__'):
-                s.append(unicode(item[0]))
+            if isinstance(item[0], basestring):
+                s.append(item[0])
             else:
-                s.append(str(item[0]))
+                s.append(tostr(item[0]))
             s.append(' = ')
-            if hasattr(item[1], '__unicode__'):
-                s.append(unicode(item[1]))
+            if isinstance(item[1], basestring):
+                s.append(item[1])
             else:
-                s.append(str(item[1]))
+                s.append(tostr(item[1]))
             s.append(', ')
         s.append('}')
         return ''.join(s)
-    if hasattr(object, '__unicode__'):
+    try:
         return unicode(object)
-    else:
+    except:
         return str(object)
+    
+def objid(obj):
+    return obj.__class__.__name__\
+        +':'+hex(id(obj))

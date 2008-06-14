@@ -61,29 +61,6 @@ class Test:
 
 
     def test_misc(self):
-
-        client = Client('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
-        print client
-        person = client.factory.create('person')
-        print person
-        first = client.factory.create('person.name.first')
-        print first
-        jeff = client.factory.create('person.jeff')
-        print jeff
-        authdog_id = client.factory.create('authdog.@id')
-        print authdog_id
-        try:
-            logger('suds.client').setLevel(logging.DEBUG)
-            print 'addPersion()'
-            h = client.factory.create('authdog')
-            h.set('hello doggy')
-            h._id = 100
-            result = client.service.addPerson(person, soapheaders=(h,))
-            print '\nreply(\n%s\n)\n' % result.encode('utf-8')
-        except Exception, e:
-            print e
-        logger('suds.client').setLevel(logging.ERROR)
-        return
         
         try:
             client = Client('http://efm.members.corpu.com/ws/projectdata.asmx?WSDL')
@@ -118,6 +95,29 @@ class Test:
             bean = client.service.getUserBean('abc', '123', 'mypassword', 'myusername')
         except WebFault, f:
             print f
+            
+        client = Client('file:///home/jortel/Desktop/misc/suds_files/WebServiceTestBean.wsdl.xml')
+        print client
+        person = client.factory.create('person')
+        print person
+        first = client.factory.create('person.name.first')
+        print first
+        jeff = client.factory.create('person.jeff')
+        print jeff
+        authdog_id = client.factory.create('authdog.@id')
+        print authdog_id
+        try:
+            logger('suds.client').setLevel(logging.DEBUG)
+            print 'addPersion()'
+            h = client.factory.create('authdog')
+            h.set('hello doggy')
+            h._id = 100
+            result = client.service.addPerson(person, soapheaders=(h,))
+            print '\nreply(\n%s\n)\n' % result.encode('utf-8')
+        except Exception, e:
+            print e
+        logger('suds.client').setLevel(logging.ERROR)
+        return
             
         return
         
@@ -315,7 +315,7 @@ class Test:
         #
         try:
             print 'testExceptions() faults=False'
-            client.service.__client__.faults=False
+            client = Client(get_url('test'), faults=False)
             result = client.service.testExceptions()
             print '\nreply( %s )\n' % tostr(result)
         except Exception, e:
@@ -388,10 +388,30 @@ class Test:
         newname.last = 'Sanders'
         
         #
+        # create a person object using the wsdl
+        #
+        another_person = service.get_instance('anotherPerson')
+        
+        #
+        # inspect empty person
+        #
+        print '{empty} another_person=\n%s' % another_person
+        
+        person.name = name
+        person.age = 43
+        person.phone.append(phoneA)
+        person.phone.append(phoneB)
+        
+        #
+        # inspect person
+        #
+        print 'another_person=\n%s' % another_person
+        
+        #
         # update the person's name (using the webservice) and print return person object
         #
         print 'updatePersion()'
-        result = service.updatePerson(person, newname)
+        result = service.updatePerson(another_person, newname)
         print '\nreply(\n%s\n)\n' % str(result)
         print 'updatePersion() newperson = None'
         result = service.updatePerson(person, None)
@@ -420,6 +440,17 @@ class Test:
             print '\nreply( %s )\n' % str(result)
         except Exception, e:
             print e
+            
+        #
+        # test list returned
+        #
+        print 'getList(str, 1)'
+        result = client.service.getList('hello', 1)
+        print '\nreply( %s )\n' % str(result)
+        
+        print 'getList(str, 3)'
+        result = client.service.getList('hello', 3)
+        print '\nreply( %s )\n' % str(result)
         
         #
         # test exceptions
@@ -431,8 +462,9 @@ class Test:
         except Exception, e:
             print e
 
-    def rpc_enctest(self):
-        
+
+
+    def rpc_enctest(self):        
 
         try:
             service = ServiceProxy('http://test.closingmarket.com/ClosingMarketService/cminterface.asmx?WSDL')
@@ -555,7 +587,7 @@ class Test:
         # get resource by category
         #
         print 'getResourcesByCategory()'
-        #logger('suds.resolver').setLevel(logging.DEBUG)
+        logger('suds.client').setLevel(logging.DEBUG)
         platforms = service.getResourcesByCategory(subject, resourceCategory.PLATFORM, 'COMMITTED', pc)
         print 'Reply:\n(\n%s\n)\n' % str(platforms)
         
@@ -654,6 +686,7 @@ class Test:
 
 if __name__ == '__main__':
     
+    #logger('suds.schema').setLevel(logging.DEBUG)
     #logger('suds.resolver').setLevel(logging.DEBUG)
     #logger('suds.serviceproxy').setLevel(logging.DEBUG)
     #logger('suds.client').setLevel(logging.DEBUG)
@@ -662,8 +695,8 @@ if __name__ == '__main__':
     test.test_misc()
     test.basic_test()
     test.rpc_test()
-    test.rpc_enctest()
-    test.auth_test()
-    test.resource_test()
-    test.perspectives_test()
-    test.contentsource_test()
+    #test.rpc_enctest()
+    #test.auth_test()
+    #test.resource_test()
+    #test.perspectives_test()
+    #test.contentsource_test()

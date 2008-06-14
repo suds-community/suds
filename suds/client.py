@@ -26,6 +26,7 @@ from suds.schema import Enumeration
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import WSDL
+from suds.sax import xsall
 
 log = logger(__name__)
 
@@ -54,8 +55,10 @@ class Client(object):
         @type proxy: dict
         """
         client = SoapClient(url, kwargs)
+        schema = client.schema
         self.service = Service(client)
-        self.factory = Factory(client.schema)
+        self.factory = Factory(schema)
+        self.sd = ServiceDefinition(client.wsdl)
         
     def items(self, sobject):
         """
@@ -90,10 +93,10 @@ class Client(object):
         return sobject.__metadata__
  
     def __str__(self):
-        return str(self.service)
+        return str(self.sd)
         
     def __unicode__(self):
-        return unicode(self.service)
+        return unicode(self.sd)
 
 
 class Service:
@@ -227,6 +230,7 @@ class SoapClient:
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
         self.cookiejar = CookieJar()
+        self.last_sent = None
         
     def send(self, method, args, kwargs):
         """
@@ -249,6 +253,7 @@ class SoapClient:
         msg = binding.get_message(method.name, args, soapheaders)
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
+            self.last_sent = msg
             request = Request(location, msg, headers)
             self.cookiejar.add_cookie_header(request) 
             self.set_proxies(location, request)
@@ -257,6 +262,7 @@ class SoapClient:
             reply = fp.read()
             result = self.succeeded(binding, method, reply)
         except HTTPError, e:
+            log.error(self.last_sent)
             result = self.failed(binding, method, e)
         return result
     
@@ -332,38 +338,124 @@ class SoapClient:
             raise Exception((status, reason))
         else:
             return (status, None)
+
+
+class ServiceDefinition:
+    
+    def __init__(self, wsdl):
+        self.wsdl = wsdl
+        self.name = wsdl.get_servicename()
+        self.methods = []
+        self.prefixes = []
+        self.types = []
+        self.__addmethods(wsdl)
+        self.__addtypes()
+        self.applyprefixes()
         
-    def get_methods(self):
-        """
-        Get a list of methods provided by this service
-        @return: A list of method descriptions.
-        @rtype: [str,]
-        """
-        list = []
-        for op in self.wsdl.get_operations():
-            method = op.get('name')
-            binding = self.wsdl.get_binding(method)
-            ptypes = binding.get_ptypes(method)
-            params = ['%s{%s}' % (t[0], t[1].asref()[0]) for t in ptypes]
-            m = '%s(%s)' % (method, ', '.join(params))
-            list.append(m)
-        return list
+    def get_method(self, name):
+        """ get a method by name """
+        for m in self.methods:
+            if m[0] == name:
+                return m
+        return None
+    
+    def applyprefixes(self):
+        """ add our prefixes to the wsdl """
+        wr = self.wsdl.root
+        for ns in self.prefixes:
+            wr.addPrefix(ns[0], ns[1])
+
+    def __addmethods(self, w):
+        """ create our list of methods """
+        for operation in w.get_operations():
+            m = operation.get('name')
+            binding = w.get_binding(m)
+            method = (m, binding.param_defs(m))
+            self.methods.append(method)
+        self.methods.sort()
+            
+    def __addtypes(self):
+        """ create our list of top level types """
+        namespaces = []
+        self.types = \
+            self.wsdl.schema.namedtypes()
+        for t in self.types:
+            ns = t.namespace()
+            if ns in namespaces:
+                continue
+            namespaces.append(ns)
+        i = 0
+        namespaces.sort()
+        for ns in namespaces:
+            p = self.__nextprefix()
+            ns = (p, ns[1])
+            self.prefixes.append(ns)
+        self.types.sort()
         
+    def __nextprefix(self):
+        """ get the next available prefix  """
+        prefixes = [ns[0] for ns in self.prefixes]
+        for n in range(0,1024):
+            p = 'ns%d'%n
+            if p not in prefixes:
+                return p
+        raise Exception('prefixes exhausted')
+    
+    def __getprefix(self, u):
+        """ get the prefix for the specified namespace (uri) """
+        for ns in xsall:
+            if u == ns[1]:
+                return ns[0]
+        for ns in self.prefixes:
+            if u == ns[1]:
+                return ns[0]
+        raise Exception('ns (%s) not mapped'  % u)
+    
+    def __xlate(self, t):
+        """ get a (namespace) translated name for type """
+        t = t.resolve()
+        name = t.get_name()
+        ns = t.namespace()
+        if ns[1] == self.wsdl.tns[1]:
+            return name
+        prefix = self.__getprefix(ns[1])
+        return ':'.join((prefix, name))
+        
+    def description(self):
+        """ get a str description of the service """
+        s = []
+        s.append('service (%s)' % self.name)
+        s.append('\tprefixes:')
+        for p in self.prefixes:
+            s.append('\t\t%s = "%s"' % p)
+        s.append('\tmethods:')
+        for m in self.methods:
+            sig = []
+            sig.append('\t\t')
+            sig.append(m[0])
+            sig.append('(')
+            for p in m[1]:
+                sig.append(p[0])
+                sig.append('{')
+                sig.append(self.__xlate(p[1]))
+                sig.append('}')
+                sig.append(', ')
+            sig.append(')')
+            s.append(''.join(sig))
+        s.append('\ttypes:')
+        for t in self.types:
+            s.append('\t\t%s'% self.__xlate(t))
+        return '\n'.join(s)
+    
     def __str__(self):
         return unicode(self).encode('utf-8')
         
     def __unicode__(self):
         try:
-            s = 'service (%s)' % self.wsdl.get_servicename()
-            s += '\n\tprefixes:\n'
-            prefixes = self.wsdl.mapped_prefixes()
-            prefixes.sort()
-            for p in prefixes:
-                s += '\t\t%s = "%s"\n' % p
-            s += '\n\tmethods:\n'
-            for m in self.get_methods():
-                s += '\t\t%s\n' % m
-            return unicode(s)
-        except Exception, e:
-            log.exception(e)
-            return u'service not available'
+            return self.description()
+        except:
+            pass
+        
+
+
+

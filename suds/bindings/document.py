@@ -15,14 +15,12 @@
 
 from suds import *
 from suds.bindings.binding import Binding
-from suds.schema import qualified_reference
 
 log = logger(__name__)
 
 class Document(Binding):
-    
     """
-    The B{Document} binding style.
+    The document/literal binding style.
     """
 
     def __init__(self, wsdl):
@@ -32,52 +30,28 @@ class Document(Binding):
         """
         Binding.__init__(self, wsdl)
         
-    def get_ptypes(self, method):
+    def part_refattr(self):
         """
-        Get a list of I{parameter definitions} defined for the specified method.
-        Each I{parameter definition} is a tuple: (I{name}, L{suds.schema.SchemaProperty})
-        @param method: The I{name} of a method.
-        @type method: str
-        @return:  A list of parameter definitions
-        @rtype: [I{definition},]
+        Get the part attribute that defines the part's I{type}.
+        @return: An attribute name.
+        @rtype: basestring 
         """
-        params = []
-        operation = self.wsdl.get_operation(method)
-        if operation is None:
-            raise NoSuchMethod(method)
-        input = operation.getChild('input')
-        msg = self.wsdl.get_message(input.get('message'))
-        for p in msg.getChildren('part'):
-            ref = p.get('element')
-            qref = qualified_reference(ref, p, self.wsdl.tns)
-            type = self.schema.find(qref)
-            if type is None:
-                raise TypeNotFound(ref)
-            for c in type.get_children():
-                params.append((c.get_name(), c))
-        log.debug('parameters %s for method %s', tostr(params), method)
-        return params
-
-    def returns_collection(self, method):
+        return "element"
+    
+    def param_defs(self, method):
         """
-        Get whether the type defined for the method is a collection
-        @param method: The I{name} of a method.
-        @type method: str
-        @rtype: boolean
+        Get parameter definitions.
+        @param method: A method name.
+        @type method: basestring
+        @return: A collection of parameter definitions
+        @rtype: [(str, L{schema.SchemaProperty}),..]
         """
-        operation = self.wsdl.get_operation(method)
-        if operation is None:
-            raise NoSuchMethod(method)
-        output = operation.getChild('output')
-        msg = self.wsdl.get_message(output.get('message'))
-        result = False
-        for p in msg.getChildren('part'):
-            ref = p.get('element')
-            qref = qualified_reference(ref, p, self.wsdl.tns)
-            type = self.schema.find(qref)
-            if len(type):
-                result = type[0].unbounded()
-            break
+        result = []
+        for p in self.part_types(method):
+            resolved = p[1].resolve()
+            for c in resolved.get_children():
+                name = c.get_name()
+                result.append((name, c))
         return result
     
     def returned_type(self, method):
@@ -88,18 +62,11 @@ class Document(Binding):
         @return: The name of the type return by the method.
         @rtype: str
         """
-        operation = self.wsdl.get_operation(method)
-        if operation is None:
-            raise NoSuchMethod(method)
-        output = operation.getChild('output')
-        msg = self.wsdl.get_message(output.get('message'))
-        result = False
-        for p in msg.getChildren('part'):
-            ref = p.get('element')
-            qref = qualified_reference(ref, p, self.wsdl.tns)
-            result = self.schema.find(qref)
-            if result is None:
-                raise TypeNotFound(ref)
-            result = result[0]
+        result = None
+        for rt in self.part_types(method, False):
+            rt = rt.resolve()
+            if len(rt):
+                rt = rt[0]
+                result = rt.resolve()
             break
         return result
