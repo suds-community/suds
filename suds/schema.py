@@ -183,7 +183,11 @@ class SchemaCollection:
                 name = c.get_name()
                 if name is None:
                     continue
-                result[name] = c.resolve()                    
+                resolved = c.resolve()
+                if isinstance(resolved, XBuiltin):
+                    result[name] = c
+                else:
+                    result[name] = resolved           
         return result.values()
     
     def flattened_children(self):
@@ -419,7 +423,7 @@ class Schema:
                 log.debug(
                     '%s, searching (import): %s\nfor:\n%s', 
                     self.id, repr(child), query)
-                result = child.find(query)
+                result = child.xsfind(query)
                 if result is not None:
                     break
             name = child.get_name()
@@ -774,7 +778,7 @@ class SchemaProperty:
         """
         Find a referenced type in self or children.
         @param ref: Either a I{qualified reference} or the
-        name of a referenced type.
+                name of a referenced type.
         @type ref: (I{str}|I{qualified reference})
         @param classes: A list of classes used to qualify the match.
         @type classes: [I{class},...] 
@@ -1238,9 +1242,36 @@ class Import(SchemaProperty):
         self.imp.ns = (None, root.get('namespace'))
         self.imp.location = root.get('schemaLocation')
         self.imp.external = False
+        
+    def find(self, ref, classes=()):
+        """
+        Find a referenced type in the imported schema.
+        @param ref: Either a I{qualified reference} or the
+                name of a referenced type.
+        @type ref: (I{str}|I{qualified reference})
+        @param classes: A list of classes used to qualify the match.
+        @type classes: [I{class},...] 
+        @return: The referenced type.
+        @rtype: L{SchemaProperty}
+        @see: L{qualified_reference()}
+        @see: L{Schema.find()}
+        """
+        result = None
+        if self.imp.schema is not None:
+            query = Query(ref)
+            query.clsfilter = classes
+            query.qualify(self.root, self.schema.tns)
+            result = self.imp.schema.find(query)
+        return result
     
-    def find(self, query):
-        """ match by name, ns, classes and exclude history """
+    def xsfind(self, query):
+        """
+        Find a I{type} defined in one of the contained schemas.
+        @param query: A query.
+        @type query: L{Query}
+        @return: The found schema type. 
+        @rtype: L{qualified_reference()}
+        """
         if self.imp.schema is None:
             return None
         marker = self.marker(query)
@@ -1270,7 +1301,10 @@ class Import(SchemaProperty):
 
     def namespace(self):
         """ get this properties namespace """
-        return self.imp.schema.tns
+        result = self.schema.tns
+        if self.imp.schema is not None:
+            result = self.imp.schema.tns
+        return result
     
     def skip(self):
         """ skip this namespace """
