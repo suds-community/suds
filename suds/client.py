@@ -263,8 +263,11 @@ class SoapClient:
             reply = fp.read()
             result = self.succeeded(binding, method, reply)
         except HTTPError, e:
-            log.error(self.last_sent)
-            result = self.failed(binding, method, e)
+            if e.code in (202,204):
+                result = None
+            else:
+                log.error(self.last_sent)
+                result = self.failed(binding, method, e)
         return result
     
     def set_proxies(self, location, request):

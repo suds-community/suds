@@ -49,13 +49,6 @@ class Content(Object):
         self.tag = tag
         self.type = type
         self.value = value
-        
-    def translate(self):
-        if self.type is None:
-            return
-        resolved = self.type.resolve()
-        self.value = \
-            resolved.translate(self.value, False)
 
 
 class Basic:
@@ -152,7 +145,6 @@ class Basic:
                     self.append(parent, cont)
                 self.resume(content)
             return
-        content.translate()
         if content.tag.startswith('_'):
             parent.set(content.tag[1:], tostr(content.value))
             return
@@ -261,6 +253,9 @@ class Literal(Basic):
             self.resolver.push(content.type)
         if content.type is None:
             raise TypeNotFound(content.tag)
+        resolved = content.type.resolve()
+        content.value = \
+            resolved.translate(content.value, False)
         
     def suspend(self, content):
         """
