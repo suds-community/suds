@@ -1458,8 +1458,8 @@ class XBoolean(XBuiltin):
     """
     
     translation = (
-        { True: 'true', False: 'false' },
-        { '1':True, 'true':True, '0':False, 'false':False },)
+        { '1':True, 'true':True, '0':False, 'false':False },
+        { True: 'true', False: 'false' },)
 
     def __init__(self, schema, name):
         """
@@ -1475,9 +1475,9 @@ class XBoolean(XBuiltin):
         @return: The converted I{language} type.
         """
         if topython:
-            table = XBoolean.translation[1]
-        else:
             table = XBoolean.translation[0]
+        else:
+            table = XBoolean.translation[1]
         return table.get(value, value)
 
    
