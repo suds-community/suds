@@ -211,3 +211,8 @@ env = client.factory.create('ns0:Envelope')
 print env
 options = client.factory.create('ns1:MapImageOptions')
 print options
+
+url = "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"
+client = Client(url)
+print client
+print client.service.getBank("76251020")
