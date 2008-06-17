@@ -13,6 +13,10 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The I{builder} module provides an wsdl/xsd defined types factory
+"""
+
 from suds import *
 from suds.sudsobject import Factory
 from suds.resolver import PathResolver
