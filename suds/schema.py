@@ -881,18 +881,10 @@ class SchemaProperty:
         """
         return False
     
-    def topython(self, value):
+    def translate(self, value, topython=True):
         """
-        Convert a value from a schema type to a python type.
-        @param value: A value to convert.
-        @return: The converted I{language} type.
-        """
-        return value
-    
-    def frompython(self, value):
-        """
-        Convert a value from a python type to an schema type.
-        @param value: A value to convert.
+        Translate a value (type) to/from a python type.
+        @param value: A value to translate.
         @return: The converted I{language} type.
         """
         return value
@@ -1464,6 +1456,10 @@ class XBoolean(XBuiltin):
     """
     Represents an (xsd) boolean builtin type.
     """
+    
+    translation = (
+        { True: 'true', False: 'false' },
+        { '1':True, 'true':True, '0':False, 'false':False },)
 
     def __init__(self, schema, name):
         """
@@ -1472,25 +1468,19 @@ class XBoolean(XBuiltin):
         """
         XBuiltin.__init__(self, schema, name)
         
-    def topython(self, value):
+    def translate(self, value, topython=True):
         """
         Convert a value from a schema type to a python type.
         @param value: A value to convert.
         @return: The converted I{language} type.
         """
-        encoding = { '1':True, 'true':True, '0':False, 'false':False }
-        return encoding.get(value, value)
-    
-    def frompython(self, value):
-        """
-        Convert a value from a python type to an schema type.
-        @param value: A value to convert.
-        @return: The converted I{language} type.
-        """
-        encoding = { True: 'true', False: 'false' }
-        return encoding.get(value, value)
-    
+        if topython:
+            table = XBoolean.translation[1]
+        else:
+            table = XBoolean.translation[0]
+        return table.get(value, value)
 
+   
 class Attribute(Polymorphic):
     """
     Represents an (xsd) <attribute/> node
