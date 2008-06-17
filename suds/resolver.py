@@ -126,6 +126,26 @@ class TreeResolver(Resolver):
         for item in primer:
             self.push(item)
             
+    def findattr(self, name, resolved=True):
+        """
+        Find an attribute type definition.
+        @param name: An attribute name.
+        @type name: basestring
+        @param resolved: A flag indicating that the fully resolved type should be
+            returned.
+        @type resolved: boolean
+        @return: The found schema I{type}
+        @rtype: L{schema.SchemaProperty}
+        """
+        attr = '@%s'%name
+        parent = self.top()[1]
+        result = self.__find(attr, parent)
+        if result is None:
+            return result
+        if resolved:
+            result = result.resolve()
+        return result
+            
     def push(self, item):
         """
         Push a type I{item} onto the stack where I{item} is a tuple
@@ -229,7 +249,6 @@ class NodeResolver(TreeResolver):
         if resolved:
             result = pushed[1]
         return result
-
 
 class GraphResolver(TreeResolver):
     """

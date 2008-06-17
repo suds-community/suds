@@ -486,6 +486,7 @@ class PropertyFactory:
     builtins =\
     {
         'anyType' : lambda x,y=None: Any(x,y),
+        'boolean' : lambda x,y=None: XBoolean(x,y),
     }
     
     def __init__(self, schema):
@@ -879,6 +880,22 @@ class SchemaProperty:
         @rtype: boolean
         """
         return False
+    
+    def topython(self, value):
+        """
+        Convert a value from a schema type to a python type.
+        @param value: A value to convert.
+        @return: The converted I{language} type.
+        """
+        return value
+    
+    def frompython(self, value):
+        """
+        Convert a value from a python type to an schema type.
+        @param value: A value to convert.
+        @return: The converted I{language} type.
+        """
+        return value
     
     def __resolve(self, t, history):
         """ resolve the specified type """
@@ -1441,6 +1458,37 @@ class Any(XBuiltin):
     
     def any(self):
         return True
+
+    
+class XBoolean(XBuiltin):
+    """
+    Represents an (xsd) boolean builtin type.
+    """
+
+    def __init__(self, schema, name):
+        """
+        @param schema: The containing schema.
+        @type schema: L{Schema}
+        """
+        XBuiltin.__init__(self, schema, name)
+        
+    def topython(self, value):
+        """
+        Convert a value from a schema type to a python type.
+        @param value: A value to convert.
+        @return: The converted I{language} type.
+        """
+        encoding = { '1':True, 'true':True, '0':False, 'false':False }
+        return encoding.get(value, value)
+    
+    def frompython(self, value):
+        """
+        Convert a value from a python type to an schema type.
+        @param value: A value to convert.
+        @return: The converted I{language} type.
+        """
+        encoding = { True: 'true', False: 'false' }
+        return encoding.get(value, value)
     
 
 class Attribute(Polymorphic):

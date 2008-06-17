@@ -82,7 +82,7 @@ class Basic:
             self.append(document, content)
             return document.root()
         if isinstance(value, dict):
-            value = Facotry.object(dict=value)  
+            value = Factory.object(dict=value)  
         elif isinstance(value, Property):
             root = self.node(tag, type)
             document.append(root)
@@ -146,7 +146,7 @@ class Basic:
                 self.resume(content)
             return
         if content.tag.startswith('_'):
-            parent.set(content.tag[1:], unicode(content.value))
+            parent.set(content.tag[1:], tostr(content.value))
             return
         child = self.node(content.tag, content.type)
         child.setText(unicode(content.value))
