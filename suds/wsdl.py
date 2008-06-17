@@ -13,6 +13,10 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The I{wsdl} module provides an objectification of the WSDL.
+"""
+
 from suds import *
 from suds.sax import Parser, Element, splitPrefix
 from bindings.document import Document

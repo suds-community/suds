@@ -15,6 +15,7 @@
 
 """
 The I{2nd generation} service proxy provides access to web services.
+See I{README.txt}
 """
 
 from cookielib import CookieJar

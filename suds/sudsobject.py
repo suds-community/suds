@@ -12,6 +12,12 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The I{sudsobject} module provides a collection of suds objects
+that are primarily used for the highly dynamic interactions with
+wsdl/xsd defined types.
+"""
+
 from suds import *
 from new import classobj, function, instancemethod
 

@@ -13,6 +13,11 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+The I{resolver} module provides a collection of classes that
+provide wsdl/xsd named type resolution.
+"""
+
 from suds import *
 from suds.sax import splitPrefix, xsins
 from suds.sudsobject import Object
