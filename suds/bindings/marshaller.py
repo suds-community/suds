@@ -49,6 +49,13 @@ class Content(Object):
         self.tag = tag
         self.type = type
         self.value = value
+        
+    def translate(self):
+        if self.type is None:
+            return
+        resolved = self.type.resolve()
+        self.value = \
+            resolved.translate(self.value, False)
 
 
 class Basic:
@@ -145,11 +152,12 @@ class Basic:
                     self.append(parent, cont)
                 self.resume(content)
             return
+        content.translate()
         if content.tag.startswith('_'):
             parent.set(content.tag[1:], tostr(content.value))
             return
         child = self.node(content.tag, content.type)
-        child.setText(unicode(content.value))
+        child.setText(tostr(content.value))
         parent.append(child)
 
     def reset(self):
