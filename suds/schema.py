@@ -743,28 +743,32 @@ class SchemaProperty:
         """
         return False
     
-    def resolve(self, depth=1024):
+    def resolve(self, depth=1024, nobuiltin=False):
         """
         Resolve and return the nodes true type when another
         named type is referenced.
         @param depth: The resolution depth.
         @type depth: int
+        @param nobuiltin: Flag indicates that resolution must
+            not continue to xsd builtins.
         @return: The resolved (true) type.
         @rtype: L{SchemaProperty}
         """
-        cached = self.resolve_cache.get(depth, None)
+        cachekey = '%d.%s' % (depth, nobuiltin)
+        cached = self.resolve_cache.get(cachekey, None)
         if cached is not None:
             return cached
         history = [self]
         result = self
         for n in range(0, depth):
             resolved = self.__resolve(result, history)
-            if resolved != result:
-                result = resolved
+            if resolved != result and \
+                not (nobuiltin and isinstance(resolved, XBuiltin)):
+                    result = resolved
             else:
                 break
         if result is not None:
-            self.resolve_cache[depth] = result
+            self.resolve_cache[cachekey] = result
         return result
         
     def any(self):
@@ -1424,7 +1428,7 @@ class XBuiltin(SchemaProperty):
     def namespace(self):
         return xsdns
     
-    def resolve(self, depth=1024):
+    def resolve(self, depth=1024, nobuiltin=False):
         return self
     
 

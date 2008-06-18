@@ -43,7 +43,15 @@ class Marshaller:
 
 
 class Content(Object):
-    """ marshalled content """
+    """
+    @ivar tag: The content tag.
+    @type tag: str
+    @ivar type: The (optional) content schema type.
+    @type type: L{schema.SchemaProperty}
+    @ivar value: The content's value.
+    @type value: I{any}
+    """
+
     def __init__(self, tag, value, type=None):
         Object.__init__(self)
         self.tag = tag
@@ -51,48 +59,290 @@ class Content(Object):
         self.value = value
 
 
-class Basic:
+class M:
     """
-    A I{basic} (untyped) marshaller.
+    Appender matcher.
+    @ivar cls: A class object.
+    @type cls: I{classobj}
     """
 
-    def __init__(self, schema=None):
+    def __init__(self, cls):
         """
-        @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @param cls: A class object.
+        @type cls: I{classobj}
         """
-        self.schema = schema
+        self.cls = cls
 
-    def process(self, tag, value, type=None):
+    def __eq__(self, x):
+        if self.cls is None:
+            return ( x is None )
+        else:
+            return isinstance(x, self.cls)
+
+
+class ContentAppender:
+    """
+    Appender used to add content to marshalled objects.
+    @ivar default: The default appender.
+    @type default: L{Appender}
+    @ivar appenders: A I{table} of appenders mapped by class.
+    @type appenders: I{table}
+    """
+
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        self.default = PrimativeAppender(marshaller)
+        self.appenders = (
+            (M(None), NoneAppender(marshaller)),
+            (M(Object), ObjectAppender(marshaller)),
+            (M(Property), PropertyAppender(marshaller)),
+            (M(list), ListAppender(marshaller)),
+            (M(tuple), ListAppender(marshaller)),
+        )
+        
+    def append(self, parent, content):
+        """
+        Select an appender and append the content to parent.
+        @param parent: A parent node.
+        @type parent: L{Element}
+        @param content: The content to append.
+        @type content: L{Content}
+        """
+        appender = self.default
+        for a in self.appenders:
+            if content.value == a[0]:
+                appender = a[1]
+                break
+        appender.append(parent, content)
+
+
+class Appender:
+    """
+    An appender used by the marshaller to append content.
+    @ivar marshaller: A marshaller.
+    @type marshaller: L{AbstractMarshaller}
+    """
+    
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        self.marshaller  = marshaller
+        
+    def node(self, content):
+        """
+        Create and return an XML node that is qualified
+        using the I{type}.  Also, make sure all referenced namespace
+        prefixes are declared.
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
+        @return: A new node.
+        @rtype: L{Element}
+        """
+        return self.marshaller.node(content)
+    
+    def setnil(self, node, content):
+        """
+        Set the value of the I{node} to nill.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
+        """
+        self.marshaller.setnil(node, content)
+        
+    def suspend(self, content):
+        """
+        Notify I{marshaller} that appending this content has suspended.
+        @param content: The content for which proccessing has been suspended.
+        @type content: L{Object}
+        """
+        self.marshaller.suspend(content)
+        
+    def resume(self, content):
+        """
+        Notify I{marshaller} that appending this content has resumed.
+        @param content: The content for which proccessing has been resumed.
+        @type content: L{Object}
+        """
+        self.marshaller.resume(content)
+    
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        self.marshaller.append(parent, content)
+
+       
+class PrimativeAppender(Appender):
+    """
+    An appender for python I{primative} types.
+    """
+
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        Appender.__init__(self, marshaller)
+        
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        if content.tag.startswith('_'):
+            attr = content.tag[1:]
+            value = tostr(content.value)
+            parent.set(attr, value)
+        else:
+            child = self.node(content)
+            child.setText(tostr(content.value))
+            parent.append(child)
+
+        
+class NoneAppender(Appender):
+    """
+    An appender for I{None} values.
+    """
+
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        Appender.__init__(self, marshaller)
+        
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        child = self.node(content)
+        self.setnil(child, content)
+        parent.append(child)
+
+
+class PropertyAppender(Appender):
+    """
+    A L{Property} appender.
+    """
+
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        Appender.__init__(self, marshaller)
+        
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        p = content.value
+        parent.setText(p.get())
+        for item in p.items():
+            cont = Content(item[0], item[1])
+            Appender.append(self, parent, cont)
+
+            
+class ObjectAppender(Appender):
+    """
+    An L{Object} appender.
+    """
+
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        Appender.__init__(self, marshaller)
+        
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        object = content.value
+        child = self.node(content)
+        parent.append(child)
+        for item in items(object):
+            cont = Content(item[0], item[1])
+            Appender.append(self, child, cont)
+
+            
+class ListAppender(Appender):
+    """
+    A list/tuple appender.
+    """
+    
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{AbstractMarshaller}
+        """
+        Appender.__init__(self, marshaller)
+        
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        collection = content.value
+        if len(collection):
+            self.suspend(content)
+            for item in collection:
+                cont = Content(content.tag, item)
+                Appender.append(self, parent, cont)
+            self.resume(content)
+
+
+class AbstractMarshaller:
+    """
+    An I{abstract} marshaller.  This class implement the core
+    functionality of the marshaller.
+    @ivar appender: A content appender.
+    @type appender: L{ContentAppender}
+    """
+
+    def __init__(self):
+        """
+        """
+        self.appender = ContentAppender(self)
+
+    def process(self, content):
         """
         Process (marshal) the tag with the specified value using the
         optional type information.
-        @param tag: The XML tag name for the value.
-        @type tag: basestring
-        @param value: The value (content) of the XML node.
-        @type value: (L{Object}|any)
-        @param type: The schema type.
-        @type type: L{schema.SchemaProperty}
+        @param content: The content to process.
+        @type content: L{Object}
         """
-        log.debug('processing tag=(%s) value:\n%s', tag, value)
+        log.debug('processing:\n%s', content)
         self.reset()
         document = Document()
-        content = Content(tag, value, type)
-        if value is None:
-            self.append(document, content)
-            return document.root()
-        if isinstance(value, dict):
-            value = Factory.object(dict=value)  
-        elif isinstance(value, Property):
-            root = self.node(tag, type)
+        if isinstance(content.value, Property):
+            root = self.node(content)
             document.append(root)
             self.append(root, content)
-        elif isinstance(value, Object):
-            self.append(document, content)
+        elif content.value is None or \
+            isinstance(content.value, Object):
+                self.append(document, content)
         else:
-            root = self.node(tag, type)
+            root = self.node(content)
             document.append(root)
-            root.setText(tostr(value))
+            root.setText(tostr(content.value))
         return document.root()
     
     def append(self, parent, content):
@@ -103,54 +353,8 @@ class Basic:
         """
         log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
         self.start(content)
-        self.__append(parent, content)
+        self.appender.append(parent, content)
         self.end(content)         
-       
-    def __append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
-        log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
-        if content.value is None:
-            child = self.node(content.tag, content.type)
-            self.setnil(child, content.type)
-            parent.append(child)
-            return
-        if isinstance(content.value, dict):
-            content.value = \
-                Facotry.object(dict=content.value)
-        if isinstance(content.value, Property):
-            p = content.value
-            parent.setText(p.get())
-            for item in p.items():
-                cont = Content(item[0], item[1])
-                self.append(parent, cont)
-            return
-        if isinstance(content.value, Object):
-            object = content.value
-            child = self.node(content.tag, content.type)
-            parent.append(child)
-            for item in items(object):
-                cont = Content(item[0], item[1])
-                self.append(child, cont)
-            return
-        if isinstance(content.value, (list,tuple)):
-            collection = content.value
-            if len(collection):
-                self.suspend(content)
-                for item in collection:
-                    cont = Content(content.tag, item)
-                    self.append(parent, cont)
-                self.resume(content)
-            return
-        if content.tag.startswith('_'):
-            parent.set(content.tag[1:], tostr(content.value))
-            return
-        child = self.node(content.tag, content.type)
-        child.setText(tostr(content.value))
-        parent.append(child)
 
     def reset(self):
         """
@@ -158,15 +362,15 @@ class Basic:
         """
         pass
 
-    def node(self, tag, type):
+    def node(self, content):
         """
         Create and return an XML node.
-        @param tag: The node name.
-        @type tag: basestring
-        @param type: The schema type.
-        @type type: L{schema.SchemaProperty}
+        @param content: The content for which proccessing has been suspended.
+        @type content: L{Object}
+        @return: An element.
+        @rtype: L{Element}
         """
-        return Element(tag)
+        return Element(content.tag)
     
     def start(self, content):
         """
@@ -200,22 +404,51 @@ class Basic:
         """
         pass
     
-    def setnil(self, node, type):
+    def setnil(self, node, content):
         """
         Set the value of the I{node} to nill.
         @param node: A I{nil} node.
         @type node: L{Element}
-        @param type: The node's schema type
-        @type type: L{schema.SchemaProperty}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
         """
         pass
 
+
+class Basic(AbstractMarshaller):
+    """
+    A I{basic} (untyped) marshaller.
+    """
+
+    def __init__(self):
+        """
+        """
+        AbstractMarshaller.__init__(self)
+    
+    def process(self, tag, value):
+        """
+        Process (marshal) the tag with the specified value using the
+        optional type information.
+        @param tag: The XML tag name for the value.
+        @type tag: basestring
+        @param value: The value (content) of the XML node.
+        @type value: (L{Object}|any)
+        """
+        content = Content(tag, value)
+        result = \
+            AbstractMarshaller.process(self, content)
+        return result
+
        
-class Literal(Basic):
+class Literal(AbstractMarshaller):
     """
     A I{literal} marshaller.
     This marshaller is semi-typed as needed to support both
     document/literal and rpc/literal soap styles.
+    @ivar schema: An xsd schema.
+    @type schema: L{schema.Schema}
+    @ivar resolver: A schema type resolver.
+    @type resolver: L{GraphResolver}
     """
 
     def __init__(self, schema):
@@ -223,8 +456,25 @@ class Literal(Basic):
         @param schema: A schema object
         @type schema: L{schema.Schema}
         """
-        Basic.__init__(self, schema)
+        AbstractMarshaller.__init__(self)
+        self.schema = schema
         self.resolver = GraphResolver(self.schema)
+        
+    def process(self, tag, value, type):
+        """
+        Process (marshal) the tag with the specified value using the
+        optional type information.
+        @param tag: The XML tag name for the value.
+        @type tag: basestring
+        @param value: The value (content) of the XML node.
+        @type value: (L{Object}|any)
+        @param type: The value's schema type.
+        @type type: L{schema.SchemaProperty}
+        """
+        content = Content(tag, value, type)
+        result = \
+            AbstractMarshaller.process(self, content)
+        return result
     
     def reset(self):
         """
@@ -289,51 +539,49 @@ class Literal(Basic):
             raise Exception(
                 'content (end) mismatch: top=(%s) cont=(%s)' % \
                 (current, content))
-            
-    def setnil(self, node, type):
-        """
-        Set the value of the I{node} to nill.
-        @param node: A I{nil} node.
-        @type node: L{Element}
-        @param type: The node's schema type
-        @type type: L{schema.SchemaProperty}
-        """
-        if type.nillable:
-            node.setnil()
     
-    def node(self, tag, type):
+    def node(self, content):
         """
         Create and return an XML node that is qualified
         using the I{type}.  Also, make sure all referenced namespace
         prefixes are declared.
-        @param tag: The node name.
-        @type tag: basestring
-        @param type: The schema type.
-        @type type: L{schema.SchemaProperty}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
         @return: A new node.
         @rtype: L{Element}
         """
-        ns = type.namespace()
-        if type.form_qualified:
-            node = Element(tag, ns=ns)
+        ns = content.type.namespace()
+        if content.type.form_qualified:
+            node = Element(content.tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
         else:
-            node = Element(tag)
-        self.encode(node, type)
+            node = Element(content.tag)
+        self.encode(node, content)
         log.debug('created - node:\n%s', node)
         return node
     
-    def encode(self, node, type):
+    def setnil(self, node, content):
+        """
+        Set the value of the I{node} to nill.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
+        """
+        if content.type.nillable:
+            node.setnil()
+    
+    def encode(self, node, content):
         """
         Add (soap) encoding information
         @param node: The node to update.
         @type node: L{Element}
-        @param type: The schema type use for the encoding.
-        @type type: L{schema.SchemaProperty}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
         """
-        if not type.any() and \
-            type.derived:
-                name = type.get_name()
+        if not content.type.any() and \
+            content.type.derived:
+                name = content.type.get_name()
                 node.set('xsi:type', name)
                 log.debug('encoding name=(%s) on:\n\t%s', name, tostr(node))
                 node.addPrefix(xsins[0], xsins[1])
@@ -358,7 +606,6 @@ class Literal(Basic):
         return result
 
 
-
 class Encoded(Literal):
     """
     A SOAP section (5) encoding marshaller.
@@ -372,16 +619,16 @@ class Encoded(Literal):
         """
         Literal.__init__(self, schema)
         
-    def encode(self, node, type):
+    def encode(self, node, content):
         """
         Add (soap) encoding information
         @param node: The node to update.
         @type node: L{Element}
-        @param type: The schema type use for the encoding.
-        @type type: L{schema.SchemaProperty}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
         """
-        if not type.any():
-            name, ns = type.qref()
+        if not content.type.any():
+            name, ns = content.type.qref()
             node.set('xsi:type', name)
             log.debug('encoding name=(%s)', name)
             node.addPrefix(ns[0], ns[1])

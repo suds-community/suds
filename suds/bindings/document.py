@@ -64,9 +64,9 @@ class Document(Binding):
         """
         result = None
         for rt in self.part_types(method, False):
-            rt = rt.resolve()
+            rt = rt.resolve(nobuiltin=True)
             if len(rt):
                 rt = rt[0]
-                result = rt.resolve()
+                result = rt.resolve(nobuiltin=True)
             break
         return result

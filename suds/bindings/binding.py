@@ -241,6 +241,6 @@ class Binding:
         """
         result = None
         for rt in self.part_types(method, False):
-            result = rt
+            result = rt.resolve(nobuiltin=True)
             break
         return result
