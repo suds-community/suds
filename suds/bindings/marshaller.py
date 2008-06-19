@@ -55,8 +55,8 @@ class Content(Object):
     def __init__(self, tag, value, type=None):
         Object.__init__(self)
         self.tag = tag
-        self.type = type
         self.value = value
+        self.type = type
 
 
 class M:
@@ -309,7 +309,7 @@ class ListAppender(Appender):
             self.resume(content)
 
 
-class AbstractMarshaller:
+class MBase:
     """
     An I{abstract} marshaller.  This class implement the core
     functionality of the marshaller.
@@ -415,7 +415,7 @@ class AbstractMarshaller:
         pass
 
 
-class Basic(AbstractMarshaller):
+class Basic(MBase):
     """
     A I{basic} (untyped) marshaller.
     """
@@ -423,7 +423,7 @@ class Basic(AbstractMarshaller):
     def __init__(self):
         """
         """
-        AbstractMarshaller.__init__(self)
+        MBase.__init__(self)
     
     def process(self, tag, value):
         """
@@ -436,11 +436,11 @@ class Basic(AbstractMarshaller):
         """
         content = Content(tag, value)
         result = \
-            AbstractMarshaller.process(self, content)
+            MBase.process(self, content)
         return result
 
        
-class Literal(AbstractMarshaller):
+class Literal(MBase):
     """
     A I{literal} marshaller.
     This marshaller is semi-typed as needed to support both
@@ -456,7 +456,7 @@ class Literal(AbstractMarshaller):
         @param schema: A schema object
         @type schema: L{schema.Schema}
         """
-        AbstractMarshaller.__init__(self)
+        MBase.__init__(self)
         self.schema = schema
         self.resolver = GraphResolver(self.schema)
         
@@ -472,8 +472,7 @@ class Literal(AbstractMarshaller):
         @type type: L{schema.SchemaProperty}
         """
         content = Content(tag, value, type)
-        result = \
-            AbstractMarshaller.process(self, content)
+        result = MBase.process(self, content)
         return result
     
     def reset(self):

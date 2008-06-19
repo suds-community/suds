@@ -21,12 +21,8 @@ from suds.resolver import NodeResolver
 log = logger(__name__)
 
 
-reserved = \
-    { 'class':'cls', 'def':'dfn', }
-    
-booleans = \
-    { 'true':True, 'false':False }
-    
+reserved = { 'class':'cls', 'def':'dfn', }
+
 
 class Unmarshaller:
     """
@@ -45,10 +41,31 @@ class Unmarshaller:
         self.basic = Basic(schema)
         self.typed = Typed(schema)
 
-    
-class Basic:
+       
+class Content(Object):
     """
-    A object builder (unmarshaller).
+    @ivar node: The content source node.
+    @type node: L{sax.Element}
+    @ivar data: The (optional) content data.
+    @type data: L{Object}
+    @ivar type: The (optional) content schema type.
+    @type type: L{schema.SchemaProperty}
+    @ivar text: The (optional) content (xml) text.
+    @type text: basestring
+    """
+
+    def __init__(self, node):
+        Object.__init__(self)
+        self.node = node
+        self.data = None
+        self.type = None
+        self.text = None
+
+    
+class UMBase:
+    """
+    The abstract XML I{node} unmarshaller.  This class provides the
+    I{core} unmarshalling functionality.
     @ivar schema: A schema object
     @type schema: L{schema.Schema}
     """
@@ -59,148 +76,137 @@ class Basic:
         """
         self.schema = schema
         
-    def process(self, node, type=None):
+    def process(self, content):
         """
-        Process an object graph representation of the xml L{node}.
-        @param node: An XML tree.
-        @type node: L{sax.Element}
-        @param type: The I{optional} schema type.
-        @type type: L{schema.SchemaProperty}
+        Process an object graph representation of the xml I{node}.
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: A suds object.
         @rtype: L{Object}
         """
         self.reset()
-        data, result = self.__process(node, type)
+        data, result = self.append(content)
         return result
     
-    def __process(self, node, type=None):
+    def append(self, content):
         """
         Process the specified node and convert the XML document into
-        a L{suds} object.
-        @param node: An XML fragment.
-        @type node: L{sax.Element}
-        @param type: The I{optional} schema type.
-        @type type: L{schema.SchemaProperty}
+        a I{suds} L{object}.
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: A suds object.
         @rtype: L{Object}
         @note: This is not the proper entry point.
         @see: L{process()}
         """
-        data = self.start(node, type)
-        self.import_attrs(data, node)
-        self.import_children(data, node)
-        self.import_text(data, node)
-        self.end(node, data)
-        return data, self.result(data, node)
+        self.start(content)
+        self.append_attributes(content)
+        self.append_children(content)
+        self.append_text(content)
+        self.end(content)
+        return content.data, self.postprocess(content)
     
-    def import_attrs(self, data, node):
+    def append_attributes(self, content):
         """
-        Import attribute nodes into L{data}.
-        @param data: The current object being built.
-        @type data: L{Object}
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
+        Append attribute nodes into L{data}.
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         """
-        for attr in node.attributes:
+        for attr in content.node.attributes:
             if attr.namespace()[1] == xsins[1]:
                 continue
-            key = attr.name
-            key = '_%s' % reserved.get(key, key)
-            value = attr.getValue()
-            value = booleans.get(value.lower(), value)
-            setattr(data, key, value)
+            name = attr.name
+            value = attr.value
+            self.append_attr(name, value, content)
             
-    def import_children(self, data, node):
+    def append_attr(self, name, value, content):
         """
-        Import child nodes into L{data}
-        @param data: The current object being built.
-        @type data: L{Object}
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
+        Append an attribute name/value into L{data}.
+        @param name: The attribute name
+        @type name: basestring
+        @param value: The attribute's value
+        @type value: basestring
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         """
-        for child in node.children:
-            cdata, cval = self.__process(child)
+        key = name
+        key = '_%s' % reserved.get(key, key)
+        setattr(content.data, key, value)
+            
+    def append_children(self, content):
+        """
+        Append child nodes into L{data}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
+        """
+        for child in content.node.children:
+            cont = Content(child)
+            cdata, cval = self.append(cont)
             key = reserved.get(child.name, child.name)
-            if key in data:
-                v = getattr(data, key)
+            if key in content.data:
+                v = getattr(content.data, key)
                 if isinstance(v, list):
                     v.append(cval)
                 else:
-                    setattr(data, key, [v, cval])
+                    setattr(content.data, key, [v, cval])
                 continue
             if self.unbounded(cdata):
                 if cval is None:
-                    setattr(data, key, [])
+                    setattr(content.data, key, [])
                 else:
-                    setattr(data, key, [cval,])
+                    setattr(content.data, key, [cval,])
             else:
-                setattr(data, key, cval)
+                setattr(content.data, key, cval)
     
-    def import_text(self, data, node):
+    def append_text(self, content):
         """
-        Import text nodes into L{data}
-        @param data: The current object being built.
-        @type data: L{Object}
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
+        Append text nodes into L{data}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         """
-        if node.text is None: return
-        if len(node.text):
-            value = node.getText()
-            value = booleans.get(value.lower(), value)
-            md = data.__metadata__
-            md.__xml__ = Factory.metadata()
-            md.__xml__.text = value
+        text = content.node.getText()
+        if text is not None and \
+            len(text):
+                content.text = text
             
-    def result(self, data, node):
+    def postprocess(self, content):
         """
         Perform final processing of the resulting data structure as follows:
         simple elements (not attrs or children) with text nodes will have a string 
         result equal to the value of the text node.
-        @param data: The current object being built.
-        @type data: L{Object}
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: The post-processed result.
         @rtype: (L{Object}|I{list}|I{str}) 
         """
-        if len(data): return data
-        text = None
-        try:
-            md = data.__metadata__
-            text = md.__xml__.text
-        except AttributeError:
-            pass
-        if text is None:
-            if self.nillable(data) and node.isnil():
+        if len(content.data):
+            return content.data
+        if content.text is None:
+            if self.nillable(content.data) and content.node.isnil():
                 return None
             else:
                 return ''
-        return text
+        return content.text
         
     def reset(self):
         pass
 
-    def start(self, node, type=None):
+    def start(self, content):
         """
         Processing on I{node} has started.  Build and return
         the proper object.
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
-        @param type: The I{optional} schema type.
-        @type type: L{schema.SchemaProperty}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: A subclass of Object.
         @rtype: L{Object}
         """
-        return Factory.object(node.name)
+        content.data = Factory.object(content.node.name)
     
-    def end(self, node, data):
+    def end(self, content):
         """
         Processing on I{node} has ended.
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
-        @param data: The current object being built.
-        @type data: L{Object}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         """
         pass
     
@@ -233,22 +239,61 @@ class Basic:
         @rtype: boolean
         '"""
         return False
+    
+    
+class Basic(UMBase):
+    """
+    A object builder (unmarshaller).
+    @ivar schema: A schema object
+    @type schema: L{schema.Schema}
+    """
+    def __init__(self, schema):
+        """
+        @param schema: A schema object
+        @type schema: L{schema.Schema}
+        """
+        UMBase.__init__(self, schema)
+        
+    def process(self, node):
+        """
+        Process an object graph representation of the xml I{node}.
+        @param node: An XML tree.
+        @type node: L{sax.Element}
+        @return: A suds object.
+        @rtype: L{Object}
+        """
+        content = Content(node)
+        return UMBase.process(self, content)
 
 
-class Typed(Basic):
+class Typed(UMBase):
     """
     A I{typed} XML unmarshaller
     @ivar resolver: A schema type resolver.
     @type resolver: L{NodeResolver}
     """
     
-    def __init__(self, binding):
+    def __init__(self, schema):
         """
-        @param binding: A binding object.
-        @type binding: L{binding.Binding}
+        @param schema: A schema object.
+        @type schema: L{schema.Schema}
         """
-        Basic.__init__(self, binding)
-        self.resolver = NodeResolver(self.schema)
+        UMBase.__init__(self, schema)
+        self.resolver = NodeResolver(schema)
+        
+    def process(self, node, type):
+        """
+        Process an object graph representation of the xml L{node}.
+        @param node: An XML tree.
+        @type node: L{sax.Element}
+        @param type: The I{optional} schema type.
+        @type type: L{schema.SchemaProperty}
+        @return: A suds object.
+        @rtype: L{Object}
+        """
+        content = Content(node)
+        content.type = type
+        return UMBase.process(self, content)
 
     def reset(self):
         """
@@ -257,37 +302,31 @@ class Typed(Basic):
         log.debug('reset')
         self.resolver.reset()
     
-    def start(self, node, type=None):
+    def start(self, content):
         """ 
         Resolve to the schema type; build an object and setup metadata.
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
-        @param type: The I{optional} schema type.
-        @type type: L{schema.SchemaProperty}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: A subclass of Object.
         @rtype: L{Object}
         """
-        if type is None:
-            if node.name == 'pathmatches':
-                pass
-            found = self.resolver.find(node)
+        content.data = Factory.object(content.node.name)
+        if content.type is None:
+            found = self.resolver.find(content.node)
             if found is None:
-                raise TypeNotFound(node.qname())
-            type = found
+                raise TypeNotFound(content.node.qname())
+            content.type = found
         else:
-            self.resolver.push(type)
-        data = Factory.object(type.get_name())
-        md = data.__metadata__
-        md.__type__ = type
-        return data
+            self.resolver.push(content.type)
+        data = Factory.object(content.type.get_name())
+        md = content.data.__metadata__
+        md.__type__ = content.type
         
-    def end(self, node, data):
+    def end(self, content):
         """
         Backup (pop) the resolver.
-        @param node: The current node being proecessed.
-        @type node: L{sax.Element}
-        @param data: The current object being built.
-        @type data: L{Object}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         """
         self.resolver.pop()
         
@@ -325,3 +364,32 @@ class Typed(Basic):
         except:
             log.error('metadata error:\n%s', tostr(data), exc_info=True)
         return False
+    
+    def append_attr(self, name, value, content):
+        """
+        Append an attribute name/value into L{data}.
+        @param name: The attribute name
+        @type name: basestring
+        @param value: The attribute's value
+        @type value: basestring
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
+        """
+        type = self.resolver.findattr(name)
+        if type is None:
+            log.warn('attribute (%s) type, not-found', name)
+        else:
+            resolved = type.resolve()
+            value = type.translate(value)
+        UMBase.append_attr(self, name, value, content)
+    
+    def append_text(self, content):
+        """
+        Append text nodes into L{data}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
+        """
+        UMBase.append_text(self, content)
+        resolved = content.type.resolve()
+        content.text = \
+            resolved.translate(content.text)
