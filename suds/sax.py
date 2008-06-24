@@ -412,7 +412,7 @@ class Element:
         @rtype: (I{prefix}, I{name})
         """
         if self.prefix is None:
-            p = self.parent
+            p = self
             while p is not None:
                 if p.expns is not None:
                     return (None, p.expns)
