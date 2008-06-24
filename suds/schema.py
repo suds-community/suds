@@ -339,6 +339,7 @@ class Schema:
         @return: The found schema type. 
         @rtype: L{qualified_reference()}
         """
+        self.start(query)
         key = query.key()
         cached = self.types.get(key, None)
         if cached is not None and \
@@ -350,7 +351,6 @@ class Schema:
                 '%s, found (%s)\n%s\n%s',
                 self.id, query.name, query, tostr(b))
             return b
-        self.start(query)
         result = None
         while result is None:
             result = self.__find(query)
