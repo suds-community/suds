@@ -415,11 +415,13 @@ class ServiceDefinition:
                 return ns[0]
         raise Exception('ns (%s) not mapped'  % u)
     
-    def __xlate(self, t):
+    def __xlate(self, type):
         """ get a (namespace) translated name for type """
-        t = t.resolve()
-        name = t.get_name()
-        ns = t.namespace()
+        resolved = type.resolve()
+        name = resolved.get_name()
+        if type.unbounded():
+            name += '[]'
+        ns = resolved.namespace()
         if ns[1] == self.wsdl.tns[1]:
             return name
         prefix = self.__getprefix(ns[1])
@@ -439,10 +441,9 @@ class ServiceDefinition:
             sig.append(m[0])
             sig.append('(')
             for p in m[1]:
-                sig.append(p[0])
-                sig.append('{')
                 sig.append(self.__xlate(p[1]))
-                sig.append('}')
+                sig.append(' ')
+                sig.append(p[0])
                 sig.append(', ')
             sig.append(')')
             s.append(''.join(sig))
