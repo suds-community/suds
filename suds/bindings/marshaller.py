@@ -627,8 +627,10 @@ class Encoded(Literal):
         @type content: L{Object}
         """
         if not content.type.any():
-            name, ns = content.type.qref()
-            node.set('xsi:type', name)
+            name = content.type.get_name()
+            ns = content.type.namespace()
+            ref = ':'.join((ns[0], name))
+            node.set('xsi:type', ref)
             log.debug('encoding name=(%s)', name)
             node.addPrefix(ns[0], ns[1])
             node.addPrefix(xsins[0], xsins[1])
