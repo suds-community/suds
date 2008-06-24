@@ -31,7 +31,7 @@ import logging
 log = logger(__name__)
 
 
-def qualified_reference(ref, resolvers, tns=defns):
+def qualified_reference(ref, resolvers, defns=defns):
     """
     Get type reference I{qualified} by pnamespace.
     @param ref: A referenced type name such as <person type="tns:person"/>
@@ -40,7 +40,7 @@ def qualified_reference(ref, resolvers, tns=defns):
     @type resolvers: [L{sax.Element},]
     @param tns: An optional target namespace used to qualify references
         when no prefix is specified.
-    @type tns: A namespace I{tuple: (prefix,uri)}
+    @type defns: A default namespace I{tuple: (prefix,uri)} used when ref not prefixed.
     @return: A qualified reference.
     @rtype: (name, ns)
     @note: Suds namespaces are tuples: I{(prefix,URI)}.  An example
@@ -59,7 +59,7 @@ def qualified_reference(ref, resolvers, tns=defns):
         if ns is None:
             raise Exception('prefix (%s) not resolved' % p)
     else:
-        ns = tns
+        ns = defns
     return (n, ns)
 
 def isqref(object):
@@ -674,14 +674,13 @@ class SchemaProperty:
         @see: L{qualified_reference()}
         """
         ref = self.ref()
-        if ref is None:
-            name = self.get_name()
-            ns = self.namespace()
-        else:
-            qref = qualified_reference(ref, self.root, self.schema.tns)
+        if ref is not None:
+            qref = qualified_reference(ref, self.root, self.root.namespace())
             name = qref[0]
             ns = qref[1]
-        return (':'.join((ns[0], name)), ns)
+            return (':'.join((ns[0], name)), ns)
+        else:
+            return None
     
     def get_children(self, empty=None):
         """
@@ -897,7 +896,7 @@ class SchemaProperty:
         """ resolve the specified type """
         result = t
         if t.typed():
-            ref = qualified_reference(t.ref(), t.root, t.namespace())
+            ref = qualified_reference(t.ref(), t.root, t.root.namespace())
             query = Query(ref)
             query.history = history
             log.debug('%s, resolving: %s\n using:%s', self.id, ref, query)
@@ -1221,7 +1220,8 @@ class Extension(Complex):
         """ lookup superclass  """
         Complex.__init1__(self)
         base = self.root.get('base')
-        query = Query(base)
+        ref = qualified_reference(base, self.root, self.root.namespace())
+        query = Query(ref)
         self.super = self.schema.find(query)
         if self.super is None:
             raise TypeNotFound(base)

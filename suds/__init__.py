@@ -42,7 +42,7 @@ class TypeNotFound(Exception):
     def __str__(self):
         return unicode(self).encode('utf-8')
     def __unicode__(self):
-        return 'WSDL type: %s not-found' % unicode(self.name)
+        return 'WSDL/XSD type: %s not-found' % unicode(self.name)
     
 class BuildError(Exception):
     def __init__(self, type):
