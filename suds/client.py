@@ -377,12 +377,12 @@ class SimClient(SoapClient):
     Loopback client used for message/reply simulation.
     """
     
-    LBKEY = 'loopback'
+    INJKEY = 'inject'
     
     @classmethod
     def simulation(cls, kwargs):
         """ get whether loopback has been specified in the I{kwargs}. """
-        return kwargs.has_key(SimClient.LBKEY)
+        return kwargs.has_key(SimClient.INJKEY)
     
     def __init__(self, super):
         """
@@ -406,7 +406,7 @@ class SimClient(SoapClient):
         @return: The result of the method invocation.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
-        lb = kwargs[SimClient.LBKEY]
+        lb = kwargs[SimClient.INJKEY]
         msg = lb.get('msg', None)
         if msg is None:
             reply = lb.get('reply', None)
