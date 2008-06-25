@@ -23,7 +23,7 @@ tranparent referenced type resolution and targeted denormalization.
 
 from suds import *
 from suds.sudsobject import Factory, Object
-from sax import Parser, splitPrefix, defns, xsdns, xsins
+from sax import Parser, splitPrefix, Namespace
 from sax import Element as Node
 from urlparse import urljoin
 import logging
@@ -31,7 +31,7 @@ import logging
 log = logger(__name__)
 
 
-def qualified_reference(ref, resolvers, defns=defns):
+def qualified_reference(ref, resolvers, defns=Namespace.default):
     """
     Get type reference I{qualified} by pnamespace.
     @param ref: A referenced type name such as <person type="tns:person"/>
@@ -74,8 +74,7 @@ def isqref(object):
         isinstance(object, tuple) and \
         len(object) == 2 and \
         isinstance(object[0], basestring) and \
-        isinstance(object[1], tuple) and \
-        len(object[1]) == len(defns))
+        Namespace.isns(object[1]))
 
 
 class SchemaCollection:
@@ -106,10 +105,7 @@ class SchemaCollection:
         self.tns = wsdl.tns
         self.baseurl = wsdl.url
         self.children = []
-        if impfilter is None:
-            self.impfilter = set([xsdns[1], xsins[1]])
-        else:
-            self.impfilter = impfilter
+        self.impfilter = impfilter
         self.namespaces = {}
         
     def add(self, node):
@@ -259,10 +255,7 @@ class Schema:
         self.types = {}
         self.children = []
         self.factory = PropertyFactory(self)
-        if impfilter is None:
-            self.impfilter = set([xsdns[1], xsins[1]])
-        else:
-            self.impfilter = impfilter
+        self.impfilter = impfilter
         self.form_qualified = self.__form_qualified()
         if container is None:
             self.init(3)
@@ -1322,6 +1315,7 @@ class Import(SchemaProperty):
     def skip(self):
         """ skip this namespace """
         return \
+            Namespace.xs(self.imp.ns) or \
             self.imp.ns[1] == self.schema.tns or \
             self.imp.ns[1] in self.schema.impfilter
             
@@ -1426,7 +1420,7 @@ class XBuiltin(SchemaProperty):
         return self.root.get('name')
             
     def namespace(self):
-        return xsdns
+        return Namespace.xsdns
     
     def resolve(self, depth=1024, nobuiltin=False):
         return self

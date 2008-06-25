@@ -27,7 +27,7 @@ from suds.schema import Enumeration
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import WSDL
-from suds.sax import xsall
+from suds.sax import Namespace
 
 log = logger(__name__)
 
@@ -130,7 +130,13 @@ class Service:
 
 class Method(object):
     
-    """Method invocation wrapper""" 
+    """
+    Method invocation wrapper
+    @ivar client: A soap client.
+    @type client: L{SoapClient}
+    @ivar name: The method name.
+    @type name: basestring
+    """ 
     
     def __init__(self, client, name):
         """
@@ -146,7 +152,11 @@ class Method(object):
         """call the method"""
         result = None
         try:
-            result = self.client.send(self, args, kwargs)
+            if SimClient.simulation(kwargs):
+                simulator = SimClient(self.client)
+                result = simulator.invoke(self, args, kwargs)
+            else:
+                result = self.client.invoke(self, args, kwargs)
         except WebFault, e:
             if self.client.arg.faults:
                 log.debug('raising (%s)', e)
@@ -233,7 +243,7 @@ class SoapClient:
         self.cookiejar = CookieJar()
         self.last_sent = None
         
-    def send(self, method, args, kwargs):
+    def invoke(self, method, args, kwargs):
         """
         Send the required soap message to invoke the specified method
         @param method: A method object to be invoked.
@@ -248,10 +258,27 @@ class SoapClient:
         result = None
         binding = self.wsdl.get_binding(method.name)
         binding.faults = self.arg.faults
-        headers = self.headers(method.name)
         location = self.wsdl.get_location().encode('utf-8')
         soapheaders = kwargs.get('soapheaders', ())
         msg = binding.get_message(method.name, args, soapheaders)
+        log.debug('sending to (%s)\nmessage:\n%s', location, msg)
+        return self.send(method, binding, msg)
+    
+    def send(self, method, binding, msg):
+        """
+        Send soap message.
+        @param method: The method being invoked.
+        @type method: L{Method}
+        @param binding: The binding used to create I{msg}.
+        @type binding: L{bindings.binding.Binding}
+        @param msg: A soap message to send.
+        @type msg: basestring
+        @return: The reply to the sent message.
+        @rtype: I{builtin} or I{subclass of} L{Object}
+        """
+        result = None
+        headers = self.headers(method.name)
+        location = self.wsdl.get_location().encode('utf-8')
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent = msg
@@ -344,6 +371,67 @@ class SoapClient:
             return (status, None)
 
 
+class SimClient(SoapClient):
+    
+    """
+    Loopback client used for message/reply simulation.
+    """
+    
+    LBKEY = 'loopback'
+    
+    @classmethod
+    def simulation(cls, kwargs):
+        """ get whether loopback has been specified in the I{kwargs}. """
+        return kwargs.has_key(SimClient.LBKEY)
+    
+    def __init__(self, super):
+        """
+        @param super: The SoapClient superclass instance.
+        @type super: L{SoapClient}
+        """
+        for item in super.__dict__.items():
+            k,v = item
+            if k.startswith('__'): continue
+            self.__dict__[k] = v
+        
+    def invoke(self, method, args, kwargs):
+        """
+        Send the required soap message to invoke the specified method
+        @param method: A method object to be invoked.
+        @type method: L{Method}
+        @param args: Arguments
+        @type args: [arg,...]
+        @param kwargs: Keyword Arguments
+        @type kwargs: I{dict}
+        @return: The result of the method invocation.
+        @rtype: I{builtin} or I{subclass of} L{Object}
+        """
+        lb = kwargs[SimClient.LBKEY]
+        msg = lb.get('msg', None)
+        if msg is None:
+            reply = lb.get('reply', None)
+            result = self.__reply(method, reply)
+        else:
+            result = self.__send(method, msg)
+        return result
+        
+    def __send(self, method, msg):
+        """ send the supplied soap message """
+        result = None
+        binding = self.wsdl.get_binding(method.name)
+        binding.faults = self.arg.faults
+        headers = self.headers(method.name)
+        location = self.wsdl.get_location().encode('utf-8')
+        log.debug('sending to (%s)\nmessage:\n%s', location, msg)
+        return self.send(method, binding, msg)
+    
+    def __reply(self, method, reply):
+        """ simulate the reply """
+        binding = self.wsdl.get_binding(method.name)
+        binding.faults = self.arg.faults
+        return self.succeeded(binding, method, reply)
+
+
 class ServiceDefinition:
     
     def __init__(self, wsdl):
@@ -407,7 +495,7 @@ class ServiceDefinition:
     
     def __getprefix(self, u):
         """ get the prefix for the specified namespace (uri) """
-        for ns in xsall:
+        for ns in Namespace.all:
             if u == ns[1]:
                 return ns[0]
         for ns in self.prefixes:

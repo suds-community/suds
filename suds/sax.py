@@ -23,12 +23,6 @@ B{far} better.
 XML namespaces in suds are represented using a (2) element tuple
 containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
 
-@var defns: The default namespace
-@type defns: namespace : (I{prefix},I{URI})
-@var xsdns: The I{schema} namespace
-@type xsdns: namespace : (I{prefix},I{URI})
-@var xsins: The I{schema-instance} namespace.
-@type xsins: namespace : (I{prefix},I{URI})
 """
 
 from suds import *
@@ -53,10 +47,52 @@ def splitPrefix(name):
         return (None, name)
 
 
-defns = (None, None)
-xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
-xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-xsall = (xsdns, xsins)
+class Namespace:
+
+    default = (None, None)
+    xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
+    xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+    all = (xsdns, xsins)
+    
+    @classmethod
+    def create(cls, p=None, u=None):
+        return (p, u)
+    
+    @classmethod
+    def xsd(cls, ns):
+        try:
+            return cls.w3(ns) and ns[1].endswith('XMLSchema')
+        except:
+            pass
+        return False
+    
+    @classmethod
+    def xsi(cls, ns):
+        try:
+            return cls.w3(ns) and ns[1].endswith('XMLSchema-instance')
+        except:
+            pass
+        return False
+    
+    @classmethod
+    def xs(cls, ns):
+        return ( cls.xsd(ns) or cls.xsi(ns) )
+
+    @classmethod
+    def w3(cls, ns):
+        try:
+            return ns[1].startswith('http://www.w3.org')
+        except:
+            pass
+        return False
+    
+    @classmethod
+    def isns(cls, ns):
+        try:
+            return isinstance(ns, tuple) and len(ns) == len(cls.default)
+        except:
+            pass
+        return False
 
 
 class Attribute:
@@ -140,7 +176,7 @@ class Attribute:
         @rtype: (I{prefix}, I{name})
         """
         if self.prefix is None:
-            return defns
+            return Namespace.default
         else:
             return self.resolvePrefix(self.prefix)
         
@@ -152,7 +188,7 @@ class Attribute:
         @return: The namespace that has been mapped to I{prefix}
         @rtype: (I{prefix}, I{name})
         """
-        ns = defns
+        ns = Namespace.default
         if self.parent is not None:
             ns = self.parent.resolvePrefix(prefix)
         return ns
@@ -567,7 +603,7 @@ class Element:
             child.parent = None
         return detached
         
-    def resolvePrefix(self, prefix, default=defns):
+    def resolvePrefix(self, prefix, default=Namespace.default):
         """
         Resolve the specified prefix to a namespace.  The I{nsprefixes} is
         searched.  If not found, it walks up the tree until either resolved or
@@ -708,7 +744,7 @@ class Element:
         @return: True if I{nil}, else False
         @rtype: boolean
         """
-        nilattr = self.attrib('nil', ns=xsins)
+        nilattr = self.attrib('nil', ns=Namespace.xsins)
         if nilattr is None:
             return False
         else:
@@ -733,8 +769,8 @@ class Element:
         @return: self
         @rtype: L{Element}
         """
-        self.set('%s:nil' % xsins[0], flag)
-        self.addPrefix(xsins[0], xsins[1])
+        self.set('%s:nil' % Namespace.xsins[0], flag)
+        self.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
         if flag:
             self.text = None
         return self
@@ -908,7 +944,8 @@ class Handler(ContentHandler):
     def mapPrefix(self, node, attribute):
         skip = False
         if attribute.name == 'xmlns':
-            node.expns = attribute.value
+            if len(attribute.value):
+                node.expns = attribute.value
             skip = True
         elif attribute.prefix == 'xmlns':
             prefix = attribute.name

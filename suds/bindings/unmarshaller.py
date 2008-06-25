@@ -15,7 +15,7 @@
 
 from suds import *
 from suds.sudsobject import Factory, Object
-from suds.sax import xsins
+from suds.sax import Namespace
 from suds.resolver import NodeResolver
 
 log = logger(__name__)
@@ -113,8 +113,8 @@ class UMBase:
         @type content: L{Content}
         """
         for attr in content.node.attributes:
-            if attr.namespace()[1] == xsins[1]:
-                continue
+            ns = attr.namespace()
+            if Namespace.xs(ns): continue
             name = attr.name
             value = attr.value
             self.append_attr(name, value, content)

@@ -16,7 +16,7 @@
 from suds import *
 from suds.sudsobject import Factory, Object, Property, items
 from suds.resolver import GraphResolver
-from suds.sax import Document, Element, Attribute, splitPrefix, xsins
+from suds.sax import Document, Element, Attribute, splitPrefix, Namespace
 
 log = logger(__name__)
 
@@ -583,7 +583,7 @@ class Literal(MBase):
                 name = content.type.get_name()
                 node.set('xsi:type', name)
                 log.debug('encoding name=(%s) on:\n\t%s', name, tostr(node))
-                node.addPrefix(xsins[0], xsins[1])
+                node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
     
     def __metatype(self, content):
         """
@@ -633,4 +633,4 @@ class Encoded(Literal):
             node.set('xsi:type', ref)
             log.debug('encoding name=(%s)', name)
             node.addPrefix(ns[0], ns[1])
-            node.addPrefix(xsins[0], xsins[1])
+            node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
