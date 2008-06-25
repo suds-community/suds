@@ -19,7 +19,7 @@ provide wsdl/xsd named type resolution.
 """
 
 from suds import *
-from suds.sax import splitPrefix, xsins
+from suds.sax import splitPrefix, Namespace
 from suds.sudsobject import Object
 from suds.schema import Query
 
@@ -235,7 +235,7 @@ class NodeResolver(TreeResolver):
         @return: The found schema I{type}
         @rtype: L{schema.SchemaProperty}
         """
-        name = node.get('type', xsins)
+        name = node.get('type', Namespace.xsins)
         if name is None:
             name = node.name
             parent = self.top()[1]

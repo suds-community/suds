@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.sax import Parser, Element, xsins
+from suds.sax import Parser, Element, Namespace
 from suds.sudsobject import Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
@@ -136,7 +136,7 @@ class Binding:
         """ get soap envelope """
         env = Element('%s:Envelope' % envns[0], ns=envns)
         env.addPrefix(encns[0], encns[1])
-        env.addPrefix(xsins[0], xsins[1])
+        env.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
         env.append(header)
         env.append(body)
         return env
