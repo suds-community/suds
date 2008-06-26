@@ -404,6 +404,35 @@ NIL VALUES
  ServiceProxy specifies weather Object values = None are sent to the
  WS server in the soap message as <tag xsi:nil="true"/> or <tag/>.
  
+ MESSAGE INJECTION (Testing)
+ 
+ The service API provides for message/reply injection.  To inject either a soap
+ message to be sent or to inject a reply to be processed as if returned by the
+ soap server, simply specify the 'inject' keyword argument with a value of a 
+ dictionary containing either {msg:'<message string>'} | {reply:'<reply string>'}
+ when invoking the service.  Eg:
+ 
+>
+> reply = \
+> """
+> <SOAP-ENV:Envelope xmlns="HelloWorldService.HelloWorldService"
+>  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+>  xmlns:tns="HelloWorldService.HelloWorldService"
+>  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>  xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance">
+>  <SOAP-ENV:Body>
+>    <testResponse>
+>      <retval xmlns="" xsi:type="tns:stringArray">
+>        <string xmlns="" xsi:type="xs:string">str1</string>
+>        <string xmlns="" xsi:type="xs:string">str2</string>
+>      </retval>
+>    </testResponse>
+>  </SOAP-ENV:Body>
+> </SOAP-ENV:Envelope>
+>"""
+>
+> print client.service.test(inject={'reply':reply})
+> 
  
  TECHNICAL (FYI) NOTES
  
