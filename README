@@ -449,7 +449,7 @@ NIL VALUES
     This ensures that all lookups and comparisons are fully qualified.
     
  TIPS
-  * Cache the ServiceProxy because reading and digesting the WSDL can be expensive
+  * Cache the suds Client because reading and digesting the WSDL can be expensive
      because some servers generate them on demand.
 
 
