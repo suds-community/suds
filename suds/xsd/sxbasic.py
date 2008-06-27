@@ -49,7 +49,7 @@ class Complex(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'sequence', 'complexContent', 'any')
+        return ('attribute', 'sequence', 'all', 'complexContent', 'any')
         
     def get_name(self):
         """ gets the <xs:complexType name=""/> attribute value """
@@ -157,6 +157,21 @@ class Sequence(SchemaObject):
         @rtype: [str,...]
         """
         return ('element', 'any',)
+
+
+class All(Sequence):
+    """
+    Represents an (xsd) schema <xs:all/> node.
+    """
+
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        """
+        Sequence.__init__(self, schema, root)
 
 
 class ComplexContent(SchemaObject):
