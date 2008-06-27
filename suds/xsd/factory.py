@@ -39,6 +39,7 @@ class Factory:
         'element' : lambda x,y=None: Element(x,y),
         'attribute' : lambda x,y=None: Attribute(x,y),
         'sequence' : lambda x,y=None: Sequence(x,y),
+        'all' : lambda x,y=None: All(x,y),
         'complexContent' : lambda x,y=None: ComplexContent(x,y),
         'restriction' : lambda x,y=None: Restriction(x,y),
         'enumeration' : lambda x,y=None: Enumeration(x,y),
