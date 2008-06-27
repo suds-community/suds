@@ -373,8 +373,7 @@ class Import(SchemaObject):
             self.id, 
             query.name,
             repr(self.imp.schema))
-        cloned = query.clone()
-        result = cloned.execute(self.imp.schema)
+        result = self.imp.schema.find(query)
         if result is not None:
             log.debug('%s, found (%s) as %s',
                 self.id, 

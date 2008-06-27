@@ -79,7 +79,6 @@ class Query(Object):
         self.cidx = 0
         self.clsfilter = []
         self.schema = None
-        self.locked = False
         
     def filter(self, result):
         """
@@ -162,28 +161,11 @@ class Query(Object):
             self.history.append(result)
         return result
     
-    def clone(self, locked=True):
-        """
-        Clone this object.
-        @param locked: A flag indicating the clone should be locked.
-        @type locked: boolean
-        @return: A clone of this query.
-        @rtype: L{Query}
-        """
-        clone = Query(self.name)
-        clone.locked = locked
-        clone.qname = self.qname
-        clone.cidx = self.cidx
-        clone.resolved = self.resolved
-        clone.clsfilter = self.clsfilter
-        clone.history += self.history
-        return clone
-    
     def __increment(self):
         """ Increment the class ordering """
         result = False
         max = len(self.clsorder)-1
-        if self.cidx < max and not self.locked:
+        if self.cidx < max:
             self.cidx += 1
             classes = Query.clsorder[self.cidx]
             log.debug('%s, targeting %s', self.id, classes)
