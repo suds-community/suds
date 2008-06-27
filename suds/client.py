@@ -23,7 +23,6 @@ from urllib2 import Request, urlopen, urlparse, HTTPError
 from suds import *
 from suds import sudsobject
 from sudsobject import Factory as InstFactory, Object
-from suds.schema import Enumeration
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import WSDL
@@ -174,7 +173,7 @@ class Factory:
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         self.schema = schema
         self.resolver = PathResolver(schema)
@@ -191,9 +190,9 @@ class Factory:
         type = self.resolver.find(name)
         if type is None:
             raise TypeNotFound(name)
-        if isinstance(type, Enumeration):
+        if type.enum():
             result = InstFactory.object(name)
-            for e in type.get_children():
+            for e in type[0].get_children():
                 enum = e.get_name()
                 setattr(result, enum, enum)
         else:
@@ -216,7 +215,7 @@ class SoapClient:
     @ivar wsdl: A WSDL object.
     @type wsdl: L{WSDL}
     @ivar schema: A schema object.
-    @type schema: L{schema.Schema}
+    @type schema: L{xsd.schema.Schema}
     @ivar builder: A builder object used to build schema types.
     @type builder: L{Builder}
     @ivar cookiejar: A cookie jar.

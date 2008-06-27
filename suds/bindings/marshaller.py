@@ -35,7 +35,7 @@ class Marshaller:
     def __init__(self, schema):
         """
         @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         self.basic = Basic()
         self.literal =  Literal(schema)
@@ -47,7 +47,7 @@ class Content(Object):
     @ivar tag: The content tag.
     @type tag: str
     @ivar type: The (optional) content schema type.
-    @type type: L{schema.SchemaProperty}
+    @type type: L{xsd.sxbase.SchemaObject}
     @ivar value: The content's value.
     @type value: I{any}
     """
@@ -92,7 +92,7 @@ class ContentAppender:
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         self.default = PrimativeAppender(marshaller)
         self.appenders = (
@@ -123,13 +123,13 @@ class Appender:
     """
     An appender used by the marshaller to append content.
     @ivar marshaller: A marshaller.
-    @type marshaller: L{AbstractMarshaller}
+    @type marshaller: L{MBase}
     """
     
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         self.marshaller  = marshaller
         
@@ -188,7 +188,7 @@ class PrimativeAppender(Appender):
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         Appender.__init__(self, marshaller)
         
@@ -216,7 +216,7 @@ class NoneAppender(Appender):
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         Appender.__init__(self, marshaller)
         
@@ -239,7 +239,7 @@ class PropertyAppender(Appender):
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         Appender.__init__(self, marshaller)
         
@@ -264,7 +264,7 @@ class ObjectAppender(Appender):
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         Appender.__init__(self, marshaller)
         
@@ -290,7 +290,7 @@ class ListAppender(Appender):
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{AbstractMarshaller}
+        @type marshaller: L{MBase}
         """
         Appender.__init__(self, marshaller)
         
@@ -446,7 +446,7 @@ class Literal(MBase):
     This marshaller is semi-typed as needed to support both
     document/literal and rpc/literal soap styles.
     @ivar schema: An xsd schema.
-    @type schema: L{schema.Schema}
+    @type schema: L{xsd.schema.Schema}
     @ivar resolver: A schema type resolver.
     @type resolver: L{GraphResolver}
     """
@@ -454,7 +454,7 @@ class Literal(MBase):
     def __init__(self, schema):
         """
         @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         MBase.__init__(self)
         self.schema = schema
@@ -469,7 +469,7 @@ class Literal(MBase):
         @param value: The value (content) of the XML node.
         @type value: (L{Object}|any)
         @param type: The value's schema type.
-        @type type: L{schema.SchemaProperty}
+        @type type: L{xsd.sxbase.SchemaObject}
         """
         content = Content(tag, value, type)
         result = MBase.process(self, content)
@@ -593,7 +593,7 @@ class Literal(MBase):
         @param content: The content for which proccessing has ended.
         @type content: L{Object}
         @return: The type found in the metadata.
-        @rtype: L{schema.SchemaProperty}
+        @rtype: L{xsd.sxbase.SchemaObject}
         """
         result = None
         try:
@@ -614,7 +614,7 @@ class Encoded(Literal):
     def __init__(self, schema):
         """
         @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         Literal.__init__(self, schema)
         

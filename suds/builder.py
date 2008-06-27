@@ -30,7 +30,7 @@ class Builder:
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         self.resolver = PathResolver(schema)
         

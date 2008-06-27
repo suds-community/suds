@@ -44,7 +44,7 @@ class Document(Binding):
         @param method: A method name.
         @type method: basestring
         @return: A collection of parameter definitions
-        @rtype: [(str, L{schema.SchemaProperty}),..]
+        @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
         """
         result = []
         for p in self.part_types(method):

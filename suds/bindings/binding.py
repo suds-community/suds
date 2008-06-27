@@ -18,7 +18,8 @@ from suds.sax import Parser, Element, Namespace
 from suds.sudsobject import Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
-from suds.schema import Query, qualified_reference
+from suds.xsd import qualified_reference
+from suds.xsd.query import Query
 
 log = logger(__name__)
 
@@ -186,7 +187,7 @@ class Binding:
     def part_types(self, method, input=True):
         """
         Get a list of I{parameter definitions} defined for the specified method.
-        Each I{parameter definition} is a tuple: (I{name}, L{schema.SchemaProperty})
+        Each I{parameter definition} is a tuple: (I{name}, L{xsd.sxbase.SchemaObject})
         @param method: The I{name} of a method.
         @type method: str
         @param input: Defines input/output message.
@@ -199,7 +200,7 @@ class Binding:
             ref = p.get(self.part_refattr())
             qref = qualified_reference(ref, p, self.wsdl.tns)
             query = Query(qref)
-            pt = self.schema.find(query)
+            pt = query.execute(self.schema)
             if pt is None:
                 raise TypeNotFound(method)
             if input:
@@ -214,7 +215,7 @@ class Binding:
         @param method: A method name.
         @type method: basestring
         @return: A collection of parameter definitions
-        @rtype: [(str, L{schema.SchemaProperty}),..]
+        @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
         """
         return self.part_types(method)
     

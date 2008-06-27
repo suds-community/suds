@@ -21,7 +21,7 @@ provide wsdl/xsd named type resolution.
 from suds import *
 from suds.sax import splitPrefix, Namespace
 from suds.sudsobject import Object
-from suds.schema import Query
+from suds.xsd.query import Query
 
 log = logger(__name__)
 
@@ -30,13 +30,13 @@ class Resolver:
     """
     An I{abstract} schema-type resolver.
     @ivar schema: A schema object.
-    @type schema: L{schema.Schema}
+    @type schema: L{xsd.schema.Schema}
     """
 
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         self.schema = schema
 
@@ -51,7 +51,7 @@ class PathResolver(Resolver):
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         Resolver.__init__(self, schema)
 
@@ -65,13 +65,13 @@ class PathResolver(Resolver):
             should be returned.
         @type resolved: boolean
         @return: The found schema I{type}
-        @rtype: L{schema.SchemaProperty}
+        @rtype: L{xsd.sxbase.SchemaObject}
         """
         result = None
         parts = path.split('.')
         log.debug('searching schema for (%s)', parts[0])
         query = Query(parts[0])
-        result = self.schema.find(query)
+        result = query.execute(self.schema)
         if result is None:
             log.error('(%s) not-found', parts[0])
             return result
@@ -111,7 +111,7 @@ class TreeResolver(Resolver):
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         Resolver.__init__(self, schema)
         self.stack = Stack()
@@ -120,7 +120,7 @@ class TreeResolver(Resolver):
         """
         Reset the resolver's state.
         @param primer: Items used to initialize the stack.
-        @type primer: [L{schema.SchemaProperty},...]
+        @type primer: [L{xsd.sxbase.SchemaObject},...]
         """
         self.stack = Stack()
         for item in primer:
@@ -135,7 +135,7 @@ class TreeResolver(Resolver):
             returned.
         @type resolved: boolean
         @return: The found schema I{type}
-        @rtype: L{schema.SchemaProperty}
+        @rtype: L{xsd.sxbase.SchemaObject}
         """
         attr = '@%s'%name
         parent = self.top()[1]
@@ -151,7 +151,7 @@ class TreeResolver(Resolver):
         Push a type I{item} onto the stack where I{item} is a tuple
         as (I{type},I{resolved}).
         @param item: An item to push.
-        @type item: L{schema.SchemaProperty}
+        @type item: L{xsd.sxbase.SchemaObject}
         @return: The pushed item.
         @rtype: (I{type},I{resolved})
         """
@@ -192,7 +192,7 @@ class TreeResolver(Resolver):
         if parent is None:
             log.debug('searching schema for (%s)', name)
             query = Query(name)
-            result = self.schema.find(query)
+            result = query.execute(self.schema)
         else:
             log.debug('searching parent (%s) for (%s)', repr(parent), name)
             if name.startswith('@'):
@@ -218,7 +218,7 @@ class NodeResolver(TreeResolver):
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         TreeResolver.__init__(self, schema)
         
@@ -233,15 +233,19 @@ class NodeResolver(TreeResolver):
             pushed onto the stack.
         @type push: boolean
         @return: The found schema I{type}
-        @rtype: L{schema.SchemaProperty}
+        @rtype: L{xsd.sxbase.SchemaObject}
         """
-        name = node.get('type', Namespace.xsins)
-        if name is None:
-            name = node.name
-            parent = self.top()[1]
-        else:
+        name = node.name
+        top = self.top()
+        if top is None:
             parent = None
+        else:
+            parent = top[1]
         result = self._TreeResolver__find(name, parent)
+        if result is None and parent is None:
+            name = node.get('type', Namespace.xsins)
+            if name is not None:
+                result = self._TreeResolver__find(name, None)
         if result is None:
             return result
         if push:
@@ -261,7 +265,7 @@ class GraphResolver(TreeResolver):
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         TreeResolver.__init__(self, schema)
         
@@ -278,7 +282,7 @@ class GraphResolver(TreeResolver):
             pushed onto the stack.
         @type push: boolean
         @return: The found schema I{type}
-        @rtype: L{schema.SchemaProperty}
+        @rtype: L{xsd.sxbase.SchemaObject}
         """
         if isinstance(object, Object):
             result = self.__embedded(object)
