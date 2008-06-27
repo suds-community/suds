@@ -19,6 +19,8 @@ from suds import logger, WebFault
 import logging
 from suds.client import Client
 
+#logger('suds.client').setLevel(logging.DEBUG)
+
 def start(url):
     print '\n________________________________________________________________\n' 
     print 'Test @ ( %s )' % url
@@ -28,7 +30,7 @@ try:
     start(url)
     client = Client(url)
     print client
-except WebFault, f:
+except Exception, f:
     print f
 
 try:
@@ -37,7 +39,7 @@ try:
     client = Client(url)
     print client
     print client.service.genSSHA('hello', 'sha1')
-except WebFault, f:
+except Exception, f:
     print f
 
 try:
@@ -46,7 +48,7 @@ try:
     client = Client(url)
     print client
     bean = client.service.getUserBean('abc', '123', 'mypassword', 'myusername')
-except WebFault, f:
+except Exception, f:
     print f
 
 try:
@@ -58,7 +60,7 @@ try:
     print env
     options = client.factory.create('ns1:MapImageOptions')
     print options
-except WebFault, f:
+except Exception, f:
     print f
 
 try:
@@ -67,7 +69,7 @@ try:
     client = Client(url)
     print client
     print client.service.getBank("76251020")
-except WebFault, f:
+except Exception, f:
     print f
 
 try:
@@ -76,7 +78,7 @@ try:
     client = Client(url)
     print client
     print client.service.getDistance('27613', '21601')
-except WebFault, f:
+except Exception, f:
     print f
     
 try:
@@ -84,5 +86,5 @@ try:
     start(url)
     client = Client(url)
     print client
-except WebFault, f:
+except Exception, f:
     print f
