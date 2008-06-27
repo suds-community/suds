@@ -36,7 +36,7 @@ class Unmarshaller:
     def __init__(self, schema):
         """
         @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         self.basic = Basic(schema)
         self.typed = Typed(schema)
@@ -49,7 +49,7 @@ class Content(Object):
     @ivar data: The (optional) content data.
     @type data: L{Object}
     @ivar type: The (optional) content schema type.
-    @type type: L{schema.SchemaProperty}
+    @type type: L{xsd.sxbase.SchemaObject}
     @ivar text: The (optional) content (xml) text.
     @type text: basestring
     """
@@ -67,12 +67,12 @@ class UMBase:
     The abstract XML I{node} unmarshaller.  This class provides the
     I{core} unmarshalling functionality.
     @ivar schema: A schema object
-    @type schema: L{schema.Schema}
+    @type schema: L{xsd.schema.Schema}
     """
     def __init__(self, schema):
         """
         @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         self.schema = schema
         
@@ -108,7 +108,7 @@ class UMBase:
     
     def append_attributes(self, content):
         """
-        Append attribute nodes into L{data}.
+        Append attribute nodes into L{Content.data}.
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
@@ -121,7 +121,7 @@ class UMBase:
             
     def append_attr(self, name, value, content):
         """
-        Append an attribute name/value into L{data}.
+        Append an attribute name/value into L{Content.data}.
         @param name: The attribute name
         @type name: basestring
         @param value: The attribute's value
@@ -135,7 +135,7 @@ class UMBase:
             
     def append_children(self, content):
         """
-        Append child nodes into L{data}
+        Append child nodes into L{Content.data}
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
@@ -160,7 +160,7 @@ class UMBase:
     
     def append_text(self, content):
         """
-        Append text nodes into L{data}
+        Append text nodes into L{Content.data}
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
@@ -245,12 +245,12 @@ class Basic(UMBase):
     """
     A object builder (unmarshaller).
     @ivar schema: A schema object
-    @type schema: L{schema.Schema}
+    @type schema: L{xsd.schema.Schema}
     """
     def __init__(self, schema):
         """
         @param schema: A schema object
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         UMBase.__init__(self, schema)
         
@@ -276,7 +276,7 @@ class Typed(UMBase):
     def __init__(self, schema):
         """
         @param schema: A schema object.
-        @type schema: L{schema.Schema}
+        @type schema: L{xsd.schema.Schema}
         """
         UMBase.__init__(self, schema)
         self.resolver = NodeResolver(schema)
@@ -287,7 +287,7 @@ class Typed(UMBase):
         @param node: An XML tree.
         @type node: L{sax.Element}
         @param type: The I{optional} schema type.
-        @type type: L{schema.SchemaProperty}
+        @type type: L{xsd.sxbase.SchemaObject}
         @return: A suds object.
         @rtype: L{Object}
         """
@@ -370,7 +370,7 @@ class Typed(UMBase):
     
     def append_attr(self, name, value, content):
         """
-        Append an attribute name/value into L{data}.
+        Append an attribute name/value into L{Content.data}.
         @param name: The attribute name
         @type name: basestring
         @param value: The attribute's value
@@ -388,7 +388,7 @@ class Typed(UMBase):
     
     def append_text(self, content):
         """
-        Append text nodes into L{data}
+        Append text nodes into L{Content.data}
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """

@@ -19,9 +19,9 @@ The I{wsdl} module provides an objectification of the WSDL.
 
 from suds import *
 from suds.sax import Parser, Element, splitPrefix
-from bindings.document import Document
-from bindings.rpc import RPC
-from schema import Schema, SchemaCollection
+from suds.bindings.document import Document
+from suds.bindings.rpc import RPC
+from suds.xsd.schema import Schema, SchemaCollection
 from urlparse import urlparse
 
 log = logger(__name__)

@@ -14,9 +14,10 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 from suds import *
-from suds.schema import XBuiltin
+from suds.xsd import qualified_reference
+from suds.xsd.sxbuiltin import XBuiltin
 from suds.bindings.binding import Binding
-from suds.schema import qualified_reference
+
 
 log = logger(__name__)
 
