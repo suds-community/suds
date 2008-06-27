@@ -240,8 +240,11 @@ class Element(Polymorphic):
     
     def unbounded(self):
         """ get whether the element has a maxOccurs > 1 or unbounded """
-        max = self.root.get('maxOccurs', default=1)
-        return (max > 1 or max == 'unbounded')
+        max = self.root.get('maxOccurs', default='1')
+        if max.isdigit():
+            return (int(max) > 1)
+        else:
+            return ( max == 'unbounded' )
     
     def __form_qualified(self):
         """ get @form = (qualified) """
