@@ -310,7 +310,6 @@ class Typed(UMBase):
         @return: A subclass of Object.
         @rtype: L{Object}
         """
-        content.data = Factory.object(content.node.name)
         if content.type is None:
             found = self.resolver.find(content.node)
             if found is None:
@@ -321,7 +320,7 @@ class Typed(UMBase):
         cls_name = content.type.get_name()
         if cls_name is None:
             cls_name = content.node.name
-        data = Factory.object(cls_name)
+        content.data = Factory.object(cls_name)
         md = content.data.__metadata__
         md.__type__ = content.type
         
