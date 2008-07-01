@@ -441,7 +441,7 @@ class ServiceDefinition:
         self.types = []
         self.__addmethods(wsdl)
         self.__addtypes()
-        self.applyprefixes()
+        self.__pushprefixes()
         
     def get_method(self, name):
         """ get a method by name """
@@ -450,11 +450,10 @@ class ServiceDefinition:
                 return m
         return None
     
-    def applyprefixes(self):
+    def __pushprefixes(self):
         """ add our prefixes to the wsdl """
-        wr = self.wsdl.root
         for ns in self.prefixes:
-            wr.addPrefix(ns[0], ns[1])
+            self.wsdl.root.addPrefix(ns[0], ns[1])
 
     def __addmethods(self, w):
         """ create our list of methods """
@@ -485,10 +484,11 @@ class ServiceDefinition:
         
     def __nextprefix(self):
         """ get the next available prefix  """
-        prefixes = [ns[0] for ns in self.prefixes]
+        used = [ns[0] for ns in self.prefixes]
+        used += [ns[0] for ns in self.wsdl.root.nsprefixes.items()]
         for n in range(0,1024):
             p = 'ns%d'%n
-            if p not in prefixes:
+            if p not in used:
                 return p
         raise Exception('prefixes exhausted')
     
@@ -545,8 +545,9 @@ class ServiceDefinition:
     def __unicode__(self):
         try:
             return self.description()
-        except:
-            pass
+        except Exception, e:
+            log.exception(e)
+        return tostr(e)
         
 
 

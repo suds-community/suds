@@ -54,19 +54,18 @@ class Document(Binding):
                 result.append((name, c))
         return result
     
-    def returned_type(self, method):
+    def returned_types(self, method):
         """
         Get the referenced type returned by the I{method}.
         @param method: The name of a method.
         @type method: str
         @return: The name of the type return by the method.
-        @rtype: str
+        @rtype: [L{xsd.sxbase.SchemaObject}]
         """
-        result = None
-        for rt in self.part_types(method, False):
-            rt = rt.resolve(nobuiltin=True)
-            if len(rt):
-                rt = rt[0]
-                result = rt.resolve(nobuiltin=True)
+        result = []
+        for pt in self.part_types(method, False):
+            pt = pt.resolve(nobuiltin=True)
+            for rt in pt.children:
+                result.append(rt)
             break
         return result

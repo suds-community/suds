@@ -15,7 +15,7 @@
 
 from suds import *
 from suds.sax import Parser, Element, Namespace
-from suds.sudsobject import Object
+from suds.sudsobject import Factory, Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
 from suds.xsd import qualified_reference
@@ -82,14 +82,50 @@ class Binding:
         soapenv = replyroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         nodes = soapbody[0].children
-        if self.returns_collection(method):
-            list = []
-            for node in nodes:
-                list.append(self.unmarshal(node, method))
-            return list
-        if len(nodes) > 0:
-            return self.unmarshal(nodes[0], method)
+        rtypes = self.returned_types(method)
+        if len(rtypes) == 1 and rtypes[0].unbounded():
+            return self.reply_list(rtypes[0], nodes)
+        if len(nodes) > 1:
+            return self.reply_composite(rtypes, nodes)
+        if len(nodes) == 1:
+            unmarshaller = self.unmarshaller.typed
+            resolved = rtypes[0].resolve(nobuiltin=True)
+            return unmarshaller.process(nodes[0], resolved)
         return None
+    
+    def reply_list(self, rt, nodes):
+        """ construct a 'list' reply """
+        result = []
+        resolved = rt.resolve(nobuiltin=True)
+        unmarshaller = self.unmarshaller.typed
+        for node in nodes:
+            sobject = unmarshaller.process(node, resolved)
+            result.append(sobject)
+        return result
+    
+    def reply_composite(self, rtypes, nodes):
+        """ construct a 'composite' reply """
+        dictionary = {}
+        for rt in rtypes:
+            dictionary[rt.get_name()] = rt
+        unmarshaller = self.unmarshaller.typed
+        composite = Factory.object()
+        for node in nodes:
+            tag = node.name
+            rt = dictionary.get(tag, None)
+            if rt is None:
+                raise Exception('tag (%s), not-found' % tag)
+            resolved = rt.resolve(nobuiltin=True)
+            sobject = unmarshaller.process(node, resolved)
+            if rt.unbounded():
+                value = getattr(composite, tag, None)
+                if value is None:
+                    value = []
+                    setattr(composite, tag, value)
+                value.append(sobject)
+            else:
+                setattr(composite, tag, sobject)
+        return composite
     
     def get_fault(self, msg):
         """extract the fault from the specified soap reply message"""
@@ -97,26 +133,12 @@ class Binding:
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
-        p = self.unmarshal(fault)
+        unmarshaller = self.unmarshaller.basic
+        p = unmarshaller.process(fault)
         if self.faults:
             raise WebFault(unicode(p))
         else:
             return p.detail
-                    
-    def unmarshal(self, node, method=None):
-        """unmarshal the specified node into a object"""
-        result = None
-        if len(node.children) > 0:
-            if method is not None:
-                type = self.returned_type(method)
-                result = \
-                    self.unmarshaller.typed.process(node, type)
-            else:
-                result = \
-                    self.unmarshaller.basic.process(node)
-        else:
-            result = node.text
-        return result
     
     def param(self, method, pdef, object):
         """encode and return the specified object within the named root tag"""
@@ -202,7 +224,7 @@ class Binding:
             query = Query(qref)
             pt = query.execute(self.schema)
             if pt is None:
-                raise TypeNotFound(method)
+                raise TypeNotFound(qref)
             if input:
                 result.append((p.get('name'), pt))
             else:
@@ -219,29 +241,15 @@ class Binding:
         """
         return self.part_types(method)
     
-    def returns_collection(self, method):
-        """
-        Get whether the type defined for the method is a collection
-        @param method: The I{name} of a method.
-        @type method: str
-        @rtype: boolean
-        """
-        result = False
-        rt = self.returned_type(method)
-        if rt is not None:
-            result = rt.unbounded()
-        return result
-    
-    def returned_type(self, method):
+    def returned_types(self, method):
         """
         Get the referenced type returned by the I{method}.
         @param method: The name of a method.
         @type method: str
         @return: The name of the type return by the method.
-        @rtype: str
+        @rtype: [L{xsd.sxbase.SchemaObject}]
         """
-        result = None
+        result = []
         for rt in self.part_types(method, False):
-            result = rt.resolve(nobuiltin=True)
-            break
+            result.append(rt)
         return result

@@ -44,7 +44,7 @@ class Factory:
         'restriction' : lambda x,y=None: Restriction(x,y),
         'enumeration' : lambda x,y=None: Enumeration(x,y),
         'extension' : lambda x,y=None: Extension(x,y),
-        'any' : lambda x,y=None: Any(x,y),
+        'any' : lambda x,y=None: Any(x,y.name),
     }
 
     builtins =\
