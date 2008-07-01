@@ -114,11 +114,12 @@ class WSDL:
     
     def get_soap_action(self, method):
         """ get an operation's soap action @soapAction """
+        action = ''
         for operation in self.root.childrenAtPath('binding/operation'):
             if method == operation.get('name'):
                 operation = operation.getChild('operation')
-                return operation.get('soapAction', default="")
-        return ""
+                action = operation.get('soapAction', default='')
+        return '"%s"' % action
 
     def get_location(self):
         """get the location of the service defined in the wsdl"""
