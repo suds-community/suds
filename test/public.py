@@ -15,22 +15,38 @@
 import sys
 sys.path.append('../')
 
+from test import *
 from suds import logger, WebFault
 import logging
 from suds.client import Client
+
+errors = 0
 
 #logger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     print '\n________________________________________________________________\n' 
     print 'Test @ ( %s )' % url
+    
+try:
+    url = 'http://ap1314-dsr.compmed.ucdavis.edu/dataserver/Aperio.Images/Image?method=wsdl '
+    start(url)
+    client = Client(url)
+    print client
+    print 'Logon()'
+    reply = client.service.Logon('testuser','test')
+    print reply
+except Exception, f:
+    errors += 1
+    print f
 
 try:
     url = 'http://soa.ebrev.info/service.wsdl'
     start(url)
     client = Client(url)
     print client
-except Exception, f:
+except WebFault, f:
+    errors += 1
     print f
 
 try:
@@ -40,6 +56,7 @@ try:
     print client
     print client.service.genSSHA('hello', 'sha1')
 except Exception, f:
+    errors += 1
     print f
 
 try:
@@ -49,6 +66,7 @@ try:
     print client
     bean = client.service.getUserBean('abc', '123', 'mypassword', 'myusername')
 except Exception, f:
+    errors += 1
     print f
 
 try:
@@ -61,6 +79,7 @@ try:
     options = client.factory.create('ns1:MapImageOptions')
     print options
 except Exception, f:
+    errors += 1
     print f
 
 try:
@@ -70,6 +89,7 @@ try:
     print client
     print client.service.getBank("76251020")
 except Exception, f:
+    errors += 1
     print f
 
 try:
@@ -79,6 +99,7 @@ try:
     print client
     print client.service.getDistance('27613', '21601')
 except Exception, f:
+    errors += 1
     print f
     
 try:
@@ -87,4 +108,7 @@ try:
     client = Client(url)
     print client
 except Exception, f:
+    errors += 1
     print f
+
+print '\nFinished: errors = %d' % errors
