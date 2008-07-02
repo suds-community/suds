@@ -282,10 +282,7 @@ def basic_rpc_literal():
         errors += 1
     except Exception, e:
         print e
-        
-    #
-    # test faults
-    #
+
     try:
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceRPCTestBean?wsdl'
         start(url)
