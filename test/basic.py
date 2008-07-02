@@ -19,9 +19,11 @@ from suds import logger, WebFault
 import logging
 from suds.client import Client
 
-print '_____________________ L O C A L (axis2) _________________________'
+print '_____________________ L O C A L (axis) _________________________'
 
-url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
+axis2url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
+axisUrl = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
+url = axisUrl
 
 #logger('suds.client').setLevel(logging.DEBUG)
     
@@ -41,7 +43,7 @@ print client
 # create a name object using the wsdl
 #
 print 'create name'
-name = client.factory.create('ns0:Name')
+name = client.factory.create('ns2:Name')
 name.first = u'jeff'+unichr(1234)
 name.last = 'ortel'
 
@@ -51,20 +53,27 @@ print name
 # create a phone object using the wsdl
 #
 print 'create phone'
-phoneA = client.factory.create('ns0:Phone')
+phoneA = client.factory.create('ns2:Phone')
 phoneA.npa = 410
 phoneA.nxx = 822
 phoneA.number = 5138
 
-phoneB = client.factory.create('ns0:Phone')
+phoneB = client.factory.create('ns2:Phone')
 phoneB.npa = 919
 phoneB.nxx = 606
 phoneB.number = 4406
 
 #
+# create a dog
+#
+dog = client.factory.create('ns2:Dog')
+dog.name = 'Chance'
+dog.trained = True
+
+#
 # create a person object using the wsdl
 #
-person = client.factory.create('ns0:Person')
+person = client.factory.create('ns2:Person')
 
 #
 # inspect empty person
@@ -73,8 +82,8 @@ print '{empty} person=\n%s' % person
 
 person.name = name
 person.age = 43
-person.phone.append(phoneA)
-person.phone.append(phoneB)
+person.phone = [phoneA,phoneB]
+person.pets = [dog]
 
 #
 # inspect person
@@ -91,17 +100,25 @@ print '\nreply(\n%s\n)\n' % result.encode('utf-8')
 #
 # create a new name object used to update the person
 #
-newname = client.factory.create('ns0:Name')
+newname = client.factory.create('ns2:Name')
 newname.first = 'Todd'
 newname.last = None
+
+ap = client.factory.create('ns2:AnotherPerson')
+ap.name = person.name
+ap.age = person.age
+ap.phone = person.phone
+ap.pets = person.pets
+
+print 'AnotherPerson\n%s' % ap
 
 #
 # update the person's name (using the webservice) and print return person object
 #
 print 'updatePersion()'
-result = client.service.updatePerson(person, newname)
+result = client.service.updatePerson(ap, newname)
 print '\nreply(\n%s\n)\n' % str(result)
-result = client.service.updatePerson(person, None)
+result = client.service.updatePerson(ap, None)
 print '\nreply(\n%s\n)\n' % str(result)
 
 
@@ -158,8 +175,10 @@ result = client.service.getList('hello', 3)
 print '\nreply( %s )\n' % str(result)
 
 print 'addPet()'
-dog = client.factory.create('ns0:Dog')
+dog = client.factory.create('ns2:Dog')
 dog.name = 'Chance'
+dog.trained = True
+print dog
 try:
     result = client.service.addPet(person, dog)
     print '\nreply( %s )\n' % str(result)
@@ -207,7 +226,7 @@ except WebFault, f:
     
 client = Client('http://arcweb.esri.com/services/v2/MapImage.wsdl')
 print client
-env = client.factory.create('ns0:Envelope')
+env = client.factory.create('ns2:Envelope')
 print env
 options = client.factory.create('ns1:MapImageOptions')
 print options
@@ -215,4 +234,25 @@ print options
 url = "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"
 client = Client(url)
 print client
-print client.service.getBank("76251020")
+try:
+    print client.service.getBank("76251020")
+except WebFault, f:
+    print f
+
+url = "http://webservices.imacination.com/distance/Distance.jws?wsdl"
+client = Client(url)
+print client
+try:
+    print client.service.getDistance('27613', '21601')
+except WebFault, f:
+    print f
+    
+url = "http://arcweb.esri.com/services/v2/RouteFinder.wsdl"
+client = Client(url)
+print client
+try:
+    pass
+except WebFault, f:
+    print f
+    
+    
