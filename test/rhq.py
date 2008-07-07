@@ -347,13 +347,13 @@ def perspectives():
         # get all (content) perspectives
         #
         print 'getPerspective()'
-        perspectives = service.getPerspective("content")
+        perspectives = client.service.getPerspective("content")
         print 'perspectives: ', str(perspectives)
         #
         # get all perspectives
         #     
         print 'getAllPerspective()'
-        perspectives = service.getAllPerspectives()
+        perspectives = client.service.getAllPerspectives()
         print 'perspectives: ', str(perspectives)
     except Exception, e:
         errors += 1
@@ -408,10 +408,10 @@ def content_source():
 if __name__ == '__main__':
     
     errors = 0
-    basic_doc_literal()
-    basic_rpc_literal()
+    #basic_doc_literal()
+    #basic_rpc_literal()
     authentication()
     perspectives()
-    content_source()
+    #content_source()
     
     print '\nFinished: errors=%d' % errors
