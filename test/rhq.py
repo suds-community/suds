@@ -28,6 +28,7 @@ errors = 0
 subject = None
 
 #logger('suds.client').setLevel(logging.DEBUG)
+#logger('suds.xsd.schema').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -346,7 +347,7 @@ def perspectives():
         #
         # get all (content) perspectives
         #
-        print 'getPerspective()'
+        print 'getPerspective(content)'
         perspectives = client.service.getPerspective("content")
         print 'perspectives: ', str(perspectives)
         #
