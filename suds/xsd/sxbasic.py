@@ -292,6 +292,7 @@ class Element(Polymorphic):
             self.referenced.init(self.stage)
             self.root = self.referenced.root
             self.children = self.referenced.children
+            self.attributes = self.referenced.attributes
         else:
             self.promote_grandchildren()
         self.derived = self.resolve().derived

@@ -232,7 +232,7 @@ class Schema:
                 
     def __init0__(self):
         """ create children """
-        self.children = self.factory.build(self.root)
+        self.children = self.factory.build(self.root)[1]
 
     def __init1__(self):
         """ run children through depsolving and child promotion """

@@ -359,7 +359,11 @@ class SchemaObject:
         if ref is not None:
             result.append(' type="%s"' % ref)
         if len(self):
-            for c in ( self.attributes + self.children ):
+            for c in self.attributes:
+                result.append('\n')
+                result.append(c.str(indent+1))
+                result.append('@')
+            for c in self.children:
                 result.append('\n')
                 result.append(c.str(indent+1))
             result.append('\n%s' % tab)
