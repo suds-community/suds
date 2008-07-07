@@ -70,14 +70,18 @@ class Factory:
         @return: A schema object graph.
         @rtype: L{sxbase.SchemaObject}
         """
-        result = []
+        children = []
+        attributes = []
         for node in root.children:
             if '*' in filter or node.name in filter:
                 child = self.create(basic=node)
                 child.factory = self
-                result.append(child)
-                child.children = self.build(node, child.valid_children())
-        return result
+                if child.isattr():
+                    attributes.append(child)
+                else:
+                    children.append(child)
+                child.attributes, child.children = self.build(node, child.valid_children())
+        return (attributes, children)
     
     def create(self, basic=None, builtin=None, query=None):
         """
