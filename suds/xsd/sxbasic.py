@@ -364,13 +364,21 @@ class Import(SchemaObject):
         @rtype: L{SchemaObject}
         @see: L{qualified_reference()}
         """
-        result = None
-        if self.imp.schema is not None:
-            query = self.factory.create(query=ref)
-            query.clsfilter = classes
-            query.qualify(self.root, self.schema.tns)
-            result = query.execute(self.imp.schema)
-        return result
+        if self.imp.schema is None:
+            return None
+        if isqref(ref):
+            n, ns = ref
+        else:
+            n, ns = qualified_reference(ref, self.root, self.namespace())
+        for c in self.imp.schema.children:
+            if c.match(n, ns, classes=classes):
+                return c
+        qref = (n, ns)
+        for c in self.imp.schema.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                return p
+        return None
     
     def xsfind(self, query):
         """

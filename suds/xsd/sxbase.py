@@ -485,12 +485,14 @@ class Polymorphic(SchemaObject):
         first, then look deeper.
         """
         classes = (self.__class__,)
+        n, ns = qualified_reference(ref, self.root, self.namespace())
         for c in self.schema.children:
-            if c.match(ref, classes=classes):
+            if c.match(n, ns=ns, classes=classes):
                 self.referenced = c
                 return
+        qref = (n, ns)
         for c in self.schema.children:
-            p = c.find(ref, classes)
+            p = c.find(qref, classes)
             if p is not None:
                 self.referenced = p
                 return
