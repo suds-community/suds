@@ -408,10 +408,10 @@ def content_source():
 if __name__ == '__main__':
     
     errors = 0
-    #basic_doc_literal()
-    #basic_rpc_literal()
+    basic_doc_literal()
+    basic_rpc_literal()
     authentication()
     perspectives()
-    #content_source()
+    content_source()
     
     print '\nFinished: errors=%d' % errors
