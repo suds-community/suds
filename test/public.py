@@ -15,7 +15,6 @@
 import sys
 sys.path.append('../')
 
-from test import *
 from suds import logger, WebFault
 import logging
 from suds.client import Client
