@@ -35,10 +35,13 @@ try:
     print 'Logon()'
     reply = client.service.Logon('testuser','test')
     print reply
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 try:
     url = 'http://soa.ebrev.info/service.wsdl'
@@ -49,6 +52,9 @@ except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 try:
     url = 'https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl'
@@ -56,10 +62,13 @@ try:
     client = Client(url)
     print client
     print client.service.genSSHA('hello', 'sha1')
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 try:
     url = 'http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL'
@@ -67,10 +76,13 @@ try:
     client = Client(url)
     print client
     bean = client.service.getUserBean('abc', '123', 'mypassword', 'myusername')
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 try:
     url = 'http://arcweb.esri.com/services/v2/MapImage.wsdl'
@@ -81,10 +93,13 @@ try:
     print env
     options = client.factory.create('ns1:MapImageOptions')
     print options
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 try:
     url = "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"
@@ -92,10 +107,13 @@ try:
     client = Client(url)
     print client
     print client.service.getBank("76251020")
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 try:
     url = "http://webservices.imacination.com/distance/Distance.jws?wsdl"
@@ -103,19 +121,25 @@ try:
     client = Client(url)
     print client
     print client.service.getDistance('27613', '21601')
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
     
 try:
     url = "http://arcweb.esri.com/services/v2/RouteFinder.wsdl"
     start(url)
     client = Client(url)
     print client
-except Exception, f:
+except WebFault, f:
     errors += 1
     print f
     print f.fault
+except Exception, e:
+    errors += 1
+    print e
 
 print '\nFinished: errors = %d' % errors

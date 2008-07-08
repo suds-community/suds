@@ -101,6 +101,10 @@ try:
     print '\nreply(\n%s\n)\n' % str(result)
     result = client.service.updatePerson(ap, None)
     print '\nreply(\n%s\n)\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
@@ -112,6 +116,10 @@ try:
     print 'echo(None)'
     result = client.service.echo(None)
     print '\nreply( %s )\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
@@ -120,6 +128,10 @@ try:
     print 'hello()'
     result = client.service.hello()
     print '\nreply( %s )\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
@@ -128,15 +140,24 @@ try:
     print 'testVoid()'
     result = client.service.testVoid()
     print '\nreply( %s )\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
+
 try:
     array = client.factory.create('ns0:stringArray')
     array.item = ['my', 'dog', 'likes', 'steak']
     print 'testListArgs()\n%s\n' % array
     result = client.service.testListArg(array)
     print '\nreply( %s )\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
@@ -150,6 +171,10 @@ try:
         if n > 0 and n != len(result.item):
             errors += 1
             print 'expected (%d), reply (%d)' % (n, len(result.item))
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
@@ -160,7 +185,11 @@ try:
     print '\nreply( %s )\n' % tostr(result)
     print 'Fault expected and not raised'
     errors += 1
+except WebFault, f:
+    print f
+    print f.fault
 except Exception, e:
+    errors += 1
     print e
 
 try:
@@ -170,6 +199,10 @@ try:
     print 'testExceptions()'
     result = client.service.testExceptions()
     print '\nreply( %s )\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
 except Exception, e:
     errors += 1
     print e
