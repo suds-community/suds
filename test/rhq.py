@@ -20,7 +20,7 @@
 import sys
 sys.path.append('../')
 
-from suds import logger
+from suds import *
 import logging
 from suds.client import Client
 
@@ -90,6 +90,10 @@ def basic_doc_literal():
         print '\nreply(\n%s\n)\n' % str(result)
         result = client.service.updatePerson(person, None)
         print '\nreply(\n%s\n)\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -101,6 +105,10 @@ def basic_doc_literal():
         print 'echo(None)'
         result = client.service.echo(None)
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -109,6 +117,10 @@ def basic_doc_literal():
         print 'hello()'
         result = client.service.hello()
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -117,6 +129,10 @@ def basic_doc_literal():
         print 'testVoid()'
         result = client.service.testVoid()
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -126,6 +142,10 @@ def basic_doc_literal():
         print 'testListArgs(%s)' % mylist
         result = client.service.testListArg(mylist)
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -139,6 +159,10 @@ def basic_doc_literal():
             if len(result) != n:
                 errors += 1
                 print 'expected (%d), reply (%d)' % (n, len(result))
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -149,7 +173,11 @@ def basic_doc_literal():
         print '\nreply( %s )\n' % tostr(result)
         print 'Fault expected and not raised'
         errors += 1
+    except WebFault, f:
+        print f
+        print f.fault
     except Exception, e:
+        errors += 1
         print e
         
     #
@@ -162,6 +190,10 @@ def basic_doc_literal():
         print 'testExceptions()'
         result = client.service.testExceptions()
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -221,6 +253,10 @@ def basic_rpc_literal():
         print '\nreply(\n%s\n)\n' % str(result)
         result = client.service.updatePerson(person, None)
         print '\nreply(\n%s\n)\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -232,6 +268,10 @@ def basic_rpc_literal():
         print 'echo(None)'
         result = client.service.echo(None)
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -240,6 +280,10 @@ def basic_rpc_literal():
         print 'hello()'
         result = client.service.hello()
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -248,6 +292,10 @@ def basic_rpc_literal():
         print 'testVoid()'
         result = client.service.testVoid()
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -258,6 +306,10 @@ def basic_rpc_literal():
         print 'testListArgs()\n%s\n' % array
         result = client.service.testListArg(array)
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -271,6 +323,10 @@ def basic_rpc_literal():
             if n > 0 and n != len(result.item):
                 errors += 1
                 print 'expected (%d), reply (%d)' % (n, len(result.item))
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -281,7 +337,11 @@ def basic_rpc_literal():
         print '\nreply( %s )\n' % tostr(result)
         print 'Fault expected and not raised'
         errors += 1
+    except WebFault, f:
+        print f
+        print f.fault
     except Exception, e:
+        errors += 1
         print e
 
     try:
@@ -291,6 +351,10 @@ def basic_rpc_literal():
         print 'testExceptions()'
         result = client.service.testExceptions()
         print '\nreply( %s )\n' % str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -331,6 +395,10 @@ def authentication():
         print subject
         prefs = client.service.loadUserConfiguration(id)
         print 'Reply:\n(\n%s\n)\n' % str(prefs)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -356,6 +424,10 @@ def perspectives():
         print 'getAllPerspective()'
         perspectives = client.service.getAllPerspectives()
         print 'perspectives: ', str(perspectives)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
@@ -401,6 +473,10 @@ def content_source():
                             configuration, 
                             False)
         print 'createContentSource: ', str(result)
+    except WebFault, f:
+        errors += 1
+        print f
+        print f.fault
     except Exception, e:
         errors += 1
         print e
