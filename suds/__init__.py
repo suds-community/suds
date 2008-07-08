@@ -30,41 +30,28 @@ socket.setdefaulttimeout(10)
 
 class MethodNotFound(Exception):
     def __init__(self, name):
-        self.name = name
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-    def __unicode__(self):
-        return 'service method: %s not-found' % unicode(self.name)
+        Exception.__init__(self, "Method not found: '%s'" % name)
     
 class TypeNotFound(Exception):
     def __init__(self, name):
-        self.name = name
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-    def __unicode__(self):
-        return 'WSDL/XSD type: %s not-found' % unicode(self.name)
+        Exception.__init__(self, "Type not found: '%s'" % name)
     
 class BuildError(Exception):
-    def __init__(self, type):
-        self.type = type
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-    def __unicode__(self):
-        return \
-            """
-            An error occured while building a instance of (%s).  As a result
-            the object you requested could not be constructed.  It is recommended
-            that you construct the type manually uisng a Suds object.
-            Please notify the project mantainer of this error.
-            """ % unicode(self.type)
+    msg = \
+        """
+        An error occured while building a instance of (%s).  As a result
+        the object you requested could not be constructed.  It is recommended
+        that you construct the type manually uisng a Suds object.
+        Please notify the project mantainer of this error.
+        """
+    def __init__(self, name):
+        Exception.__init__(self, BuildError.msg % name)
     
 class WebFault(Exception):
-    def __init__(self, type):
-        self.type = type
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-    def __unicode__(self):
-        return 'service endpoint raised fault %s\n' % unicode(self.type)
+    def __init__(self, fault):
+        if hasattr(fault, 'faultstring'):
+            Exception.__init__(self, "Server raised fault: '%s'" % fault.faultstring)
+        self.fault = fault
 
 #
 # Logging

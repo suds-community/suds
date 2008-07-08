@@ -136,7 +136,7 @@ class Binding:
         unmarshaller = self.unmarshaller.basic
         p = unmarshaller.process(fault)
         if self.faults:
-            raise WebFault(unicode(p))
+            raise WebFault(p)
         else:
             return p.detail
     
