@@ -38,6 +38,7 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
 
 try:
     url = 'http://soa.ebrev.info/service.wsdl'
@@ -47,6 +48,7 @@ try:
 except WebFault, f:
     errors += 1
     print f
+    print f.fault
 
 try:
     url = 'https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl'
@@ -57,6 +59,7 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
 
 try:
     url = 'http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL'
@@ -67,6 +70,7 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
 
 try:
     url = 'http://arcweb.esri.com/services/v2/MapImage.wsdl'
@@ -80,6 +84,7 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
 
 try:
     url = "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"
@@ -90,6 +95,7 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
 
 try:
     url = "http://webservices.imacination.com/distance/Distance.jws?wsdl"
@@ -100,6 +106,7 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
     
 try:
     url = "http://arcweb.esri.com/services/v2/RouteFinder.wsdl"
@@ -109,5 +116,6 @@ try:
 except Exception, f:
     errors += 1
     print f
+    print f.fault
 
 print '\nFinished: errors = %d' % errors
