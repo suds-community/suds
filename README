@@ -655,3 +655,166 @@ version 0.2.1 (5-8-08):
    * Update serviceproxy.py:set_proxies() to log DEBUG instead of INFO.
    
    * Enhance schema __str__ to show both the raw xml and the model (mostly for debugging).
+
+version 0.2.2 (7-8-08):
+
+   * Update exceptions to be more /standard/ python by using Exception.__init__() to set Exception.message as
+     suggested by Ticket #14; update bindings to raise WebFault passing (p)
+   
+   * Add capability in bindings to handle multiple root nodes in the returned values;
+     returned as a composite object unlike when lists are returned
+   
+   * Fix soapAction to be enclosed by quotes
+   
+   * Add support for <xs:all/>
+   
+   * Fix unbounded() method in SchemaObject
+   
+   * Refactored schema into new (xsd) package.  Files just getting too big. Added execute() to
+     Query and retrofitted suds to execute() query instead of using Schema.find() directly.  
+     Also, move hokey start() methods from schema, as well as, query incrementation.
+   
+   * Refactor SoapClient and 
+       1) rename send() to invoke()
+       2) split message sending from invoke() and place in send();
+     Add TestClient which allows for invocation kwargs to have inject={'msg=, and reply='} for message
+     and reply injection; Add Namespace class to sax for better management of namespace behavior;
+     retrofix suds to import and use Namespace
+   
+   * Change the default namespace used to resolve referenced types (base=,type=,etc) when no prefix is
+     specified from the targetNamespace (tns) to the XML (node) namesapce
+   
+   * Apply fix as defined by davidglick@onenw.org in ticket #13;
+     update service definition to print to display service methods as ' my_method(xs:int arg0, Person arg1) '
+     instead of ' my_method(arg0{xs:int}, arg1{Person}) ' which is more like traditional method signatures
+   
+   * Add xsd/python type converstion to unmarshaller (XBoolean only); refactor unmarshaller to use Content
+     class which makes apis cleaner, adds symmetry between marshaller(s) and unmarshaller(s),
+     provides good mechanism for schema-property based type conversions
+   
+   * Refactor marshaller with Appenders; add nobuiltin flag to resolve() to support fix for
+     returned_type() and returnes_collection() in bindings.
+   
+   * Add support for (202,204) http codes
+   
+   * Add XBoolean and mappings; add findattr() to TreeResolver in preparation for type conversions
+   
+   * Updated schema and schema property loading (deep recusion stopped); Changed Imported schemas so then no
+     longer copy imported schemas, rather the import proxies find requests; Add ServiceDefinition class which
+     provides better service inspection; also provides namespace mapping and show types; schema property api simplified;
+     support for xs:any and xs:anyType added; Some schema lookup problems fixed; Binding classes refactored slightly;
+     A lot of debug logging added (might have to comment some out for performance - some of the args are expensive).
+   
+   * Add sudsobject.Property; a property is a special Object that contains a (value) attributeand is returned by the
+     Builder (factory) for schema-types without children such as: <element/> and <simpleType/>; Builder, Marshallers
+     and Resolvers updated to handle Properties; Resolver, Schema also updated to handle attribute lookups (this was missing)
+   
+   * Make sudsobject.Factory a singleton
+   
+   * Fix unmarshalling error - list of simple elements unmarshalling as [<empty>,...]
+   
+   * Add groundwork for user defined soap headers (see readme)
+   
+   * Fix elementFormDefault per ticket #7
+   
+   * Remove unused kwargs from bindings; cache bindings in wsdl; retrofit legacy ServiceProxy to delegate to {new} Client API;
+     remove keyword nil_supported in favor of natural handling by 'nillable' attribute on <element/> within schemas
+   
+   * Add support for <element/> attribute flags (nillable and form)
+   
+   * Add the Proxy (2nd generation API) class
+   
+   * Updated the serviceproxy.Factory to use the simpler create() method; updated readme
+   
+   * Add accessor/conversion functions to that user don't need to access __x__ attributes.
+     Also add todict() and get_items() for easy conversion to dictionary and iteration
+   
+   * Search top-level elements for @ref before looking deeper
+   
+   * Add derived() to SchemaObject.  This is needed to ensure that all derviced types (wsdl classes)
+     are qualified by xsi:type without specifying the xsi:type for all custom types as did in earlier
+     releases of suds.  Update the literal marshaller to only add the xsi:type when the type needs
+     to be specified.
+   
+   * Change ns promotion in sax to prevent ns promoted to parent when parent has the prefix
+   
+   * Returned_type() returns the (unresolved) Element 
+   
+   * In order to support the new features and fix reported bugs,
+     I'm in the process of refactoring and hopefully evolving the components
+     in Suds that provide the input/output translations:
+   
+     * Builder ( translates: XSD objects => python objects )
+     * Marshaller ( translates: python objects => XML/SOAP )
+     * Unmarshaller ( translates: soap/xml => python objects )
+   
+     This evolution will provide better symmetry between these components as follows:
+   
+     The Builder and Unmarshaller will produce python
+     (subclass of sudsobject.Object) objects with:
+   
+     *  __metadata__.__type__ = XSD type (SchemaProperty)
+     * subclass name ( __class__.__name__ ) = schema-type name.
+   
+     and
+   
+     The Marshaller(s), while consuming python objects produced by the Builder or
+     Unmarshaller, will leverage this standard information to
+     produce the appropriate output ( XML/SOAP ).
+   
+     The 0.2.1 code behaves *mostly* like this but ... not quite.
+     Also, the implementations have some redundancy.
+   
+     While doing this, it made sense to factor out the common schema-type "lookup"
+     functionality used by the Builder, Marshallers and Unmarshaller classes into a
+     hierarchy of "Resolver" classes.  This reduces the complexity and redundancy
+     of the Builder, Marshallers and Unmarshaller classes and allows for better
+     modularity.  Once this refactoring was complete, the difference between the
+     literal/encoded Marshallers became very small.  Given that the amount of code
+     in the bindings.literal and bindings.encoded packages was small (and getting smaller)
+     and in the interest of keeping the Suds code base compact, I moved all of the
+     marshalling classes to the bindings.marshaller module.
+     All of the bindings.XX sub-packages will be removed.
+   
+     The net effect:
+   
+     All of the Suds major components:
+   
+     * client (old: service proxy)
+     * wsdl
+       * schema
+       * resolvers
+     * output (marshalling)
+     * builder
+     * input (unmarshalling)
+   
+     Now have better:
+   
+      * modularity
+      * symmetry with regard to Object metadata.
+      * code re-use (< 1% code duplication --- i hope)
+      * looser coupling
+   
+     ... and better provide for the following features/bug-fixes:
+   
+     * (fix) Proper level of XML element qualification based on
+        <schema elementFormDefault=""/> attribute.  This will ensure that when
+        elementFormDefault="qualified", Suds will include the proper namespace on
+        root elements for both literal and encoded bindings.  In order for this to
+        work properly, the literal marshaller (like the encoded marshaller) needed
+        to be schema-type aware.  Had i added the same schema-type lookup as the
+        encoded marshaller instead of the refactoring described above, the two
+        classes would have been almost a complete duplicate of each other :-(
+   
+   * The builder and unmarshaller used the schema.Schema.find()
+     to resolve schema-types.  They constructed a path as "person.name.first"
+     to resolve types in proper context.  Since the Schema.find() was stateless,
+     it resolved the intermediate path elements on every call.  The new resolver
+     classes are statefull and resolve child types *much* more efficiently.
+   
+   * Name collisions in sudsobject.Object like the items() method.  I've moved all
+     methods (including class methods) to a Factory class that is included in the Object class
+     as a class attr ( __factory__ ).  Now that *all* attributes have python built-in naming,
+     we should not have any more name collisions.  This of course assumes that no wsdl/schema
+     entity names will have a name with the python built-in naming convention
+     but I have to draw the line somewhere :-) 
