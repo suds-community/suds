@@ -183,8 +183,7 @@ try:
     print 'testExceptions()' 
     result = client.service.testExceptions()
     print '\nreply( %s )\n' % tostr(result)
-    print 'Fault expected and not raised'
-    errors += 1
+    raise Exception('Fault expected and not raised')
 except WebFault, f:
     print f
     print f.fault
