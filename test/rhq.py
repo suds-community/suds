@@ -43,6 +43,7 @@ def basic_doc_literal():
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceTestBean?wsdl'
         start(url)
         client = Client(url)
+        print client
         #
         # create name
         #
@@ -205,6 +206,7 @@ def basic_rpc_literal():
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceRPCTestBean?wsdl'
         start(url)
         client = Client(url)
+        print client
         #
         # create name
         #
