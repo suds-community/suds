@@ -38,11 +38,12 @@ class WSDL:
     a web services definition language inspection object
     """
     
-    def __init__(self, url):
+    def __init__(self, url, opener=None):
         self.url = url
         try:
             log.debug('reading wsdl at: %s ...', url)
-            self.root = Parser().parse(url=url).root()
+            p = Parser(opener)
+            self.root = p.parse(url=url).root()
             self.tns = self.__tns()
             self.schema = self.__get_schema()
             log.debug('parsed content:\n%s', unicode(self.root))

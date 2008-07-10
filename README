@@ -397,39 +397,26 @@ AUTHENTICATION
 
 Revision 63+ (and release 0.1.8+) includes the migration from httplib to urllib2
 which enables users to leverage all of the authentication features provided
-by urllib2.  For example basic http authentication could be implemented
+by urllib2.  For example basic HTTP authentication could be implemented
 as follows:
 
-  > import urllib2
-  > 
-  > theurl = 'www.someserver.com/toplevelurl/somepage.htm'
-  > protocol = 'http://'
-  > username = 'johnny'
-  > password = 'XXXXXX'
-  > # a great password
-  > 
-  > passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-  > # this creates a password manager
-  > passman.add_password(None, theurl, username, password)
-  > # because we have put None at the start it will always
-  > # use this username/password combination for  urls
-  > # for which `theurl` is a super-url
-  > 
-  > authhandler = urllib2.HTTPBasicAuthHandler(passman)
-  > # create the AuthHandler
-  > 
-  > opener = urllib2.build_opener(authhandler)
-  > 
-  > urllib2.install_opener(opener)
-  > # All calls to urllib2.urlopen will now use our handler
-  > # Make sure not to include the protocol in with the URL, or
-  > # HTTPPasswordMgrWithDefaultRealm will be very confused.
-  > # You must (of course) use it when fetching the page though.
-  > 
-  > pagehandle = urllib2.urlopen(protocol + theurl)
+>
+> import urllib2
+> baseurl = 'http://localhost:7080/'
+> username = 'myuser'
+> password = 'mypassword'
+> passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+> passman.add_password(None, baseurl, username, password)
+> authhandler = urllib2.HTTPBasicAuthHandler(passman)
+> opener = urllib2.build_opener(authhandler)
+>
+> myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+> client = Client(myurl, urlopener=opener)
+>
 
 Since suds uses urllib2.urlopen(), basic http authentication is handled
-automatically for you if you setup the urllib2 library correctly.
+automatically if you create the urlopener correctly and set the urlopener
+using the 'urlopener' keyword argument.
 
 PROXIES
 
