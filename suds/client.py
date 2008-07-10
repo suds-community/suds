@@ -51,8 +51,10 @@ class Client(object):
                 else return tuple from service method invocation as (http code, object).
         @type faults: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
-                           The proxy is defined as {protocol:proxy,}
+                The proxy is defined as {protocol:proxy,}
         @type proxy: dict
+        @keyword opener: A urllib2 opener to be used to open urls.
+        @type opener: A I{urllib2.Opener}
         """
         client = SoapClient(url, kwargs)
         schema = client.schema
@@ -230,8 +232,10 @@ class SoapClient:
                 else return tuple from service method invocation as (http code, object).
         @type faults: boolean
         @keyword proxy: An http proxy to be specified on requests (default:{}).
-                           The proxy is defined as {protocol:proxy,}
+                The proxy is defined as {protocol:proxy,}
         @type proxy: dict
+        @keyword opener: A urllib2 opener to be used to open urls.
+        @type opener: A I{urllib2.Opener}
         """
         self.arg = Object()
         self.arg.faults = kwargs.get('faults', True)
