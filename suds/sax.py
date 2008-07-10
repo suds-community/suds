@@ -983,6 +983,9 @@ class Handler(ContentHandler):
 
 class Parser:
     """ simple parser """
+    
+    def __init__(self, opener=None):
+        self.opener = opener
         
     def parse(self, file=None, url=None, string=None):
         """ parse a document """
@@ -991,12 +994,18 @@ class Parser:
             parse(file, handler)
             return handler.nodes[0]
         if url is not None:
-            parse(urlopen(url), handler)
+            parse(self.urlopen(url), handler)
             return handler.nodes[0]
         if string is not None:
             parseString(string, handler)
             return handler.nodes[0]
 
+    def urlopen(self, url):
+        """ open the specified url """
+        if self.opener is None:
+            return urlopen(url)
+        else:
+            return self.opener.open(url)
 
 
 encodings = \

@@ -19,7 +19,7 @@ See I{README.txt}
 """
 
 from cookielib import CookieJar
-from urllib2 import Request, urlopen, urlparse, HTTPError
+from urllib2 import Request, HTTPError, urlopen, urlparse
 from suds import *
 from suds import sudsobject
 from sudsobject import Factory as InstFactory, Object
@@ -236,7 +236,8 @@ class SoapClient:
         self.arg = Object()
         self.arg.faults = kwargs.get('faults', True)
         self.arg.proxies = kwargs.get('proxy', {})
-        self.wsdl = WSDL(url)
+        self.arg.opener = kwargs.get('opener', None)
+        self.wsdl = WSDL(url, self.arg.opener)
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
         self.cookiejar = CookieJar()
@@ -284,7 +285,7 @@ class SoapClient:
             request = Request(location, msg, headers)
             self.cookiejar.add_cookie_header(request) 
             self.set_proxies(location, request)
-            fp = urlopen(request)
+            fp = self.urlopen(request)
             self.cookiejar.extract_cookies(fp, request)
             reply = fp.read()
             result = self.succeeded(binding, method, reply)
@@ -295,6 +296,18 @@ class SoapClient:
                 log.error(self.last_sent)
                 result = self.failed(binding, method, e)
         return result
+    
+    def urlopen(self, request):
+        """
+        Open the url as specified by the request using either the default
+        urllib2 opener or the opener specified by the user.
+        @param request: An http request object.
+        @type request: L{Request}
+        """
+        if self.arg.opener is None:
+            return urlopen(request)
+        else:
+            return self.arg.opener.open(request)
     
     def set_proxies(self, location, request):
         """
