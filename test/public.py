@@ -15,6 +15,7 @@
 import sys
 sys.path.append('../')
 
+import suds.metrics as metrics
 from suds import logger, WebFault
 import logging
 from suds.client import Client
@@ -22,6 +23,8 @@ from suds.client import Client
 errors = 0
 
 #logger('suds.client').setLevel(logging.DEBUG)
+#logger('suds.metrics').setLevel(logging.DEBUG)
+#logger('suds').setLevel(logging.DEBUG)
 
 def start(url):
     print '\n________________________________________________________________\n' 
@@ -134,6 +137,27 @@ try:
     start(url)
     client = Client(url)
     print client
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    
+try:
+    url = "https://www.e-conomic.com/secure/api1/EconomicWebService.asmx?WSDL"
+    start(url)
+    timer = metrics.Timer()
+    timer.start()
+    client = Client(url)
+    timer.stop()
+    print 'create client: %s' % timer
+    timer.start()
+    s = str(client)
+    timer.stop()
+    print 'str(client): %s' % timer
+    print 'client:\n%s' % s
 except WebFault, f:
     errors += 1
     print f

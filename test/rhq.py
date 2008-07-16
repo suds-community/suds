@@ -23,12 +23,14 @@ sys.path.append('../')
 from suds import *
 import logging
 from suds.client import Client
+from traceback import print_exc
 
 errors = 0
 subject = None
 
 #logger('suds.client').setLevel(logging.DEBUG)
 #logger('suds.xsd.schema').setLevel(logging.DEBUG)
+#logger('suds.metrics').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -480,6 +482,7 @@ def content_source():
     except Exception, e:
         errors += 1
         print e
+        print_exc()
 
         
 if __name__ == '__main__':
