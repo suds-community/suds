@@ -55,12 +55,16 @@ class Complex(SchemaObject):
         """ gets the <xs:complexType name=""/> attribute value """
         return self.root.get('name')
     
-    def __init0__(self):
-        """ update derived flag """
-        for c in self.children:
-            if c.__class__ in (Extension, ComplexContent):
-                self.derived = True
-                break
+    def derived(self):
+        try:
+            return self.__derived
+        except:
+            self.__derived = False
+            for c in self.children:
+                if c.__class__ in (Extension, ComplexContent):
+                    self.__derived = True
+                    break
+        return self.__derived
         
     def __init2__(self):
         """ promote grand-children """
@@ -295,7 +299,18 @@ class Element(Polymorphic):
             self.attributes = self.referenced.attributes
         else:
             self.promote_grandchildren()
-        self.derived = self.resolve().derived
+            
+    def derived(self):
+        """ get whether our resolved type is derived """
+        try:
+            return self.__derived
+        except:
+            resolved = self.resolve()
+            if resolved is self:
+                self.__derived = False
+            else:
+                self.__derived = resolved.derived()
+        return self.__derived
 
 
 class Extension(Complex):
@@ -351,7 +366,6 @@ class Import(SchemaObject):
         self.imp.schema = None
         self.imp.ns = (None, root.get('namespace'))
         self.imp.location = root.get('schemaLocation')
-        self.imp.external = False
         
     def find(self, ref, classes=()):
         """
@@ -371,7 +385,7 @@ class Import(SchemaObject):
             n, ns = ref
         else:
             n, ns = qualified_reference(ref, self.root, self.namespace())
-        for c in self.imp.schema.children:
+        for c in self.imp.schema.index.get(n, []):
             if c.match(n, ns, classes=classes):
                 return c
         qref = (n, ns)
@@ -399,13 +413,13 @@ class Import(SchemaObject):
         log.debug('%s, finding (%s) in:\n%s',
             self.id, 
             query.name,
-            repr(self.imp.schema))
+            Repr(self.imp.schema))
         result = self.imp.schema.find(query)
         if result is not None:
             log.debug('%s, found (%s) as %s',
                 self.id, 
                 query.qname, 
-                repr(result))
+                Repr(result))
         return result
     
     def marker(self, query):
@@ -420,13 +434,6 @@ class Import(SchemaObject):
         if self.imp.schema is not None:
             result = self.imp.schema.tns
         return result
-    
-    def skip(self):
-        """ skip this namespace """
-        return \
-            Namespace.xs(self.imp.ns) or \
-            self.imp.ns[1] == self.schema.tns or \
-            self.imp.ns[1] in self.schema.impfilter
             
     def str(self, indent=0):
         """
@@ -449,45 +456,35 @@ class Import(SchemaObject):
         return ''.join(result)
             
     def __init0__(self):
-        log.debug('%s, import (%s) at: (%s)', self.id, self.imp.ns[1], self.imp.location)
-        if self.skip():
-            log.debug('%s, import (%s) skipped', self.id, self.imp.ns[1])
-            return
-        schema = self.schema.schemabyns(self.imp.ns)
-        if schema is not None:
-            self.imp.schema = schema
-            self.__import_succeeded()
+        log.debug('%s, importing:\n%s', self.id, self.imp)
+        if self.imp.location is None:
+            self.imp.schema = self.__import_local()
         else:
-            self.imp.external = True
-            self.__import()
+            self.imp.schema = self.__import()
+        if self.imp.schema is not None:
+            self.__process_imported()
 
     def __import(self):
         """ import the xsd content at the specified url """
-        if self.imp.location is None:
-            url = self.imp.ns[1]
-        else:
-            url = self.imp.location
+        url = self.imp.location
         try:
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
-            p = Parser()
-            root = p.parse(url=url).root()
-            self.imp.schema = Schema(root, url, impfilter=self.schema.impfilter)
-            self.__import_succeeded()
+            root = Parser().parse(url=url).root()
+            return Schema(root, url)
         except Exception:
-            self.__import_failed(url)
-            
-    def __import_failed(self, url):
-        """ import failed """
-        self.schema.impfilter.add(self.imp.ns[1])
-        msg = \
-            'imported schema (%s) at (%s), not-found' \
-            (self.imp.ns[1], url)
-        log.debug('%s, %s', self.id, msg, exc_info=True)
-        if self.imp.location is not None:
+            msg = 'imported schema (%s) at (%s), not-found' (self.imp.ns[1], url)
+            log.error('%s, %s', self.id, msg, exc_info=True)
             raise Exception(msg)
+        
+    def __import_local(self):
+        """ import (local) xsd content using a namespace lookup """
+        result = self.schema.locate(self.imp.ns)
+        if result is None:
+            log.error('imported schema (%s) not-found', self.imp.ns[1])
+        return result
             
-    def __import_succeeded(self):
+    def __process_imported(self):
         """ process the imported schema """
         self.imp.schema.init(0)
         if self.imp.ns[0] is not None:

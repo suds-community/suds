@@ -26,12 +26,6 @@ from urlparse import urlparse
 
 log = logger(__name__)
 
-#
-# soap namespaces
-#
-soapencns = (None, 'http://schemas.xmlsoap.org/soap/encoding/')
-soapwsdlns = (None, 'http://schemas.xmlsoap.org/wsdl/')
-
 
 class WSDL:
     """
@@ -46,7 +40,7 @@ class WSDL:
             self.root = p.parse(url=url).root()
             self.tns = self.__tns()
             self.schema = self.__get_schema()
-            log.debug('parsed content:\n%s', unicode(self.root))
+            log.debug('parsed content:\n%s', self.root)
         except Exception, e:
             log.exception(e)
             raise e
@@ -65,9 +59,7 @@ class WSDL:
     
     def __get_schema(self):
         """ get a collective schema of all <schema/> nodes """
-        filter = \
-            set([soapencns[1], soapwsdlns[1]])
-        container = SchemaCollection(self, filter)
+        container = SchemaCollection(self)
         for root in self.root.childrenAtPath('types/schema'):
             container.add(root)
         if not len(container): # empty

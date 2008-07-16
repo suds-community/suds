@@ -163,21 +163,26 @@ class Printer:
         """ print object using the specified indent (n) and newline (nl). """
         if object is None:
             return 'None'
-        if self.complex(object):
-            if isinstance(object, (Object, dict)):
-                return self.print_complex(object, n+2, nl)
-            if isinstance(object, (list,tuple)):
-                return self.print_collection(object, n+2)
+        if isinstance(object, Object):
+            if len(object) == 0:
+                return '<empty>'
+            else:
+                return self.print_object(object, n+2, nl)
         if isinstance(object, Property):
             return self.print_property(object)
-        if isinstance(object, Object):
-            object = asdict(object)
-        if isinstance(object, (dict,list,tuple)):
-            if len(object) > 0:
-                return tostr(object)
-            else:
+        if isinstance(object, dict):
+            if len(object) == 0:
                 return '<empty>'
-        return '(%s)' % tostr(object)
+            else:
+                return self.print_dictionary(object, n+2, nl)
+        if isinstance(object, (list,tuple)):
+            if len(object) == 0:
+                return '<empty>'
+            else:
+                return self.print_collection(object, n+2)
+        if isinstance(object, basestring):
+            return '"%s"' % tostr(object)
+        return '%s' % tostr(object)
     
     def print_property(self, d):
         """ print a property object """
@@ -189,18 +194,40 @@ class Printer:
         s.append(self.process(d.value))
         return ''.join(s)
     
-    def print_complex(self, d, n, nl=False):
+    def print_object(self, d, n, nl=False):
         """ print complex using the specified indent (n) and newline (nl). """
         s = []
         if nl:
             s.append('\n')
             s.append(self.indent(n))
-        if isinstance(d, Object):
-            cls = d.__class__
-            if cls != Object:
-                s.append('(')
-                s.append(cls.__name__)
-                s.append(')')
+        cls = d.__class__
+        if cls != Object:
+            s.append('(')
+            s.append(cls.__name__)
+            s.append(')')
+        s.append('{')
+        for item in items(d):
+            s.append('\n')
+            s.append(self.indent(n+1))
+            if isinstance(item[1], (list,tuple)):            
+                s.append(item[0])
+                s.append('[]')
+            else:
+                s.append(item[0])
+            s.append(' = ')
+            item = self.unwrap(d, item)
+            s.append(self.process(item[1], n, True))
+        s.append('\n')
+        s.append(self.indent(n))
+        s.append('}')
+        return ''.join(s)
+    
+    def print_dictionary(self, d, n, nl=False):
+        """ print complex using the specified indent (n) and newline (nl). """
+        s = []
+        if nl:
+            s.append('\n')
+            s.append(self.indent(n))
         s.append('{')
         for item in items(d):
             s.append('\n')
@@ -227,18 +254,17 @@ class Printer:
             s.append(',')
         return ''.join(s)
     
-    def complex(self, object):
-        """ get whether the object is a complex type """
-        if isinstance(object, (Object, dict)):
-            if len(object) > 1:
-                return True
-            for item in items(object):
-                if self.complex(item[1]):
-                    return True
-        if isinstance(object, (list,tuple)):
-            if len(object) > 1: return True
-            for c in object:
-                if self.complex(c):
-                    return True
-            return False
-        return False
+    def unwrap(self, d, item):
+        """ translate (unwrap) using an optional wrapper function """
+        nopt = ( lambda x: x )
+        try:
+            md = d.__metadata__
+            pmd = getattr(md, '__print__', None)
+            if pmd is None:
+                return item
+            wrappers = getattr(pmd, 'wrappers', {})
+            fn = wrappers.get(item[0], nopt)
+            return (item[0], fn(item[1]))
+        except:
+            pass
+        return item

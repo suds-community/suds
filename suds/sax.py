@@ -25,6 +25,8 @@ containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
 
 """
 
+import re
+import suds.metrics
 from suds import *
 from urllib import urlopen
 from xml.sax import parse, parseString, ContentHandler
@@ -990,14 +992,22 @@ class Parser:
     def parse(self, file=None, url=None, string=None):
         """ parse a document """
         handler = Handler()
+        timer = metrics.Timer()
+        timer.start()
         if file is not None:
             parse(file, handler)
+            timer.stop()
+            metrics.log.debug('sax (%s) duration: %s', file, timer)
             return handler.nodes[0]
         if url is not None:
             parse(self.urlopen(url), handler)
+            timer.stop()
+            metrics.log.debug('sax (%s) duration: %s', url, timer)
             return handler.nodes[0]
         if string is not None:
             parseString(string, handler)
+            timer.stop()
+            metrics.log.debug('%s\nsax duration: %s', string, timer)
             return handler.nodes[0]
 
     def urlopen(self, url):
@@ -1009,16 +1019,24 @@ class Parser:
 
 
 encodings = \
-(( '&', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
+    (( '&', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
+special = \
+    ('&', '<', '>', '"', "'")
+
+def needs_encode(s):
+    for c in special:
+        if c in s:
+            return True
+    return False
 
 def encode(s):
-    if isinstance(s, basestring):
+    if isinstance(s, basestring) and needs_encode(s):
         for x in encodings:
             s = s.replace(x[0], x[1])
     return s
 
 def decode(s):
-    if isinstance(s, basestring):
+    if isinstance(s, basestring) and '&' in s:
         for x in encodings:
             s = s.replace(x[1], x[0])
     return s

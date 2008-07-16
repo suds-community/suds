@@ -20,7 +20,7 @@ is the denormalized, objectified and intelligent view of the schema.
 Most of the I{value-add} provided by the model is centered around
 tranparent referenced type resolution and targeted denormalization.
 """
-
+import suds.metrics
 from suds import *
 from suds.xsd import *
 from suds.xsd.factory import Factory
@@ -43,23 +43,18 @@ class SchemaCollection:
     @type baseurl: str
     @ivar children: A list contained schemas.
     @type children: [L{Schema},...]
-    @ivar impfilter: A list of namespaces B{not} to import.
-    @type impfilter: set
     """
     
-    def __init__(self, wsdl, impfilter=None):
+    def __init__(self, wsdl):
         """
         @param wsdl: A WSDL object.
         @type wsdl: L{wsdl.WSDL}
-        @param impfilter: A list of namespaces B{not} to import.
-        @type impfilter: set
         """
         self.root = wsdl.root
         self.id = objid(self)
         self.tns = wsdl.tns
         self.baseurl = wsdl.url
         self.children = []
-        self.impfilter = impfilter
         self.namespaces = {}
         
     def add(self, node):
@@ -68,7 +63,7 @@ class SchemaCollection:
         @param node: A <schema/> root node.
         @type node: L{sax.Element}
         """
-        child = Schema(node, self.baseurl, self, self.impfilter)
+        child = Schema(node, self.baseurl, self)
         self.children.append(child)
         self.namespaces[child.tns[1]] = child
         
@@ -79,10 +74,9 @@ class SchemaCollection:
         for stage in Schema.init_stages:
             for child in self.children:
                 child.init(stage)
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug('schema (%s):\n%s', self.baseurl, str(self))
+        log.debug('schema (%s):\n%s', self.baseurl, self)
         
-    def schemabyns(self, ns):
+    def locate(self, ns):
         """
         Find a schema by namespace.  Only the URI portion of
         the namespace is compared to each schema's I{targetNamespace}
@@ -98,7 +92,7 @@ class SchemaCollection:
         result = None
         if query.inprogress():
             for s in self.children:
-                log.debug('%s, finding (%s) in %s', self.id, query.name, repr(s))
+                log.debug('%s, finding (%s) in %s', self.id, query.name, Repr(s))
                 result = s.find(query)
                 if result is not None:
                     break
@@ -168,13 +162,11 @@ class Schema:
     @type children: [L{SchemaObject},...]
     @ivar factory: A property factory.
     @type factory: L{Factory}
-    @ivar impfilter: A list of namespaces B{not} to import.
-    @type impfilter: set
     """
     
     init_stages = range(0,4)
     
-    def __init__(self, root, baseurl, container=None, impfilter=None):
+    def __init__(self, root, baseurl, container=None):
         """
         @param root: The xml root.
         @type root: L{sax.Element}
@@ -182,8 +174,6 @@ class Schema:
         @type baseurl: basestring
         @param container: An optional container.
         @type container: L{SchemaCollection}
-        @param impfilter: A list of namespaces B{not} to import.
-        @type impfilter: set
         """
         self.root = root
         self.id = objid(self)
@@ -193,8 +183,9 @@ class Schema:
         self.container = container
         self.types = {}
         self.children = []
+        self.index = {}
+        self.imports = []
         self.factory = Factory(self)
-        self.impfilter = impfilter
         self.form_qualified = self.__form_qualified()
         if container is None:
             self.init(3)
@@ -220,19 +211,34 @@ class Schema:
         @param stage: The init stage to complete.
         """
         for n in range(0, (stage+1)):
+            timer = metrics.Timer()
             if self.stage < n:
                 m = '__init%s__' % n
                 self.stage = n
                 log.debug('%s, init (%d)', self.id, n)
                 if not hasattr(self, m): continue
                 method = getattr(self, m)
+                timer.start()
                 method()
                 for s in self.grandchildren():
                     s.init(n)
+                timer.stop()
+                metrics.log.debug('%s, init (%d) %s', self.id, n, timer)
                 
     def __init0__(self):
         """ create children """
         self.children = self.factory.build(self.root)[1]
+        for c in self.children:
+            if isinstance(c, Import):
+                self.imports.append(c)
+                continue
+            name = c.get_name()
+            if name is None: continue
+            list = self.index.get(name, None)
+            if list is None:
+                list = []
+                self.index[name] = list
+            list.append(c)
 
     def __init1__(self):
         """ run children through depsolving and child promotion """
@@ -244,10 +250,10 @@ class Schema:
     def __init2__(self):
         pass
         
-    def schemabyns(self, ns):
+    def locate(self, ns):
         """ find schema by namespace """
         if self.container is not None:
-            return self.container.schemabyns(ns)
+            return self.container.locate(ns)
         else:
             return None
         
@@ -322,49 +328,32 @@ class Schema:
             if query.resolved:
                 result = result.resolve()
             self.types[key] = result
-            log.debug('%s, found (%s)\n%s\n%s', self.id, query.name, query, tostr(result))
+            log.debug('%s, found (%s)\n%s\n%s', self.id, query.name, query, result)
         else:
             log.debug('%s, (%s) not-found:\n%s', self.id, query.name, query)
         return result
     
     def __find(self, query):
         """ find a schema object by name. """
-        result = None
         query.qualify(self.root, self.tns)
         ref, ns = query.qname
         log.debug('%s, finding (%s)\n%s', self.id, query.name, query)
-        for child in self.children:
-            if isinstance(child, Import):
-                log.debug(
-                    '%s, searching (import): %s\nfor:\n%s', 
-                    self.id, repr(child), query)
-                result = child.xsfind(query)
-                if result is None:
+        for child in self.index.get(ref, []):
+            log.debug('%s, matching: %s\nfor:\n%s', self.id, Repr(child), query)
+            if child.match(ref, ns):
+                result = child
+                if query.filter(result):
                     continue
                 else:
-                    break
-            name = child.get_name()
-            if name is None:
-                log.debug(
-                    '%s, searching (child): %s\nfor:\n%s',
-                    self.id, repr(child), query)
-                result = child.get_child(ref, ns)
-                if query.filter(result):
-                    result = None
-                    continue
-                if result is not None:
-                    break
+                    return child
+        for child in self.imports:
+            log.debug('%s, searching (import): %s\nfor:\n%s', self.id, Repr(child), query)
+            result = child.xsfind(query)
+            if result is None:
+                continue
             else:
-                log.debug(
-                    '%s, matching: %s\nfor:\n%s',
-                    self.id, repr(child), query)
-                if child.match(ref, ns):
-                    result = child
-                    if query.filter(result):
-                        result = None
-                    else:
-                        break
-        return result
+                return result
+        return None
         
     def __repr__(self):
         myrep = \

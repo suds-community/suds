@@ -13,16 +13,15 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-
-from suds import *
-from suds.sudsobject import Object
-from suds.xsd import *
-from suds.xsd.sxbuiltin import XBuiltin
-from suds.xsd.sxbasic import Simple, Element, Complex
-
 """
 The I{query} module defines a class for performing schema queries.
 """
+
+from suds import *
+from suds.sudsobject import *
+from suds.xsd import *
+from suds.xsd.sxbuiltin import XBuiltin
+from suds.xsd.sxbasic import Simple, Element, Complex
 
 log = logger(__name__)
 
@@ -79,6 +78,10 @@ class Query(Object):
         self.cidx = 0
         self.clsfilter = []
         self.schema = None
+        pmd = Factory.metadata()
+        pmd.wrappers = { 'schema' : lambda x : repr(x) }
+        self.__metadata__.__print__ = pmd
+
         
     def filter(self, result):
         """
@@ -97,7 +100,7 @@ class Query(Object):
               ( len(self.clsfilter) and cls not in self.clsfilter ) or \
               result in self.history )
         if reject:
-            log.debug('result %s, rejected by\n%s', repr(result), tostr(self))
+            log.debug('result %s, rejected by\n%s', Repr(result), self)
         return reject
     
     def qualify(self, resolvers, defns):
