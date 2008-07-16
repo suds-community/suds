@@ -16,7 +16,7 @@
 import logging
 import socket
 
-VERSION = "0.2.2"
+VERSION = "0.2.3"
 
 #
 # socket timeout - 10 seconds
@@ -34,7 +34,7 @@ class MethodNotFound(Exception):
     
 class TypeNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, "Type not found: '%s'" % name)
+        Exception.__init__(self, "Type not found: '%s'" % tostr(name))
     
 class BuildError(Exception):
     msg = \
@@ -71,6 +71,11 @@ def logger(name=None):
         root.addHandler(__handler)
     return logger
 
+class Repr:
+    def __init__(self, x):
+        self.x = x
+    def __str__(self):
+        return repr(self.x)  
 
 #
 # Utility

@@ -75,14 +75,14 @@ class PathResolver(Resolver):
         if result is None:
             log.error('(%s) not-found', parts[0])
             return result
-        log.debug('found (%s) as (%s)', parts[0], repr(result))
+        log.debug('found (%s) as (%s)', parts[0], Repr(result))
         leaf = parts[-1]
         if resolved or \
             result != leaf:
                 result = result.resolve()
         for part in parts[1:]:
             name = splitPrefix(part)[1]
-            log.debug('searching parent (%s) for (%s)', repr(result), name)
+            log.debug('searching parent (%s) for (%s)', Repr(result), name)
             if name.startswith('@'):
                 result = result.get_attribute(name[1:])
             else:
@@ -90,7 +90,7 @@ class PathResolver(Resolver):
             if result is None:
                 log.error('(%s) not-found', name)
                 break
-            log.debug('found (%s) as (%s)', name, repr(result))
+            log.debug('found (%s) as (%s)', name, Repr(result))
             if resolved or \
                 result != leaf:
                     result = result.resolve()
@@ -157,7 +157,7 @@ class TreeResolver(Resolver):
         """
         item = (item, item.resolve())
         self.stack.append(item)
-        log.debug('push: (%s)\n%s', repr(item), repr(self.stack))
+        log.debug('push: (%s)\n%s', Repr(item), Repr(self.stack))
         return item
     
     def top(self):
@@ -181,7 +181,7 @@ class TreeResolver(Resolver):
         """
         if len(self.stack):      
             popped = self.stack.pop()
-            log.debug('pop: (%s)\n%s', repr(popped), repr(self.stack))
+            log.debug('pop: (%s)\n%s', Repr(popped), Repr(self.stack))
             return popped
         else:
             log.debug('stack empty, not-popped')
@@ -194,7 +194,7 @@ class TreeResolver(Resolver):
             query = Query(name)
             result = query.execute(self.schema)
         else:
-            log.debug('searching parent (%s) for (%s)', repr(parent), name)
+            log.debug('searching parent (%s) for (%s)', Repr(parent), name)
             if name.startswith('@'):
                 result = parent.get_attribute(name[1:])
             else:
@@ -202,7 +202,7 @@ class TreeResolver(Resolver):
         if result is None:
             log.error('(%s) not-found', name)
         else:
-            log.debug('(%s) found as (%s)', name, repr(result))
+            log.debug('(%s) found as (%s)', name, Repr(result))
         return result
 
 

@@ -18,6 +18,7 @@ The I{2nd generation} service proxy provides access to web services.
 See I{README.txt}
 """
 
+import suds.metrics as metrics
 from cookielib import CookieJar
 from urllib2 import Request, HTTPError, urlopen, urlparse
 from suds import *
@@ -27,6 +28,7 @@ from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import WSDL
 from suds.sax import Namespace
+from cProfile import Profile
 
 log = logger(__name__)
 
@@ -40,6 +42,8 @@ class Client(object):
     @type service: L{Service}
     @ivar factory: The factory used to create objects.
     @type factory: L{Factory}
+    @ivar sd: The service definition
+    @type sd: L{ServiceDefinition}
     """
 
     def __init__(self, url, **kwargs):
@@ -57,10 +61,23 @@ class Client(object):
         @type opener: A I{urllib2.Opener}
         """
         client = SoapClient(url, kwargs)
-        schema = client.schema
         self.service = Service(client)
-        self.factory = Factory(schema)
-        self.sd = ServiceDefinition(client.wsdl)
+        self.factory = Factory(client.schema)
+        self.sd = None
+        
+    def service_definition(self):
+        """
+        Get (create on-demand) the service definition.
+        @return: The service definition associated with the client.
+        @rtype: L{ServiceDefinition}
+        """
+        if self.sd is None:
+            timer = metrics.Timer()
+            timer.start()
+            self.sd = ServiceDefinition(self.service.__client__.wsdl)
+            timer.stop()
+            metrics.log.debug('definition created: %s', timer)
+        return self.sd
         
     def items(self, sobject):
         """
@@ -95,10 +112,10 @@ class Client(object):
         return sobject.__metadata__
  
     def __str__(self):
-        return str(self.sd)
+        return unicode(self)
         
     def __unicode__(self):
-        return unicode(self.sd)
+        return unicode(self.service_definition())
 
 
 class Service:
@@ -189,6 +206,8 @@ class Factory:
         @return: The requested object.
         @rtype: L{Object}
         """
+        timer = metrics.Timer()
+        timer.start()
         type = self.resolver.find(name)
         if type is None:
             raise TypeNotFound(name)
@@ -200,10 +219,11 @@ class Factory:
         else:
             try:
                 result = self.builder.build(type=type)
-            except Exception, e:
-                msg = repr(type)
-                log.exception(msg)
-                raise BuildError(msg)
+            except:
+                log.error("create '%s' failed", name, exc_info=True)
+                raise BuildError("create '%s' failed", name)
+        timer.stop()
+        metrics.log.debug('%s created: %s', name, timer)
         return result
 
 
@@ -259,14 +279,22 @@ class SoapClient:
         @return: The result of the method invocation.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
+        timer = metrics.Timer()
+        timer.start()
         result = None
         binding = self.wsdl.get_binding(method.name)
         binding.faults = self.arg.faults
         location = self.wsdl.get_location().encode('utf-8')
         soapheaders = kwargs.get('soapheaders', ())
         msg = binding.get_message(method.name, args, soapheaders)
+        timer.stop()
+        metrics.log.debug("message for '%s' created: %s", method.name, timer)
+        timer.start()
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
-        return self.send(method, binding, msg)
+        result = self.send(method, binding, msg)
+        timer.stop()
+        metrics.log.debug("method '%s' invoked: %s", method.name, timer)
+        return result
     
     def send(self, method, binding, msg):
         """
@@ -474,11 +502,15 @@ class ServiceDefinition:
 
     def __addmethods(self, w):
         """ create our list of methods """
+        timer = metrics.Timer()
         for operation in w.get_operations():
+            timer.start()
             m = operation.get('name')
             binding = w.get_binding(m)
             method = (m, binding.param_defs(m))
             self.methods.append(method)
+            timer.stop()
+            metrics.log.debug("method '%s' created: %s", m, timer)
         self.methods.sort()
             
     def __addtypes(self):
@@ -538,7 +570,7 @@ class ServiceDefinition:
         s.append('\tprefixes:')
         for p in self.prefixes:
             s.append('\t\t%s = "%s"' % p)
-        s.append('\tmethods:')
+        s.append('\tmethods (%d):' % len(self.methods))
         for m in self.methods:
             sig = []
             sig.append('\t\t')
@@ -551,7 +583,7 @@ class ServiceDefinition:
                 sig.append(', ')
             sig.append(')')
             s.append(''.join(sig))
-        s.append('\ttypes:')
+        s.append('\ttypes (%d):' % len(self.types))
         for t in self.types:
             s.append('\t\t%s'% self.__xlate(t))
         return '\n'.join(s)

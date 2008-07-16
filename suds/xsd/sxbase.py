@@ -48,8 +48,6 @@ class SchemaObject:
     @type children: [L{SchemaObject},...]
     @ivar attributes: A list of child xsd I{(attribute)} nodes
     @type attributes: [L{SchemaObject},...]
-    @ivar derived: Derived type flag.
-    @type derived: boolean
     @ivar resolve_result: The cached result of L{resolve()}
     @type resolve_result: L{SchemaObject}
     """
@@ -72,7 +70,6 @@ class SchemaObject:
         self.nillable = False
         self.children = []
         self.attributes = []
-        self.derived = False
         self.resolve_cache = {}
         
     def init(self, stage):
@@ -380,6 +377,15 @@ class SchemaObject:
         """
         return False
     
+    def derived(self):
+        """
+        Get whether the object is derived in the it is an extension
+        of another type.
+        @return: True if derived, else False.
+        @rtype: boolean
+        """
+        return False
+    
     def translate(self, value, topython=True):
         """
         Translate a value (type) to/from a python type.
@@ -490,7 +496,7 @@ class Polymorphic(SchemaObject):
         """
         classes = (self.__class__,)
         n, ns = qualified_reference(ref, self.root, self.namespace())
-        for c in self.schema.children:
+        for c in self.schema.index.get(n, []):
             if c.match(n, ns=ns, classes=classes):
                 self.referenced = c
                 return

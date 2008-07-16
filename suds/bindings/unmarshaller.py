@@ -347,7 +347,7 @@ class Typed(UMBase):
                 type = md.__type__
                 return type.unbounded()
         except:
-            log.error('metadata error:\n%s', tostr(data), exc_info=True)
+            log.error('metadata error:\n%s', data, exc_info=True)
         return False
     
     def nillable(self, data):
@@ -364,7 +364,7 @@ class Typed(UMBase):
                 type = md.__type__
                 return type.nillable
         except:
-            log.error('metadata error:\n%s', tostr(data), exc_info=True)
+            log.error('metadata error:\n%s', data, exc_info=True)
         return False
     
     def append_attr(self, name, value, content):

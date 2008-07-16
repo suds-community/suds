@@ -579,10 +579,10 @@ class Literal(MBase):
         @type content: L{Object}
         """
         if not content.type.any() and \
-            content.type.derived:
+            content.type.derived():
                 name = content.type.get_name()
                 node.set('xsi:type', name)
-                log.debug('encoding name=(%s) on:\n\t%s', name, tostr(node))
+                log.debug('encoding name=(%s) on:\n\t%s', name, node)
                 node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
     
     def __metatype(self, content):
