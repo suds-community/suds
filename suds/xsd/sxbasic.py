@@ -481,7 +481,7 @@ class Import(SchemaObject):
         """ import (local) xsd content using a namespace lookup """
         result = self.schema.locate(self.imp.ns)
         if result is None:
-            log.error('imported schema (%s) not-found', self.imp.ns[1])
+            log.debug('imported schema (%s) not-found', self.imp.ns[1])
         return result
             
     def __process_imported(self):
