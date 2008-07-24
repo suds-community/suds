@@ -456,7 +456,7 @@ class SchemaObject:
         return myrep.encode('utf-8')
     
     def __len__(self):
-        return len(self.children)
+        return len(self.children)+len(self.attributes)
     
     def __getitem__(self, index):
         return self.children[index]
