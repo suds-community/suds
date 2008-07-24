@@ -61,8 +61,11 @@ class Factory:
         @return: The created object.
         @rtype: L{WObject} 
         """
-        fn = cls.tags[root.name]
-        return fn(root, definitions)
+        fn = cls.tags.get(root.name)
+        if fn is not None:
+            return fn(root, definitions)
+        else:
+            return None
 
 
 class WObject(Object):
@@ -190,6 +193,7 @@ class Definitions(WObject):
         self.resolve()
         self.build_schema()
         self.assign_bindings()
+        log.debug("wsdl at '%s' loaded:\n%s", url, self)
         
     def mktns(self, root):
         """ Get/create the target namespace """
@@ -207,6 +211,7 @@ class Definitions(WObject):
         for path in paths:
             for c in root.childrenAtPath(path):
                 child = Factory.create(c, self)
+                if child is None: continue
                 self.children.append(child)
                 if isinstance(child, Import):
                     self.imports.append(child)
@@ -310,6 +315,7 @@ class Import(WObject):
     def load(self, definitions, opener):
         """ Load the object by opening the URL """
         url = self.location
+        log.debug('importing (%s)', url)
         if '://' not in url:
             url = urljoin(definitions.url, url)
         d = Definitions(url, opener)
