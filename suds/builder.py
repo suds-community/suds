@@ -73,7 +73,6 @@ class Builder:
     def add_attributes(self, data, type):
         """ add required attributes """
         for a in type.get_attributes():
-            if a.required():
-                name = '_%s' % a.get_name()
-                value = a.get_default()
-                setattr(data, name, value)
+            name = '_%s' % a.get_name()
+            value = a.get_default()
+            setattr(data, name, value)

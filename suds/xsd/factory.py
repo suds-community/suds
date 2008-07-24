@@ -50,6 +50,9 @@ class Factory:
     {
         'anyType' : lambda x,y=None: Any(x,y),
         'boolean' : lambda x,y=None: XBoolean(x,y),
+        'date' : lambda x,y=None: XDate(x,y),
+        'time' : lambda x,y=None: XTime(x,y),
+        'dateTime': lambda x,y=None: XDateTime(x,y),
     }
     
     def __init__(self, schema):

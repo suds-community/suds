@@ -348,6 +348,10 @@ class Extension(Complex):
         for c in super.children:
             self.children.insert(index, c)
             index += 1
+        index = 0
+        for a in super.attributes:
+            self.attributes.insert(index, a)
+            index += 1
 
 
 class Import(SchemaObject):
