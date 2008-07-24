@@ -46,24 +46,20 @@ class SchemaCollection:
     """
     
     def __init__(self, wsdl):
-        """
-        @param wsdl: A WSDL object.
-        @type wsdl: L{wsdl.WSDL}
-        """
-        self.root = wsdl.root
         self.id = objid(self)
+        self.root = wsdl.root
         self.tns = wsdl.tns
-        self.baseurl = wsdl.url
         self.children = []
         self.namespaces = {}
         
-    def add(self, node):
+    def add(self, schema):
         """
         Add a schema node to the collection.
-        @param node: A <schema/> root node.
-        @type node: L{sax.Element}
+        @param schema: A <schema/> entry.
+        @type schema: (L{suds.wsdl.Definitions},L{sax.Element})
         """
-        child = Schema(node, self.baseurl, self)
+        root, wsdl = schema
+        child = Schema(root, wsdl.url, self)
         self.children.append(child)
         self.namespaces[child.tns[1]] = child
         
@@ -74,7 +70,7 @@ class SchemaCollection:
         for stage in Schema.init_stages:
             for child in self.children:
                 child.init(stage)
-        log.debug('schema (%s):\n%s', self.baseurl, self)
+        log.debug('loaded:\n%s', self)
         
     def locate(self, ns):
         """

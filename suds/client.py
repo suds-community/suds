@@ -26,9 +26,8 @@ from suds import sudsobject
 from sudsobject import Factory as InstFactory, Object
 from suds.resolver import PathResolver
 from suds.builder import Builder
-from suds.wsdl import WSDL
+from suds.wsdl import Definitions
 from suds.sax import Namespace
-from cProfile import Profile
 
 log = logger(__name__)
 
@@ -133,7 +132,7 @@ class Service:
         builtin =  name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
-        operation = self.__client__.wsdl.get_operation(name)
+        operation = self.__client__.wsdl.binding().operation(name)
         if operation is None:
             raise MethodNotFound(name)
         method = Method(self.__client__, name)
@@ -235,7 +234,7 @@ class SoapClient:
     @ivar arg: A object containing custom args.
     @type arg: L{Object}
     @ivar wsdl: A WSDL object.
-    @type wsdl: L{WSDL}
+    @type wsdl: L{Definitions}
     @ivar schema: A schema object.
     @type schema: L{xsd.schema.Schema}
     @ivar builder: A builder object used to build schema types.
@@ -261,7 +260,7 @@ class SoapClient:
         self.arg.faults = kwargs.get('faults', True)
         self.arg.proxies = kwargs.get('proxy', {})
         self.arg.opener = kwargs.get('opener', None)
-        self.wsdl = WSDL(url, self.arg.opener)
+        self.wsdl = Definitions(url, self.arg.opener)
         self.schema = self.wsdl.schema
         self.builder = Builder(self.schema)
         self.cookiejar = CookieJar()
@@ -282,15 +281,13 @@ class SoapClient:
         timer = metrics.Timer()
         timer.start()
         result = None
-        binding = self.wsdl.get_binding(method.name)
+        binding = self.wsdl.binding().operation(method.name).binding.input
         binding.faults = self.arg.faults
-        location = self.wsdl.get_location().encode('utf-8')
         soapheaders = kwargs.get('soapheaders', ())
         msg = binding.get_message(method.name, args, soapheaders)
         timer.stop()
         metrics.log.debug("message for '%s' created: %s", method.name, timer)
         timer.start()
-        log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         result = self.send(method, binding, msg)
         timer.stop()
         metrics.log.debug("method '%s' invoked: %s", method.name, timer)
@@ -310,7 +307,7 @@ class SoapClient:
         """
         result = None
         headers = self.headers(method.name)
-        location = self.wsdl.get_location().encode('utf-8')
+        location = self.wsdl.service.port.location
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent = msg
@@ -363,10 +360,8 @@ class SoapClient:
         @return: A dictionary of header/values.
         @rtype: dict
         """
-        action = self.wsdl.get_soap_action(method)
-        result = \
-            { 'SOAPAction': action, 
-               'Content-Type' : 'text/xml' }
+        action = self.wsdl.binding().operation(method).soap.action
+        result = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
         log.debug('headers = %s', result)
         return result
     
@@ -462,16 +457,16 @@ class SimClient(SoapClient):
     def __send(self, method, msg):
         """ send the supplied soap message """
         result = None
-        binding = self.wsdl.get_binding(method.name)
+        binding = self.wsdl.binding().operation(method.name).binding.input
         binding.faults = self.arg.faults
         headers = self.headers(method.name)
-        location = self.wsdl.get_location().encode('utf-8')
+        location = self.wsdl.service.port.location
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         return self.send(method, binding, msg)
     
     def __reply(self, method, reply):
         """ simulate the reply """
-        binding = self.wsdl.get_binding(method.name)
+        binding = self.wsdl.binding().operation(method.name).binding.output
         binding.faults = self.arg.faults
         return self.succeeded(binding, method, reply)
 
@@ -480,7 +475,7 @@ class ServiceDefinition:
     
     def __init__(self, wsdl):
         self.wsdl = wsdl
-        self.name = wsdl.get_servicename()
+        self.name = wsdl.service.name
         self.methods = []
         self.prefixes = []
         self.types = []
@@ -503,10 +498,10 @@ class ServiceDefinition:
     def __addmethods(self, w):
         """ create our list of methods """
         timer = metrics.Timer()
-        for operation in w.get_operations():
+        for operation in w.binding().operations.values():
             timer.start()
-            m = operation.get('name')
-            binding = w.get_binding(m)
+            m = operation.name
+            binding = operation.binding.input
             method = (m, binding.param_defs(m))
             self.methods.append(method)
             timer.stop()

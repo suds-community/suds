@@ -64,7 +64,6 @@ class SchemaObject:
         self.schema = schema
         self.root = root
         self.id = objid(self)
-        self.factory = None
         self.stage = -1
         self.form_qualified = schema.form_qualified
         self.nillable = False
@@ -404,10 +403,11 @@ class SchemaObject:
     
     def __resolve(self, t, history):
         """ resolve the specified type """
+        from suds.xsd.query import Query
         result = t
         if t.typed():
             ref = qualified_reference(t.ref(), t.root, t.root.namespace())
-            query = t.factory.create(query=ref)
+            query = Query(ref)
             query.history = history
             log.debug('%s, resolving: %s\n using:%s', self.id, ref, query)
             resolved = query.execute(t.schema)

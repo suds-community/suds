@@ -157,9 +157,10 @@ class Printer:
     
     def tostr(self, object, indent=-2):
         """ get s string representation of object """
-        return self.process(object, indent)
+        history = []
+        return self.process(object, history, indent)
     
-    def process(self, object, n=0, nl=False):
+    def process(self, object, h, n=0, nl=False):
         """ print object using the specified indent (n) and newline (nl). """
         if object is None:
             return 'None'
@@ -167,46 +168,61 @@ class Printer:
             if len(object) == 0:
                 return '<empty>'
             else:
-                return self.print_object(object, n+2, nl)
+                return self.print_object(object, h, n+2, nl)
         if isinstance(object, Property):
-            return self.print_property(object)
+            return self.print_property(object, h)
         if isinstance(object, dict):
             if len(object) == 0:
                 return '<empty>'
             else:
-                return self.print_dictionary(object, n+2, nl)
+                return self.print_dictionary(object, h, n+2, nl)
         if isinstance(object, (list,tuple)):
             if len(object) == 0:
                 return '<empty>'
             else:
-                return self.print_collection(object, n+2)
+                return self.print_collection(object, h, n+2)
         if isinstance(object, basestring):
             return '"%s"' % tostr(object)
         return '%s' % tostr(object)
     
-    def print_property(self, d):
+    def print_property(self, d, h):
         """ print a property object """
         s = []
         cls = d.__class__
         s.append('property:')
         s.append(cls.__name__)
+        if d in h:
+            s.append('...')
+            return ''.join(s)
+        h.append(d)
         s.append('=')
-        s.append(self.process(d.value))
+        s.append(self.process(d.value, h))
+        h.pop()
         return ''.join(s)
     
-    def print_object(self, d, n, nl=False):
+    def print_object(self, d, h, n, nl=False):
         """ print complex using the specified indent (n) and newline (nl). """
         s = []
+        cls = d.__class__
+        if d in h:
+            s.append('(')
+            s.append(cls.__name__)
+            s.append(')')
+            s.append('...')
+            return ''.join(s)
+        h.append(d)
         if nl:
             s.append('\n')
             s.append(self.indent(n))
-        cls = d.__class__
         if cls != Object:
             s.append('(')
             s.append(cls.__name__)
             s.append(')')
         s.append('{')
         for item in items(d):
+            if self.exclude(d, item):
+                continue
+            item = self.unwrap(d, item)
             s.append('\n')
             s.append(self.indent(n+1))
             if isinstance(item[1], (list,tuple)):            
@@ -215,43 +231,49 @@ class Printer:
             else:
                 s.append(item[0])
             s.append(' = ')
-            item = self.unwrap(d, item)
-            s.append(self.process(item[1], n, True))
+            s.append(self.process(item[1], h, n, True))
         s.append('\n')
         s.append(self.indent(n))
         s.append('}')
+        h.pop()
         return ''.join(s)
     
-    def print_dictionary(self, d, n, nl=False):
+    def print_dictionary(self, d, h, n, nl=False):
         """ print complex using the specified indent (n) and newline (nl). """
+        if d in h: return '{}...'
+        h.append(d)
         s = []
         if nl:
             s.append('\n')
             s.append(self.indent(n))
         s.append('{')
-        for item in items(d):
+        for item in d.items():
             s.append('\n')
             s.append(self.indent(n+1))
             if isinstance(item[1], (list,tuple)):            
-                s.append(item[0])
+                s.append(tostr(item[0]))
                 s.append('[]')
             else:
-                s.append(item[0])
+                s.append(tostr(item[0]))
             s.append(' = ')
-            s.append(self.process(item[1], n, True))
+            s.append(self.process(item[1], h, n, True))
         s.append('\n')
         s.append(self.indent(n))
         s.append('}')
+        h.pop()
         return ''.join(s)
 
-    def print_collection(self, c, n):
+    def print_collection(self, c, h, n):
         """ print collection using the specified indent (n) and newline (nl). """
+        if c in h: return '[]...'
+        h.append(c)
         s = []
         for item in c:
             s.append('\n')
             s.append(self.indent(n))
-            s.append(self.process(item, n-2))
+            s.append(self.process(item, h, n-2))
             s.append(',')
+        h.pop()
         return ''.join(s)
     
     def unwrap(self, d, item):
@@ -268,3 +290,16 @@ class Printer:
         except:
             pass
         return item
+    
+    def exclude(self, d, item):
+        """ check metadata for excluded items """
+        try:
+            md = d.__metadata__
+            pmd = getattr(md, '__print__', None)
+            if pmd is None:
+                return False
+            excludes = getattr(pmd, 'excludes', [])
+            return ( item[0] in excludes ) 
+        except:
+            pass
+        return False

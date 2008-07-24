@@ -20,23 +20,15 @@ log = logger(__name__)
 
 class Document(Binding):
     """
-    The document/literal binding style.
+    The I{wrapped} document/literal binding style.
     """
 
     def __init__(self, wsdl):
         """
         @param wsdl: A WSDL object.
-        @type wsdl: L{suds.wsdl.WSDL}
+        @type wsdl: L{suds.wsdl.Definitions}
         """
         Binding.__init__(self, wsdl)
-        
-    def part_refattr(self):
-        """
-        Get the part attribute that defines the part's I{type}.
-        @return: An attribute name.
-        @rtype: basestring 
-        """
-        return "element"
     
     def param_defs(self, method):
         """

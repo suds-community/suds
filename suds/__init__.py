@@ -16,7 +16,7 @@
 import logging
 import socket
 
-VERSION = "0.2.3"
+VERSION = "0.2.4"
 
 #
 # socket timeout - 10 seconds

@@ -330,10 +330,11 @@ class Extension(Complex):
         
     def __init1__(self):
         """ lookup superclass  """
+        from suds.xsd.query import Query
         Complex.__init1__(self)
         base = self.root.get('base')
         ref = qualified_reference(base, self.root, self.root.namespace())
-        query = self.factory.create(query=ref)
+        query = Query(ref)
         self.super = query.execute(self.schema)
         if self.super is None:
             raise TypeNotFound(base)
@@ -471,9 +472,10 @@ class Import(SchemaObject):
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
             root = Parser().parse(url=url).root()
+            from suds.xsd.schema import Schema
             return Schema(root, url)
         except Exception:
-            msg = 'imported schema (%s) at (%s), not-found' (self.imp.ns[1], url)
+            msg = 'imported schema (%s) at (%s), not-found' % (self.imp.ns[1], url)
             log.error('%s, %s', self.id, msg, exc_info=True)
             raise Exception(msg)
         
