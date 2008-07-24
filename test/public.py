@@ -19,6 +19,7 @@ import suds.metrics as metrics
 from suds import logger, WebFault
 import logging
 from suds.client import Client
+from traceback import print_exc
 
 errors = 0
 
@@ -30,6 +31,35 @@ def start(url):
     print '\n________________________________________________________________\n' 
     print 'Test @ ( %s )' % url
     
+try:
+    url = 'http://www.netunitysoftware.com/wsrp2interop/wsrpproducer.asmx?Operation=WSDL&WsrpVersion=Two'
+    start(url)
+    client = Client(url)
+    print client
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    print_exc()
+
+try:
+    url = 'https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl'
+    start(url)
+    client = Client(url)
+    print client
+    print client.service.genSSHA('hello', 'sha1')
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    print_exc()
+
 try:
     url = 'http://ap1314-dsr.compmed.ucdavis.edu/dataserver/Aperio.Images/Image?method=wsdl '
     start(url)
@@ -51,20 +81,6 @@ try:
     start(url)
     client = Client(url)
     print client
-except WebFault, f:
-    errors += 1
-    print f
-    print f.fault
-except Exception, e:
-    errors += 1
-    print e
-
-try:
-    url = 'https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl'
-    start(url)
-    client = Client(url)
-    print client
-    print client.service.genSSHA('hello', 'sha1')
 except WebFault, f:
     errors += 1
     print f
@@ -144,11 +160,12 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
-    
+
+timer = metrics.Timer()
+
 try:
     url = "https://www.e-conomic.com/secure/api1/EconomicWebService.asmx?WSDL"
     start(url)
-    timer = metrics.Timer()
     timer.start()
     client = Client(url)
     timer.stop()
@@ -158,6 +175,10 @@ try:
     timer.stop()
     print 'str(client): %s' % timer
     print 'client:\n%s' % s
+    print 'Account_GetAll()'
+    logger('suds.metrics').setLevel(logging.DEBUG)
+    a = client.service.Account_GetAll()
+    print a
 except WebFault, f:
     errors += 1
     print f
