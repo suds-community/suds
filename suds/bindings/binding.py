@@ -55,10 +55,12 @@ class Binding:
     def use_literal(self):
         """ set the input message encoding to "literal" """
         self.encoded = False
+        return self
     
     def use_encoded(self):
         """ set the input message encoding to "encoded" """
         self.encoded = True
+        return self
 
     def get_message(self, method_name, args, soapheaders):
         """get the soap message for the specified method and args"""
@@ -198,14 +200,6 @@ class Binding:
         method = Element('%s:%s' % (prefix, name))
         return method
     
-    def part_refattr(self):
-        """
-        Get the part attribute that defines the part's I{type}.
-        @return: An attribute name.
-        @rtype: basestring 
-        """
-        pass
-    
     def part_types(self, method, input=True):
         """
         Get a list of I{parameter definitions} defined for the specified method.
@@ -218,15 +212,19 @@ class Binding:
         @rtype: [I{definition},]
         """
         result = []
-        for p in self.wsdl.get_parts(method, input):
-            ref = p.get(self.part_refattr())
-            qref = qualified_reference(ref, p, self.wsdl.tns)
+        operation = self.wsdl.binding().type.operation(method)
+        if input:
+            parts = operation.input.parts
+        else:
+            parts = operation.output.parts
+        for p in parts:
+            qref = p.xsref()
             query = Query(qref)
             pt = query.execute(self.schema)
             if pt is None:
                 raise TypeNotFound(qref)
             if input:
-                result.append((p.get('name'), pt))
+                result.append((p.name, pt))
             else:
                 result.append(pt)
         return result

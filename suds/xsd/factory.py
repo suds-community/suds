@@ -18,7 +18,6 @@ from suds import *
 from suds.xsd import *
 from suds.xsd.sxbuiltin import *
 from suds.xsd.sxbasic import *
-from suds.xsd.query import Query
 
 log = logger(__name__)
 
@@ -75,7 +74,8 @@ class Factory:
         for node in root.children:
             if '*' in filter or node.name in filter:
                 child = self.create(basic=node)
-                child.factory = self
+                if child is None:
+                    continue
                 if child.isattr():
                     attributes.append(child)
                 else:
@@ -83,7 +83,7 @@ class Factory:
                 child.attributes, child.children = self.build(node, child.valid_children())
         return (attributes, children)
     
-    def create(self, basic=None, builtin=None, query=None):
+    def create(self, basic=None, builtin=None):
         """
         Create an xsd object.
         @param basic: A root node.  When specified, a object is created.
@@ -92,23 +92,22 @@ class Factory:
             object is created.
         @type builtin: basestring
         @return: A I{basic} I{schema.SchemaObject} when I{basic} is specified; An
-            L{XBuiltin} builtin when I{builtin} name is specified;
-            A L{Query} when I{query} is specified.
+            L{XBuiltin} builtin when I{builtin} name is specified
         @rtype: L{SchemaObject}
         """
         if basic is not None:
-            return self.__create(basic)
+            return self.__basic(basic)
         elif builtin is not None:
             return self.__builtin(builtin)
-        elif query is not None:
-            return Query(query)
+        raise Exception('(basic|builtin) must be specified')
 
-    def __create(self, root):
+    def __basic(self, root):
         if root.name in Factory.tags:
             fn = Factory.tags[root.name]
             return fn(self.schema, root)
         else:
-            raise Exception('tag (%s) not-found' % root.name)
+            log.debug('tag (%s) not-found', root.name)
+        return None
         
     def __builtin(self, name):
         if name in Factory.builtins:
