@@ -319,8 +319,6 @@ class Import(WObject):
         if '://' not in url:
             url = urljoin(definitions.url, url)
         d = Definitions(url, opener)
-        for imp in d.imports:
-            imp.load(d, opener)
         definitions.schemas += d.schemas
         definitions.messages.update(d.messages)
         definitions.port_types.update(d.port_types)
