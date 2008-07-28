@@ -857,10 +857,10 @@ version 0.2.3 (7-23-08):
 version 0.2.4 (7-28-08):
 
    * Added support for WSDL imports: <wsdl:import/>
-   * Added support for xsd<->python type conversion for:
+   * Added support for xsd<->python type conversions (thanks: Nathan Van Gheem) for:
       * xs:date
-         xs:time
-         xs:dateTime
+      * xs:time
+      * xs:dateTime
    * Fixed:
       * Bug: Schema <import/> with schemaLocation specified.
       * Bug: Namespaces specified in service description not valid until client/proxy is printed.
