@@ -62,21 +62,7 @@ class Client(object):
         client = SoapClient(url, kwargs)
         self.service = Service(client)
         self.factory = Factory(client.schema)
-        self.sd = None
-        
-    def service_definition(self):
-        """
-        Get (create on-demand) the service definition.
-        @return: The service definition associated with the client.
-        @rtype: L{ServiceDefinition}
-        """
-        if self.sd is None:
-            timer = metrics.Timer()
-            timer.start()
-            self.sd = ServiceDefinition(self.service.__client__.wsdl)
-            timer.stop()
-            metrics.log.debug('definition created: %s', timer)
-        return self.sd
+        self.sd = ServiceDefinition(client.wsdl)
         
     def items(self, sobject):
         """
@@ -114,7 +100,7 @@ class Client(object):
         return unicode(self)
         
     def __unicode__(self):
-        return unicode(self.service_definition())
+        return unicode(self.sd)
 
 
 class Service:
