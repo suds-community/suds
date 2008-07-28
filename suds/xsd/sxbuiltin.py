@@ -109,6 +109,10 @@ class XBoolean(XBuiltin):
 
 
 class LocalTimezone(datetime.tzinfo):
+    """
+    This implements tzinfo
+    python does not automatically support timezones for its date objects
+    """
     def __init__(self):
         offset = time.timezone
         self.__offset = datetime.timedelta(minutes = offset)
@@ -154,16 +158,37 @@ class XDate(XBuiltin):
         else:
             return 0
     
-    def translate(self, value, topython=True):
-        if topython:            
-            year, month, day = value.rsplit('-', 3)
+    def toPython(self, value):
+        if len(value) == 0:
+            return None
+            
+        year, month, day = value.rsplit('-', 3)
+        
+        #if it has a tz set, convert to user's tz
+        if len(day) > 2:
             date = datetime.datetime(int(year), int(month), int(day[:2]), tzinfo=LocalTimezone())
-            
+
             offset = time.timezone - self.get_offset(day[2:])
-            
+
             return date - datetime.timedelta(seconds=offset)
         else:
-            return value.strftime("%Y-%m-%d") + value.tzinfo.tzname(None)
+            return datetime.datetime(int(year), int(month), int(day))
+    
+    def toString(self, value):
+        if value is None:
+            return ''
+        else:
+            #if tz was used here or not
+            if value.tzinfo is None:
+                return value.strftime("%Y-%m-%d")
+            else:
+                return value.strftime("%Y-%m-%d") + value.tzinfo.tzname(None)                
+    
+    def translate(self, value, topython=True):
+        if topython:
+            return self.toPython(value)
+        else:
+            return self.toString(value)
 
       
 class XTime(XDate):
@@ -194,17 +219,20 @@ class XTime(XDate):
     def get_offset(self, value):
         """
         done differently from parent since datetime.timedelta does not work with the time object
+        returns None, None if there is no tz set
         """
         if len(value) == 0:
-            tz = time.timezone
-            return tz/60/60, 0
-        elif value.lower() != "z":
+            return None, None
+        elif value.lower() == "z":
+            return 0, 0
+        else:
             tz_hour, tz_min = value.split(':', 1)
             return int(tz_hour), int(tz_min)
-        else:
-            return 0, 0
             
     def calculate_time(self, hour, minute, tz_hour, tz_min):
+        if tz_hour == None:
+            return hour, minute
+        
         hour -= time.timezone/60/60 - tz_hour
         minute -= tz_min*60
         
@@ -230,22 +258,44 @@ class XTime(XDate):
         
         #convert to local since you can use timedelta with time objects
         tz_hour, tz_min = self.get_offset(leftover)
-        hour, minute = self.calculate_time(int(hour), int(minute), tz_hour, tz_min)
+        
+        #if it has a tz set, convert to user's tz
+        # if tz_hour is None, no tz was set
+        if tz_hour is not None:
+            hour, minute = self.calculate_time(int(hour), int(minute), tz_hour, tz_min)
                     
-        return hour, minute, second, microsec
+        return int(hour), int(minute), second, microsec, tz_hour
+
+    def toPython(self, value):
+        if len(value) == 0:
+            return None
+            
+        hour, minute, second, microsec, has_tz_set = self.get_time(value)
+        
+        if has_tz_set is not None:
+            return datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=microsec, tzinfo=LocalTimezone())
+        else:
+            return datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=microsec)
+            
+    def toString(self, value):
+        if value is None:
+            return ''
+            
+        time = value.strftime("%H:%M:%S")
+        
+        if value.microsecond != 0:
+            time += str(float(value.microsecond)/1000000)[1:]
+
+        if value.tzinfo is not None:
+            time += value.tzinfo.tzname(None)
+            
+        return time
 
     def translate(self, value, topython=True):
         if topython:
-            hour, minute, second, microsec = self.get_time(value)
-            
-            mytime = datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=microsec, tzinfo=LocalTimezone())
-            
-            return mytime
+            return self.toPython(value)
         else:
-            if value.microsecond != 0:
-                return value.strftime("%H:%M:%S") + str(float(value.microsecond)/1000000)[1:] + value.tzinfo.tzname(None)
-            else:
-                return value.strftime("%H:%M:%S") + value.tzinfo.tzname(None)
+            return self.toString(value)
             
 
 class XDateTime(XTime, XDate):
@@ -267,20 +317,40 @@ class XDateTime(XTime, XDate):
                     
         return int(hour), int(minute), second, microsec, leftover
 
-    def translate(self, value, topython=True):
-        if topython:
-            date, mytime = value.split('T')
-            year, month, day = date.split('-', 2)
+    def toPython(self, value):
+        if len(value) == 0:
+            return None
+            
+        date, mytime = value.split('T')
+        year, month, day = date.split('-', 2)
 
-            hour, minute, second, microsec, leftover = self.get_time(mytime)
-            
+        hour, minute, second, microsec, leftover = self.get_time(mytime)
+        
+        #if it has a tz set, convert to user's tz
+        if len(leftover) > 0:
             date = datetime.datetime(int(year), int(month),  int(day), hour, minute, second, microsec, tzinfo=LocalTimezone())
-            
             #best way to convert timezone
             offset = time.timezone - self.get_offset(leftover)
             return date - datetime.timedelta(seconds=offset)
         else:
-            if value.microsecond != 0:
-                return value.strftime("%Y-%m-%dT%H:%M:%S") + str(float(value.microsecond)/1000000)[1:] + value.tzinfo.tzname(None)
-            else:
-                return value.strftime("%Y-%m-%dT%H:%M:%S") + value.tzinfo.tzname(None)
+            return datetime.datetime(int(year), int(month),  int(day), hour, minute, second, microsec)
+
+    def toString(self, value):
+        if value is None:
+            return ''
+        
+        dt = value.strftime("%Y-%m-%dT%H:%M:%S")
+        
+        if value.microsecond != 0:
+            dt += str(float(value.microsecond)/1000000)[1:]
+            
+        if value.tzinfo is not None:
+            dt += value.tzinfo.tzname(None)
+
+        return dt
+
+    def translate(self, value, topython=True):
+        if topython:
+            return self.toPython(value)
+        else:
+            return self.toString(value)
