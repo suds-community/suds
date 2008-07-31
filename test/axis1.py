@@ -19,7 +19,7 @@
 import sys
 sys.path.append('../')
 
-from suds import logger
+from suds import *
 import logging
 from suds.client import Client
 
@@ -192,7 +192,7 @@ except Exception, e:
     print e
 
 try:
-    url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceRPCTestBean?wsdl'
+    url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
     client = Client(url, faults=False)
     print 'testExceptions()'

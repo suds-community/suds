@@ -363,7 +363,7 @@ def basic_rpc_literal():
         
 def authentication():
     
-    global subject
+    global subject, errors
     
     try:
         
