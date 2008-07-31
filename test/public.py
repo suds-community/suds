@@ -32,6 +32,26 @@ def start(url):
     print 'Test @ ( %s )' % url
     
 try:
+    url = 'http://cert.synxis.com/interface/ChannelConnect.asmx?WSDL'
+    start(url)
+    client = Client(url)
+    print client
+    guest_count = client.factory.create('ns0:GuestCount')
+    print 'gc:\n%s' % guest_count
+    sp = client.factory.create('ns0:StateProv')
+    print 'sp:\n%s' % sp
+    sp._StateCode = 'OR'
+    print 'sp:\n%s' % sp
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    print_exc()
+    
+try:
     url = 'http://www.netunitysoftware.com/wsrp2interop/wsrpproducer.asmx?Operation=WSDL&WsrpVersion=Two'
     start(url)
     client = Client(url)
@@ -61,9 +81,10 @@ except Exception, e:
     print_exc()
 
 try:
-    url = 'http://ap1314-dsr.compmed.ucdavis.edu/dataserver/Aperio.Images/Image?method=wsdl '
+    url = 'http://ap1314-dsr.compmed.ucdavis.edu/dataserver/Aperio.Images/Image?method=wsdl'
     start(url)
     client = Client(url)
+    print client.factory.resolver.schema
     print client
     print 'Logon()'
     reply = client.service.Logon('testuser','test')
@@ -164,7 +185,8 @@ except Exception, e:
 timer = metrics.Timer()
 
 try:
-    url = "https://www.e-conomic.com/secure/api1/EconomicWebService.asmx?WSDL"
+    #url = "https://www.e-conomic.com/secure/api1/EconomicWebService.asmx?WSDL"
+    url = "file:///home/jortel/Desktop/EconomicWebService.asmx?WSDL"
     start(url)
     timer.start()
     client = Client(url)
