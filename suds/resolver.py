@@ -21,7 +21,7 @@ provide wsdl/xsd named type resolution.
 from suds import *
 from suds.sax import splitPrefix, Namespace
 from suds.sudsobject import Object
-from suds.xsd.query import Query
+from suds.xsd.query import Query, qualify
 
 log = logger(__name__)
 
@@ -41,19 +41,21 @@ class Resolver:
         self.schema = schema
 
 
-
 class PathResolver(Resolver):
     """
     Resolveds the definition object for the schema type located at the specified path.
     The path may contain (.) dot notation to specify nested types.
+    @ivar wsdl: A wsdl object.
+    @type wsdl: L{wsdl.Definitions}
     """
     
-    def __init__(self, schema):
+    def __init__(self, wsdl):
         """
-        @param schema: A schema object.
-        @type schema: L{xsd.schema.Schema}
+        @param wsdl: A schema object.
+        @type wsdl: L{wsdl.Definitions}
         """
-        Resolver.__init__(self, schema)
+        Resolver.__init__(self, wsdl.schema)
+        self.wsdl = wsdl
 
     def find(self, path, resolved=True):
         """
@@ -70,7 +72,8 @@ class PathResolver(Resolver):
         result = None
         parts = path.split('.')
         log.debug('searching schema for (%s)', parts[0])
-        query = Query(parts[0])
+        qref = qualify(parts[0], self.wsdl.root, self.wsdl.tns)
+        query = Query(qref)
         result = query.execute(self.schema)
         if result is None:
             log.error('(%s) not-found', parts[0])

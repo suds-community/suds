@@ -20,6 +20,7 @@ schema objects.
 
 from suds import *
 from suds.xsd import *
+from copy import copy, deepcopy
 
 log = logger(__name__)
 
@@ -32,12 +33,6 @@ class SchemaObject:
     @type root: L{sax.Element}
     @ivar schema: The schema containing this object.
     @type schema: L{schema.Schema}
-    @ivar state: The transient states for the object
-    @type state: L{sudsobject.Object}
-    @ivar state.depsolve: The dependancy resolved flag.
-    @type state.depsolve: boolean
-    @ivar state.promoted: The child promoted flag.
-    @type state.promoted: boolean
     @ivar form_qualified: A flag that inidcates that @elementFormDefault
         has a value of I{qualified}.
     @type form_qualified: boolean
@@ -48,11 +43,15 @@ class SchemaObject:
     @type children: [L{SchemaObject},...]
     @ivar attributes: A list of child xsd I{(attribute)} nodes
     @type attributes: [L{SchemaObject},...]
-    @ivar resolve_result: The cached result of L{resolve()}
-    @type resolve_result: L{SchemaObject}
     """
     
-    init_stages = range(0,4)
+    @classmethod
+    def prepend(cls, d, s, filter=(object,)):
+        i = 0
+        for x in s:
+            if isinstance(x, filter):
+                d.insert(i, x)
+                i += 1
 
     def __init__(self, schema, root):
         """
@@ -64,53 +63,15 @@ class SchemaObject:
         self.schema = schema
         self.root = root
         self.id = objid(self)
-        self.stage = -1
+        self.name = root.get('name')
+        self.qname = (self.name, schema.tns[1])
+        self.type = root.get('type')
         self.form_qualified = schema.form_qualified
         self.nillable = False
         self.children = []
         self.attributes = []
-        self.resolve_cache = {}
-        
-    def init(self, stage):
-        """
-        Perform I{stage} initialization.
-        @param stage: The init stage to complete.
-        """
-        for n in range(0, (stage+1)):  
-            if self.stage < n:
-                m = '__init%s__' % n
-                self.stage = n
-                log.debug('%s, init (%d)', self.id, n)
-                if not hasattr(self, m): continue
-                method = getattr(self, m)
-                method()
-                for c in self.children:
-                    c.init(n)
-        
-    def match(self, name, ns=None, classes=()):
-        """
-        Match by name, optional namespace and list of classes.  When a list of
-        classes is specified, this object must be in the list.  Otherwise, the
-        class list is ignored.
-        @param name: The name of the object
-        @type name: basestring
-        @param ns: An optional namespace
-        @type ns: (I{prefix},I{URI})
-        @param classes: A list of classes used to qualify the match.
-        @type classes: [I{class},...]
-        @return: True on match, else False
-        @rtype: boolean
-        """
-        myns = self.namespace()
-        myname = self.get_name()
-        if ns is None:
-            matched = ( myname == name )
-        else:
-            matched = ( myns[1] == ns[1] and myname == name )
-        if matched and len(classes):
-            matched = ( self.__class__ in classes )
-        return matched
-        
+        self.cache = {}
+
     def namespace(self):
         """
         Get this properties namespace
@@ -118,114 +79,6 @@ class SchemaObject:
         @rtype: (I{prefix},I{URI})
         """
         return self.schema.tns
-        
-    def get_name(self):
-        """
-        Get the object's name
-        @return: The object's name
-        @rtype: basestring
-        """
-        return None
-    
-    def get_qname(self):
-        """
-        Get a fully qualified name.
-        @return: A qualified name as I{prefix}:I{name}.
-        @rtype: basestring
-        """
-        prefix = self.namespace()[0]
-        name = self.get_name()
-        if name is not None:
-            return ':'.join((prefix, name))
-        else:
-            return None
-    
-    def typed(self):
-        """
-        Get whether this type references another type.
-        @return: True if @type="" is specified
-        @rtype: boolean
-        """
-        return ( self.ref() is not None )
-    
-    def ref(self):
-        """
-        Get the referenced (xsi) type as defined by the schema.
-        This is usually the value of the I{type} attribute.
-        @return: The object's type reference
-        @rtype: basestring
-        """
-        return None
-        
-    def qref(self):
-        """
-        Get the B{qualified} referenced (xsi) type as defined by the schema.
-        This is usually the value of the I{type} attribute that has been
-        qualified by L{qualified_reference()}.
-        @return: The object's (qualified) type reference
-        @rtype: I{qualified reference}
-        @see: L{qualified_reference()}
-        """
-        ref = self.ref()
-        if ref is not None:
-            qref = qualified_reference(ref, self.root, self.root.namespace())
-            name = qref[0]
-            ns = qref[1]
-            return (':'.join((ns[0], name)), ns)
-        else:
-            return None
-    
-    def get_children(self, empty=None):
-        """
-        Get child (nested) schema definition nodes (excluding attributes).
-        @param empty: An optional value to be returned when the
-        list of children is empty.
-        @type empty: I{any}
-        @return: A list of children.
-        @rtype: [L{SchemaObject},...]
-        """ 
-        list = self.children
-        if len(list) == 0 and empty is not None:
-            list = empty
-        return list
-    
-    def get_child(self, name, ns=None):
-        """
-        Get (find) a I{non-attribute} child by name and namespace.
-        @param name: A child name.
-        @type name: basestring
-        @param ns: The child's namespace.
-        @type ns: (I{prefix},I{URI})
-        @return: The requested child.
-        @rtype: L{SchemaObject}
-        """
-        for child in self.get_children():
-            if child.match(name, ns):
-                return child
-        return None
-    
-    def get_attributes(self):
-        """
-        Get a list of schema attribute nodes.
-        @return: A list of attributes.
-        @rtype: [L{sxbasic.Attribute},...]
-        """ 
-        return self.attributes
-    
-    def get_attribute(self, name, ns=None):
-        """
-        Get (find) a I{non-attribute} child by name and namespace.
-        @param name: A child name.
-        @type name: basestring
-        @param ns: The child's namespace.
-        @type ns: (I{prefix},I{URI})
-        @return: The requested child.
-        @rtype: L{SchemaObject}
-        """
-        for a in self.get_attributes():
-            if a.match(name, ns):
-                return a
-        return None
     
     def unbounded(self):
         """
@@ -235,33 +88,41 @@ class SchemaObject:
         """
         return False
     
-    def resolve(self, depth=1024, nobuiltin=False):
+    def resolve(self, nobuiltin=False):
         """
-        Resolve and return the nodes true type when another
-        named type is referenced.
-        @param depth: The resolution depth.
-        @type depth: int
+        Resolve and return the nodes true self.
         @param nobuiltin: Flag indicates that resolution must
-            not continue to xsd builtins.
+            not continue to include xsd builtins.
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
         """
-        cachekey = '%d.%s' % (depth, nobuiltin)
-        cached = self.resolve_cache.get(cachekey, None)
-        if cached is not None:
-            return cached
-        history = [self]
-        result = self
-        for n in range(0, depth):
-            resolved = self.__resolve(result, history)
-            if resolved != result and \
-                not (nobuiltin and resolved.builtin()):
-                    result = resolved
-            else:
-                break
-        if result is not None:
-            self.resolve_cache[cachekey] = result
-        return result
+        return self.cache.get(nobuiltin, self)
+    
+    def get_child(self, name):
+        """
+        Get (find) a I{non-attribute} child by name.
+        @param name: A child name.
+        @type name: str
+        @return: The requested child.
+        @rtype: L{SchemaObject}
+        """
+        for child in self.children:
+            if child.any() or child.name == name:
+                return child
+        return None
+    
+    def get_attribute(self, name):
+        """
+        Get (find) a I{non-attribute} attribute by name.
+        @param name: A attribute name.
+        @type name: str
+        @return: The requested child.
+        @rtype: L{SchemaObject}
+        """
+        for child in self.attributes:
+            if child.name == name:
+                return child
+        return None
         
     def any(self):
         """
@@ -286,87 +147,6 @@ class SchemaObject:
         @rtype: boolean
         """
         return False
-        
-    def find(self, ref, classes=()):
-        """
-        Find a referenced type in self or children.
-        @param ref: Either a I{qualified reference} or the
-                name of a referenced type.
-        @type ref: (I{str}|I{qualified reference})
-        @param classes: A list of classes used to qualify the match.
-        @type classes: [I{class},...] 
-        @return: The referenced type.
-        @rtype: L{SchemaObject}
-        @see: L{qualified_reference()}
-        """
-        if isqref(ref):
-            n, ns = ref
-        else:
-            n, ns = qualified_reference(ref, self.root, self.namespace())
-        if self.match(n, ns, classes=classes):
-            return self
-        qref = (n, ns)
-        for c in self.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                return p
-        return None
-                
-    def replace_child(self, child, replacements):
-        """
-        Replace a (child) with specified replacement objects.
-        @param child: A child of this object.
-        @type child: L{SchemaObject}
-        @param replacements: A list of replacement properties.
-        @type replacements: [L{SchemaObject},...]
-        """
-        index = self.children.index(child)
-        self.children.remove(child)
-        for c in replacements:
-            self.children.insert(index, c)
-            index += 1
-            
-    def promote_grandchildren(self):
-        """
-        Promote grand-children as direct children.  Promoted children
-        replace their parents.
-        @see: replace_child()
-        """
-        children = list(self.children)
-        for c in children:
-            c.init(self.stage)
-            self.attributes += c.attributes
-            self.replace_child(c, c.children)
-        
-    def str(self, indent=0):
-        """
-        Get a string representation of this object.
-        @param indent: The indent.
-        @type indent: int
-        @return: A string.
-        @rtype: str
-        """
-        tab = '%*s'%(indent*3, '')
-        result  = []
-        result.append('%s<%s' % (tab, self.id))
-        result.append(' {%s}' % self.stage)
-        result.append(' name="%s"' % self.get_name())
-        ref = self.ref()
-        if ref is not None:
-            result.append(' type="%s"' % ref)
-        if len(self):
-            for c in self.attributes:
-                result.append('\n')
-                result.append(c.str(indent+1))
-                result.append('@')
-            for c in self.children:
-                result.append('\n')
-                result.append(c.str(indent+1))
-            result.append('\n%s' % tab)
-            result.append('</%s>' % self.__class__.__name__)
-        else:
-            result.append(' />')
-        return ''.join(result)
     
     def isattr(self):
         """
@@ -384,7 +164,28 @@ class SchemaObject:
         @rtype: boolean
         """
         return False
-    
+        
+    def find(self, qref, classes=()):
+        """
+        Find a referenced type in self or children.
+        @param qref: A qualified reference.
+        @type qref: qref
+        @param classes: A list of classes used to qualify the match.
+        @type classes: [I{class},...] 
+        @return: The referenced type.
+        @rtype: L{SchemaObject}
+        @see: L{qualify()}
+        """
+        if not len(classes):
+            classes = (self.__class__,)
+        if self.qname == qref and self.__class__ in classes:
+            return self
+        for c in self.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                return p
+        return None
+
     def translate(self, value, topython=True):
         """
         Translate a value (type) to/from a python type.
@@ -393,7 +194,7 @@ class SchemaObject:
         """
         return value
     
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
@@ -401,48 +202,90 @@ class SchemaObject:
         """
         return ()
     
-    def __resolve(self, t, history):
-        """ resolve the specified type """
-        from suds.xsd.query import Query
-        result = t
-        if t.typed():
-            ref = qualified_reference(t.ref(), t.root, t.root.namespace())
-            query = Query(ref)
-            query.history = history
-            log.debug('%s, resolving: %s\n using:%s', self.id, ref, query)
-            resolved = query.execute(t.schema)
-            if resolved is None:
-                raise TypeNotFound(ref)
-            else:
-                result = resolved
-        return result
+    def flatten(self, items=None):
+        """
+        Walk the tree and invoke promote() on each node.  This gives each
+        node the opportunity to flatten the tree as needed to remote
+        uninteresting nodes.  Nodes that don't directly contribute to the
+        structure of the data are omitted.
+        @param items: A list of items to be promoted.
+        @type items: (pa[],pc[])
+        """
+        log.debug(Repr(self))
+        if items is None:
+            pa,pc = [],[]
+        else:
+            pa,pc = items
+        children = self.children[:]
+        children.reverse()
+        for c in children:
+            c.flatten((pa,pc))
+        if items is None:
+            self.attributes += pa
+            self.children = pc
+        else:
+            self.promote(pa, pc)
             
-    def __init0__(self):
+    def promote(self, pa, pc):
         """
-        Load
-        @precondition: The model must be initialized.
-        @note: subclasses override here!
+        Promote children during the flattening proess.  The object's
+        attributes and children are added to the B{p}romoted B{a}ttributes
+        and B{p}romoted B{c}hildren lists as they see fit.
+        @param pa: List of attributes to promote.
+        @type pa: [L{SchemaObject}]
+        @param pc: List of children to promote.
+        @type pc: [L{SchemaObject}]
         """
-        pass   
-    
-    def __init1__(self):
+        log.debug(Repr(self))
+        self.prepend(pa, self.attributes)
+        self.prepend(pc, self.children, (Promotable,))
+            
+    def dereference(self):
         """
-        Perform dependancy solving.
-        Dependancies are resolved to their I{true} types during
-        schema loading.
-        @precondition: The model must be initialized.
-        @precondition: I{__init0__()} have been invoked.
-        @note: subclasses override here!
+        Walk the tree and invoke mutate() on each node.  This gives each
+        node the opportunity to resolve references to other types
+        and mutate as needed.
+        """
+        log.debug(Repr(self))
+        self.mutate()
+        for c in self.children:
+            c.dereference()
+            
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
         """
         pass
     
-    def __init2__(self):
+    def str(self, indent=0):
         """
-        Promote children.
-        @precondition: The model must be initialized.
-        @precondition: I{__init1__()} have been invoked.
+        Get a string representation of this object.
+        @param indent: The indent.
+        @type indent: int
+        @return: A string.
+        @rtype: str
         """
-        pass
+        tab = '%*s'%(indent*3, '')
+        result  = []
+        result.append('%s<%s' % (tab, self.id))
+        result.append(' name="%s"' % self.name)
+        if self.type is not None:
+            result.append(' type="%s"' % self.type)
+        if len(self):
+            result.append('>')
+            for c in self.attributes:
+                result.append('\n')
+                result.append(c.str(indent+1))
+                result.append('@')
+            for c in self.children:
+                result.append('\n')
+                result.append(c.str(indent+1))
+            result.append('\n%s' % tab)
+            result.append('</%s>' % self.__class__.__name__)
+        else:
+            result.append(' />')
+        return ''.join(result)
         
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -451,8 +294,7 @@ class SchemaObject:
         return unicode(self.str())
     
     def __repr__(self):
-        myrep = \
-            '<%s {%d} name="%s"/>' % (self.id, self.stage, self.get_name())
+        myrep = '<%s name="%s"/>' % (self.id, self.name)
         return myrep.encode('utf-8')
     
     def __len__(self):
@@ -460,14 +302,18 @@ class SchemaObject:
     
     def __getitem__(self, index):
         return self.children[index]
-    
 
-class Polymorphic(SchemaObject):
-    
+    def __deepcopy__(self, memo={}):
+        clone = copy(self)
+        clone.attributes = deepcopy(self.attributes)
+        clone.children = deepcopy(self.children)
+        return clone
+
+
+class Promotable(SchemaObject):
     """
-    Represents a polymorphic object which is an xsd construct
-    that may reference another by name.  Once the reference is
-    resolved, the object transforms into the referenced object.
+    Represents I{promotable} schema objects.  They are objects that
+    should be promoted during the flattening process.
     """
     
     def __init__(self, schema, root):
@@ -478,33 +324,3 @@ class Polymorphic(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.referenced = None
-        
-    def __init1__(self):
-        """
-        Resolve based on @ref (reference) found
-        @see: L{SchemaObject.__init1__()}
-        """
-        ref = self.root.get('ref')
-        if ref is not None:
-            self.__find_referenced(ref)
-        
-    def __find_referenced(self, ref):
-        """ 
-        find the referenced object in top level elements
-        first, then look deeper.
-        """
-        classes = (self.__class__,)
-        n, ns = qualified_reference(ref, self.root, self.namespace())
-        for c in self.schema.index.get(n, []):
-            if c.match(n, ns=ns, classes=classes):
-                self.referenced = c
-                return
-        qref = (n, ns)
-        for c in self.schema.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                self.referenced = p
-                return
-        raise TypeNotFound(ref)
-

@@ -20,18 +20,104 @@ I{basic} schema objects.
 
 from suds import *
 from suds.xsd import *
-from suds.xsd.sxbase import SchemaObject, Polymorphic
-from suds.sudsobject import Factory
-from suds.sax import Parser, splitPrefix, Namespace
+from suds.xsd.sxbase import *
+from suds.xsd.query import Query
+from suds.sudsobject import Factory as SOFactory
+from suds.sax import Parser, splitPrefix
 from urlparse import urljoin
+from copy import copy, deepcopy
 
 log = logger(__name__)
+
+
+class Factory:
+    """
+    @cvar tags: A factory to create object objects based on tag.
+    @type tags: {tag:fn,}
+    """
+
+    tags =\
+    {
+        'import' : lambda x,y: Import(x,y), 
+        'complexType' : lambda x,y: Complex(x,y), 
+        'simpleType' : lambda x,y: Simple(x,y), 
+        'element' : lambda x,y: Element(x,y),
+        'attribute' : lambda x,y: Attribute(x,y),
+        'sequence' : lambda x,y: Sequence(x,y),
+        'all' : lambda x,y: All(x,y),
+        'complexContent' : lambda x,y: ComplexContent(x,y),
+        'restriction' : lambda x,y: Restriction(x,y),
+        'enumeration' : lambda x,y: Enumeration(x,y),
+        'extension' : lambda x,y: Extension(x,y),
+        'any' : lambda x,y: Any(x,y),
+    }
+    
+    @classmethod
+    def create(cls, root, schema):
+        """
+        Create an object based on the root tag name.
+        @param root: An XML root element.
+        @type root: L{Element}
+        @param schema: A schema object.
+        @type schema: L{schema.Schema}
+        @return: The created object.
+        @rtype: L{SchemaObject} 
+        """
+        fn = cls.tags.get(root.name)
+        if fn is not None:
+            return fn(schema, root)
+        else:
+            return None
+
+    @classmethod
+    def build(cls, root, schema, filter=('*',)):
+        """
+        Build an xsobject representation.
+        @param root: An schema XML root.
+        @type root: L{sax.Element}
+        @param filter: A tag filter.
+        @type filter: [str,...]
+        @return: A schema object graph.
+        @rtype: L{sxbase.SchemaObject}
+        """
+        children = []
+        attributes = []
+        for node in root.children:
+            if '*' in filter or node.name in filter:
+                child = cls.create(node, schema)
+                if child is None:
+                    continue
+                if child.isattr():
+                    attributes.append(child)
+                else:
+                    children.append(child)
+                child.attributes, child.children = \
+                    cls.build(node, schema, child.childtags())
+        return (attributes, children)
+    
+    @classmethod
+    def collate(cls, children):
+        imports = []
+        elements = {}
+        types = {}
+        for c in children:
+            if isinstance(c, Element):
+                elements[c.qname] = c
+                continue
+            if isinstance(c, Import):
+                imports.append(c)
+                continue
+            types[c.qname] = c
+        for i in imports:
+            children.remove(i)
+        return (children, imports,elements,types)
+
 
 class Complex(SchemaObject):
     """
     Represents an (xsd) schema <xs:complexType/> node.
-    @cvar valid_children: A list of valid child node names
-    @type valid_children: (I{str},...)
+    @cvar childtags: A list of valid child node names
+    @type childtags: (I{str},...)
     """
     
     def __init__(self, schema, root):
@@ -43,19 +129,21 @@ class Complex(SchemaObject):
         """
         SchemaObject.__init__(self, schema, root)
         
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
         @rtype: [str,...]
         """
         return ('attribute', 'sequence', 'all', 'complexContent', 'any')
-        
-    def get_name(self):
-        """ gets the <xs:complexType name=""/> attribute value """
-        return self.root.get('name')
     
     def derived(self):
+        """
+        Get whether the object is derived in the it is an extension
+        of another type.
+        @return: True if derived, else False.
+        @rtype: boolean
+        """
         try:
             return self.__derived
         except:
@@ -65,14 +153,6 @@ class Complex(SchemaObject):
                     self.__derived = True
                     break
         return self.__derived
-        
-    def __init2__(self):
-        """ promote grand-children """
-        self.promote_grandchildren()
-    
-    def __lt__(self, other):
-        """ <element/> first """
-        return ( not isinstance(other, Element) )
 
 
 class Simple(SchemaObject):
@@ -89,23 +169,20 @@ class Simple(SchemaObject):
         """
         SchemaObject.__init__(self, schema, root)
 
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
         @rtype: [str,...]
         """
         return ('restriction', 'any',)
-
-    def get_name(self):
-        """ gets the <xs:simpleType name=""/> attribute value """
-        return self.root.get('name')
-
-    def ref(self):
-        """ gets the <xs:simpleType xsi:type=""/> attribute value """
-        return self.root.get('type')
     
     def enum(self):
+        """
+        Get whether this is a simple-type containing an enumeration.
+        @return: True if any, else False
+        @rtype: boolean
+        """
         for c in self.children:
             if isinstance(c, Restriction):
                 for gc in c.children:
@@ -127,17 +204,18 @@ class Restriction(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        
-    def get_name(self):
-        return self.__class__.__name__
 
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
         @rtype: [str,...]
         """
         return ('enumeration',)
+    
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')
 
 
 class Sequence(SchemaObject):
@@ -153,17 +231,21 @@ class Sequence(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
+        
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')
 
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('element', 'any',)
+        return ('element', 'sequence', 'all', 'any')
 
 
-class All(Sequence):
+class All(SchemaObject):
     """
     Represents an (xsd) schema <xs:all/> node.
     """
@@ -175,7 +257,19 @@ class All(Sequence):
         @param root: The xml root node.
         @type root: L{sax.Element}
         """
-        Sequence.__init__(self, schema, root)
+        SchemaObject.__init__(self, schema, root)
+        
+    def childtags(self):
+        """
+        Get a list of valid child tag names.
+        @return: A list of child tag names.
+        @rtype: [str,...]
+        """
+        return ('element', 'sequence', 'all', 'any')
+    
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')
 
 
 class ComplexContent(SchemaObject):
@@ -192,20 +286,20 @@ class ComplexContent(SchemaObject):
         """
         SchemaObject.__init__(self, schema, root)
         
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('extension',)
+        return ('attribute', 'extension',)
+    
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')
 
-    def __init2__(self):
-        """ promote grand-children """
-        self.promote_grandchildren()
 
-
-class Enumeration(SchemaObject):
+class Enumeration(Promotable):
     """
     Represents an (xsd) schema <xs:enumeration/> node
     """
@@ -217,14 +311,15 @@ class Enumeration(SchemaObject):
         @param root: The xml root node.
         @type root: L{sax.Element}
         """
-        SchemaObject.__init__(self, schema, root)
+        Promotable.__init__(self, schema, root)
+        self.name = root.get('value')
         
-    def get_name(self):
-        """ gets the <xs:enumeration value=""/> attribute value """
-        return self.root.get('value')
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')
 
     
-class Element(Polymorphic):
+class Element(Promotable):
     """
     Represents an (xsd) schema <xs:element/> node.
     """
@@ -236,72 +331,43 @@ class Element(Polymorphic):
         @param root: The xml root node.
         @type root: L{sax.Element}
         """
-        Polymorphic.__init__(self, schema, root)
-        form = root.get('form')
-        self.form_qualified = self.__form_qualified()
-        self.nillable = self.__nillable()
+        Promotable.__init__(self, schema, root)
+        self.ref = root.get('ref')
+        self.referenced = None
+        a = root.get('form')
+        if a is not None:
+            self.form_qualified = ( a == 'qualified' )
+        a = self.root.get('nillable')
+        if a is not None:
+            self.nillable = ( a in ('1', 'true') )
+        self.max = self.root.get('maxOccurs', default='1')
         
-    def valid_children(self):
+    def childtags(self):
         """
         Get a list of valid child tag names.
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'complexType', 'any',)
-        
-    def get_name(self):
-        """ gets the <xs:element name=""/> attribute value """
-        return self.root.get('name')
-    
-    def ref(self):
-        """ gets the <xs:element type=""/> attribute value """
-        return self.root.get('type')
+        return ('attribute', 'simpleType', 'complexType', 'any',)
     
     def unbounded(self):
-        """ get whether the element has a maxOccurs > 1 or unbounded """
-        max = self.root.get('maxOccurs', default='1')
-        if max.isdigit():
-            return (int(max) > 1)
-        else:
-            return ( max == 'unbounded' )
-    
-    def __form_qualified(self):
-        """ get @form = (qualified) """
-        form = self.root.get('form')
-        if form is None:
-            return self.form_qualified
-        else:
-            return ( form.lower() == 'qualified' )
-        
-    def __nillable(self):
-        """ get @nillable = (1|true) """
-        nillable = self.root.get('nillable')
-        if nillable is None:
-            return self.nillable
-        else:
-            return ( nillable.lower() in ('1', 'true') )
-
-    def __lt__(self, other):
-        """ <simpleType/> first """
-        return ( not isinstance(other, Simple) )
-    
-    def __init2__(self):
         """
-        if referenced (@ref) then promote the referenced
-        node; then replace my children with those of the
-        referenced node; otherwise, promote my grand-children
-        @see: L{SchemaObject.__init2__()}
+        Get whether this node is unbounded I{(a collection)}
+        @return: True if unbounded, else False.
+        @rtype: boolean
         """
-        if self.referenced is not None:
-            self.referenced.init(self.stage)
-            self.root = self.referenced.root
-            self.children = self.referenced.children
-            self.attributes = self.referenced.attributes
+        if self.max.isdigit():
+            return (int(self.max) > 1)
         else:
-            self.promote_grandchildren()
+            return ( self.max == 'unbounded' )
             
     def derived(self):
-        """ get whether our resolved type is derived """
+        """
+        Get whether the object is derived in the it is an extension
+        of another type.
+        @return: True if derived, else False.
+        @rtype: boolean
+        """
         try:
             return self.__derived
         except:
@@ -311,9 +377,84 @@ class Element(Polymorphic):
             else:
                 self.__derived = resolved.derived()
         return self.__derived
+    
+    def resolve(self, nobuiltin=False):
+        """
+        Resolve and return the nodes true self.
+        @param nobuiltin: Flag indicates that resolution must
+            not continue to include xsd builtins.
+        @return: The resolved (true) type.
+        @rtype: L{SchemaObject}
+        """
+        if self.type is None:
+            return self
+        cached = self.cache.get(nobuiltin)
+        if cached is not None:
+            return cached
+        result = self
+        qref = qualify(self.type, self.root, self.root.namespace())
+        query = Query(type=qref)
+        query.history = [self]
+        log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
+        resolved = query.execute(self.schema)
+        if resolved is None:
+            raise TypeNotFound(qref)
+        else:
+            result = resolved.resolve(nobuiltin)
+        return result
+    
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
+        """
+        if self.ref is None:
+            return
+        classes = (Element,)
+        qref = qualify(self.ref, self.root, self.namespace())
+        for e in self.schema.elements.values():
+            if e.qname == qref:
+                self.merge(e)
+                return
+        for c in self.schema.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                self.merge(p)
+                return
+        raise TypeNotFound(self.ref)
+    
+    def merge(self, e):
+        """
+        Merge the referenced object.
+        @param e: A resoleve reference.
+        @type e: L{Element}
+        """
+        self.name = e.name
+        self.qname = e.qname
+        self.type = e.type
+        self.children = deepcopy(e.children)
+        self.attributes = deepcopy(e.attributes)
+        
+    def promote(self, pa, pc):
+        """
+        Promote children during the flattening proess.  The object's
+        attributes and children are added to the B{p}romoted B{a}ttributes
+        and B{p}romoted B{c}hildren lists as they see fit.
+        @param pa: List of attributes to promote.
+        @type pa: [L{SchemaObject}]
+        @param pc: List of children to promote.
+        @type pc: [L{SchemaObject}]
+        """
+        if len(self):
+            log.debug(Repr(self))
+            self.attributes += pa
+            del self.children[:]
+            self.children += pc
+            del pa[:]
+            del pc[:]
 
 
-class Extension(Complex):
+class Extension(SchemaObject):
     """
     Represents an (xsd) schema <xs:extension/> node.
     """
@@ -325,33 +466,42 @@ class Extension(Complex):
         @param root: The xml root node.
         @type root: L{sax.Element}
         """
-        Complex.__init__(self, schema, root)
-        self.super = None
+        SchemaObject.__init__(self, schema, root)
+        self.base = root.get('base')
         
-    def __init1__(self):
-        """ lookup superclass  """
-        from suds.xsd.query import Query
-        Complex.__init1__(self)
-        base = self.root.get('base')
-        ref = qualified_reference(base, self.root, self.root.namespace())
-        query = Query(ref)
-        self.super = query.execute(self.schema)
-        if self.super is None:
-            raise TypeNotFound(base)
+    def childtags(self):
+        """
+        Get a list of valid child tag names.
+        @return: A list of child tag names.
+        @rtype: [str,...]
+        """
+        return ('attribute', 'sequence', 'all', 'any')
         
-    def __init2__(self):
-        """ add base type's children as my own """
-        Complex.__init2__(self)
-        index = 0
-        self.super.init(self.stage)
-        super = self.super.resolve()
-        for c in super.children:
-            self.children.insert(index, c)
-            index += 1
-        index = 0
-        for a in super.attributes:
-            self.attributes.insert(index, a)
-            index += 1
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
+        """
+        log.debug(Repr(self))
+        qref = qualify(self.base, self.root, self.namespace())
+        query = Query(type=qref)
+        super = query.execute(self.schema)
+        if super is None:
+            raise TypeNotFound(self.base)
+        self.merge(super)
+
+    def merge(self, b):
+        """
+        Merge the resolved I{base} object with myself.
+        @param b: A resolved base object.
+        @type b: L{SchemaObject}
+        """
+        self.prepend(self.attributes, deepcopy(b.attributes))
+        self.prepend(self.children, deepcopy(b.children))
+        
+    def __repr__(self):
+        myrep = '<%s base="%s"/>' % (self.id, self.base)
+        return myrep.encode('utf-8')
 
 
 class Import(SchemaObject):
@@ -367,79 +517,36 @@ class Import(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.imp = Factory.object('import')
-        self.imp.schema = None
+        self.imp = SOFactory.object('import')
         self.imp.ns = (None, root.get('namespace'))
         self.imp.location = root.get('schemaLocation')
+        self.opened = False
         
-    def find(self, ref, classes=()):
+    def open(self):
         """
-        Find a referenced type in the imported schema.
-        @param ref: Either a I{qualified reference} or the
-                name of a referenced type.
-        @type ref: (I{str}|I{qualified reference})
-        @param classes: A list of classes used to qualify the match.
-        @type classes: [I{class},...] 
-        @return: The referenced type.
-        @rtype: L{SchemaObject}
-        @see: L{qualified_reference()}
+        Open and import the refrenced schema.
         """
-        if self.imp.schema is None:
-            return None
-        if isqref(ref):
-            n, ns = ref
+        if self.opened:
+            return
+        self.opened = True
+        log.debug('%s, importing:\n%s', self.id, self.imp)
+        if self.imp.location is None:
+            result = self.schema.locate(self.imp.ns)
+            if result is None:
+                log.debug('imported schema (%s) not-found', self.imp.ns[1])
+            return result
         else:
-            n, ns = qualified_reference(ref, self.root, self.namespace())
-        for c in self.imp.schema.index.get(n, []):
-            if c.match(n, ns, classes=classes):
-                return c
-        qref = (n, ns)
-        for c in self.imp.schema.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                return p
-        return None
-    
-    def xsfind(self, query):
-        """
-        Find a I{type} defined in one of the contained schemas.
-        @param query: A query.
-        @type query: L{query.Query}
-        @return: The found schema type. 
-        @rtype: L{qualified_reference()}
-        """
-        if self.imp.schema is None:
-            return None
-        marker = self.marker(query)
-        if marker in query.history:
-            return None
-        query.history.append(marker)
-        result = None
-        log.debug('%s, finding (%s) in:\n%s',
-            self.id, 
-            query.name,
-            Repr(self.imp.schema))
-        result = self.imp.schema.find(query)
-        if result is not None:
-            log.debug('%s, found (%s) as %s',
-                self.id, 
-                query.qname, 
-                Repr(result))
-        return result
-    
-    def marker(self, query):
-        """ get unique search marker """
-        search = query.signature()
-        sid = self.imp.schema.id
-        return 'import-marker:%s/%s' % (sid, search)
-
-    def namespace(self):
-        """ get this properties namespace """
-        result = self.schema.tns
-        if self.imp.schema is not None:
-            result = self.imp.schema.tns
-        return result
-            
+            url = self.imp.location
+            try:
+                if '://' not in url:
+                    url = urljoin(self.schema.baseurl, url)
+                root = Parser().parse(url=url).root()
+                return self.schema.instance(root, url)
+            except Exception:
+                msg = 'imported schema (%s) at (%s), not-found' % (self.imp.ns[1], url)
+                log.error('%s, %s', self.id, msg, exc_info=True)
+                raise Exception(msg)
+ 
     def str(self, indent=0):
         """
         Get a string representation of this object.
@@ -451,69 +558,18 @@ class Import(SchemaObject):
         tab = '%*s'%(indent*3, '')
         result  = []
         result.append('%s<%s' % (tab, self.id))
-        result.append(' {%d}' % self.stage)
+        result.append(' ns="%s"' % self.imp.ns[1])
         result.append(' location="%s"' % self.imp.location)
-        if self.imp.schema is None:
-            result.append(' schema="n/r"')
-        else:
-            result.append(' schema="%s"' % self.imp.schema.id)
         result.append('/>')
         return ''.join(result)
-            
-    def __init0__(self):
-        log.debug('%s, importing:\n%s', self.id, self.imp)
-        if self.imp.location is None:
-            self.imp.schema = self.__import_local()
-        else:
-            self.imp.schema = self.__import()
-        if self.imp.schema is not None:
-            self.__process_imported()
 
-    def __import(self):
-        """ import the xsd content at the specified url """
-        url = self.imp.location
-        try:
-            if '://' not in url:
-                url = urljoin(self.schema.baseurl, url)
-            root = Parser().parse(url=url).root()
-            from suds.xsd.schema import Schema
-            return Schema(root, url)
-        except Exception:
-            msg = 'imported schema (%s) at (%s), not-found' % (self.imp.ns[1], url)
-            log.error('%s, %s', self.id, msg, exc_info=True)
-            raise Exception(msg)
-        
-    def __import_local(self):
-        """ import (local) xsd content using a namespace lookup """
-        result = self.schema.locate(self.imp.ns)
-        if result is None:
-            log.debug('imported schema (%s) not-found', self.imp.ns[1])
-        return result
-            
-    def __process_imported(self):
-        """ process the imported schema """
-        self.imp.schema.init(0)
-        if self.imp.ns[0] is not None:
-            ns = self.imp.ns
-            self.schema.root.addPrefix(ns[0], ns[1])
-            
     def __repr__(self):
-        result  = []
-        result.append('<%s' % self.id)
-        result.append(' {%s}' % self.stage)
-        if self.imp.schema is None:
-            result.append(' schema="n/r"')
-        else:
-            result.append(' schema="%s"' % self.imp.schema.id)
-            result.append(' tns="%s"' % self.imp.schema.tns[1])
-        result.append('/>')
-        return ''.join(result)
-            
-    def __lt__(self, other):
-        """ everything else first """
-        return False
+        repr = '<%s ns="%s" location="%s"/>' \
+            % (self.id, self.imp.ns[1], self.imp.location)
+        return repr.encode('utf-8')
+
    
-class Attribute(Polymorphic):
+class Attribute(Promotable):
     """
     Represents an (xsd) <attribute/> node
     """
@@ -525,38 +581,74 @@ class Attribute(Polymorphic):
         @param root: The xml root node.
         @type root: L{sax.Element}
         """
-        Polymorphic.__init__(self, schema, root)
+        Promotable.__init__(self, schema, root)
         
     def isattr(self):
-        """ get whether the object is an attribute """
+        """
+        Get whether the object is a schema I{attribute} definition.
+        @return: True if an attribute, else False.
+        @rtype: boolean
+        """
         return True
-        
-    def get_name(self):
-        """ gets the <xs:attribute name=""/> attribute value """
-        return self.root.get('name')
-    
-    def ref(self):
-        """ gets the <xs:attribute type=""/> attribute value """
-        return self.root.get('type')
 
     def get_default(self):
-        """ gets the <xs:attribute default=""/> attribute value """
+        """
+        Gets the <xs:attribute default=""/> attribute value.
+        @return: The default value for the attribute
+        @rtype: str
+        """
         return self.root.get('default', default='')
     
     def required(self):
-        """ gets the <xs:attribute use="required"/> attribute value """
+        """
+        Gets the <xs:attribute use="required"/> attribute value
+        @return: Whether the attribute is required.
+        @rtype: bool
+        """
         use = self.root.get('use', default='')
         return ( use.lower() == 'required' )
 
-    def __init2__(self):
-        """
-        Replace the root with the referenced root 
-        while preserving @use.
-        @see: L{SchemaObject.__init2__()}
-        """
-        if self.referenced is not None:
-            myuse = self.root.get('use')
-            self.root = self.referenced.root
-            if myuse is not None:
-                self.root.set('use', myuse)
 
+class Any(Promotable):
+    """
+    Represents an (xsd) <any/> node
+    """
+
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        """
+        Promotable.__init__(self, schema, root)
+        
+    def get_child(self, name):
+        """
+        Get (find) a I{non-attribute} child by name and namespace.
+        @param name: A child name.
+        @type name: basestring
+        @return: The requested child.
+        @rtype: L{SchemaObject}
+        """
+        return self
+    
+    def get_attribute(self, name):
+        """
+        Get (find) a I{non-attribute} attribute by name.
+        @param name: A attribute name.
+        @type name: str
+        @return: The requested attribute.
+        @rtype: L{SchemaObject}
+        """
+        return self
+    
+    def any(self):
+        """
+        Get whether this is an xs:any
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return True
+    
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')

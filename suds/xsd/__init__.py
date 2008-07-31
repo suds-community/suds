@@ -27,10 +27,10 @@ from suds.sax import Namespace, splitPrefix
 log = logger(__name__)
 
 
-def qualified_reference(ref, resolvers, defns=Namespace.default):
+def qualify(ref, resolvers, defns=Namespace.default):
     """
-    Get type reference I{qualified} by pnamespace.
-    @param ref: A referenced type name such as <person type="tns:person"/>
+    Get a reference that is I{qualified} by namespace.
+    @param ref: A referenced schema type name.
     @type ref: str
     @param resolvers: A list of objects to be used to resolve types.
     @type resolvers: [L{sax.Element},]
@@ -38,9 +38,7 @@ def qualified_reference(ref, resolvers, defns=Namespace.default):
         when no prefix is specified.
     @type defns: A default namespace I{tuple: (prefix,uri)} used when ref not prefixed.
     @return: A qualified reference.
-    @rtype: (name, ns)
-    @note: Suds namespaces are tuples: I{(prefix,URI)}.  An example
-        qualified reference would be: ("myname",("tns", "http://..."))
+    @rtype: (name, namespace-uri)
     """
     ns = None
     p, n = splitPrefix(ref)
@@ -56,7 +54,7 @@ def qualified_reference(ref, resolvers, defns=Namespace.default):
             raise Exception('prefix (%s) not resolved' % p)
     else:
         ns = defns
-    return (n, ns)
+    return (n, ns[1])
 
 def isqref(object):
     """
@@ -64,10 +62,10 @@ def isqref(object):
     @param object: An object to be tested.
     @type object: I{any}
     @rtype: boolean
-    @see: L{qualified_reference()}
+    @see: L{qualify}
     """
     return (\
         isinstance(object, tuple) and \
         len(object) == 2 and \
         isinstance(object[0], basestring) and \
-        Namespace.isns(object[1]))
+        isinstance(object[1], basestring))

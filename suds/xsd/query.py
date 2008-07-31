@@ -20,8 +20,6 @@ The I{query} module defines a class for performing schema queries.
 from suds import *
 from suds.sudsobject import *
 from suds.xsd import *
-from suds.xsd.sxbuiltin import XBuiltin
-from suds.xsd.sxbasic import Simple, Element, Complex
 
 log = logger(__name__)
 
@@ -29,59 +27,27 @@ log = logger(__name__)
 class Query(Object):
     """
     A schema query class.
-    @ivar id: The object id.
-    @type id: str
-    @ivar name: The schema type name being queried.
-    @type name: (str|qref)
-    @ivar qname: The qualified name being queried for.
-    @type qname: I{qref}
-    @ivar history: A list of items tracked during query processing.
-        This list primarily contians items found by the query.  However, 
-        it can hold and be preloaded as needed.
-    @type history: []
-    @ivar resolved: A flag indicating that the result should be
-        fully resolved.
-    @type resolved: boolean
-    @ivar cidx: The class match list index.
-    @type cidx: number
-    @ivar clsfilter: A class filter list.  When empty, all
-        classes match.
-    @type clsfilter: [L{sxbase.SchemaObject},...]
-    @ivar schema: The schema associated with the query.  The schema
-        is used by the query to search for items.
-    @type schema: L{schema.Schema}
-    @ivar locked: A flag indicates that the query may not be incremented.
-    @type locked: boolean
-    @cvar clsorder: A list of classes, used to ensure that types
-        are found in a particular order.
-    @type clsorder: ()
     """
     
-    clsorder = ((XBuiltin, Simple, Element),(Complex,))
-    
-    def __init__(self, name):
+    def __init__(self, ref=None, type=None):
         """
-        @param name: The schema type name being queried.
-        @type name: (str|qref)
+        @param ref: The schema reference being queried.
+        @type ref: qref
+        @param type: The schema B{type} reference being queried.
+        @type type: qref
         """
         Object.__init__(self)
         self.id = objid(self)
-        self.name = name
-        if isqref(name):
-            self.name = name[0]
-            self.qname = name
-        else:
-            self.name = name  
-            self.qname = None
+        self.ref = ref
         self.history = []
         self.resolved = False
-        self.cidx = 0
-        self.clsfilter = []
-        self.schema = None
-        pmd = Factory.metadata()
-        pmd.wrappers = { 'schema' : lambda x : repr(x) }
-        self.__metadata__.__print__ = pmd
-
+        self.element_priority = False
+        if type is None:
+            self.element_priority = True
+        else:
+            self.ref = type
+        if not isqref(self.ref):
+            raise Exception('%s, must be qref' % self.ref)
         
     def filter(self, result):
         """
@@ -93,52 +59,10 @@ class Query(Object):
         """
         if result is None:
             return True
-        cls = result.__class__
-        classes = Query.clsorder[self.cidx]
-        reject = \
-            ( cls not in classes or \
-              ( len(self.clsfilter) and cls not in self.clsfilter ) or \
-              result in self.history )
+        reject = ( result in self.history )
         if reject:
             log.debug('result %s, rejected by\n%s', Repr(result), self)
         return reject
-    
-    def qualify(self, resolvers, defns):
-        """
-        Qualify the I{name}.  Convert the name a qualified reference
-        @param resolvers: A list of namespace prefix resolvers.
-        @type resolvers: (tuple|list)
-        @param defns: The default namespace when name has no prefix.
-        @type defns: I{namesapce}
-        """
-        if self.qname is None:
-            if isinstance(self.name, basestring):
-                self.qname = qualified_reference(self.name, resolvers, defns)
-            elif isqref(self.name):
-                self.qname = name
-                self.name = self.qname[0]
-            else:
-                raise Exception('name must be (str|qref)')
-            
-    def inprogress(self):
-        """
-        Get whether the query is I{in-use} or I{in-progress}.
-        @return: True when in progress.
-        @rtype: boolean
-        """
-        return ( self.schema is not None )
-    
-    def signature(self):
-        """
-        Get the query's search signature.
-        @return: A string representation of the search criteria.
-        @rtype: str
-        """
-        return \
-            str(self.resolved) \
-            + tostr(self.qname) \
-            + tostr(self.clsfilter) \
-            + tostr(Query.clsorder[self.cidx])
             
     def execute(self, schema):
         """
@@ -149,28 +73,16 @@ class Query(Object):
         @return: The item matching the search criteria.
         @rtype: L{sxbase.SchemaObject}
         """
-        if self.inprogress():
-            raise Exception('%s, already in progress' % self.id)
-        self.schema = schema
-        self.qualify(schema.root, schema.tns)
-        result = None
-        while result is None:
-            result = schema.find(self)
-            if result is None and self.__increment():
-                continue
-            else:
-                break
-        if result is not None:
-            self.history.append(result)
-        return result
+        return schema.execute(self)
     
-    def __increment(self):
-        """ Increment the class ordering """
-        result = False
-        max = len(self.clsorder)-1
-        if self.cidx < max:
-            self.cidx += 1
-            classes = Query.clsorder[self.cidx]
-            log.debug('%s, targeting %s', self.id, classes)
-            result = True
-        return result
+    def result(self, result):
+        """
+        Notification of a query result.
+        @param result: A query result.
+        @type result: L{sxbase.SchemaObject}
+        """
+        if result is None:
+            log.debug('%s, not-found', self.ref)
+            return
+        log.debug('%s, found as: %s', self.ref, Repr(result))
+        self.history.append(result)
