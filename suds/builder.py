@@ -27,20 +27,22 @@ log = logger(__name__)
 class Builder:
     """ Builder used to construct an object for types defined in the schema """
     
-    def __init__(self, schema):
+    def __init__(self, wsdl):
         """
-        @param schema: A schema object.
-        @type schema: L{xsd.schema.Schema}
+        @param wsdl: A schema object.
+        @type wsdl: L{wsdl.Definitions}
         """
-        self.resolver = PathResolver(schema)
+        self.resolver = PathResolver(wsdl)
         
-    def build(self, name=None, type=None):
+    def build(self, name):
         """ build a an object for the specified typename as defined in the schema """
-        if type is None:
+        if isinstance(name, basestring):
             type = self.resolver.find(name)
-        if type is None:
-            raise TypeNotFound(name)
-        cls = type.get_name()
+            if type is None:
+                raise TypeNotFound(name)
+        else:
+            type = name
+        cls = type.name
         if len(type):
             data = Factory.object(cls)
         else:
@@ -48,7 +50,7 @@ class Builder:
         md = data.__metadata__
         md.__type__ = type
         self.add_attributes(data, type)
-        for c in type.get_children():
+        for c in type.children:
             self.process(data, c)
         return data
             
@@ -60,20 +62,20 @@ class Builder:
         if type.unbounded():
             value = []
         else:
-            children = resolved.get_children()
+            children = resolved.children
             if len(children) > 0:
-                value = Factory.object(type.get_name())
-        setattr(data, type.get_name(), value)
+                value = Factory.object(type.name)
+        setattr(data, type.name, value)
         if value is not None:
             data = value
         if not isinstance(data, list):
-            for c in resolved.get_children():
+            for c in resolved.children:
                 self.process(data, c)
 
     def add_attributes(self, data, type):
         """ add required attributes """
-        for a in type.get_attributes():
+        for a in type.attributes:
             if a.required():
-                name = '_%s' % a.get_name()
+                name = '_%s' % a.name
                 value = a.get_default()
                 setattr(data, name, value)

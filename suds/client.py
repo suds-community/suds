@@ -61,7 +61,7 @@ class Client(object):
         """
         client = SoapClient(url, kwargs)
         self.service = Service(client)
-        self.factory = Factory(client.schema)
+        self.factory = Factory(client.wsdl)
         self.sd = ServiceDefinition(client.wsdl)
         
     def items(self, sobject):
@@ -174,14 +174,13 @@ class Factory:
     
     """ A factory for instantiating types defined in the wsdl """
     
-    def __init__(self, schema):
+    def __init__(self, wsdl):
         """
-        @param schema: A schema object.
-        @type schema: L{xsd.schema.Schema}
+        @param wsdl: A schema object.
+        @type wsdl: L{wsdl.Definitions}
         """
-        self.schema = schema
-        self.resolver = PathResolver(schema)
-        self.builder = Builder(schema)
+        self.resolver = PathResolver(wsdl)
+        self.builder = Builder(wsdl)
     
     def create(self, name):
         """
@@ -198,12 +197,12 @@ class Factory:
             raise TypeNotFound(name)
         if type.enum():
             result = InstFactory.object(name)
-            for e in type[0].get_children():
-                enum = e.get_name()
+            for e in type[0].children:
+                enum = e.name
                 setattr(result, enum, enum)
         else:
             try:
-                result = self.builder.build(type=type)
+                result = self.builder.build(type)
             except:
                 log.error("create '%s' failed", name, exc_info=True)
                 raise BuildError("create '%s' failed", name)
@@ -248,7 +247,7 @@ class SoapClient:
         self.arg.opener = kwargs.get('opener', None)
         self.wsdl = Definitions(url, self.arg.opener)
         self.schema = self.wsdl.schema
-        self.builder = Builder(self.schema)
+        self.builder = Builder(self.wsdl)
         self.cookiejar = CookieJar()
         self.last_sent = None
         
@@ -497,8 +496,11 @@ class ServiceDefinition:
     def __addtypes(self):
         """ create our list of top level types """
         namespaces = []
-        self.types = \
-            self.wsdl.schema.namedtypes()
+        self.types = []
+        for type in self.wsdl.schema.children:
+            if type.name is None:
+                continue
+            self.types.append(type)
         for t in self.types:
             ns = t.namespace()
             if ns in namespaces:
@@ -535,7 +537,7 @@ class ServiceDefinition:
     def __xlate(self, type):
         """ get a (namespace) translated name for type """
         resolved = type.resolve()
-        name = resolved.get_name()
+        name = resolved.name
         if type.unbounded():
             name += '[]'
         ns = resolved.namespace()

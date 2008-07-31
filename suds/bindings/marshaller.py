@@ -580,7 +580,7 @@ class Literal(MBase):
         """
         if not content.type.any() and \
             content.type.derived():
-                name = content.type.get_name()
+                name = content.type.name
                 node.set('xsi:type', name)
                 log.debug('encoding name=(%s) on:\n\t%s', name, node)
                 node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
@@ -599,7 +599,7 @@ class Literal(MBase):
         try:
             md = content.value.__metadata__
             result = md.__type__
-            log.debug('type (%s) found in metadata', result.get_name())
+            log.debug('type (%s) found in metadata', result.name)
         except AttributeError:
             pass
         return result
@@ -627,7 +627,7 @@ class Encoded(Literal):
         @type content: L{Object}
         """
         if not content.type.any():
-            name = content.type.get_name()
+            name = content.type.name
             ns = content.type.namespace()
             ref = ':'.join((ns[0], name))
             node.set('xsi:type', ref)

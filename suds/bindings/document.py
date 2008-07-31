@@ -41,9 +41,8 @@ class Document(Binding):
         result = []
         for p in self.part_types(method):
             resolved = p[1].resolve()
-            for c in resolved.get_children():
-                name = c.get_name()
-                result.append((name, c))
+            for c in resolved.children:
+                result.append((c.name, c))
         return result
     
     def returned_types(self, method):

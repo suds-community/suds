@@ -23,32 +23,32 @@ tranparent referenced type resolution and targeted denormalization.
 import suds.metrics
 from suds import *
 from suds.xsd import *
-from suds.xsd.factory import Factory
+from suds.xsd.sxbuiltin import *
+from suds.xsd.sxbasic import Factory as BasicFactory
+from suds.xsd.sxbuiltin import Factory as BuiltinFactory
 from suds.xsd.sxbase import SchemaObject
-from suds.xsd.sxbasic import Import
 from suds.sax import splitPrefix, Namespace
 
 log = logger(__name__)
 
-
 class SchemaCollection:
     """
-    A collection of schema objects.  This class is needed because WSDLs may contain
-    more then one <schema/> node.
-    @ivar root: A root node used for ns prefix resolution (set to WSDL's root).
-    @type root: L{sax.Element}
-    @ivar tns: The target namespace (set to WSDL's target namesapce)
-    @type tns: (prefix,URI)
-    @ivar baseurl: The I{base} URL for this schema.
-    @type baseurl: str
+    A collection of schema objects.  This class is needed because WSDLs 
+    may contain more then one <schema/> node.
+    @ivar wsdl: A wsdl object.
+    @type wsdl: L{suds.wsdl.Definitions}
     @ivar children: A list contained schemas.
     @type children: [L{Schema},...]
+    @ivar namespaces: A dictionary of contained schemas by namespace.
+    @type namespaces: {str:L{Schema}}
     """
     
     def __init__(self, wsdl):
-        self.id = objid(self)
-        self.root = wsdl.root
-        self.tns = wsdl.tns
+        """
+        @param wsdl: A wsdl object.
+        @type wsdl: L{suds.wsdl.Definitions}
+        """
+        self.wsdl = wsdl
         self.children = []
         self.namespaces = {}
         
@@ -66,11 +66,22 @@ class SchemaCollection:
     def load(self):
         """
         Load the schema objects for the root nodes.
+            - de-references schemas
+            - flatten schemas
+            - merge schemas
+        @return: The merged schema.
+        @rtype: L{Schema}
         """
-        for stage in Schema.init_stages:
-            for child in self.children:
-                child.init(stage)
+        for child in self.children:
+            child.build()
+            child.open_imports()
         log.debug('loaded:\n%s', self)
+        merged = self.merge()
+        log.debug('marged\n%s', merged)
+        merged.dereference()
+        merged.flatten()
+        log.debug('flattend-marged\n%s', merged)
+        return merged
         
     def locate(self, ns):
         """
@@ -81,49 +92,21 @@ class SchemaCollection:
         @return: The schema matching the namesapce, else None.
         @rtype: L{Schema}
         """
-        return self.namespaces.get(ns[1], None)
-
-    def find(self, query):
-        """ @see: L{Schema.find()} """
-        result = None
-        if query.inprogress():
-            for s in self.children:
-                log.debug('%s, finding (%s) in %s', self.id, query.name, Repr(s))
-                result = s.find(query)
-                if result is not None:
-                    break
-        else:
-            result = query.execute(self)
-        return result
-        
-    def namedtypes(self):
-        """
-        Get a list of top level named types.
-        @return: A list of types.
-        @rtype: [L{SchemaObject},...]
-        """
-        result = {}
-        for s in self.flattened_children():
-            for c in s.children:
-                name = c.get_name()
-                if name is None:
-                    continue
-                resolved = c.resolve()
-                if resolved.builtin():
-                    result[name] = c
-                else:
-                    result[name] = resolved           
-        return result.values()
+        return self.namespaces.get(ns[1])
     
-    def flattened_children(self):
-        result = []
-        for s in self.children:
-            if s not in result:
-                result.append(s)
-            for gc in s.grandchildren():
-                if gc not in result:
-                    result.append(gc)
-        return result
+    def merge(self):
+        """
+        Merge the contained schemas into one.
+        @return: The merged schema.
+        @rtype: L{Schema}
+        """
+        if len(self):
+            schema = self.children[0]
+            for s in self.children[1:]:
+                schema.merge(s)
+            return schema
+        else:
+            return None
     
     def __len__(self):
         return len(self.children)
@@ -144,23 +127,22 @@ class Schema:
     It provides inspection, lookup and type resolution.
     @ivar root: The root node.
     @type root: L{sax.Element}
-    @ivar tns: The target namespace.
-    @type tns: (prefix,URI)
-    @ivar efdq: The @B{e}lementB{F}ormB{D}efault="B{q}ualified" flag. 
-    @type efdq: boolean
     @ivar baseurl: The I{base} URL for this schema.
     @type baseurl: str
     @ivar container: A schema collection containing this schema.
     @type container: L{SchemaCollection}
     @ivar types: A schema types cache.
     @type types: {name:L{SchemaObject}}
-    @ivar children: A list of child properties.
+    @ivar children: A list of children.
     @type children: [L{SchemaObject},...]
-    @ivar factory: A property factory.
-    @type factory: L{Factory}
+    @ivar imports: A list of import objects.
+    @type imports: [L{SchemaObject},...]
+    @ivar merged: A flag indicating this schema has been merged.
+    @type merged: bool
+    @ivar form_qualified: The flag indicating:
+        (@elementFormDefault).
+    @type form_qualified: bool
     """
-    
-    init_stages = range(0,4)
     
     def __init__(self, root, baseurl, container=None):
         """
@@ -173,94 +155,116 @@ class Schema:
         """
         self.root = root
         self.id = objid(self)
-        self.tns = self.__tns()
-        self.stage = -1
+        self.tns = self.mktns()
         self.baseurl = baseurl
         self.container = container
         self.types = {}
         self.children = []
-        self.index = {}
         self.imports = []
-        self.factory = Factory(self)
-        self.form_qualified = self.__form_qualified()
-        if container is None:
-            self.init(3)
-                    
-    def __form_qualified(self):
-        """ get @elementFormDefault = (qualified) """
+        self.elements = {}
+        self.types = {}
+        self.merged = False
         form = self.root.get('elementFormDefault')
         if form is None:
-            return False
+            self.form_qualified = False
         else:
-            return ( form.lower() == 'qualified' )
+            self.form_qualified = ( form == 'qualified' )
+        if container is None:
+            self.build()
+            self.open_imports()
+            self.dereference()
+            self.flatten()
                 
-    def __tns(self):
-        """ get the target namespace """
+    def mktns(self):
+        """
+        Make the schema's target namespace.
+        @return: The namespace representation of the schema's
+            targetNamespace value.
+        @rtype: (prefix, uri)
+        """
         tns = [None, self.root.get('targetNamespace')]
         if tns[1] is not None:
             tns[0] = self.root.findPrefix(tns[1])
         return tuple(tns)
-            
-    def init(self, stage):
-        """
-        Perform I{stage} initialization.
-        @param stage: The init stage to complete.
-        """
-        for n in range(0, (stage+1)):
-            timer = metrics.Timer()
-            if self.stage < n:
-                m = '__init%s__' % n
-                self.stage = n
-                log.debug('%s, init (%d)', self.id, n)
-                if not hasattr(self, m): continue
-                method = getattr(self, m)
-                timer.start()
-                method()
-                for s in self.grandchildren():
-                    s.init(n)
-                timer.stop()
-                metrics.log.debug('%s, init (%d) %s', self.id, n, timer)
                 
-    def __init0__(self):
-        """ create children """
-        self.children = self.factory.build(self.root)[1]
-        for c in self.children:
-            if isinstance(c, Import):
-                self.imports.append(c)
+    def build(self):
+        """
+        Build the schema (object graph) using the root node
+        using the factory.
+            - Build the graph.
+            - Collate the children.
+        """
+        self.children = BasicFactory.build(self.root, self)[1]
+        collated = BasicFactory.collate(self.children)
+        self.children = collated[0]
+        self.imports = collated[1]
+        self.elements = collated[2]
+        self.types = collated[3]
+        
+    def merge(self, schema):
+        """
+        Merge the contents from the schema.  Only objects not already contained
+        in this schema's collections are merged.  This is to provide for bidirectional
+        import which produce cyclic includes.
+        @returns: self
+        @rtype: L{Schema} 
+        """
+        for item in schema.elements.items():
+            if item[0] in self.elements:
                 continue
-            name = c.get_name()
-            if name is None: continue
-            list = self.index.get(name, None)
-            if list is None:
-                list = []
-                self.index[name] = list
-            list.append(c)
-
-    def __init1__(self):
-        """ run children through depsolving and child promotion """
-        for stage in SchemaObject.init_stages:
-            for c in self.children:
-                c.init(stage)
-        self.children.sort()
-
-    def __init2__(self):
-        pass
+            self.elements[item[0]] = item[1]
+            self.children.append(item[1])
+        for item in schema.types.items():
+            if item[0] in self.types:
+                continue
+            self.types[item[0]] = item[1]
+            self.children.append(item[1])
+        schema.merged = True
+        return self
+        
+    def open_imports(self):
+        """
+        Instruct all contained L{sxbasic.Import} children to import
+        the schema's which they reference.  The contents of the
+        imported schema are I{merged} in.
+        """
+        for imp in self.imports:
+            imported = imp.open()
+            if imported is None:
+                continue
+            imported.open_imports()
+            self.merge(imported)
         
     def locate(self, ns):
-        """ find schema by namespace """
+        """
+        Find a schema by namespace.  Only the URI portion of
+        the namespace is compared to each schema's I{targetNamespace}.
+        The request is passed to the container.
+        @param ns: A namespace.
+        @type ns: (prefix,URI)
+        @return: The schema matching the namesapce, else None.
+        @rtype: L{Schema}
+        """
         if self.container is not None:
             return self.container.locate(ns)
         else:
             return None
-        
-    def grandchildren(self):
-        """ get I{grandchild} schemas that have been imported """
+            
+    def dereference(self):
+        """
+        Instruct all children to perform dereferencing.
+        """
         for c in self.children:
-            if isinstance(c, Import) and \
-                c.imp.schema is not None:
-                    yield c.imp.schema
+            c.dereference()
         
-    def find(self, query):
+    def flatten(self):
+        """
+        Instruct all children to I{flatten}.
+        """
+        for c in self.children:
+            c.flatten()
+        
+    def execute(self, query):
         """
         Find a I{type} defined in one of the contained schemas.
         @param query: A query.
@@ -268,26 +272,52 @@ class Schema:
         @return: The found schema type. 
         @rtype: L{SchemaObject()}
         """
-        if query.inprogress():
-            result = self.__process_query(query)
+        if self.builtin(query.ref):
+            name = query.ref[0]
+            b = BuiltinFactory.create(self, name)
+            log.debug('%s, found builtin (%s)', self.id, name)
+            return b
+        if query.element_priority:
+            collections = (self.elements, self.types)
         else:
-            result = query.execute(self)
+            collections = (self.types,)
+        for d in collections:
+            result = d.get(query.ref)
+            if not query.filter(result):
+                break
+        if result is None:
+            return result
+        if query.resolved:
+            result = result.resolve()
+        query.result(result)
         return result
 
     def custom(self, ref, context=None):
-        """ get whether specified type reference is custom """
+        """
+        Get whether the specified reference is B{not} an (xs) builtin.
+        @param ref: A str or qref.
+        @type ref: (str|qref)
+        @return: True if B{not} a builtin, else False.
+        @rtype: bool 
+        """
         if ref is None:
             return True
         else:
-            return (not self.builtin(ref, context))
+            return ( not self.builtin(ref, context) )
     
     def builtin(self, ref, context=None):
-        """ get whether the specified type reference is an (xsd) builtin """
+        """
+        Get whether the specified reference is an (xs) builtin.
+        @param ref: A str or qref.
+        @type ref: (str|qref)
+        @return: True if builtin, else False.
+        @rtype: bool 
+        """
         w3 = 'http://www.w3.org'
         try:
             if isqref(ref):
                 ns = ref[1]
-                return ns[1].startswith(w3)
+                return ns.startswith(w3)
             if context is None:
                 context = self.root    
             prefix = splitPrefix(ref)[0]
@@ -295,6 +325,20 @@ class Schema:
             return (prefix in prefixes)
         except:
             return False
+        
+    def instance(self, root, url):
+        """
+        Create and return an new schema object using the
+        specified I{root} and I{url}.
+        @param root: A schema root node.
+        @type root: L{sax.Element}
+        @param url: A base URL.
+        @type url: str
+        @return: The newly created schema object.
+        @rtype: L{Schema}
+        @note: This is only used by Import children.
+        """
+        return Schema(root, url)
 
     def str(self, indent=0):
         tab = '%*s'%(indent*3, '')
@@ -302,58 +346,14 @@ class Schema:
         result.append('%s%s' % (tab, self.id))
         result.append('%s(raw)' % tab)
         result.append(self.root.str(indent+1))
-        result.append('%s(model {%d})' % (tab, self.stage))
+        result.append('%s(model)' % tab)
         for c in self.children:
             result.append(c.str(indent+1))
         result.append('')
         return '\n'.join(result)
-
-    def __process_query(self, query):
-        """ process the query """
-        key = query.signature()
-        cached = self.types.get(key, None)
-        if cached is not None and \
-            not query.filter(cached):
-                return cached
-        if self.builtin(query.qname):
-            b = self.factory.create(builtin=query.name)
-            log.debug('%s, found builtin (%s)', self.id, query.name)
-            return b
-        result = self.__find(query)
-        if result is not None:
-            if query.resolved:
-                result = result.resolve()
-            self.types[key] = result
-            log.debug('%s, found (%s)\n%s\n%s', self.id, query.name, query, result)
-        else:
-            log.debug('%s, (%s) not-found:\n%s', self.id, query.name, query)
-        return result
-    
-    def __find(self, query):
-        """ find a schema object by name. """
-        query.qualify(self.root, self.tns)
-        ref, ns = query.qname
-        log.debug('%s, finding (%s)\n%s', self.id, query.name, query)
-        for child in self.index.get(ref, []):
-            log.debug('%s, matching: %s\nfor:\n%s', self.id, Repr(child), query)
-            if child.match(ref, ns):
-                result = child
-                if query.filter(result):
-                    continue
-                else:
-                    return child
-        for child in self.imports:
-            log.debug('%s, searching (import): %s\nfor:\n%s', self.id, Repr(child), query)
-            result = child.xsfind(query)
-            if result is None:
-                continue
-            else:
-                return result
-        return None
         
     def __repr__(self):
-        myrep = \
-            '<%s {%d} tns="%s"/>' % (self.id, self.stage, self.tns[1])
+        myrep = '<%s tns="%s"/>' % (self.id, self.tns[1])
         return myrep.encode('utf-8')
     
     def __str__(self):

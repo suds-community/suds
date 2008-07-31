@@ -16,13 +16,13 @@
 import logging
 import socket
 
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 
 #
-# socket timeout - 10 seconds
+# socket timeout - 30 seconds
 #
 
-socket.setdefaulttimeout(10)
+socket.setdefaulttimeout(30)
 
 #
 # Exceptions

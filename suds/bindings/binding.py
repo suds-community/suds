@@ -18,7 +18,6 @@ from suds.sax import Parser, Element, Namespace
 from suds.sudsobject import Factory, Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
-from suds.xsd import qualified_reference
 from suds.xsd.query import Query
 
 log = logger(__name__)
@@ -109,7 +108,7 @@ class Binding:
         """ construct a 'composite' reply """
         dictionary = {}
         for rt in rtypes:
-            dictionary[rt.get_name()] = rt
+            dictionary[rt.name] = rt
         unmarshaller = self.unmarshaller.typed
         composite = Factory.object()
         for node in nodes:

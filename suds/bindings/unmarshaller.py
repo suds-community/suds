@@ -317,7 +317,7 @@ class Typed(UMBase):
             content.type = found
         else:
             self.resolver.push(content.type)
-        cls_name = content.type.get_name()
+        cls_name = content.type.name
         if cls_name is None:
             cls_name = content.node.name
         content.data = Factory.object(cls_name)

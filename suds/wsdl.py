@@ -23,7 +23,7 @@ from suds import *
 from suds.sax import Parser, Element, splitPrefix
 from suds.bindings.document import Document
 from suds.bindings.rpc import RPC
-from suds.xsd import qualified_reference
+from suds.xsd import qualify
 from suds.xsd.schema import SchemaCollection
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SOFactory
@@ -74,20 +74,6 @@ class WObject(Object):
     @ivar root: The XML I{root} element.
     @type root: L{Element}
     """
-    
-    @classmethod
-    def asqname(cls, qref):
-        """
-        Convert I{qref} to a I{qname} where a I{qref} is a tuple of:
-        (name, I{namespace}) as returned by L{suds.xsd.qualified_reference} and
-        a I{qname} is a tuple of (name, I{namespace-uri}).
-        @param qref: A qualified reference.
-        @type qref: (name, I{namespace})
-        @return: A qualified name.
-        @rtype: (name, I{namespace-uri}).
-        """
-        n,ns = qref
-        return (n, ns[1])
     
     def __init__(self, root, definitions=None):
         """
@@ -253,8 +239,7 @@ class Definitions(WObject):
             root = Element.buildPath(self.root, 'types/schema')
             entry = (root, self)
             container.add(entry)
-        container.load()
-        self.schema = container
+        self.schema = container.load()
         
     def assign_bindings(self):
         """ Create suds binding objects based on sytle/use """
@@ -295,7 +280,7 @@ class Import(WObject):
     @ivar ns: The value of the I{namespace} attribute.
     @type ns: str
     @ivar imported: The imported object.
-    @type: L{Definitions}
+    @type imported: L{Definitions}
     """
     
     def __init__(self, root, definitions):
@@ -352,10 +337,10 @@ class Part(NamedObject):
     """
     Represents <message><part/></message>.
     @ivar element: The value of the {element} attribute.
-        Stored as a I{qref} as converted by L{suds.xsd.qualified_reference}.
+        Stored as a I{qref} as converted by L{suds.xsd.qualify}.
     @type element: str
     @ivar type: The value of the {type} attribute.
-        Stored as a I{qref} as converted by L{suds.xsd.qualified_reference}.
+        Stored as a I{qref} as converted by L{suds.xsd.qualify}.
     @type type: str
     """
 
@@ -392,7 +377,7 @@ class Part(NamedObject):
         if s is None:
             return s
         else:
-            return qualified_reference(s, self.root, tns)  
+            return qualify(s, self.root, tns)  
 
 
 class Message(NamedObject):
@@ -440,8 +425,11 @@ class PortType(NamedObject):
             op.name = c.get('name')
             input = c.getChild('input')
             op.input = input.get('message')
-            output = c.getChild('output')
-            op.output = output.get('message')
+            output = c.getChild('output', default=input)
+            if output is None:
+                op.output = None
+            else:
+                op.output = output.get('message')
             self.operations[op.name] = op
             
     def resolve(self, definitions):
@@ -451,14 +439,14 @@ class PortType(NamedObject):
         @type definitions: L{Definitions}
         """
         for op in self.operations.values():
-            qref = qualified_reference(op.input, self.root, wsdlns)
-            msg = definitions.messages.get(self.asqname(qref))
+            qref = qualify(op.input, self.root, wsdlns)
+            msg = definitions.messages.get(qref)
             if msg is None:
                 raise Exception("msg '%s', not-found" % op.input)
             else:
                 op.input = msg
-            qref = qualified_reference(op.output, self.root, wsdlns)
-            msg = definitions.messages.get(self.asqname(qref))
+            qref = qualify(op.output, self.root, wsdlns)
+            msg = definitions.messages.get(qref)
             if msg is None:
                 raise Exception("msg '%s', not-found" % op.input)
             else:
@@ -525,7 +513,7 @@ class Binding(NamedObject):
                 soap.input.body.use = 'literal'
             else:
                 soap.input.body.use = soapbody.get('use', default='literal')
-            output = c.getChild('output')
+            output = c.getChild('output', default=input)
             soapbody = output.getChild('body')
             if soapbody is None:
                 soap.output.body.use = 'literal'
@@ -539,8 +527,8 @@ class Binding(NamedObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        ref = qualified_reference(self.type, self.root, wsdlns)
-        port_type = definitions.port_types.get(self.asqname(ref))
+        ref = qualify(self.type, self.root, wsdlns)
+        port_type = definitions.port_types.get(ref)
         if port_type is None:
             raise Exception("portType '%s', not-found" % self.type)
         else:
@@ -592,8 +580,8 @@ class Service(NamedObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        ref = qualified_reference(self.port.binding, self.root, wsdlns)
-        binding = definitions.bindings.get(self.asqname(ref))
+        ref = qualify(self.port.binding, self.root, wsdlns)
+        binding = definitions.bindings.get(ref)
         if binding is None:
             raise Exception("binding '%s', not-found" % self.port.binding)
         else:

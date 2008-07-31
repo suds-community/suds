@@ -28,6 +28,36 @@ import time
 
 log = logger(__name__)
 
+
+class Factory:
+
+    tags =\
+    {
+        'anyType' : lambda x,y=None: Any(x,y),
+        'boolean' : lambda x,y=None: XBoolean(x,y),
+        'date' : lambda x,y=None: XDate(x,y),
+        'time' : lambda x,y=None: XTime(x,y),
+        'dateTime': lambda x,y=None: XDateTime(x,y),
+    }
+
+    @classmethod
+    def create(cls, schema, name):
+        """
+        Create an object based on the root tag name.
+        @param schema: A schema object.
+        @type schema: L{schema.Schema}
+        @param name: The name.
+        @type name: str
+        @return: The created object.
+        @rtype: L{SchemaObject} 
+        """
+        fn = cls.tags.get(name)
+        if fn is not None:
+            return fn(schema, name)
+        else:
+            return XBuiltin(schema, name)
+
+
 class XBuiltin(SchemaObject):
     """
     Represents an (xsd) schema <xs:*/> node
@@ -38,12 +68,9 @@ class XBuiltin(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         """
-        root = Element('sxbuiltin')
-        root.set('name', name)
+        root = Element(name)
         SchemaObject.__init__(self, schema, root)
-        
-    def get_name(self):
-        return self.root.get('name')
+        self.name = name
             
     def namespace(self):
         return Namespace.xsdns
@@ -51,10 +78,10 @@ class XBuiltin(SchemaObject):
     def builtin(self):
         return True
     
-    def resolve(self, depth=1024, nobuiltin=False):
+    def resolve(self, nobuiltin=False):
         return self
-    
 
+  
 class Any(XBuiltin):
     """
     Represents an (xsd) <any/> node
@@ -66,19 +93,26 @@ class Any(XBuiltin):
         @type schema: L{schema.Schema}
         """
         XBuiltin.__init__(self, schema, name)
-        
-    def match(self, name, ns=None, classes=()):
-        """ match anything """
-        return True
     
-    def get_child(self, name, ns=None):
-        """ get any child """
+    def get_child(self, name):
+        """
+        Get (find) a I{non-attribute} child by name and namespace.
+        @param name: A child name.
+        @type name: basestring
+        @return: The requested child.
+        @rtype: L{SchemaObject}
+        """
         return Any(self.schema, name)
     
     def any(self):
+        """
+        Get whether this is an xs:any
+        @return: True if any, else False
+        @rtype: boolean
+        """
         return True
 
-    
+
 class XBoolean(XBuiltin):
     """
     Represents an (xsd) boolean builtin type.
