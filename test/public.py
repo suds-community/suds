@@ -32,6 +32,25 @@ def start(url):
     print 'Test @ ( %s )' % url
     
 try:
+    url = 'http://www.zenfolio.com/zf/api/zfapi.asmx?wsdl'
+    start(url)
+    client = Client(url)
+    print client
+    group = client.factory.create('Group')
+    print 'Group:\n%s' % group
+    print 'LoadGroupHierarchy("demo")'
+    groupHierarchy = client.service.LoadGroupHierarchy("demo")
+    print 'result:\n%s' % groupHierarchy
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    print_exc()
+    
+try:
     url = 'http://cert.synxis.com/interface/ChannelConnect.asmx?WSDL'
     start(url)
     client = Client(url)

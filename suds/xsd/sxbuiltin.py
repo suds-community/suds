@@ -149,7 +149,7 @@ class LocalTimezone(datetime.tzinfo):
     """
     def __init__(self):
         offset = time.timezone
-        self.__offset = datetime.timedelta(minutes = offset)
+        self.__offset = datetime.timedelta(seconds = offset)
         
         offset = offset/60/60
         offset = str(offset)

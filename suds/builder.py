@@ -49,13 +49,17 @@ class Builder:
             data = Factory.property(cls)
         md = data.__metadata__
         md.__type__ = type
+        history = []
         self.add_attributes(data, type)
         for c in type.children:
-            self.process(data, c)
+            self.process(data, c, history)
         return data
             
-    def process(self, data, type):
+    def process(self, data, type, history):
         """ process the specified type then process its children """
+        if type in history:
+            return
+        history.append(type)
         resolved = type.resolve()
         self.add_attributes(data, type)
         value = None
@@ -70,7 +74,7 @@ class Builder:
             data = value
         if not isinstance(data, list):
             for c in resolved.children:
-                self.process(data, c)
+                self.process(data, c, history)
 
     def add_attributes(self, data, type):
         """ add required attributes """

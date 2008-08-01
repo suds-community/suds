@@ -45,6 +45,7 @@ class Factory:
         'attribute' : lambda x,y: Attribute(x,y),
         'sequence' : lambda x,y: Sequence(x,y),
         'all' : lambda x,y: All(x,y),
+        'choice' : lambda x,y: Choice(x,y),
         'complexContent' : lambda x,y: ComplexContent(x,y),
         'restriction' : lambda x,y: Restriction(x,y),
         'enumeration' : lambda x,y: Enumeration(x,y),
@@ -135,7 +136,7 @@ class Complex(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'sequence', 'all', 'complexContent', 'any')
+        return ('attribute', 'sequence', 'all', 'choice', 'complexContent', 'any')
     
     def derived(self):
         """
@@ -216,60 +217,54 @@ class Restriction(SchemaObject):
     def __repr__(self):
         myrep = '<%s />' % self.id
         return myrep.encode('utf-8')
+    
+    
+class Collection(SchemaObject):
+    """
+    Represents an (xsd) schema collection node:
+        - sequence
+        - choice
+        - all
+    """
 
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        @param root: The xml root node.
+        @type root: L{sax.Element}
+        """
+        SchemaObject.__init__(self, schema, root)
+        
+    def __repr__(self):
+        myrep = '<%s />' % self.id
+        return myrep.encode('utf-8')
 
-class Sequence(SchemaObject):
+    def childtags(self):
+        """
+        Get a list of valid child tag names.
+        @return: A list of child tag names.
+        @rtype: [str,...]
+        """
+        return ('element', 'sequence', 'all', 'choice', 'any')
+
+class Sequence(Collection):
     """
     Represents an (xsd) schema <xs:sequence/> node.
     """
+    pass
 
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
-        
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
-
-    def childtags(self):
-        """
-        Get a list of valid child tag names.
-        @return: A list of child tag names.
-        @rtype: [str,...]
-        """
-        return ('element', 'sequence', 'all', 'any')
-
-
-class All(SchemaObject):
+class All(Collection):
     """
     Represents an (xsd) schema <xs:all/> node.
     """
+    pass
 
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
-        
-    def childtags(self):
-        """
-        Get a list of valid child tag names.
-        @return: A list of child tag names.
-        @rtype: [str,...]
-        """
-        return ('element', 'sequence', 'all', 'any')
-    
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
+class Choice(Collection):
+    """
+    Represents an (xsd) schema <xs:choice/> node.
+    """
+    pass
 
 
 class ComplexContent(SchemaObject):
@@ -475,7 +470,7 @@ class Extension(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'sequence', 'all', 'any')
+        return ('attribute', 'sequence', 'all', 'choice', 'any')
         
     def mutate(self):
         """
