@@ -99,6 +99,7 @@ class ContentAppender:
             (M(None), NoneAppender(marshaller)),
             (M(Object), ObjectAppender(marshaller)),
             (M(Property), PropertyAppender(marshaller)),
+            (M(Element), ElementAppender(marshaller)),
             (M(list), ListAppender(marshaller)),
             (M(tuple), ListAppender(marshaller)),
         )
@@ -113,7 +114,7 @@ class ContentAppender:
         """
         appender = self.default
         for a in self.appenders:
-            if content.value == a[0]:
+            if a[0] == content.value:
                 appender = a[1]
                 break
         appender.append(parent, content)
@@ -207,7 +208,7 @@ class PrimativeAppender(Appender):
             child.setText(tostr(content.value))
             parent.append(child)
 
-        
+
 class NoneAppender(Appender):
     """
     An appender for I{None} values.
@@ -281,7 +282,31 @@ class ObjectAppender(Appender):
             cont = Content(item[0], item[1])
             Appender.append(self, child, cont)
 
-            
+
+class ElementAppender(Appender):
+    """
+    An appender for I{Element} types.
+    """
+
+    def __init__(self, marshaller):
+        """
+        @param marshaller: A marshaller.
+        @type marshaller: L{MBase}
+        """
+        Appender.__init__(self, marshaller)
+        
+    def append(self, parent, content):
+        """
+        Append the specified L{content} to the I{parent}.
+        @param content: The content to append.
+        @type content: L{Object}
+        """
+        if content.tag.startswith('_'):
+            raise Exception('raw XML not valid as attribute value')
+        child = content.value.detach()
+        parent.append(child)
+
+
 class ListAppender(Appender):
     """
     A list/tuple appender.
