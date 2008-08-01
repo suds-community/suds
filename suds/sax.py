@@ -28,7 +28,7 @@ containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
 import re
 import suds.metrics
 from suds import *
-from urllib import urlopen
+from urllib2 import urlopen
 from xml.sax import parse, parseString, ContentHandler
 
 log = logger(__name__)
