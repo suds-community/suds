@@ -204,8 +204,7 @@ except Exception, e:
 timer = metrics.Timer()
 
 try:
-    #url = "https://www.e-conomic.com/secure/api1/EconomicWebService.asmx?WSDL"
-    url = "file:///home/jortel/Desktop/EconomicWebService.asmx?WSDL"
+    url = "https://www.e-conomic.com/secure/api1/EconomicWebService.asmx?WSDL"
     start(url)
     timer.start()
     client = Client(url)
