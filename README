@@ -39,7 +39,7 @@ a client for that service as follows:
 
   > from client import Client
   >
-  > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+  > url = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
   >
   > client = Client(url)
 
@@ -228,7 +228,7 @@ a proxy for that service as follows:
 
   > from serviceproxy import ServiceProxy
   >
-  > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+  > url = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
   >
   > myservice = ServiceProxy(url)
 
@@ -864,3 +864,15 @@ version 0.2.4 (7-28-08):
    * Fixed:
       * Bug: Schema <import/> with schemaLocation specified.
       * Bug: Namespaces specified in service description not valid until client/proxy is printed.
+      
+version 0.2.5 (8-01-08):
+
+   * Overhauled the (XSD) package.  This new (merging) approach is simpler and should be
+      more reliable and maintainable.  Also, should provide better performance since the merged
+      schema performes lookups via dictionary lookup.
+      
+      This overhaul should fix current TypeNotFound and <xs:extension/> problems, I hope :-).
+      
+   * Fixed dateTime printing bug.
+
+   * Added infinite recursion prevention in builder.Builder for xsd types that contain themselves.
