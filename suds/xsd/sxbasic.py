@@ -185,10 +185,8 @@ class Simple(SchemaObject):
         @rtype: boolean
         """
         for c in self.children:
-            if isinstance(c, Restriction):
-                for gc in c.children:
-                    if isinstance(gc, Enumeration):
-                        return True
+            if isinstance(c, Enumeration):
+                return True
         return False
 
    
