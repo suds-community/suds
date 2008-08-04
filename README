@@ -1,7 +1,7 @@
 OVERVIEW
 
 The "Suds" web services client is a lightweight soap-based client for python
-the is licensed under GPL.
+the is licensed under LGPL.
    
  Basic features:
  
