@@ -203,6 +203,26 @@ dot notation as follows:
   >
   > name = client.factory.create('person.name') 
   >
+
+If the type is in the same namespace as the wsdl (targetNamespace) then it may be referenced
+without any namespace qualification.  If not, the type must be qualifed by either a namespace
+prefix such as:
+
+  >
+  > name = client.factory.create('ns0:person') 
+  >
+ 
+ Or, the name can be fully qualified by the namespace itself using the full 
+ qualification syntax as (as of 0.2.6):
+ 
+  >
+  > name = client.factory.create('{http://test.server.enterprise.rhq.org/}person') 
+  >
+ 
+ Qualified names can only be used for the *first* part of the name, when using (.) dot
+ notation to specify a path.
+ 
+SOAP HEADERS
   
 SOAP headers may be passed during the service invocation by using the
 special (soapheaders) keyword as follows:
