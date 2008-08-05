@@ -425,6 +425,7 @@ class PortType(NamedObject):
         for c in root.getChildren('operation'):
             op = SOFactory.object('Operation')
             op.name = c.get('name')
+            op.tns = definitions.tns
             input = c.getChild('input')
             op.input = input.get('message')
             output = c.getChild('output', default=input)
@@ -493,13 +494,14 @@ class Binding(NamedObject):
         soap = SOFactory.object('SOAP')
         self.soap = soap
         self.soap.style = sr.get('style', default='document')
-        self.add_operations(self.root)
+        self.add_operations(self.root, definitions)
         
-    def add_operations(self, root):
+    def add_operations(self, root, definitions):
         """ Add <operation/> children """
         for c in root.getChildren('operation'):
             op = SOFactory.object('Operation')
             op.name = c.get('name')
+            op.tns = definitions.tns
             sr = c.getChild('operation')
             soap = SOFactory.object('SOAP')
             soap.action = '"%s"' % sr.get('soapAction', default='')

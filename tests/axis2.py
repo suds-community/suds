@@ -29,6 +29,8 @@ errors = 0
 setup_logging()
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
+
+url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
     
 print 'url=%s' % url
 
