@@ -18,11 +18,12 @@
 The I{query} module defines a class for performing schema queries.
 """
 
+from logging import getLogger
 from suds import *
 from suds.sudsobject import *
 from suds.xsd import *
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class Query(Object):

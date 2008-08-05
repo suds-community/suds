@@ -22,17 +22,20 @@
 import sys
 sys.path.append('../')
 
-from suds import *
 import logging
+import traceback as tb
+import metrics as metrics
+from test import *
+from suds import WebFault
 from suds.client import Client
-from traceback import print_exc
 
 errors = 0
-subject = None
 
-#logger('suds.client').setLevel(logging.DEBUG)
-#logger('suds.xsd.schema').setLevel(logging.DEBUG)
-#logger('suds.metrics').setLevel(logging.DEBUG)
+setup_logging()
+
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+#logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
+#logging.getLogger('suds').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -102,6 +105,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
   
     try:
         print "echo('this is cool')"
@@ -117,6 +121,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
     try:
         print 'hello()'
@@ -129,6 +134,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
 
     try:
         print 'testVoid()'
@@ -141,6 +147,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
 
     try:
         mylist = ['my', 'dog', 'likes', 'steak']
@@ -154,6 +161,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
     
     try:
         s = 'hello'
@@ -171,6 +179,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
     
     try:
         print 'testExceptions()' 
@@ -183,6 +192,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
     #
     # test faults
@@ -201,6 +211,7 @@ def basic_doc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
 def basic_rpc_literal():
     
@@ -265,6 +276,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
   
     try:
         print "echo('this is cool')"
@@ -280,6 +292,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
     try:
         print 'hello()'
@@ -292,6 +305,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
 
     try:
         print 'testVoid()'
@@ -304,6 +318,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
 
     try:
         array = client.factory.create('ns0:stringArray')
@@ -318,6 +333,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
     
     try:
         s = 'hello'
@@ -335,6 +351,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
     
     try:
         print 'testExceptions()' 
@@ -347,6 +364,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
 
     try:
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceRPCTestBean?wsdl'
@@ -362,6 +380,7 @@ def basic_rpc_literal():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
 def authentication():
     
@@ -406,6 +425,7 @@ def authentication():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
 def perspectives():
     
@@ -435,6 +455,7 @@ def perspectives():
     except Exception, e:
         errors += 1
         print e
+        tb.print_exc()
         
 def content_source():
     
@@ -484,7 +505,7 @@ def content_source():
     except Exception, e:
         errors += 1
         print e
-        print_exc()
+        tb.print_exc()
 
         
 if __name__ == '__main__':

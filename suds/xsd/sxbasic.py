@@ -19,6 +19,7 @@ The I{sxbasic} module provides classes that represent
 I{basic} schema objects.
 """
 
+from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.xsd.sxbase import *
@@ -28,7 +29,7 @@ from suds.sax import Parser, splitPrefix
 from urlparse import urljoin
 from copy import copy, deepcopy
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class Factory:
@@ -156,6 +157,14 @@ class Complex(SchemaObject):
                     break
         return self.__derived
 
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('name',)
+
 
 class Simple(SchemaObject):
     """
@@ -190,6 +199,14 @@ class Simple(SchemaObject):
                 return True
         return False
 
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('name',)
+
    
 class Restriction(SchemaObject):
     """
@@ -213,10 +230,6 @@ class Restriction(SchemaObject):
         """
         return ('enumeration',)
     
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
-    
     
 class Collection(SchemaObject):
     """
@@ -234,10 +247,6 @@ class Collection(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
 
     def childtags(self):
         """
@@ -287,10 +296,6 @@ class ComplexContent(SchemaObject):
         @rtype: [str,...]
         """
         return ('attribute', 'extension',)
-    
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
 
 
 class Enumeration(Promotable):
@@ -307,10 +312,6 @@ class Enumeration(Promotable):
         """
         Promotable.__init__(self, schema, root)
         self.name = root.get('value')
-        
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
 
     
 class Element(Promotable):
@@ -327,7 +328,6 @@ class Element(Promotable):
         """
         Promotable.__init__(self, schema, root)
         self.ref = root.get('ref')
-        self.referenced = None
         a = root.get('form')
         if a is not None:
             self.form_qualified = ( a == 'qualified' )
@@ -335,6 +335,7 @@ class Element(Promotable):
         if a is not None:
             self.nillable = ( a in ('1', 'true') )
         self.max = self.root.get('maxOccurs', default='1')
+        self.mutated = ( self.ref is None )
         
     def childtags(self):
         """
@@ -402,18 +403,19 @@ class Element(Promotable):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.ref is None:
+        if self.mutated:
             return
+        self.mutated = True
         classes = (Element,)
         qref = qualify(self.ref, self.root, self.namespace())
         for e in self.schema.elements.values():
             if e.qname == qref:
-                self.merge(e)
+                self.merge(deepcopy(e))
                 return
         for c in self.schema.children:
             p = c.find(qref, classes)
             if p is not None:
-                self.merge(p)
+                self.merge(deepcopy(p))
                 return
         raise TypeNotFound(self.ref)
     
@@ -426,8 +428,8 @@ class Element(Promotable):
         self.name = e.name
         self.qname = e.qname
         self.type = e.type
-        self.children = deepcopy(e.children)
-        self.attributes = deepcopy(e.attributes)
+        self.children = e.children
+        self.attributes = e.attributes
         
     def promote(self, pa, pc):
         """
@@ -447,6 +449,14 @@ class Element(Promotable):
             del pa[:]
             del pc[:]
 
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('name','type')
+
 
 class Extension(SchemaObject):
     """
@@ -462,6 +472,7 @@ class Extension(SchemaObject):
         """
         SchemaObject.__init__(self, schema, root)
         self.base = root.get('base')
+        self.mutated = False
         
     def childtags(self):
         """
@@ -476,13 +487,16 @@ class Extension(SchemaObject):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
+        if self.mutated:
+            return
+        self.mutated = True
         log.debug(Repr(self))
         qref = qualify(self.base, self.root, self.namespace())
         query = Query(type=qref)
         super = query.execute(self.schema)
         if super is None:
             raise TypeNotFound(self.base)
-        self.merge(super)
+        self.merge(deepcopy(super))
 
     def merge(self, b):
         """
@@ -490,12 +504,19 @@ class Extension(SchemaObject):
         @param b: A resolved base object.
         @type b: L{SchemaObject}
         """
-        self.prepend(self.attributes, deepcopy(b.attributes))
-        self.prepend(self.children, deepcopy(b.children))
-        
-    def __repr__(self):
-        myrep = '<%s base="%s"/>' % (self.id, self.base)
-        return myrep.encode('utf-8')
+        b.dereference()
+        filter = UniqueFilter(self.attributes)
+        self.prepend(self.attributes, b.attributes, filter)
+        filter = UniqueFilter(self.children)
+        self.prepend(self.children, b.children, filter)
+
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('base',)
 
 
 class Import(SchemaObject):
@@ -511,9 +532,8 @@ class Import(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.imp = SOFactory.object('import')
-        self.imp.ns = (None, root.get('namespace'))
-        self.imp.location = root.get('schemaLocation')
+        self.ns = (None, root.get('namespace'))
+        self.location = root.get('schemaLocation')
         self.opened = False
         
     def open(self):
@@ -523,44 +543,31 @@ class Import(SchemaObject):
         if self.opened:
             return
         self.opened = True
-        log.debug('%s, importing:\n%s', self.id, self.imp)
-        if self.imp.location is None:
-            result = self.schema.locate(self.imp.ns)
+        log.debug('%s, importing ns="%s", location="%s"', self.id, self.ns[1], self.location)
+        if self.location is None:
+            result = self.schema.locate(self.ns)
             if result is None:
-                log.debug('imported schema (%s) not-found', self.imp.ns[1])
+                log.debug('imported schema (%s) not-found', self.ns[1])
             return result
         else:
-            url = self.imp.location
+            url = self.location
             try:
                 if '://' not in url:
                     url = urljoin(self.schema.baseurl, url)
                 root = Parser().parse(url=url).root()
                 return self.schema.instance(root, url)
             except Exception:
-                msg = 'imported schema (%s) at (%s), not-found' % (self.imp.ns[1], url)
+                msg = 'imported schema (%s) at (%s), not-found' % (self.ns[1], url)
                 log.error('%s, %s', self.id, msg, exc_info=True)
                 raise Exception(msg)
  
-    def str(self, indent=0):
+    def description(self):
         """
-        Get a string representation of this object.
-        @param indent: The indent.
-        @type indent: int
-        @return: A string.
-        @rtype: str
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
         """
-        tab = '%*s'%(indent*3, '')
-        result  = []
-        result.append('%s<%s' % (tab, self.id))
-        result.append(' ns="%s"' % self.imp.ns[1])
-        result.append(' location="%s"' % self.imp.location)
-        result.append('/>')
-        return ''.join(result)
-
-    def __repr__(self):
-        repr = '<%s ns="%s" location="%s"/>' \
-            % (self.id, self.imp.ns[1], self.imp.location)
-        return repr.encode('utf-8')
+        return ('ns', 'location')
 
    
 class Attribute(Promotable):
@@ -601,6 +608,14 @@ class Attribute(Promotable):
         """
         use = self.root.get('use', default='')
         return ( use.lower() == 'required' )
+    
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('name','type')
 
 
 class Any(Promotable):
@@ -642,7 +657,4 @@ class Any(Promotable):
         @rtype: boolean
         """
         return True
-    
-    def __repr__(self):
-        myrep = '<%s />' % self.id
-        return myrep.encode('utf-8')
+

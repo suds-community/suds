@@ -21,13 +21,18 @@
 import sys
 sys.path.append('../')
 
-from suds import *
 import logging
+import traceback as tb
+import metrics as metrics
+from test import *
+from suds import WebFault
 from suds.client import Client
 
 errors = 0
 
-#logger('suds.client').setLevel(logging.DEBUG)
+setup_logging()
+
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -110,6 +115,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
     
 try:
     print "echo('this is cool')"
@@ -125,6 +131,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
     
 try:
     print 'hello()'
@@ -137,6 +144,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     print 'testVoid()'
@@ -149,6 +157,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     array = client.factory.create('ns0:stringArray')
@@ -163,6 +172,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     s = 'hello'
@@ -180,6 +190,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     print 'testExceptions()' 
@@ -192,6 +203,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
@@ -207,5 +219,6 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
     
 print '\nFinished: errors=%d' % errors

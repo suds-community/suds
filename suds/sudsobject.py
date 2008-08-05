@@ -20,10 +20,11 @@ that are primarily used for the highly dynamic interactions with
 wsdl/xsd defined types.
 """
 
+from logging import getLogger
 from suds import *
 from new import classobj, function, instancemethod
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 def items(sobject):

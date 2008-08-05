@@ -17,14 +17,19 @@
 import sys
 sys.path.append('../')
 
-from suds import logger, WebFault
 import logging
-from suds.client import Client
+import traceback as tb
 import urllib2
+import metrics as metrics
+from test import *
+from suds import WebFault
+from suds.client import Client
 
 errors = 0
 
-#logger('suds.client').setLevel(logging.DEBUG)
+setup_logging()
+
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def opener():
     baseurl = 'http://localhost:9090/'

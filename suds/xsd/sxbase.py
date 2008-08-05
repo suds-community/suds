@@ -19,11 +19,12 @@ The I{sxbase} module provides I{base} classes that represent
 schema objects.
 """
 
+from logging import getLogger
 from suds import *
 from suds.xsd import *
 from copy import copy, deepcopy
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class SchemaObject:
@@ -47,10 +48,22 @@ class SchemaObject:
     """
     
     @classmethod
-    def prepend(cls, d, s, filter=(object,)):
+    def prepend(cls, d, s, filter=None):
+        """
+        Prepend schema object's from B{s}ource list to 
+        the B{d}estination list while applying the filter.
+        @param d: The destination list.
+        @type d: list
+        @param s: The source list.
+        @type s: list
+        @param filter: A filter that allows items to be prepended.
+        @type filter: L{PrependFilter}
+        """
+        if filter is None:
+            filter = PrependFilter()
         i = 0
         for x in s:
-            if isinstance(x, filter):
+            if filter.permit(x):
                 d.insert(i, x)
                 i += 1
 
@@ -238,8 +251,9 @@ class SchemaObject:
         @type pc: [L{SchemaObject}]
         """
         log.debug(Repr(self))
+        filter = PromoteFilter()
         self.prepend(pa, self.attributes)
-        self.prepend(pc, self.children, (Promotable,))
+        self.prepend(pc, self.children, filter)
             
     def dereference(self):
         """
@@ -270,9 +284,13 @@ class SchemaObject:
         tab = '%*s'%(indent*3, '')
         result  = []
         result.append('%s<%s' % (tab, self.id))
-        result.append(' name="%s"' % self.name)
-        if self.type is not None:
-            result.append(' type="%s"' % self.type)
+        for n in self.description():
+            if not hasattr(self, n):
+                continue
+            v = getattr(self, n)
+            if v is None:
+                continue
+            result.append(' %s="%s"' % (n, v))
         if len(self):
             result.append('>')
             for c in self.attributes:
@@ -287,6 +305,14 @@ class SchemaObject:
         else:
             result.append(' />')
         return ''.join(result)
+    
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ()
         
     def __str__(self):
         return unicode(self).encode('utf-8')
@@ -295,7 +321,17 @@ class SchemaObject:
         return unicode(self.str())
     
     def __repr__(self):
-        myrep = '<%s name="%s"/>' % (self.id, self.name)
+        s = []
+        s.append('<%s' % self.id)
+        for n in self.description():
+            if not hasattr(self, n):
+                continue
+            v = getattr(self, n)
+            if v is None:
+                continue
+            s.append(' %s="%s"' % (n, v))
+        s.append(' />')
+        myrep = ''.join(s)
         return myrep.encode('utf-8')
     
     def __len__(self):
@@ -325,3 +361,18 @@ class Promotable(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
+
+
+class PrependFilter:
+    def permit(self, x):
+        return True        
+
+class PromoteFilter(PrependFilter):
+    def permit(self, x):
+        return isinstance(x, Promotable)
+    
+class UniqueFilter(PrependFilter):
+    def __init__(self, d):
+        self.ids = [m.id for m in d]
+    def permit(self, x):
+        return ( x.id not in self.ids )

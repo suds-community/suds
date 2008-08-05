@@ -27,12 +27,13 @@ containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
 """
 
 import re
+from logging import getLogger
 import suds.metrics
 from suds import *
 from urllib2 import urlopen
 from xml.sax import parse, parseString, ContentHandler
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 def splitPrefix(name):
     """

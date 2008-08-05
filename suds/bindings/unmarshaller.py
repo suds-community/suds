@@ -14,12 +14,13 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+from logging import getLogger
 from suds import *
 from suds.sudsobject import Factory, Object
 from suds.sax import Namespace
 from suds.resolver import NodeResolver
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 reserved = { 'class':'cls', 'def':'dfn', }

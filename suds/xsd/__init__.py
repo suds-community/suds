@@ -22,10 +22,11 @@ Most of the I{value-add} provided by the model is centered around
 tranparent referenced type resolution and targeted denormalization.
 """
 
+from logging import getLogger
 from suds import *
 from suds.sax import Namespace, splitPrefix
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 def qualify(ref, resolvers, defns=Namespace.default):

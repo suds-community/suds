@@ -19,6 +19,7 @@ The I{2nd generation} service proxy provides access to web services.
 See I{README.txt}
 """
 
+from logging import getLogger
 import suds.metrics as metrics
 from cookielib import CookieJar
 from urllib2 import Request, HTTPError, urlopen, urlparse
@@ -30,7 +31,7 @@ from suds.builder import Builder
 from suds.wsdl import Definitions
 from suds.sax import Namespace
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class Client(object):

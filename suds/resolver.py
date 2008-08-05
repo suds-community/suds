@@ -19,12 +19,13 @@ The I{resolver} module provides a collection of classes that
 provide wsdl/xsd named type resolution.
 """
 
+from logging import getLogger
 from suds import *
 from suds.sax import splitPrefix, Namespace
 from suds.sudsobject import Object
 from suds.xsd.query import Query, qualify
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class Resolver:

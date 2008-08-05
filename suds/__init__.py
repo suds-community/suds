@@ -14,7 +14,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-import logging
 import socket
 
 VERSION = "0.2.6"
@@ -57,20 +56,6 @@ class WebFault(Exception):
 #
 # Logging
 #
-
-def logger(name=None):
-    if name is None:
-        return logging.getLogger()
-    fmt =\
-        '%(asctime)s [%(levelname)s] %(funcName)s() @%(filename)s:%(lineno)d\n%(message)s\n'
-    logger = logging.getLogger(name)
-    root = logging.getLogger()
-    if not root.handlers:
-        root.setLevel(logging.INFO)
-        __handler = logging.StreamHandler()
-        __handler.setFormatter(logging.Formatter(fmt))
-        root.addHandler(__handler)
-    return logger
 
 class Repr:
     def __init__(self, x):
