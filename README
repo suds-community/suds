@@ -9,18 +9,27 @@ the is licensed under LGPL.
   * provides an object-like API.
   * reads wsdl at runtime for encoding/decoding
   * provides for the following SOAP (style) binding/encoding:
-     * Document/Literal
+     * Document/Literal {wrapped}
      * RPC/Literal
      * RPC/Encoded (section 5)
   
 Logging:
 
-By default, the suds package logs at LEVEL=INFO using a console handler.
-All messages are at level DEBUG or ERROR so, no messages are written
-unless the user does the following: suds.logger(<desired package>).setLevel(logging.<desired-level>)
+The suds package use the Python standard lib logging package: 
+all messages are at level DEBUG or ERROR.
+
+To register a console handler you can use basicConfig:
+  >
+  > import logging
+  > logging.basicConfig(level=logging.INFO)
+  >
+
+Once the console handler is configured, the user can enable module 
+specific debugging doing the following:
+logging.getLogger(<desired package>).setLevel(logging.<desired-level>)
 A common example (show sent/received soap messages):
   >
-  > suds.logger('suds.serviceproxy').setLevel(logging.DEBUG)
+  > logging.getLogger('suds.serviceproxy').setLevel(logging.DEBUG)
   >
 
 BASIC USAGE (2nd generation):
@@ -876,3 +885,12 @@ version 0.2.5 (8-01-08):
    * Fixed dateTime printing bug.
 
    * Added infinite recursion prevention in builder.Builder for xsd types that contain themselves.
+   
+version 0.2.6 (8-5-08):
+
+   * Fix ENUMs broken during xsd package overhaul.
+   * Fix type as defined in ticket #24.
+   * Fix duplicate param names in method signatures as reported in ticket #30.
+   * Suds licensed as LGPL.
+   * Remove logging setup in suds.__init__() as suggested by patch in ticket #31.  Users will
+      now need to configure the logger.

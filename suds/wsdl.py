@@ -20,6 +20,7 @@ The primary class is I{Definitions} as it represends the root element
 found in the document.
 """
 
+from logging import getLogger
 from suds import *
 from suds.sax import Parser, Element, splitPrefix
 from suds.bindings.document import Document
@@ -30,7 +31,7 @@ from suds.sudsobject import Object
 from suds.sudsobject import Factory as SOFactory
 from urlparse import urljoin
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 wsdlns = (None, "http://schemas.xmlsoap.org/wsdl/")
 

@@ -21,6 +21,8 @@ is the denormalized, objectified and intelligent view of the schema.
 Most of the I{value-add} provided by the model is centered around
 tranparent referenced type resolution and targeted denormalization.
 """
+
+from logging import getLogger
 import suds.metrics
 from suds import *
 from suds.xsd import *
@@ -30,7 +32,8 @@ from suds.xsd.sxbuiltin import Factory as BuiltinFactory
 from suds.xsd.sxbase import SchemaObject
 from suds.sax import splitPrefix, Namespace
 
-log = logger(__name__)
+log = getLogger(__name__)
+
 
 class SchemaCollection:
     """

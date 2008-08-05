@@ -20,10 +20,11 @@ The service proxy provides access to web services.
 Replaced by: L{client.Client}
 """
 
+from logging import getLogger
 from suds import *
 from suds.client import Client
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class ServiceProxy(object):

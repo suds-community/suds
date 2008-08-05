@@ -18,11 +18,12 @@
 The I{builder} module provides an wsdl/xsd defined types factory
 """
 
+from logging import getLogger
 from suds import *
 from suds.sudsobject import Factory
 from suds.resolver import PathResolver
 
-log = logger(__name__)
+log = getLogger(__name__)
 
 
 class Builder:

@@ -17,17 +17,20 @@
 import sys
 sys.path.append('../')
 
-import suds.metrics as metrics
-from suds import logger, WebFault
 import logging
+import traceback as tb
+import metrics as metrics
+from test import *
+from suds import WebFault
 from suds.client import Client
-from traceback import print_exc
 
 errors = 0
 
-#logger('suds.client').setLevel(logging.DEBUG)
-#logger('suds.metrics').setLevel(logging.DEBUG)
-#logger('suds').setLevel(logging.DEBUG)
+setup_logging()
+
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+#logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
+#logging.getLogger('suds').setLevel(logging.DEBUG)
 
 def start(url):
     print '\n________________________________________________________________\n' 
@@ -50,19 +53,13 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
-    print_exc()
+    tb.print_exc()
     
 try:
     url = 'http://cert.synxis.com/interface/ChannelConnect.asmx?WSDL'
     start(url)
     client = Client(url)
     print client
-    guest_count = client.factory.create('ns0:GuestCount')
-    print 'gc:\n%s' % guest_count
-    sp = client.factory.create('ns0:StateProv')
-    print 'sp:\n%s' % sp
-    sp._StateCode = 'OR'
-    print 'sp:\n%s' % sp
 except WebFault, f:
     errors += 1
     print f
@@ -70,7 +67,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
-    print_exc()
+    tb.print_exc()
     
 try:
     url = 'http://www.netunitysoftware.com/wsrp2interop/wsrpproducer.asmx?Operation=WSDL&WsrpVersion=Two'
@@ -84,7 +81,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
-    print_exc()
+    tb.print_exc()
 
 try:
     url = 'https://sec.neurofuzz-software.com/paos/genSSHA-SOAP.php?wsdl'
@@ -99,13 +96,13 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
-    print_exc()
+    tb.print_exc()
 
 try:
     url = 'http://ap1314-dsr.compmed.ucdavis.edu/dataserver/Aperio.Images/Image?method=wsdl'
     start(url)
     client = Client(url)
-    print client.factory.resolver.schema
+    #print client.factory.resolver.schema
     print client
     print 'Logon()'
     reply = client.service.Logon('testuser','test')
@@ -117,6 +114,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     url = 'http://soa.ebrev.info/service.wsdl'
@@ -130,6 +128,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     url = 'http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL'
@@ -144,6 +143,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     url = 'http://arcweb.esri.com/services/v2/MapImage.wsdl'
@@ -161,6 +161,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     url = "http://www.thomas-bayer.com/axis2/services/BLZService?wsdl"
@@ -175,6 +176,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 try:
     url = "http://webservices.imacination.com/distance/Distance.jws?wsdl"
@@ -189,6 +191,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
     
 try:
     url = "http://arcweb.esri.com/services/v2/RouteFinder.wsdl"
@@ -202,6 +205,7 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 timer = metrics.Timer()
 
@@ -218,7 +222,6 @@ try:
     print 'str(client): %s' % timer
     print 'client:\n%s' % s
     print 'Account_GetAll()'
-    logger('suds.metrics').setLevel(logging.DEBUG)
     a = client.service.Account_GetAll()
     print a
 except WebFault, f:
@@ -228,5 +231,6 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 print '\nFinished: errors = %d' % errors
