@@ -914,3 +914,5 @@ version 0.2.6 (8-5-08):
    * Suds licensed as LGPL.
    * Remove logging setup in suds.__init__() as suggested by patch in ticket #31.  Users will
       now need to configure the logger.
+   * Add support for Client.Factory.create() alt: syntax for fully qualifying the type to be
+      built as: {namespace}name.  Eg: client.factory.create('{http://blabla.com/ns}Person') 
