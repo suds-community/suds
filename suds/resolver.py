@@ -19,6 +19,7 @@ The I{resolver} module provides a collection of classes that
 provide wsdl/xsd named type resolution.
 """
 
+import re
 from logging import getLogger
 from suds import *
 from suds.sax import splitPrefix, Namespace
@@ -51,6 +52,9 @@ class PathResolver(Resolver):
     @type wsdl: L{wsdl.Definitions}
     """
     
+    altp = re.compile('({)(.+)(})(.+)')
+    splitp = re.compile('({.+})*[^.]+')
+    
     def __init__(self, wsdl):
         """
         @param wsdl: A schema object.
@@ -72,9 +76,9 @@ class PathResolver(Resolver):
         @rtype: L{xsd.sxbase.SchemaObject}
         """
         result = None
-        parts = path.split('.')
+        parts = self.split(path)
         log.debug('searching schema for (%s)', parts[0])
-        qref = qualify(parts[0], self.wsdl.root, self.wsdl.tns)
+        qref = self.qualify(parts[0])
         query = Query(qref)
         result = query.execute(self.schema)
         if result is None:
@@ -101,6 +105,42 @@ class PathResolver(Resolver):
                     result = result.resolve()
         return result
     
+    def qualify(self, name):
+        """
+        Qualify the name as either:
+          - plain name
+          - ns prefixed name (eg: ns0:Person)
+          - fully ns qualified name (eg: {http://myns-uri}Person)
+        @param name: The name of an object in the schema.
+        @type name: str
+        @return: A qualifed name.
+        @rtype: qname
+        """
+        m = self.altp.match(name)
+        if m is None:
+            return qualify(name, self.wsdl.root, self.wsdl.tns)
+        else:
+            return (m.group(4), m.group(2))
+        
+    def split(self, s):
+        """
+        Split the string on (.) while preserving any (.) inside the
+        '{}' alternalte syntax for full ns qualification.
+        @param s: A plain or qualifed name.
+        @type s: str
+        @return: A list of the name's parts.
+        @rtype: [str,...]
+        """
+        parts = []
+        b = 0
+        while 1:
+            m = self.splitp.match(s, b)
+            if m is None:
+                break
+            b,e = m.span()
+            parts.append(s[b:e])
+            b = e+1
+        return parts
 
 
 class TreeResolver(Resolver):
