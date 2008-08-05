@@ -191,14 +191,15 @@ class Binding:
         """ get soap envelope body """
         ns = self.wsdl.tns
         body = Element('%s:Body' % envns[0])
-        body.addPrefix(ns[0], ns[1])
         body.append(method)
         return body
     
     def method(self, name):
         """get method fragment"""
-        prefix = self.wsdl.tns[0]
-        method = Element('%s:%s' % (prefix, name))
+        operation = self.wsdl.binding().type.operation(name)
+        ns = operation.tns
+        method = Element('%s:%s' % (ns[0], name))
+        method.addPrefix(ns[0], ns[1])
         return method
     
     def part_types(self, method, input=True):
