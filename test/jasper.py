@@ -20,7 +20,7 @@ sys.path.append('../')
 import logging
 import traceback as tb
 import urllib2
-import metrics as metrics
+import suds.metrics as metrics
 from test import *
 from suds import WebFault
 from suds.client import Client
