@@ -187,10 +187,10 @@ class Definitions(WObject):
         """ Get/create the target namespace """
         tns = root.get('targetNamespace')
         prefix = root.findPrefix(tns)
-        ns = (prefix, tns)
-        if ns[0] is None:
-            log.debug('warning: tns (%s), not mapped to a prefix', tns)
-        return ns
+        if prefix is None:
+            log.debug('warning: tns (%s), not mapped to prefix', tns)
+            prefix = 'tns'
+        return (prefix, tns)
         
     def add_children(self, root):
         """ Add child objects using the factory """
