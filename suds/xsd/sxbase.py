@@ -95,6 +95,9 @@ class SchemaObject:
         """
         return self.schema.tns
     
+    def default_namespace(self):
+        return self.root.defaultNamespace()
+    
     def unbounded(self):
         """
         Get whether this node is unbounded I{(a collection)}
