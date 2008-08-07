@@ -446,8 +446,7 @@ class Element(Promotable):
         if len(self):
             log.debug(Repr(self))
             self.attributes += pa
-            del self.children[:]
-            self.children += pc
+            self.children = copy(pc)
             del pa[:]
             del pc[:]
 
