@@ -82,6 +82,7 @@ class SchemaObject:
         self.type = root.get('type')
         self.form_qualified = schema.form_qualified
         self.nillable = False
+        self.inherited = False
         self.children = []
         self.attributes = []
         self.cache = {}
@@ -272,6 +273,14 @@ class SchemaObject:
         another object.
         """
         pass
+
+    def mark_inherited(self):
+        """
+        Mark this branch in the tree as inherited = true.
+        """
+        self.inherited = True
+        for c in self.children:
+            c.mark_inherited()
     
     def str(self, indent=0):
         """
