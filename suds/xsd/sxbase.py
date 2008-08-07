@@ -46,7 +46,7 @@ class SchemaObject:
     @ivar attributes: A list of child xsd I{(attribute)} nodes
     @type attributes: [L{SchemaObject},...]
     """
-    
+
     @classmethod
     def prepend(cls, d, s, filter=None):
         """
@@ -60,12 +60,20 @@ class SchemaObject:
         @type filter: L{PrependFilter}
         """
         if filter is None:
-            filter = PrependFilter()
+            filter = ListFilter()
         i = 0
         for x in s:
             if filter.permit(x):
                 d.insert(i, x)
                 i += 1
+    
+    @classmethod
+    def append(cls, d, s, filter=None):
+        if filter is None:
+            filter = ListFilter()
+        for item in s:
+            if filter.permit(item):
+                d.append(item)
 
     def __init__(self, schema, root):
         """
@@ -220,29 +228,25 @@ class SchemaObject:
         """
         return ()
     
-    def flatten(self, items=None):
+    def flatten(self, parent=None):
         """
         Walk the tree and invoke promote() on each node.  This gives each
         node the opportunity to flatten the tree as needed to remote
         uninteresting nodes.  Nodes that don't directly contribute to the
         structure of the data are omitted.
-        @param items: A list of items to be promoted.
-        @type items: (pa[],pc[])
         """
         log.debug(Repr(self))
-        if items is None:
-            pa,pc = [],[]
-        else:
-            pa,pc = items
-        children = self.children[:]
-        children.reverse()
-        for c in children:
-            c.flatten((pa,pc))
-        if items is None:
+        pa, pc = [],[]
+        for c in self.children:
+            a, c = c.flatten(self)
+            pa += a
+            pc += c
+        if parent is None:
             self.attributes += pa
             self.children = pc
         else:
             self.promote(pa, pc)
+        return (pa, pc)
             
     def promote(self, pa, pc):
         """
@@ -256,8 +260,8 @@ class SchemaObject:
         """
         log.debug(Repr(self))
         filter = PromoteFilter()
-        self.prepend(pa, self.attributes)
-        self.prepend(pc, self.children, filter)
+        self.append(pa, self.attributes)
+        self.append(pc, self.children, filter)
             
     def dereference(self):
         """
@@ -375,15 +379,15 @@ class Promotable(SchemaObject):
         SchemaObject.__init__(self, schema, root)
 
 
-class PrependFilter:
+class ListFilter:
     def permit(self, x):
         return True        
 
-class PromoteFilter(PrependFilter):
+class PromoteFilter(ListFilter):
     def permit(self, x):
         return isinstance(x, Promotable)
     
-class UniqueFilter(PrependFilter):
+class UniqueFilter(ListFilter):
     def __init__(self, d):
         self.ids = [m.id for m in d]
     def permit(self, x):
