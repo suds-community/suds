@@ -452,14 +452,25 @@ class Element:
         @rtype: (I{prefix}, I{name})
         """
         if self.prefix is None:
-            p = self
-            while p is not None:
-                if p.expns is not None:
-                    return (None, p.expns)
-                else:
-                    p = p.parent
+            return self.defaultNamespace()
         else:
             return self.resolvePrefix(self.prefix)
+        
+    def defaultNamespace(self):
+        """
+        Get the default (unqualified namespace).  
+        This is the expns of the first node (looking up the tree)
+        that has it set.
+        @return: The namespace of a node when not qualified.
+        @rtype: (I{prefix}, I{name})
+        """
+        p = self
+        while p is not None:
+            if p.expns is not None:
+                return (None, p.expns)
+            else:
+                p = p.parent
+        return Namespace.default
             
     def append(self, objects):
         """

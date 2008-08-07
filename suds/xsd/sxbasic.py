@@ -152,7 +152,7 @@ class Complex(SchemaObject):
         except:
             self.__derived = False
             for c in self.children:
-                if c.__class__ in (Extension, ComplexContent):
+                if c.inherited:
                     self.__derived = True
                     break
         return self.__derived
@@ -387,7 +387,8 @@ class Element(Promotable):
         if cached is not None:
             return cached
         result = self
-        qref = qualify(self.type, self.root, self.root.namespace())
+        defns = self.root.defaultNamespace()
+        qref = qualify(self.type, self.root, defns)
         query = Query(type=qref)
         query.history = [self]
         log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
@@ -455,7 +456,7 @@ class Element(Promotable):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('name','type')
+        return ('name', 'type', 'inherited')
 
 
 class Extension(SchemaObject):
@@ -508,6 +509,8 @@ class Extension(SchemaObject):
         filter = UniqueFilter(self.attributes)
         self.prepend(self.attributes, b.attributes, filter)
         filter = UniqueFilter(self.children)
+        for c in b.children:
+            c.mark_inherited()
         self.prepend(self.children, b.children, filter)
 
     def description(self):

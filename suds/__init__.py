@@ -16,7 +16,7 @@
 
 import socket
 
-VERSION = "0.2.6"
+VERSION = "0.2.7"
 
 #
 # socket timeout - 30 seconds
