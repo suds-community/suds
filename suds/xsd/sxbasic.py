@@ -408,7 +408,8 @@ class Element(Promotable):
             return
         self.mutated = True
         classes = (Element,)
-        qref = qualify(self.ref, self.root, self.namespace())
+        defns = self.default_namespace()
+        qref = qualify(self.ref, self.root, defns)
         for e in self.schema.elements.values():
             if e.qname == qref:
                 self.merge(deepcopy(e))
@@ -492,11 +493,12 @@ class Extension(SchemaObject):
             return
         self.mutated = True
         log.debug(Repr(self))
-        qref = qualify(self.base, self.root, self.namespace())
+        defns = self.default_namespace()
+        qref = qualify(self.base, self.root, defns)
         query = Query(type=qref)
         super = query.execute(self.schema)
         if super is None:
-            raise TypeNotFound(self.base)
+            raise TypeNotFound(qref)
         self.merge(deepcopy(super))
 
     def merge(self, b):
