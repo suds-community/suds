@@ -9,7 +9,7 @@ the is licensed under LGPL.
   * provides an object-like API.
   * reads wsdl at runtime for encoding/decoding
   * provides for the following SOAP (style) binding/encoding:
-     * Document/Literal {wrapped}
+     * Document/Literal
      * RPC/Literal
      * RPC/Encoded (section 5)
   
