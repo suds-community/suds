@@ -916,3 +916,17 @@ version 0.2.6 (8-5-08):
       now need to configure the logger.
    * Add support for Client.Factory.create() alt: syntax for fully qualifying the type to be
       built as: {namespace}name.  Eg: client.factory.create('{http://blabla.com/ns}Person') 
+      
+version 0.2.7 (8-11-08):
+
+   * Add detection/support for document/literal - wrapped and unwrapped.
+   * Update document/literal {wrapped} to set document root (under <body/>) to be the
+      wrapper element (w/ proper namespace).
+   * Add support for <sequence/>, <all/> and <choice/> having maxOccurs and have the
+      which causes the unmarshaller to set values for elements contained in an unbounded
+      collection as a list.
+   * Update client.factory (builder) to omit children of <choice/> since the 'user' really needs
+      to decide which children to include.
+   * Update flattening algorithm to prevent re-flattening of types from imported schemas.
+   * Adjustments to flattening/merging algorithms.
+
