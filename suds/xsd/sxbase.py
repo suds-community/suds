@@ -60,7 +60,7 @@ class SchemaObject:
         @param s: The source list.
         @type s: list
         @param filter: A filter that allows items to be prepended.
-        @type filter: L{PrependFilter}
+        @type filter: L{ListFilter}
         """
         if filter is None:
             filter = ListFilter()
@@ -72,6 +72,16 @@ class SchemaObject:
     
     @classmethod
     def append(cls, d, s, filter=None):
+        """
+        Append schema object's from B{s}ource list to 
+        the B{d}estination list while applying the filter.
+        @param d: The destination list.
+        @type d: list
+        @param s: The source list.
+        @type s: list
+        @param filter: A filter that allows items to be appended.
+        @type filter: L{ListFilter}
+        """
         if filter is None:
             filter = ListFilter()
         for item in s:
