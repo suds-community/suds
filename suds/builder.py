@@ -54,7 +54,8 @@ class Builder:
         history = []
         self.add_attributes(data, type)
         for c in type.children:
-            if c.any(): continue
+            if self.skip_child(c):
+                continue
             self.process(data, c, history)
         return data
             
@@ -77,7 +78,8 @@ class Builder:
             data = value
         if not isinstance(data, list):
             for c in resolved.children:
-                if c.any(): continue
+                if self.skip_child(c):
+                    continue
                 self.process(data, c, history)
 
     def add_attributes(self, data, type):
@@ -87,3 +89,10 @@ class Builder:
                 name = '_%s' % a.name
                 value = a.get_default()
                 setattr(data, name, value)
+                
+    def skip_child(self, c):
+        """ get whether or not to skip the specified child """
+        if c.any(): return True
+        if c.container is not None:
+            return c.container.choice()
+        return False

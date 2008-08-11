@@ -45,6 +45,9 @@ class SchemaObject:
     @type children: [L{SchemaObject},...]
     @ivar attributes: A list of child xsd I{(attribute)} nodes
     @type attributes: [L{SchemaObject},...]
+    @ivar container: The <sequence/>,<all/> or <choice/> 
+        containing this object.
+    @type container: L{SchemaObject}
     """
 
     @classmethod
@@ -93,7 +96,9 @@ class SchemaObject:
         self.inherited = False
         self.children = []
         self.attributes = []
+        self.container = None
         self.cache = {}
+        self.flattened = False
 
     def namespace(self):
         """
@@ -149,10 +154,34 @@ class SchemaObject:
             if child.name == name:
                 return child
         return None
+    
+    def sequence(self):
+        """
+        Get whether this is an <xs:sequence/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return False
+    
+    def all(self):
+        """
+        Get whether this is an <xs:all/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return False
+    
+    def choice(self):
+        """
+        Get whether this is an <xs:choice/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return False
         
     def any(self):
         """
-        Get whether this is an xs:any
+        Get whether this is an <xs:any/>
         @return: True if any, else False
         @rtype: boolean
         """
@@ -173,6 +202,14 @@ class SchemaObject:
         @rtype: boolean
         """
         return False
+    
+    def containedbychoice(self):
+        """
+        Get whether this type is contained by a <choice/>.
+        @return: True if contained by choice.
+        @rtype: boolean
+        """
+        pass
     
     def isattr(self):
         """
@@ -235,6 +272,9 @@ class SchemaObject:
         uninteresting nodes.  Nodes that don't directly contribute to the
         structure of the data are omitted.
         """
+        if self.flattened:
+            return
+        self.flattened = True
         log.debug(Repr(self))
         pa, pc = [],[]
         for c in self.children:

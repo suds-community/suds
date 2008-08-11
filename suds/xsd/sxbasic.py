@@ -247,6 +247,8 @@ class Collection(SchemaObject):
         @type root: L{sax.Element}
         """
         SchemaObject.__init__(self, schema, root)
+        self.min = root.get('minOccurs', default='1')
+        self.max = root.get('maxOccurs', default='1')
 
     def childtags(self):
         """
@@ -256,23 +258,67 @@ class Collection(SchemaObject):
         """
         return ('element', 'sequence', 'all', 'choice', 'any')
 
+    def promote(self, pa, pc):
+        """
+        Promote children during the flattening proess.  The object's
+        attributes and children are added to the B{p}romoted B{a}ttributes
+        and B{p}romoted B{c}hildren lists as they see fit.
+        @param pa: List of attributes to promote.
+        @type pa: [L{SchemaObject}]
+        @param pc: List of children to promote.
+        @type pc: [L{SchemaObject}]
+        """
+        for c in self.children:
+            c.container = self
+        SchemaObject.promote(self, pa, pc)
+    
+    def unbounded(self):
+        """
+        Get whether this node is unbounded I{(a collection)}.
+        @return: True if unbounded, else False.
+        @rtype: boolean
+        """
+        if self.max.isdigit():
+            return (int(self.max) > 1)
+        else:
+            return ( self.max == 'unbounded' )
+
+
 class Sequence(Collection):
     """
     Represents an (xsd) schema <xs:sequence/> node.
     """
-    pass
+    def sequence(self):
+        """
+        Get whether this is an <xs:sequence/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return True
 
 class All(Collection):
     """
     Represents an (xsd) schema <xs:all/> node.
     """
-    pass
+    def all(self):
+        """
+        Get whether this is an <xs:all/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return True
 
 class Choice(Collection):
     """
     Represents an (xsd) schema <xs:choice/> node.
     """
-    pass
+    def choice(self):
+        """
+        Get whether this is an <xs:choice/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return True
 
 
 class ComplexContent(SchemaObject):
@@ -334,7 +380,8 @@ class Element(Promotable):
         a = self.root.get('nillable')
         if a is not None:
             self.nillable = ( a in ('1', 'true') )
-        self.max = self.root.get('maxOccurs', default='1')
+        self.min = root.get('minOccurs', default='1')
+        self.max = root.get('maxOccurs', default='1')
         self.mutated = ( self.ref is None )
         
     def childtags(self):
@@ -347,10 +394,12 @@ class Element(Promotable):
     
     def unbounded(self):
         """
-        Get whether this node is unbounded I{(a collection)}
+        Get whether this node is unbounded I{(a collection)}.
         @return: True if unbounded, else False.
         @rtype: boolean
         """
+        if self.container_unbounded():
+            return True
         if self.max.isdigit():
             return (int(self.max) > 1)
         else:
@@ -457,6 +506,12 @@ class Element(Promotable):
         @rtype: [str,...]
         """
         return ('name', 'type', 'inherited')
+    
+    def container_unbounded(self):
+        if self.container is None:
+            return False
+        else:
+            return self.container.unbounded()
 
 
 class Extension(SchemaObject):
