@@ -581,7 +581,32 @@ class Extension(SchemaObject):
 class Import(SchemaObject):
     """
     Represents an (xsd) schema <xs:import/> node
+    @cvar locations: A dictionary of namespace locations.
+    @type locations: dict
+    @ivar ns: The imported namespace.
+    @type ns: str
+    @ivar location: The (optional) location.
+    @type location: namespace-uri
+    @ivar opened: Opened and L{imported} flag.
+    @type opened: boolean
     """
+    
+    locations = {}
+    
+    @classmethod
+    def bind(cls, ns, location=None):
+        """
+        Bind a namespace to a schema location (URI).  
+        This is used for imports that don't specify a schemaLocation.
+        @param ns: A namespace-uri.
+        @type ns: str
+        @param location: The (optional) schema location for the
+            namespace.  (default=ns).
+        @type location: str
+        """
+        if location is None:
+            location = ns
+        cls.locations[ns] = location
     
     def __init__(self, schema, root):
         """
@@ -593,6 +618,8 @@ class Import(SchemaObject):
         SchemaObject.__init__(self, schema, root)
         self.ns = (None, root.get('namespace'))
         self.location = root.get('schemaLocation')
+        if self.location is None:
+            self.location = self.locations.get(self.ns[1])
         self.opened = False
         
     def open(self):
@@ -603,12 +630,15 @@ class Import(SchemaObject):
             return
         self.opened = True
         log.debug('%s, importing ns="%s", location="%s"', self.id, self.ns[1], self.location)
-        if self.location is None:
-            result = self.schema.locate(self.ns)
-            if result is None:
+        result = self.schema.locate(self.ns)
+        if result is None:
+            if self.location is None:
                 log.debug('imported schema (%s) not-found', self.ns[1])
-            return result
-        else:
+            else:
+                result = self.download()
+        return result
+
+    def download(self):
             url = self.location
             try:
                 if '://' not in url:
