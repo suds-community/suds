@@ -451,7 +451,7 @@ class PortType(NamedObject):
             qref = qualify(op.output, self.root, wsdlns)
             msg = definitions.messages.get(qref)
             if msg is None:
-                raise Exception("msg '%s', not-found" % op.input)
+                raise Exception("msg '%s', not-found" % op.output)
             else:
                 op.output = msg
                 

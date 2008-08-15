@@ -34,18 +34,23 @@ class Document(Binding):
         @type wsdl: L{suds.wsdl.Definitions}
         """
         Binding.__init__(self, wsdl)
-        self.unwrapped = Unwrapped(wsdl)
-        self.wrapped = Wrapped(wsdl)
         
     def method(self, name):
         """
-        Get the document root.
+        Get the document root.  For I{wrapped}, this is the
+        name of the wrapper element qualifed by the schema tns.
         @param name: The method name.
         @type name: str
         @return: A root element.
         @rtype: L{Element}
         """
-        return self.style(name).method(name)
+        pts = self.part_types(name)
+        wt = pts[0]
+        tag = wt[1].name
+        ns = wt[1].namespace()
+        method = Element('%s:%s' % (ns[0], tag))
+        method.addPrefix(ns[0], ns[1])
+        return method
         
     def param_defs(self, method):
         """
@@ -77,76 +82,3 @@ class Document(Binding):
                 result.append(rt)
             break
         return result
-    
-    def style(self, method):
-        """ 
-        Get the sub-binding based on matching the operation name
-        to the part type name.  In the wrapped style, the part type 
-        will match the operation name.
-        @param method: A method name.
-        @type method: str
-        @rtype: L{Document} 
-        """
-        pts = self.part_types(method)
-        if pts[0][1].name == method:
-            return self.wrapped
-        else:
-            return self.unwrapped
-
-    
-class Unwrapped(Binding):
-    """
-    The I{unwrapped} style.
-    """
-
-    def __init__(self, wsdl):
-        """
-        @param wsdl: A WSDL object.
-        @type wsdl: L{suds.wsdl.Definitions}
-        """
-        Binding.__init__(self, wsdl)
-        
-    def method(self, name):
-        """
-        Get the document root.  For I{unwrapped}, this is
-        the name of the operation qualified by the wsdl tns.
-        @param name: The method name.
-        @type name: str
-        @return: A root element.
-        @rtype: L{Element}
-        """
-        operation = self.wsdl.binding().type.operation(name)
-        ns = operation.tns
-        method = Element('%s:%s' % (ns[0], name))
-        method.addPrefix(ns[0], ns[1])
-        return method
-
-      
-class Wrapped(Binding):
-    """
-    The I{wrapped} style.
-    """
-
-    def __init__(self, wsdl):
-        """
-        @param wsdl: A WSDL object.
-        @type wsdl: L{suds.wsdl.Definitions}
-        """
-        Binding.__init__(self, wsdl)
-        
-    def method(self, name):
-        """
-        Get the document root.  For I{wrapped}, this is the
-        name of the wrapper element qualifed by the schema tns.
-        @param name: The method name.
-        @type name: str
-        @return: A root element.
-        @rtype: L{Element}
-        """
-        pts = self.part_types(name)
-        wt = pts[0]
-        tag = wt[1].name
-        ns = wt[1].namespace()
-        method = Element('%s:%s' % (ns[0], tag))
-        method.addPrefix(ns[0], ns[1])
-        return method
