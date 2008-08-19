@@ -160,7 +160,7 @@ class Binding:
             
     def envelope(self, body, header):
         """ get soap envelope """
-        env = Element('%s:Envelope' % envns[0], ns=envns)
+        env = Element('Envelope', ns=envns)
         env.addPrefix(encns[0], encns[1])
         env.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
         env.append(header)
@@ -169,7 +169,7 @@ class Binding:
     
     def header(self, headers):
         """ get soap header """
-        hdr = Element('%s:Header' % envns[0], ns=envns)
+        hdr = Element('Header', ns=envns)
         if not isinstance(headers, (list,tuple)):
             headers = (headers,)
         if self.encoded:
@@ -190,17 +190,9 @@ class Binding:
     def body(self, method):
         """ get soap envelope body """
         ns = self.wsdl.tns
-        body = Element('%s:Body' % envns[0])
+        body = Element('Body', ns=envns)
         body.append(method)
         return body
-    
-    def method(self, name):
-        """get method fragment"""
-        operation = self.wsdl.binding().type.operation(name)
-        ns = operation.tns
-        method = Element('%s:%s' % (ns[0], name))
-        method.addPrefix(ns[0], ns[1])
-        return method
     
     def part_types(self, method, input=True):
         """

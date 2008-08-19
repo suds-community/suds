@@ -48,8 +48,7 @@ class Document(Binding):
         wt = pts[0]
         tag = wt[1].name
         ns = wt[1].namespace()
-        method = Element('%s:%s' % (ns[0], tag))
-        method.addPrefix(ns[0], ns[1])
+        method = Element(tag, ns=ns)
         return method
         
     def param_defs(self, method):

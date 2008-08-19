@@ -17,6 +17,7 @@
 from logging import getLogger
 from suds import *
 from suds.bindings.binding import Binding
+from suds.sax import Element
 
 
 log = getLogger(__name__)
@@ -32,3 +33,11 @@ class RPC(Binding):
         @type wsdl: L{suds.wsdl.Definitions}
         """
         Binding.__init__(self, wsdl)
+        
+    def method(self, name):
+        """get method fragment"""
+        operation = self.wsdl.binding().operation(name)
+        soap = operation.soap
+        ns = soap.input.body.namespace
+        method = Element(name, ns=ns)
+        return method

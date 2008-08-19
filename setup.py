@@ -18,11 +18,11 @@
 
 import sys
 from setuptools import setup, find_packages
-from suds import VERSION
+from suds import properties
 
 setup(
-    name="suds",
-    version=VERSION,
+    name="python-suds",
+    version=properties['version'],
     description="Lightweight SOAP client",
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
@@ -30,5 +30,4 @@ setup(
     maintainer_email="jortel@redhat.com",
     packages=find_packages(),
     url="https://fedorahosted.org/suds",
-    install_requires=[]
 )

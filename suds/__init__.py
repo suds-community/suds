@@ -14,15 +14,38 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+import os
+import sys
 import socket
 
-VERSION = "0.2.7"
-
 #
-# socket timeout - 30 seconds
+# Project properties
 #
 
-socket.setdefaulttimeout(30)
+class Properties(dict):
+    
+    def __init__(self):
+        self.load()
+        self.apply()
+
+    def load(self):
+        for line in self.open():
+            key, value = line.split('=', 1)
+            self[key.strip()] = value.strip()
+            
+    def apply(self):
+        tm = float(self['socket.timeout'])
+        socket.setdefaulttimeout(tm)
+
+    def open(self):
+        for d in sys.path:
+            try:
+                path = os.path.join(d, 'suds.properties')
+                return file(path)
+            except:
+                pass
+
+properties = Properties()
 
 #
 # Exceptions

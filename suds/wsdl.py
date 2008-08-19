@@ -501,7 +501,6 @@ class Binding(NamedObject):
         for c in root.getChildren('operation'):
             op = SOFactory.object('Operation')
             op.name = c.get('name')
-            op.tns = definitions.tns
             sr = c.getChild('operation')
             soap = SOFactory.object('SOAP')
             soap.action = '"%s"' % sr.get('soapAction', default='')
@@ -512,18 +511,26 @@ class Binding(NamedObject):
             soap.output.body = SOFactory.object('Body')
             op.soap = soap
             input = c.getChild('input')
-            soapbody = input.getChild('body')
-            if soapbody is None:
-                soap.input.body.use = 'literal'
-            else:
-                soap.input.body.use = soapbody.get('use', default='literal')
-            output = c.getChild('output', default=input)
-            soapbody = output.getChild('body')
-            if soapbody is None:
-                soap.output.body.use = 'literal'
-            else:
-                soap.output.body.use = soapbody.get('use', default='literal')
+            body = input.getChild('body')
+            self.body(definitions, soap.input.body, body)
+            output = c.getChild('output')
+            body = output.getChild('body')
+            self.body(definitions, soap.output.body, output)
             self.operations[op.name] = op
+            
+    def body(self, definitions, body, root):
+        """ add the input/output body properties """
+        if root is None:
+            body.use = 'literal'
+            body.namespace = definitions.tns
+            return
+        body.use = root.get('use', default='literal')
+        ns = root.get('namespace')
+        if ns is None:
+            body.namespace = definitions.tns
+        else:
+            prefix = root.findPrefix(ns)
+            body.namespace = (prefix, ns)
             
     def resolve(self, definitions):
         """

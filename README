@@ -510,9 +510,31 @@ NIL VALUES
     <tag type="Person/>, the namespace is the targetNamespace for the defining fragment.
     This ensures that all lookups and comparisons are fully qualified.
     
- TIPS
+ TIPS & TRICKS
+ 
   * Cache the suds Client because reading and digesting the WSDL can be expensive
      because some servers generate them on demand.
+
+  * Some WSDL(s) schemas import as: <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+     without schemaLocation="" and expect processor to use the namespace URI as the
+     schema location for the namespace.  The specifications for processing <import/>
+     leave the resolution of the imported namespace to a schema to the descession of the processor (in
+     this case suds) when @schemaLocation is not specified.  Suds always looks within the WSDL for a
+     schema but does not look outside unless:
+        1) A schemaLocation is specified, or 
+        2) A static binding is specified using the following syntax:
+            >
+            > from suds.xsd.sxbasic import Import
+            > ns = 'http://schemas.xmlsoap.org/soap/encoding/'
+            > location = 'http://schemas.xmlsoap.org/soap/encoding/'
+            > Import.bind(ns, location)
+            >
+     
+            Or, the shorthand (when location is the same as the namespace URI)
+     
+            > 
+            > Import.bind(ns)
+            >
 
 
 
