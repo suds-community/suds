@@ -22,43 +22,7 @@ import socket
 # Project properties
 #
 
-class Properties(dict):
-    
-    def __init__(self):
-        self.load()
-        self.apply()
-
-    def load(self):
-        for line in self.open():
-            line = line.strip()
-            if len(line) == 0 or line.startswith('#'):
-                continue
-            key, value = line.split('=', 1)
-            self.add(key.strip(), value.strip())
-            
-    def apply(self):
-        tm = float(self.get('socket.timeout', '30'))
-        socket.setdefaulttimeout(tm)
-        
-    def add(self, key, value):
-        v = self.get(key)
-        if v is None:
-            self[key] = value
-            return
-        if isinstance(v, list):
-            v.append(value)
-            return
-        self[key] = [v, value]
-
-    def open(self):
-        for d in sys.path:
-            try:
-                path = os.path.join(d, 'suds.properties')
-                return file(path)
-            except:
-                pass
-
-properties = Properties()
+properties = dict(version='0.2.8')
 
 #
 # Exceptions
