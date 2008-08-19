@@ -60,6 +60,9 @@ try:
     start(url)
     client = Client(url)
     print client
+    # Ping(ns0:TPA_Extensions TPA_Extensions, xs:string EchoData, )
+    tpa = client.factory.create('ns0:TPA_Extensions')
+    print client.service.Ping(tpa, "hello")
 except WebFault, f:
     errors += 1
     print f
@@ -169,21 +172,6 @@ try:
     client = Client(url)
     print client
     print client.service.getBank("76251020")
-except WebFault, f:
-    errors += 1
-    print f
-    print f.fault
-except Exception, e:
-    errors += 1
-    print e
-    tb.print_exc()
-
-try:
-    url = "http://webservices.imacination.com/distance/Distance.jws?wsdl"
-    start(url)
-    client = Client(url)
-    print client
-    print client.service.getDistance('27613', '21601')
 except WebFault, f:
     errors += 1
     print f

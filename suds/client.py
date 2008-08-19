@@ -102,7 +102,10 @@ class Client(object):
         return unicode(self)
         
     def __unicode__(self):
-        return unicode(self.sd)
+        indent = '%*s' % (4, ' ')
+        ver = properties['version']
+        desc = unicode(self.sd)
+        return 'suds\n%sversion=%s\n%s'  % (indent, ver, desc)
 
 
 class Service:
@@ -207,7 +210,7 @@ class Factory:
                 result = self.builder.build(type)
             except:
                 log.error("create '%s' failed", name, exc_info=True)
-                raise BuildError("create '%s' failed", name)
+                raise BuildError("create '%s' failed" % name)
         timer.stop()
         metrics.log.debug('%s created: %s', name, timer)
         return result

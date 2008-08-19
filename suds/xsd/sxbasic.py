@@ -552,6 +552,7 @@ class Extension(SchemaObject):
         query = Query(type=qref)
         super = query.execute(self.schema)
         if super is None:
+            log.error(self.schema)
             raise TypeNotFound(qref)
         self.merge(deepcopy(super))
 

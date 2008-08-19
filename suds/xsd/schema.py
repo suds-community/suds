@@ -78,6 +78,7 @@ class SchemaCollection:
         """
         for child in self.children:
             child.build()
+        for child in self.children:
             child.open_imports()
         log.debug('loaded:\n%s', self)
         merged = self.merge()
