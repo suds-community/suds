@@ -14,7 +14,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-dist:
+dist: FORCE
 	python setup.py sdist
 
 rpm: dist
@@ -24,7 +24,9 @@ rpm: dist
 	cp /usr/src/redhat/RPMS/noarch/*.rpm dist
 	cp /usr/src/redhat/SRPMS/*.rpm dist
 
-clean:
+clean: FORCE
 	rm -rf dist
 	rm -rf *.egg-info
 	find . -name "*.pyc" -exec rm -f {} \;
+
+FORCE:
