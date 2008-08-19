@@ -21,6 +21,8 @@ rpm: dist
 	cp dist/*.gz /usr/src/redhat/SOURCES
 	cp suds.spec /usr/src/redhat/SPECS
 	rpmbuild -ba suds.spec
+	cp /usr/src/redhat/RPMS/noarch/*.rpm dist
+	cp /usr/src/redhat/SRPMS/*.rpm dist
 
 clean:
 	rm -rf dist
