@@ -535,7 +535,7 @@ class Literal(MBase):
         resolved = content.type.resolve()
         content.value = resolved.translate(content.value, False)
         if self.__skip(content):
-            log.info('skipping (optional) content:\n%s', content)
+            log.debug('skipping (optional) content:\n%s', content)
             self.resolver.pop()
             return False
         return True
