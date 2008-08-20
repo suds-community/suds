@@ -74,7 +74,9 @@ class Binding:
         for arg in args:
             if n == len(ptypes): break
             pdef = ptypes[n]
-            method.append(self.param(method_name, pdef, arg))
+            p = self.param(method_name, pdef, arg)
+            if p is not None:
+                method.append(p)
             n += 1
         env.promotePrefixes()
         return str(env)

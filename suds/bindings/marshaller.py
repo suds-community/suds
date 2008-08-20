@@ -379,9 +379,9 @@ class MBase:
         @type content: L{Object}
         """
         log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
-        self.start(content)
-        self.appender.append(parent, content)
-        self.end(content)         
+        if self.start(content):
+            self.appender.append(parent, content)
+            self.end(content)
 
     def reset(self):
         """
@@ -404,8 +404,10 @@ class MBase:
         Appending this content has started.
         @param content: The content for which proccessing has started.
         @type content: L{Object}
+        @return: True to continue appending
+        @rtype: boolean
         """
-        pass
+        return True
     
     def suspend(self, content):
         """
@@ -514,6 +516,8 @@ class Literal(MBase):
         schema type using the resolver.
         @param content: The content for which proccessing has stated.
         @type content: L{Object}
+        @return: True to continue appending
+        @rtype: boolean
         @note: This will I{push} the type in the resolver.
         """
         log.debug('starting content:\n%s', content)
@@ -523,15 +527,18 @@ class Literal(MBase):
             name = content.tag
             if name.startswith('_'):
                 name = '@'+name[1:]
-            content.type = \
-                self.resolver.find(name, content.value)
+            content.type = self.resolver.find(name, content.value)
         else:
             self.resolver.push(content.type)
         if content.type is None:
             raise TypeNotFound(content.tag)
         resolved = content.type.resolve()
-        content.value = \
-            resolved.translate(content.value, False)
+        content.value = resolved.translate(content.value, False)
+        if self.__skip(content):
+            log.info('skipping (optional) content:\n%s', content)
+            self.resolver.pop()
+            return False
+        return True
         
     def suspend(self, content):
         """
@@ -630,6 +637,15 @@ class Literal(MBase):
         except AttributeError:
             pass
         return result
+    
+    def __skip(self, content):
+        if content.type.optional():
+            v = content.value
+            if v is None:
+                return True
+            if isinstance(v, (list,tuple)) and len(v) == 0:
+                return True
+        return False
 
 
 class Encoded(Literal):

@@ -85,10 +85,9 @@ class Builder:
     def add_attributes(self, data, type):
         """ add required attributes """
         for a in type.attributes:
-            if a.required():
-                name = '_%s' % a.name
-                value = a.get_default()
-                setattr(data, name, value)
+            name = '_%s' % a.name
+            value = a.get_default()
+            setattr(data, name, value)
                 
     def skip_child(self, c):
         """ get whether or not to skip the specified child """
