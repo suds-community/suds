@@ -129,6 +129,14 @@ class SchemaObject:
         """
         return False
     
+    def optional(self):
+        """
+        Get whether this type is optional.
+        @return: True if optional, else False
+        @rtype: boolean
+        """
+        return False
+    
     def resolve(self, nobuiltin=False):
         """
         Resolve and return the nodes true self.

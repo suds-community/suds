@@ -282,6 +282,14 @@ class Collection(SchemaObject):
             return (int(self.max) > 1)
         else:
             return ( self.max == 'unbounded' )
+        
+    def optional(self):
+        """
+        Get whether this type is optional.
+        @return: True if optional, else False
+        @rtype: boolean
+        """
+        return ( self.min == '0' )
 
 
 class Sequence(Collection):
@@ -404,6 +412,14 @@ class Element(Promotable):
             return (int(self.max) > 1)
         else:
             return ( self.max == 'unbounded' )
+        
+    def optional(self):
+        """
+        Get whether this type is optional.
+        @return: True if optional, else False
+        @rtype: boolean
+        """
+        return ( self.container.optional() or self.min == '0' )
             
     def derived(self):
         """
@@ -508,10 +524,18 @@ class Element(Promotable):
         return ('name', 'type', 'inherited')
     
     def container_unbounded(self):
+        """ get whether container is unbounded """
         if self.container is None:
             return False
         else:
             return self.container.unbounded()
+        
+    def container_optional(self):
+        """ get whether container is optional """
+        if self.container is None:
+            return False
+        else:
+            return self.container.optional()
 
 
 class Extension(SchemaObject):
@@ -690,14 +714,14 @@ class Attribute(Promotable):
         """
         return self.root.get('default', default='')
     
-    def required(self):
+    def optional(self):
         """
-        Gets the <xs:attribute use="required"/> attribute value
-        @return: Whether the attribute is required.
-        @rtype: bool
+        Get whether this type is optional.
+        @return: True if optional, else False
+        @rtype: boolean
         """
         use = self.root.get('use', default='')
-        return ( use.lower() == 'required' )
+        return ( use == 'optional' )
     
     def description(self):
         """
