@@ -612,7 +612,7 @@ class Import(SchemaObject):
     @type ns: str
     @ivar location: The (optional) location.
     @type location: namespace-uri
-    @ivar opened: Opened and L{imported} flag.
+    @ivar opened: Opened and I{imported} flag.
     @type opened: boolean
     """
     
