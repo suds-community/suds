@@ -110,7 +110,14 @@ class Client(object):
 
 class Service:
     
-    """ Service wrapper object """
+    """ 
+    Service wrapper object.
+    
+    B{See:}  L{Method} for Service.I{method()} invocation API.
+    
+    @ivar __client__: The soap client.
+    @type __client__: L{SoapClient}
+    """
     
     def __init__(self, client):
         """
@@ -157,7 +164,20 @@ class Method(object):
         self.name = name
         
     def __call__(self, *args, **kwargs):
-        """call the method"""
+        """
+        Call (invoke) the method.
+        @param args: A list of args for the method invoked.
+        @type args: list
+        @param kwargs: Keyword args to be processed by suds.
+        @type kwargs: dict
+        @keyword soapheaders: Optional soap headers to be included in the
+            soap message.
+        @type soapheaders: list( L{sudsobject.Object}|L{sudsobject.Property} )
+        @keyword inject: Inject the specified (msg|repy) into the soap message stream.
+        @type inject: dict(B{msg}=soap-out,B{reply}=soap-in)
+        @keyword location: Override the location (url) for the service.
+        @type location: str
+        """
         result = None
         try:
             if SimClient.simulation(kwargs):
@@ -278,26 +298,27 @@ class SoapClient:
         timer.stop()
         metrics.log.debug("message for '%s' created: %s", method.name, timer)
         timer.start()
-        result = self.send(method, binding, msg)
+        result = self.send(method, msg, kwargs)
         timer.stop()
         metrics.log.debug("method '%s' invoked: %s", method.name, timer)
         return result
     
-    def send(self, method, binding, msg):
+    def send(self, method, msg, kwargs):
         """
         Send soap message.
         @param method: The method being invoked.
         @type method: L{Method}
-        @param binding: The binding used to create I{msg}.
-        @type binding: L{bindings.binding.Binding}
         @param msg: A soap message to send.
         @type msg: basestring
+        @param kwargs: keyword args
+        @type kwargs: {}
         @return: The reply to the sent message.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         result = None
         headers = self.headers(method.name)
-        location = self.wsdl.service.port.location
+        location = kwargs.get('location', self.wsdl.service.port.location)
+        binding = self.wsdl.binding().operation(method.name).binding.input
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent = msg
@@ -441,16 +462,16 @@ class SimClient(SoapClient):
             reply = lb.get('reply', None)
             result = self.__reply(method, reply)
         else:
-            result = self.__send(method, msg)
+            result = self.__send(method, msg, kwargs)
         return result
         
-    def __send(self, method, msg):
+    def __send(self, method, msg, kwargs):
         """ send the supplied soap message """
         result = None
         binding = self.wsdl.binding().operation(method.name).binding.input
         binding.faults = self.arg.faults
         headers = self.headers(method.name)
-        location = self.wsdl.service.port.location
+        location = kwargs.get('location', self.wsdl.service.port.location)
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         return self.send(method, binding, msg)
     
