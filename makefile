@@ -13,9 +13,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
+#
 
 dist: clean
 	python setup.py sdist
+
+tar: dist
+	cd dist; \
+	rm -rf tmp; \
+	mkdir tmp; \
+	cd tmp; \
+	tar xzvf ../*.gz; \
+	cd `ls`; \
+	tar czvf ../../`ls ../|cut -c8-`.tar.gz *
 
 rpm: dist
 	cp dist/*.gz /usr/src/redhat/SOURCES
