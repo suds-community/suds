@@ -40,7 +40,7 @@ class Unmarshaller:
         @param schema: A schema object
         @type schema: L{xsd.schema.Schema}
         """
-        self.basic = Basic(schema)
+        self.basic = Basic()
         self.typed = Typed(schema)
 
        
@@ -68,15 +68,7 @@ class UMBase:
     """
     The abstract XML I{node} unmarshaller.  This class provides the
     I{core} unmarshalling functionality.
-    @ivar schema: A schema object
-    @type schema: L{xsd.schema.Schema}
     """
-    def __init__(self, schema):
-        """
-        @param schema: A schema object
-        @type schema: L{xsd.schema.Schema}
-        """
-        self.schema = schema
         
     def process(self, content):
         """
@@ -246,15 +238,7 @@ class UMBase:
 class Basic(UMBase):
     """
     A object builder (unmarshaller).
-    @ivar schema: A schema object
-    @type schema: L{xsd.schema.Schema}
     """
-    def __init__(self, schema):
-        """
-        @param schema: A schema object
-        @type schema: L{xsd.schema.Schema}
-        """
-        UMBase.__init__(self, schema)
         
     def process(self, node):
         """
@@ -280,7 +264,6 @@ class Typed(UMBase):
         @param schema: A schema object.
         @type schema: L{xsd.schema.Schema}
         """
-        UMBase.__init__(self, schema)
         self.resolver = NodeResolver(schema)
         
     def process(self, node, type):
