@@ -15,8 +15,16 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 #
 
+all: rpm tar egg
+
 dist: clean
 	python setup.py sdist
+	rm -rf *.egg-info
+
+egg: FORCE
+	python setup.py bdist_egg
+	cd dist; mv *.egg `ls *.egg|cut -c8-`
+	rm -rf *.egg-info
 
 tar: dist
 	cd dist; \
@@ -26,6 +34,7 @@ tar: dist
 	tar xzvf ../*.gz; \
 	cd `ls`; \
 	tar czvf ../../`ls ../|cut -c8-`.tar.gz *
+	rm -rf dist/tmp
 
 rpm: dist
 	cp dist/*.gz /usr/src/redhat/SOURCES
