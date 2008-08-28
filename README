@@ -952,3 +952,35 @@ version 0.2.7 (8-11-08):
    * Update flattening algorithm to prevent re-flattening of types from imported schemas.
    * Adjustments to flattening/merging algorithms.
 
+version 0.2.8 (8-28-08):
+
+   * Update document/literal binding to always send the document root referenced by the <part/>.
+      After yet another review of the space and user input, seems like the referenced 
+      element is ALWAYS the document root.
+
+   * Add support for 'binding' schemaLocations to namespace-uri.  
+     This is for imports that don's specify a schemaLocation and still expect the schema 
+     to be downloaded.  Eg: Axis references 'http://schemas.xmlsoap.org/soap/encoding/' 
+     without a schemaLocation.  So, by doing this:
+        >
+        > from suds.xsd.sxbasic import Import.
+        > Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
+        >
+     The schema is bound to a schemaLocation and it is downloaded.
+
+   * Basic unmarshaller doesn't need a /schema/. 
+      Should have been removed during refactoring but was missed.
+
+   * Update client to pass kwargs to send() and add /location/ kwarg for overriding the
+      service location in the wsdl.
+
+   * Update marshaller to NOT emit XML for object attributes that represent elements and/or attributes that
+      are *both* optional and value=None.
+         * Update factory (builder) to include all attributes.
+         * Add optional() method to SchemaObject.
+
+   * Update wsdl to override namespace in operation if specified.
+   
+   * Fix schema loading issue - build all schemas before processing imports.
+   
+   * Update packaging in preparation of submission to fedora
