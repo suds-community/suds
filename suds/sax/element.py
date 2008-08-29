@@ -18,6 +18,7 @@
 Provides XML I{element} classes.
 """
 
+import suds.sax
 from logging import getLogger
 from suds import *
 from suds.sax import *
@@ -209,7 +210,7 @@ class Element:
         @return: self
         @rtype: I{Element}
         """
-        self.text = encoder.encode(value)
+        self.text = sax.encoder.encode(value)
         return self
         
     def getText(self, default=None):
@@ -220,7 +221,7 @@ class Element:
         @return: The text content, or I{default}
         @rtype: basestring
         """
-        result = encoder.decode(self.text)
+        result = sax.encoder.decode(self.text)
         if result is None:
             result = default
         return result

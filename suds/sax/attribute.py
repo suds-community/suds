@@ -18,6 +18,7 @@
 Provides XML I{attribute} classes.
 """
 
+import suds.sax
 from logging import getLogger
 from suds import *
 from suds.sax import *
@@ -50,7 +51,7 @@ class Attribute:
         else:
             self.prefix = name[0]
             self.name = name[1]
-        self.value = encoder.encode(value)
+        self.value = sax.encoder.encode(value)
         
     def clone(self, parent=None):
         """
@@ -81,7 +82,7 @@ class Attribute:
         @param value: The new value (may be None)
         @type value: basestring
         """
-        self.value = encoder.encode(value)
+        self.value = sax.encoder.encode(value)
         
     def getValue(self, default=''):
         """
@@ -92,7 +93,7 @@ class Attribute:
         @return: The attribute's value, or I{default}
         @rtype: basestring
         """
-        result = encoder.decode(self.value)
+        result = sax.encoder.decode(self.value)
         if result is None:
             result = default
         return result
