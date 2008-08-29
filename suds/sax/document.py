@@ -15,6 +15,35 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Provides modules containing classes to support Web Services (SOAP)
-bindings.
+Provides XML I{document} classes.
 """
+
+from logging import getLogger
+from suds import *
+from suds.sax import *
+from suds.sax.element import Element
+
+log = getLogger(__name__)
+
+class Document(Element):
+    """ simple document """
+
+    def __init__(self):
+        Element.__init__(self, 'document')
+        
+    def root(self):
+        if len(self.children) > 0:
+            return self.children[0]
+        else:
+            return None
+        
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
+        result = '<?xml version="1.0" encoding="UTF-8"?>'
+        root = self.root()
+        if root is not None:
+            result += '\n'
+            result += root.str()
+        return unicode(result)

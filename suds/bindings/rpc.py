@@ -14,10 +14,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+Provides classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
+"""
+
 from logging import getLogger
 from suds import *
 from suds.bindings.binding import Binding
-from suds.sax import Element
+from suds.sax.element import Element
 
 
 log = getLogger(__name__)

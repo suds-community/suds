@@ -60,7 +60,7 @@ class SchemaCollection:
         """
         Add a schema node to the collection.
         @param schema: A <schema/> entry.
-        @type schema: (L{suds.wsdl.Definitions},L{sax.Element})
+        @type schema: (L{suds.wsdl.Definitions},L{sax.element.Element})
         """
         root, wsdl = schema
         child = Schema(root, wsdl.url, self)
@@ -131,7 +131,7 @@ class Schema:
     The schema is an objectification of a <schema/> (xsd) definition.
     It provides inspection, lookup and type resolution.
     @ivar root: The root node.
-    @type root: L{sax.Element}
+    @type root: L{sax.element.Element}
     @ivar baseurl: The I{base} URL for this schema.
     @type baseurl: str
     @ivar container: A schema collection containing this schema.
@@ -152,7 +152,7 @@ class Schema:
     def __init__(self, root, baseurl, container=None):
         """
         @param root: The xml root.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         @param baseurl: The base url used for importing.
         @type baseurl: basestring
         @param container: An optional container.
@@ -336,7 +336,7 @@ class Schema:
         Create and return an new schema object using the
         specified I{root} and I{url}.
         @param root: A schema root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         @param url: A base URL.
         @type url: str
         @return: The newly created schema object.

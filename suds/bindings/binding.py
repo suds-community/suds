@@ -14,9 +14,15 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+Provides classes for (WS) SOAP bindings.
+"""
+
 from logging import getLogger
 from suds import *
-from suds.sax import Parser, Element, Namespace
+from suds.sax import Namespace
+from suds.sax.parser import Parser
+from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller

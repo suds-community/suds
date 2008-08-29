@@ -22,7 +22,9 @@ found in the document.
 
 from logging import getLogger
 from suds import *
-from suds.sax import Parser, Element, splitPrefix
+from suds.sax import splitPrefix
+from suds.sax.parser import Parser
+from suds.sax.element import Element
 from suds.bindings.document import Document
 from suds.bindings.rpc import RPC
 from suds.xsd import qualify
