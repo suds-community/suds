@@ -25,7 +25,8 @@ from suds.xsd import *
 from suds.xsd.sxbase import *
 from suds.xsd.query import Query
 from suds.sudsobject import Factory as SOFactory
-from suds.sax import Parser, splitPrefix
+from suds.sax import splitPrefix
+from suds.sax.parser import Parser
 from urlparse import urljoin
 from copy import copy, deepcopy
 
@@ -77,7 +78,7 @@ class Factory:
         """
         Build an xsobject representation.
         @param root: An schema XML root.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         @param filter: A tag filter.
         @type filter: [str,...]
         @return: A schema object graph.
@@ -128,7 +129,7 @@ class Complex(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
         
@@ -176,7 +177,7 @@ class Simple(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
 
@@ -218,7 +219,7 @@ class Restriction(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
 
@@ -244,7 +245,7 @@ class Collection(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
         self.min = root.get('minOccurs', default='1')
@@ -339,7 +340,7 @@ class ComplexContent(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
         
@@ -362,7 +363,7 @@ class Enumeration(Promotable):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
         self.name = root.get('value')
@@ -378,7 +379,7 @@ class Element(Promotable):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
         self.ref = root.get('ref')
@@ -548,7 +549,7 @@ class Extension(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
         self.base = root.get('base')
@@ -638,7 +639,7 @@ class Import(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
         self.ns = (None, root.get('namespace'))
@@ -694,7 +695,7 @@ class Attribute(Promotable):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
         

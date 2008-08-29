@@ -35,7 +35,7 @@ def qualify(ref, resolvers, defns=Namespace.default):
     @param ref: A referenced schema type name.
     @type ref: str
     @param resolvers: A list of objects to be used to resolve types.
-    @type resolvers: [L{sax.Element},]
+    @type resolvers: [L{sax.element.Element},]
     @param defns: An optional target namespace used to qualify references
         when no prefix is specified.
     @type defns: A default namespace I{tuple: (prefix,uri)} used when ref not prefixed.

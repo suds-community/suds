@@ -22,7 +22,7 @@ XSD I{builtin} schema objects.
 from logging import getLogger
 from suds import *
 from suds.xsd import *
-from suds.sax import Element
+from suds.sax.element import Element
 from suds.xsd.sxbase import SchemaObject
 from suds.sax import Namespace
 import datetime

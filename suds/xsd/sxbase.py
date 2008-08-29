@@ -32,7 +32,7 @@ class SchemaObject:
     A schema object is an extension to object object with
     with schema awareness.
     @ivar root: The XML root element.
-    @type root: L{sax.Element}
+    @type root: L{sax.element.Element}
     @ivar schema: The schema containing this object.
     @type schema: L{schema.Schema}
     @ivar form_qualified: A flag that inidcates that @elementFormDefault
@@ -93,7 +93,7 @@ class SchemaObject:
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         self.schema = schema
         self.root = root
@@ -432,7 +432,7 @@ class Promotable(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.Element}
+        @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
 

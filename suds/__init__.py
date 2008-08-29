@@ -14,6 +14,13 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+Suds is a lightweight SOAP python client that provides a service proxy 
+for Web Services.
+@var properties: Library properties.
+@type properties: dict
+"""
+
 import os
 import sys
 import socket
@@ -22,7 +29,7 @@ import socket
 # Project properties
 #
 
-properties = dict(version='0.2.8')
+properties = dict(version='0.2.9')
 
 #
 # Exceptions

@@ -270,7 +270,7 @@ class NodeResolver(TreeResolver):
     def find(self, node, resolved=False, push=True):
         """
         @param node: An xml node to be resolved.
-        @type node: L{sax.Element}
+        @type node: L{sax.element.Element}
         @param resolved: A flag indicating that the fully resolved type should be
             returned.
         @type resolved: boolean

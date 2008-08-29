@@ -14,6 +14,10 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+Provides classes for XML->object I{unmarshalling}.
+"""
+
 from logging import getLogger
 from suds import *
 from suds.sudsobject import Factory, Object
@@ -47,7 +51,7 @@ class Unmarshaller:
 class Content(Object):
     """
     @ivar node: The content source node.
-    @type node: L{sax.Element}
+    @type node: L{sax.element.Element}
     @ivar data: The (optional) content data.
     @type data: L{Object}
     @ivar type: The (optional) content schema type.
@@ -244,7 +248,7 @@ class Basic(UMBase):
         """
         Process an object graph representation of the xml I{node}.
         @param node: An XML tree.
-        @type node: L{sax.Element}
+        @type node: L{sax.element.Element}
         @return: A suds object.
         @rtype: L{Object}
         """
@@ -270,7 +274,7 @@ class Typed(UMBase):
         """
         Process an object graph representation of the xml L{node}.
         @param node: An XML tree.
-        @type node: L{sax.Element}
+        @type node: L{sax.element.Element}
         @param type: The I{optional} schema type.
         @type type: L{xsd.sxbase.SchemaObject}
         @return: A suds object.

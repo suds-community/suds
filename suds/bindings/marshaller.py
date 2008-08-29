@@ -14,11 +14,18 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+"""
+Provides classes for object->XML I{marshalling}.
+"""
+
 from logging import getLogger
 from suds import *
 from suds.sudsobject import Factory, Object, Property, items
 from suds.resolver import GraphResolver
-from suds.sax import Document, Element, Attribute, splitPrefix, Namespace
+from suds.sax import splitPrefix, Namespace
+from suds.sax.document import Document
+from suds.sax.element import Element
+from suds.sax.attribute import Attribute
 
 log = getLogger(__name__)
 
