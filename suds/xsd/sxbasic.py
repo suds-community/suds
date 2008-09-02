@@ -24,7 +24,6 @@ from suds import *
 from suds.xsd import *
 from suds.xsd.sxbase import *
 from suds.xsd.query import Query
-from suds.sudsobject import Factory as SOFactory
 from suds.sax import splitPrefix
 from suds.sax.parser import Parser
 from urlparse import urljoin

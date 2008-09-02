@@ -54,10 +54,15 @@ def asdict(sobject):
 
 class Factory:
     
+    cache = {}
+    
     @classmethod
     def subclass(cls, name, super):
         name = name.encode('utf-8')
-        myclass = classobj(name,(super,),{})
+        myclass = cls.cache.get(name)
+        if myclass is None:
+            myclass = classobj(name,(super,),{})
+            cls.cache[name] = myclass
         init = '__init__'
         src = 'def %s(self):\n' % init
         src += '\t%s.%s(self)\n' % (super.__name__,init)
