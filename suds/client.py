@@ -130,8 +130,8 @@ class Service:
         builtin =  name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
-        operation = self.__client__.wsdl.binding().operation(name)
-        if operation is None:
+        method = self.__client__.wsdl.method(name)
+        if method is None:
             raise MethodNotFound(name)
         method = Method(self.__client__, name)
         return method
@@ -291,7 +291,7 @@ class SoapClient:
         timer = metrics.Timer()
         timer.start()
         result = None
-        binding = self.wsdl.binding().operation(method.name).binding.input
+        binding = self.wsdl.method(method.name).binding.input
         binding.faults = self.arg.faults
         soapheaders = kwargs.get('soapheaders', ())
         msg = binding.get_message(method.name, args, soapheaders)
@@ -317,8 +317,9 @@ class SoapClient:
         """
         result = None
         headers = self.headers(method.name)
-        location = kwargs.get('location', self.wsdl.service.port.location)
-        binding = self.wsdl.binding().operation(method.name).binding.input
+        location = self.wsdl.method(method.name).location
+        location = kwargs.get('location', location)
+        binding = self.wsdl.method(method.name).binding.input
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent = msg
@@ -371,7 +372,7 @@ class SoapClient:
         @return: A dictionary of header/values.
         @rtype: dict
         """
-        action = self.wsdl.binding().operation(method).soap.action
+        action = self.wsdl.method(method).soap.action
         result = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
         log.debug('headers = %s', result)
         return result
@@ -457,10 +458,9 @@ class SimClient(SoapClient):
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         lb = kwargs[SimClient.INJKEY]
-        msg = lb.get('msg', None)
+        msg = lb.get('msg')
         if msg is None:
-            reply = lb.get('reply', None)
-            result = self.__reply(method, reply)
+            result = self.__reply(method, lb.get('reply'))
         else:
             result = self.__send(method, msg, kwargs)
         return result
@@ -468,16 +468,17 @@ class SimClient(SoapClient):
     def __send(self, method, msg, kwargs):
         """ send the supplied soap message """
         result = None
-        binding = self.wsdl.binding().operation(method.name).binding.input
+        binding = self.wsdl.method(method.name).binding.input
         binding.faults = self.arg.faults
         headers = self.headers(method.name)
-        location = kwargs.get('location', self.wsdl.service.port.location)
+        location = self.wsdl.method(method.name).location
+        location = kwargs.get('location', location)
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
-        return self.send(method, binding, msg)
+        return self.send(method, msg, kwargs)
     
     def __reply(self, method, reply):
         """ simulate the reply """
-        binding = self.wsdl.binding().operation(method.name).binding.output
+        binding = self.wsdl.method(method.name).binding.output
         binding.faults = self.arg.faults
         return self.succeeded(binding, method, reply)
 
@@ -509,14 +510,13 @@ class ServiceDefinition:
     def __addmethods(self, w):
         """ create our list of methods """
         timer = metrics.Timer()
-        for operation in w.binding().operations.values():
+        for m in w.methods.values():
             timer.start()
-            m = operation.name
-            binding = operation.binding.input
-            method = (m, binding.param_defs(m))
+            binding = m.binding.input
+            method = (m.name, binding.param_defs(m.name))
             self.methods.append(method)
             timer.stop()
-            metrics.log.debug("method '%s' created: %s", m, timer)
+            metrics.log.debug("method '%s' created: %s", m.name, timer)
         self.methods.sort()
             
     def __addtypes(self):

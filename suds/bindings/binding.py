@@ -214,11 +214,11 @@ class Binding:
         @rtype: [I{definition},]
         """
         result = []
-        operation = self.wsdl.binding().type.operation(method)
+        method = self.wsdl.method(method)
         if input:
-            parts = operation.input.parts
+            parts = method.message.input.parts
         else:
-            parts = operation.output.parts
+            parts = method.message.output.parts
         for p in parts:
             qref = p.xsref()
             query = Query(qref)

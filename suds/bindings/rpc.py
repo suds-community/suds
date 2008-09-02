@@ -40,8 +40,6 @@ class RPC(Binding):
         
     def method(self, name):
         """get method fragment"""
-        operation = self.wsdl.binding().operation(name)
-        soap = operation.soap
-        ns = soap.input.body.namespace
+        ns = self.wsdl.method(name).soap.input.body.namespace
         method = Element(name, ns=ns)
         return method

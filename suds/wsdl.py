@@ -30,7 +30,7 @@ from suds.bindings.rpc import RPC
 from suds.xsd import qualify
 from suds.xsd.schema import SchemaCollection
 from suds.sudsobject import Object
-from suds.sudsobject import Factory as SOFactory
+from suds.sudsobject import Factory as SFactory
 from urlparse import urljoin
 
 log = getLogger(__name__)
@@ -88,7 +88,7 @@ class WObject(Object):
         """
         Object.__init__(self)
         self.root = root
-        pmd = SOFactory.metadata()
+        pmd = SFactory.metadata()
         pmd.excludes = ['root']
         pmd.wrappers = dict(qname=lambda x: repr(x))
         self.__metadata__.__print__ = pmd
@@ -173,6 +173,7 @@ class Definitions(WObject):
         self.port_types = {}
         self.bindings = {}
         self.service = None
+        self.methods = {}
         self.add_children(self.root)
         self.children.sort()
         pmd = self.__metadata__.__print__
@@ -182,7 +183,8 @@ class Definitions(WObject):
         self.open_imports(opener)
         self.resolve()
         self.build_schema()
-        self.assign_bindings()
+        if self.service is not None:
+            self.add_methods()
         log.debug("wsdl at '%s' loaded:\n%s", url, self)
         
     def mktns(self, root):
@@ -244,36 +246,46 @@ class Definitions(WObject):
             entry = (root, self)
             container.add(entry)
         self.schema = container.load()
-        
-    def assign_bindings(self):
-        """ Create suds binding objects based on sytle/use """
+                
+    def add_methods(self):
         bindings = {
             'document/literal' : Document(self),
             'rpc/literal' : RPC(self),
             'rpc/encoded' : RPC(self).use_encoded()
         }
-        for b in self.bindings.values():
-            for op in b.operations.values():
-                soap = op.soap
-                key = '/'.join((soap.style, soap.input.body.use))
-                binding = bindings.get(key)
-                if binding is None:
-                    raise Exception("binding: '%s/%s', not-supported" % key)
-                op.binding = SOFactory.object('Suds-Binding')
-                op.binding.input = binding
-                key = '/'.join((soap.style, soap.output.body.use))
-                binding = bindings.get(key)
-                if binding is None:
-                    raise Exception("binding: '%s/%s', not-supported" % key)
-                op.binding.output = binding
-            
-    def binding(self):
+        for p in self.service.ports:
+            binding = p.binding
+            ptype = p.binding.type
+            operations = p.binding.type.operations.values()
+            for name in [op.name for op in operations]:
+                m = SFactory.object('Method')
+                m.name = name
+                m.location = p.location
+                m.binding = SFactory.object('binding')
+                op = binding.operation(name)
+                m.soap = op.soap
+                key = '/'.join((op.soap.style, op.soap.input.body.use))
+                m.binding.input = bindings.get(key)
+                key = '/'.join((op.soap.style, op.soap.output.body.use))
+                m.binding.output = bindings.get(key)
+                op = ptype.operation(name)
+                m.message = SFactory.object('message')
+                m.message.input = op.input
+                m.message.output = op.output
+                self.methods[name] = m
+    
+    def method(self, name):
         """
-        Get the binding object associated with the service's port.
-        @return: The binding object.
-        @rtype: L{Binding}
+        Get a method defined an one of the portTypes by name.
+        @param name: A method name.
+        @type name: str
+        @return: The requested method object.
+        @rtype: L{Method}
         """
-        return self.service.port.binding
+        m = self.methods.get(name)
+        if m is None:
+            raise Exception('method "%s", not-found', name)
+        return m
 
 
 class Import(WObject):
@@ -356,7 +368,7 @@ class Part(NamedObject):
         @type definitions: L{Definitions}
         """
         NamedObject.__init__(self, root, definitions)
-        pmd = SOFactory.metadata()
+        pmd = SFactory.metadata()
         pmd.wrappers = \
             dict(element=lambda x: repr(x), type=lambda x: repr(x))
         self.__metadata__.__print__ = pmd
@@ -425,7 +437,7 @@ class PortType(NamedObject):
         NamedObject.__init__(self, root, definitions)
         self.operations = {}
         for c in root.getChildren('operation'):
-            op = SOFactory.object('Operation')
+            op = SFactory.object('Operation')
             op.name = c.get('name')
             op.tns = definitions.tns
             input = c.getChild('input')
@@ -493,7 +505,7 @@ class Binding(NamedObject):
         self.operations = {}
         self.type = root.get('type')
         sr = root.getChild('binding')
-        soap = SOFactory.object('SOAP')
+        soap = SFactory.object('soap')
         self.soap = soap
         self.soap.style = sr.get('style', default='document')
         self.add_operations(self.root, definitions)
@@ -501,16 +513,16 @@ class Binding(NamedObject):
     def add_operations(self, root, definitions):
         """ Add <operation/> children """
         for c in root.getChildren('operation'):
-            op = SOFactory.object('Operation')
+            op = SFactory.object('Operation')
             op.name = c.get('name')
             sr = c.getChild('operation')
-            soap = SOFactory.object('SOAP')
+            soap = SFactory.object('soap')
             soap.action = '"%s"' % sr.get('soapAction', default='')
             soap.style = sr.get('style', default=self.soap.style)
-            soap.input = SOFactory.object('Input')
-            soap.input.body = SOFactory.object('Body')
-            soap.output = SOFactory.object('Output')
-            soap.output.body = SOFactory.object('Body')
+            soap.input = SFactory.object('Input')
+            soap.input.body = SFactory.object('Body')
+            soap.output = SFactory.object('Output')
+            soap.output.body = SFactory.object('Body')
             op.soap = soap
             input = c.getChild('input')
             body = input.getChild('body')
@@ -580,12 +592,14 @@ class Service(NamedObject):
         @type definitions: L{Definitions}
         """
         NamedObject.__init__(self, root, definitions)
-        self.port = SOFactory.object('Port')
-        port = root.getChild('port')
-        self.port.name = port.get('name')
-        self.port.binding = port.get('binding')
-        address = port.getChild('address')
-        self.port.location = address.get('location').encode('utf-8')
+        self.ports = []
+        for p in root.getChildren('port'):
+            port = SFactory.object('Port')
+            port.name = p.get('name')
+            port.binding = p.get('binding')
+            address = p.getChild('address')
+            port.location = address.get('location').encode('utf-8')
+            self.ports.append(port)
         
     def resolve(self, definitions):
         """
@@ -593,13 +607,13 @@ class Service(NamedObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        ref = qualify(self.port.binding, self.root, wsdlns)
-        binding = definitions.bindings.get(ref)
-        if binding is None:
-            raise Exception("binding '%s', not-found" % self.port.binding)
-        else:
-            self.port.binding = binding
+        for p in self.ports:
+            ref = qualify(p.binding, self.root, wsdlns)
+            binding = definitions.bindings.get(ref)
+            if binding is None:
+                raise Exception("binding '%s', not-found" % p.binding)
+            else:
+                p.binding = binding
         
     def __gt__(self, other):
         return True
-
