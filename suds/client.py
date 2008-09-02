@@ -102,10 +102,9 @@ class Client(object):
         return unicode(self)
         
     def __unicode__(self):
-        indent = '%*s' % (4, ' ')
         ver = properties['version']
         desc = unicode(self.sd)
-        return 'suds\n%sversion=%s\n%s'  % (indent, ver, desc)
+        return 'suds ( version=%s )\n\n%s'  % (ver, desc)
 
 
 class Service:
@@ -575,7 +574,7 @@ class ServiceDefinition:
     def description(self):
         """ get a str description of the service """
         s = []
-        s.append('service (%s)' % self.name)
+        s.append('service ( %s )' % self.name)
         s.append('\tprefixes:')
         for p in self.prefixes:
             s.append('\t\t%s = "%s"' % p)
