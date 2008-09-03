@@ -39,18 +39,13 @@ class Attribute:
     """
     def __init__(self, name, value=None):
         """
-        @param name: The attribute's name with I{optional} namespace prefix -OR-
-            a tuple as: (I{prefix},I{name})
+        @param name: The attribute's name with I{optional} namespace prefix.
         @type name: basestring
         @param value: The attribute's value
         @type value: basestring 
         """
         self.parent = None
-        if isinstance(name, basestring):
-            self.prefix, self.name = splitPrefix(name)
-        else:
-            self.prefix = name[0]
-            self.name = name[1]
+        self.prefix, self.name = splitPrefix(name)
         self.value = sax.encoder.encode(value)
         
     def clone(self, parent=None):
