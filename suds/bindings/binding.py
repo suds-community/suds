@@ -30,25 +30,33 @@ from suds.xsd.query import Query
 
 log = getLogger(__name__)
 
-docfmt = """
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-      xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <SOAP-ENV:Header/>
-    %s
-    %s
-    %s
-    %s
-    %s
-</SOAP-ENV:Envelope>
-"""
-
 encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
 envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
 
 
 class Binding:
-    """ The soap binding base class """
+    """
+    The soap binding class used to process outgoing and imcoming
+    soap messages per the WSDL port binding.
+    @ivar wsdl: The wsdl.
+    @type wsdl: L{suds.wsdl.Definitions}
+    @ivar schema: The collective schema contained within the wsdl.
+    @type schema: L{xsd.schema.Schema}
+    @ivar faults: The faults flag used to indicate whether a web fault should raise
+        an exception or that all results are returned in a tuple (http-code, result).
+    @type faults: boolean
+    @ivar parser: A sax parser.
+    @type parser: L{suds.sax.parser.Parser}
+    @ivar unmarshaller: An unmarshaller used to generate an L{Object}
+        representation of received soap messages.
+    @type unmarshaller: L{Unmarshaller}
+    @ivar marshaller: A marshaller used to generate soap messages from
+        python L{Object}s.
+    @type marshaller: L{Unmarshaller}
+    @ivar encoded: The I{usr=literal} vs I{use=encoded} flag defines with version
+        of the I{marshaller} and I{unmarshaller} should be used to encode/decode
+        soap messages.
+    """
 
     def __init__(self, wsdl):
         self.wsdl = wsdl
@@ -60,17 +68,38 @@ class Binding:
         self.encoded = False
         
     def use_literal(self):
-        """ set the input message encoding to "literal" """
+        """
+        Set the input message encoding to I{literal} by setting the
+        L{self.encoded} flag = True.
+        @return: self
+        @rtype: L{Binding}
+        """
         self.encoded = False
         return self
     
     def use_encoded(self):
-        """ set the input message encoding to "encoded" """
+        """
+        Set the input message encoding to I{encoded} by setting the 
+        L{self.encoded} flag = False.
+        @return: self
+        @rtype: L{Binding}
+        """
         self.encoded = True
         return self
 
     def get_message(self, method_name, args, soapheaders):
-        """get the soap message for the specified method and args"""
+        """
+        Get the soap message for the specified method, args and soapheaders.
+        This is the entry point for creating the outbound soap message.
+        @param method_name: The name of the method being invoked.
+        @type method_name: str
+        @param args: A I{list} of method arguments (parameters).
+        @type args: list
+        @param soapheaders: A list of objects to be encoded as soap-headers.
+        @type soapheaders: list
+        @return: The soap message.
+        @rtype: str
+        """
         method = self.method(method_name)
         body = self.body(method)
         header = self.header(soapheaders)
@@ -87,9 +116,20 @@ class Binding:
         env.promotePrefixes()
         return str(env)
     
-    def get_reply(self, method, msg):
-        """extract the content from the specified soap reply message"""
-        replyroot = self.parser.parse(string=msg)
+    def get_reply(self, method, reply):
+        """
+        Process the I{reply} for the specified I{method} by sax parsing the I{reply}
+        and then unmarshalling into python object(s).
+        @param method: The name of the invoked method.
+        @type method: str
+        @param reply: The reply XML received after invoking the specified method.
+        @type reply: str
+        @return: The unmarshalled reply.  The returned value is an L{Object} for a
+            I{list} depending on whether the service returns a single object or a 
+            collection.
+        @rtype: L{Object}
+        """
+        replyroot = self.parser.parse(string=reply)
         soapenv = replyroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         nodes = soapbody[0].children
@@ -105,7 +145,15 @@ class Binding:
         return None
     
     def reply_list(self, rt, nodes):
-        """ construct a 'list' reply """
+        """
+        Construct a I{list} reply.
+        @param rt: The return I{type}.
+        @type rt: L{suds.xsd.sxbase.SchemaObject}
+        @param nodes: A collection of XML nodes.
+        @type nodes: [L{Element},...]
+        @return: A list of I{unmarshalled} objects.
+        @rtype: [L{Object},...]
+        """
         result = []
         resolved = rt.resolve(nobuiltin=True)
         unmarshaller = self.unmarshaller.typed
@@ -115,7 +163,15 @@ class Binding:
         return result
     
     def reply_composite(self, rtypes, nodes):
-        """ construct a 'composite' reply """
+        """
+        Construct a I{composite} reply.
+        @param rtypes: A list of legal return I{types}.
+        @type rtypes: [L{suds.xsd.sxbase.SchemaObject},...]
+        @param nodes: A collection of XML nodes.
+        @type nodes: [L{Element},...]
+        @return: The I{unmarshalled} composite object.
+        @rtype: L{Object},...
+        """
         dictionary = {}
         for rt in rtypes:
             dictionary[rt.name] = rt

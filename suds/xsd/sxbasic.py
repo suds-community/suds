@@ -28,6 +28,7 @@ from suds.sax import splitPrefix
 from suds.sax.parser import Parser
 from urlparse import urljoin
 from copy import copy, deepcopy
+from urllib2 import URLError, HTTPError, GopherError
 
 log = getLogger(__name__)
 
@@ -102,18 +103,22 @@ class Factory:
     def collate(cls, children):
         imports = []
         elements = {}
+        attributes = {}
         types = {}
         for c in children:
-            if isinstance(c, Element):
-                elements[c.qname] = c
-                continue
             if isinstance(c, Import):
                 imports.append(c)
+                continue
+            if isinstance(c, Attribute):
+                attributes[c.qname] = c
+                continue
+            if isinstance(c, Element):
+                elements[c.qname] = c
                 continue
             types[c.qname] = c
         for i in imports:
             children.remove(i)
-        return (children, imports,elements,types)
+        return (children, imports, attributes, elements, types)
 
 
 class Complex(SchemaObject):
@@ -475,10 +480,10 @@ class Element(Promotable):
         classes = (Element,)
         defns = self.default_namespace()
         qref = qualify(self.ref, self.root, defns)
-        for e in self.schema.elements.values():
-            if e.qname == qref:
-                self.merge(deepcopy(e))
-                return
+        e = self.schema.elements.get(qref)
+        if e is not None:
+            self.merge(deepcopy(e))
+            return
         for c in self.schema.children:
             p = c.find(qref, classes)
             if p is not None:
@@ -670,8 +675,8 @@ class Import(SchemaObject):
                     url = urljoin(self.schema.baseurl, url)
                 root = Parser().parse(url=url).root()
                 return self.schema.instance(root, url)
-            except Exception:
-                msg = 'imported schema (%s) at (%s), not-found' % (self.ns[1], url)
+            except (URLError, HTTPError, GopherError):
+                msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
                 log.error('%s, %s', self.id, msg, exc_info=True)
                 raise Exception(msg)
  
@@ -697,6 +702,8 @@ class Attribute(Promotable):
         @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
+        self.ref = root.get('ref')
+        self.mutated = ( self.ref is None )
         
     def isattr(self):
         """
@@ -722,6 +729,38 @@ class Attribute(Promotable):
         """
         use = self.root.get('use', default='')
         return ( use == 'optional' )
+    
+    def merge(self, e):
+        """
+        Merge the referenced object.
+        @param e: A resoleve reference.
+        @type e: L{Attribute}
+        """
+        self.name = e.name
+        self.qname = e.qname
+        self.type = e.type
+
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
+        """
+        if self.mutated:
+            return
+        self.mutated = True
+        classes = (Attribute,)
+        defns = self.default_namespace()
+        qref = qualify(self.ref, self.root, defns)
+        a = self.schema.attributes.get(qref)
+        if a is not None:
+            self.merge(deepcopy(a))
+            return
+        for c in self.schema.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                self.merge(deepcopy(p))
+                return
+        raise TypeNotFound(self.ref)
     
     def description(self):
         """

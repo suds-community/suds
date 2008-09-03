@@ -280,7 +280,7 @@ class Definitions(WObject):
         @param name: A method name.
         @type name: str
         @return: The requested method object.
-        @rtype: L{Method}
+        @rtype: I{Method}
         """
         m = self.methods.get(name)
         if m is None:

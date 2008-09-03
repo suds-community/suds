@@ -59,6 +59,7 @@ class Namespace:
     """
 
     default = (None, None)
+    xmlns = ('xml', 'http://www.w3.org/XML/1998/namespace')
     xsdns = ('xs', 'http://www.w3.org/2001/XMLSchema')
     xsins = ('xsi', 'http://www.w3.org/2001/XMLSchema-instance')
     all = (xsdns, xsins)
