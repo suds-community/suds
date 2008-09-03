@@ -73,7 +73,7 @@ class Handler(ContentHandler):
     def endElement(self, name):
         name = unicode(name)
         current = self.top()
-        current.trim()
+        current.setText(current.getText(trim=True))
         currentqname = current.qname()
         if name == currentqname:
             self.pop()

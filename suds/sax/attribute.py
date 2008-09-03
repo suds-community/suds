@@ -46,7 +46,7 @@ class Attribute:
         """
         self.parent = None
         self.prefix, self.name = splitPrefix(name)
-        self.value = sax.encoder.encode(value)
+        self.setValue(value)
         
     def clone(self, parent=None):
         """
