@@ -27,7 +27,6 @@ from suds.sax.attribute import Attribute
 log = getLogger(__name__)
 
 class Element:
-    
     """
     An XML element object.
     @ivar parent: The node containing this attribute
@@ -47,6 +46,7 @@ class Element:
     @ivar children: A list of child elements.
     @type children: [I{Element},]
     @cvar matcher: A collection of I{lambda} for string matching.
+    @cvar specialprefixes: A dictionary of builtin-special prefixes.
     """
 
     matcher = \
@@ -56,6 +56,8 @@ class Element:
         'endswith' : lambda a,b: a.endswith(b),
         'contains' : lambda a,b: b in a 
     }
+    
+    specialprefixes = { Namespace.xmlns[0] : Namespace.xmlns[1]  }
     
     @classmethod
     def buildPath(self, parent, path):
@@ -88,7 +90,7 @@ class Element:
         
         self.rename(name)
         self.expns = None
-        self.nsprefixes = { Namespace.xmlns[0] : Namespace.xmlns[1] }
+        self.nsprefixes = {}
         self.attributes = []
         self.text = None
         if parent is not None:
@@ -164,18 +166,16 @@ class Element:
             self.parent = None
         return self
         
-    def set(self, name, value, ns=None):
+    def set(self, name, value):
         """
         Set an attribute's value.
         @param name: The name of the attribute.
         @type name: basestring
         @param value: The attribute value.
         @type value: basestring
-        @param ns: The optional attribute's namespace.
-        @type ns: (I{prefix}, I{name})
         @see: __setitem__()
         """
-        attr = self.attrib(name, ns)
+        attr = self.attrib(name)
         if attr is None:
             attr = Attribute(name, value)
             self.append(attr)
@@ -443,8 +443,9 @@ class Element:
         while n is not None:
             if prefix in n.nsprefixes:
                 return (prefix, n.nsprefixes[prefix])
-            else:
-                n = n.parent
+            if prefix in self.specialprefixes:
+                return (prefix, self.specialprefixes[prefix])
+            n = n.parent
         return default
     
     def addPrefix(self, p, u):
@@ -503,6 +504,10 @@ class Element:
             if item[1] == uri:
                 prefix = item[0]
                 return prefix
+        for item in self.specialprefixes.items():
+            if item[1] == uri:
+                prefix = item[0]
+                return prefix      
         if self.parent is not None:
             return self.parent.findPrefix(uri)
         else:
@@ -522,6 +527,10 @@ class Element:
         """
         result = []
         for item in self.nsprefixes.items():
+            if self.matcher[match](item[1], uri):
+                prefix = item[0]
+                result.append(prefix)
+        for item in self.specialprefixes.items():
             if self.matcher[match](item[1], uri):
                 prefix = item[0]
                 result.append(prefix)
@@ -591,8 +600,10 @@ class Element:
         @return: self
         @rtype: L{Element}
         """
-        self.set('%s:nil' % Namespace.xsins[0], flag)
-        self.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
+        p, u = Namespace.xsins
+        name  = ':'.join((p, 'nil'))
+        self.set(name, str(flag).lower())
+        self.addPrefix(p, u)
         if flag:
             self.text = None
         return self
