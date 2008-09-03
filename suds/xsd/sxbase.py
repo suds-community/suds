@@ -329,6 +329,8 @@ class SchemaObject:
         """
         log.debug(Repr(self))
         self.mutate()
+        for a in self.attributes:
+            a.dereference()
         for c in self.children:
             c.dereference()
             

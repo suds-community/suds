@@ -88,7 +88,7 @@ class Element:
         
         self.rename(name)
         self.expns = None
-        self.nsprefixes = {}
+        self.nsprefixes = { Namespace.xmlns[0] : Namespace.xmlns[1] }
         self.attributes = []
         self.text = None
         if parent is not None:

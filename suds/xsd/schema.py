@@ -167,6 +167,7 @@ class Schema:
         self.children = []
         self.imports = []
         self.elements = {}
+        self.attributes = {}
         self.types = {}
         self.merged = False
         form = self.root.get('elementFormDefault')
@@ -199,12 +200,14 @@ class Schema:
             - Build the graph.
             - Collate the children.
         """
-        self.children = BasicFactory.build(self.root, self)[1]
+        attributes, self.children = BasicFactory.build(self.root, self)
+        collated = BasicFactory.collate(attributes)
+        self.attributes = collated[2]
         collated = BasicFactory.collate(self.children)
         self.children = collated[0]
         self.imports = collated[1]
-        self.elements = collated[2]
-        self.types = collated[3]
+        self.elements = collated[3]
+        self.types = collated[4]
         
     def merge(self, schema):
         """
@@ -214,6 +217,10 @@ class Schema:
         @returns: self
         @rtype: L{Schema} 
         """
+        for item in schema.attributes.items():
+            if item[0] in self.attributes:
+                continue
+            self.attributes[item[0]] = item[1]
         for item in schema.elements.items():
             if item[0] in self.elements:
                 continue
