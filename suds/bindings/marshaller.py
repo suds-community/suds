@@ -619,12 +619,14 @@ class Literal(MBase):
         @param content: The content for which proccessing has ended.
         @type content: L{Object}
         """
-        if not content.type.any() and \
-            content.type.derived():
-                name = content.type.name
-                node.set('xsi:type', name)
-                log.debug('encoding name=(%s) on:\n\t%s', name, node)
-                node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
+        if not content.type.any() and  content.type.derived():
+            name = content.type.name
+            ns = content.type.namespace()
+            ref = ':'.join((ns[0], name))
+            node.set('xsi:type', ref)
+            log.debug('encoding name=(%s)', name)
+            node.addPrefix(ns[0], ns[1])
+            node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
     
     def __metatype(self, content):
         """
