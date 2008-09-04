@@ -467,9 +467,11 @@ class Basic(MBase):
         optional type information.
         @param value: The value (content) of the XML node.
         @type value: (L{Object}|any)
-        @param tag: The (optional) XML tag name for the value.  The default is
+        @param tag: The (optional) tag name for the value.  The default is
             value.__class__.__name__
         @type tag: str
+        @return: An xml node.
+        @rtype: L{Element}
         """
         if tag is None:
             tag = value.__class__.__name__
@@ -507,9 +509,11 @@ class Literal(MBase):
         @type value: (L{Object}|any)
         @param type: The value's schema type.
         @type type: L{xsd.sxbase.SchemaObject}
-        @param tag: The (optional) XML tag name for the value.  The default is
+        @param tag: The (optional) tag name for the value.  The default is
             value.__class__.__name__
         @type tag: str
+        @return: An xml node.
+        @rtype: L{Element}
         """
         if tag is None:
             tag = value.__class__.__name__
