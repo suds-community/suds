@@ -235,13 +235,13 @@ class Binding:
         else:
             marshaller = self.marshaller.literal
         if isinstance(object, (Object, dict)):
-            return marshaller.process(pdef[0], object, pdef[1])
+            return marshaller.process(object, pdef[1], pdef[0])
         if isinstance(object, (list, tuple)):
             tags = []
             for item in object:
                 tags.append(self.param(method, pdef, item))
             return tags
-        return marshaller.process(pdef[0], object, pdef[1])
+        return marshaller.process(object, pdef[1], pdef[0])
             
     def envelope(self, body, header):
         """
@@ -280,7 +280,7 @@ class Binding:
             if isinstance(h, Object):
                 value = h
                 type = h.__metadata__.__type__
-                node = marshaller.process(tag, value, type)
+                node = marshaller.process(value, type, tag)
                 hdr.append(node)
             else:
                 log.error('soapheader (%s) must be Object', tag)
