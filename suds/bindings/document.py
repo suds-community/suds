@@ -41,7 +41,7 @@ class Document(Binding):
         
     def method(self, name):
         """
-        Get the document root.  For I{wrapped}, this is the
+        Get the document root.  For I{document/literal}, this is the
         name of the wrapper element qualifed by the schema tns.
         @param name: The method name.
         @type name: str

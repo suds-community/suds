@@ -146,7 +146,8 @@ class Binding:
     
     def reply_list(self, rt, nodes):
         """
-        Construct a I{list} reply.
+        Construct a I{list} reply.  This mehod is called when it has been detected
+        that the reply is a list.
         @param rt: The return I{type}.
         @type rt: L{suds.xsd.sxbase.SchemaObject}
         @param nodes: A collection of XML nodes.
@@ -164,7 +165,8 @@ class Binding:
     
     def reply_composite(self, rtypes, nodes):
         """
-        Construct a I{composite} reply.
+        Construct a I{composite} reply.  This method is called when it has been
+        detected that the reply is a composite (object).
         @param rtypes: A list of legal return I{types}.
         @type rtypes: [L{suds.xsd.sxbase.SchemaObject},...]
         @param nodes: A collection of XML nodes.
@@ -194,9 +196,17 @@ class Binding:
                 setattr(composite, tag, sobject)
         return composite
     
-    def get_fault(self, msg):
-        """extract the fault from the specified soap reply message"""
-        faultroot = self.parser.parse(string=msg)
+    def get_fault(self, reply):
+        """
+        Extract the fault from the specified soap reply.  If L{self.faults} is True, an
+        exception is raised.  Otherwise, the I{unmarshalled} fault L{Object} is
+        returned.  This method is called when the server raises a I{web fault}.
+        @param reply: A soap reply message.
+        @type reply: str
+        @return: A fault object.
+        @rtype: L{Object}
+        """
+        faultroot = self.parser.parse(string=reply)
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
@@ -208,7 +218,18 @@ class Binding:
             return p.detail
     
     def param(self, method, pdef, object):
-        """encode and return the specified object within the named root tag"""
+        """
+        Builds a parameter for the specified I{method} using the parameter
+        definition (pdef) and the specified value (object).
+        @param method: A method name.
+        @type method: str
+        @param pdef: A parameter definition.
+        @type pdef: tuple: (I{name}, L{xsd.sxbase.SchemaObject})
+        @param object: The parameter value.
+        @type object: any
+        @return: The parameter fragment.
+        @rtype: L{Element}
+        """
         if self.encoded:
             marshaller = self.marshaller.encoded
         else:
@@ -223,7 +244,15 @@ class Binding:
         return marshaller.process(pdef[0], object, pdef[1])
             
     def envelope(self, body, header):
-        """ get soap envelope """
+        """
+        Build the B{<Envelope/>} for an soap outbound message.
+        @param body: The soap message B{body}.
+        @type body: L{Element}
+        @param header: The soap message B{header}.
+        @type header: L{Element}
+        @return: The soap envelope containing the body and header.
+        @rtype: L{Element}
+        """
         env = Element('Envelope', ns=envns)
         env.addPrefix(encns[0], encns[1])
         env.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
@@ -232,7 +261,13 @@ class Binding:
         return env
     
     def header(self, headers):
-        """ get soap header """
+        """
+        Build the B{<Header/>} for an soap outbound message.
+        @param headers: A collection of header objects.
+        @type headers: [L{Object},..]
+        @return: The soap header fragment.
+        @rtype: L{Element}
+        """
         hdr = Element('Header', ns=envns)
         if not isinstance(headers, (list,tuple)):
             headers = (headers,)
@@ -252,7 +287,12 @@ class Binding:
         return hdr
     
     def body(self, method):
-        """ get soap envelope body """
+        """
+        Build the B{<Body/>} for an soap outbound message.
+        @param method: The name of the method.
+        @return: the soap body fragment.
+        @rtype: L{Element}
+        """
         ns = self.wsdl.tns
         body = Element('Body', ns=envns)
         body.append(method)
@@ -260,14 +300,14 @@ class Binding:
     
     def part_types(self, method, input=True):
         """
-        Get a list of I{parameter definitions} defined for the specified method.
-        Each I{parameter definition} is a tuple: (I{name}, L{xsd.sxbase.SchemaObject})
+        Get a list of I{parameter definitions} (pdef) defined for the specified method.
+        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
         @param method: The I{name} of a method.
         @type method: str
         @param input: Defines input/output message.
         @type input: boolean
         @return:  A list of parameter definitions
-        @rtype: [I{definition},]
+        @rtype: [I{pdef},]
         """
         result = []
         method = self.wsdl.method(method)
@@ -289,21 +329,22 @@ class Binding:
     
     def param_defs(self, method):
         """
-        Get parameter definitions.
+        Get parameter definitions.  
+        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
         @param method: A method name.
         @type method: basestring
         @return: A collection of parameter definitions
-        @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
+        @rtype: [I{pdef},..]
         """
         return self.part_types(method)
     
     def returned_types(self, method):
         """
-        Get the referenced type returned by the I{method}.
+        Get the L{xsd.sxbase.SchemaObject} returned by the I{method}.
         @param method: The name of a method.
         @type method: str
         @return: The name of the type return by the method.
-        @rtype: [L{xsd.sxbase.SchemaObject}]
+        @rtype: [I{rtype},..]
         """
         result = []
         for rt in self.part_types(method, False):
