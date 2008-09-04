@@ -109,6 +109,8 @@ class Object:
         self.__dict__[name] = value
         
     def __getitem__(self, name):
+        if isinstance(name, int):
+            name = self.__keylist__[int(name)]
         return getattr(self, name)
         
     def __iter__(self):
