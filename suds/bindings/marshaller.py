@@ -465,10 +465,11 @@ class Basic(MBase):
         """
         Process (marshal) the tag with the specified value using the
         optional type information.
-        @param tag: The XML tag name for the value.
-        @type tag: basestring
         @param value: The value (content) of the XML node.
         @type value: (L{Object}|any)
+        @param tag: The (optional) XML tag name for the value.  The default is
+            value.__class__.__name__
+        @type tag: str
         """
         if tag is None:
             tag = value.__class__.__name__
@@ -502,12 +503,13 @@ class Literal(MBase):
         """
         Process (marshal) the tag with the specified value using the
         optional type information.
-        @param tag: The XML tag name for the value.
-        @type tag: basestring
         @param value: The value (content) of the XML node.
         @type value: (L{Object}|any)
         @param type: The value's schema type.
         @type type: L{xsd.sxbase.SchemaObject}
+        @param tag: The (optional) XML tag name for the value.  The default is
+            value.__class__.__name__
+        @type tag: str
         """
         if tag is None:
             tag = value.__class__.__name__
