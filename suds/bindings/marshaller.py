@@ -461,7 +461,7 @@ class Basic(MBase):
         """
         MBase.__init__(self)
     
-    def process(self, tag, value):
+    def process(self, value, tag=None):
         """
         Process (marshal) the tag with the specified value using the
         optional type information.
@@ -470,6 +470,8 @@ class Basic(MBase):
         @param value: The value (content) of the XML node.
         @type value: (L{Object}|any)
         """
+        if tag is None:
+            tag = value.__class__.__name__
         content = Content(tag, value)
         result = \
             MBase.process(self, content)
@@ -496,7 +498,7 @@ class Literal(MBase):
         self.schema = schema
         self.resolver = GraphResolver(self.schema)
         
-    def process(self, tag, value, type):
+    def process(self, value, type, tag=None):
         """
         Process (marshal) the tag with the specified value using the
         optional type information.
@@ -507,6 +509,8 @@ class Literal(MBase):
         @param type: The value's schema type.
         @type type: L{xsd.sxbase.SchemaObject}
         """
+        if tag is None:
+            tag = value.__class__.__name__
         content = Content(tag, value, type)
         result = MBase.process(self, content)
         return result
