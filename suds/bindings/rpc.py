@@ -39,7 +39,14 @@ class RPC(Binding):
         Binding.__init__(self, wsdl)
         
     def method(self, name):
-        """get method fragment"""
+        """
+        Get the document root.  For I{rpc/(literal|encoded)}, this is the
+        name of the method qualifed by the schema tns.
+        @param name: The method name.
+        @type name: str
+        @return: A root element.
+        @rtype: L{Element}
+        """
         ns = self.wsdl.method(name).soap.input.body.namespace
         method = Element(name, ns=ns)
         return method
