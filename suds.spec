@@ -1,5 +1,5 @@
 %define name python-suds
-%define version 0.2.9
+%define version 0.3
 %define release 1
 
 Summary: Lightweight SOAP client
