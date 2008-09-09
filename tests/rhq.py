@@ -83,7 +83,7 @@ def basic_doc_literal():
         #
         print 'addPersion()'
         result = client.service.addPerson(person)
-        print '\nreply(\n%s\n)\n' % str(result)
+        print '\nreply(\n%s\n)\n' % result
         #
         # create a new name object used to update the person
         #
@@ -254,7 +254,7 @@ def basic_rpc_literal():
         #
         print 'addPersion()'
         result = client.service.addPerson(person)
-        print '\nreply(\n%s\n)\n' % str(result)
+        print '\nreply(\n%s\n)\n' % result
         #
         # create a new name object used to update the person
         #
