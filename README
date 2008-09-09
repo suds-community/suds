@@ -984,3 +984,9 @@ version 0.2.8 (8-28-08):
    * Fix schema loading issue - build all schemas before processing imports.
    
    * Update packaging in preparation of submission to fedora
+   
+version 0.2.9 (9-09-08):
+   
+   * Support for multiple ports within a service.
+   * Attribute references <xs:attribute ref=""/>
+   * Make XML special character encoder in sax package - pluggable 
