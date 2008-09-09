@@ -52,7 +52,7 @@ class Binding:
     @type unmarshaller: L{Unmarshaller}
     @ivar marshaller: A marshaller used to generate soap messages from
         python L{Object}s.
-    @type marshaller: L{Unmarshaller}
+    @type marshaller: L{Marshaller}
     @ivar encoded: The I{usr=literal} vs I{use=encoded} flag defines with version
         of the I{marshaller} and I{unmarshaller} should be used to encode/decode
         soap messages.
