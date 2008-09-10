@@ -172,8 +172,8 @@ class Method(object):
         @keyword soapheaders: Optional soap headers to be included in the
             soap message.
         @type soapheaders: list( L{sudsobject.Object}|L{sudsobject.Property} )
-        @keyword inject: Inject the specified (msg|repy) into the soap message stream.
-        @type inject: dict(B{msg}=soap-out,B{reply}=soap-in)
+        @keyword inject: Inject the specified (msg|reply|fault) into the soap message stream.
+        @type inject: dict(B{msg}=soap-message|B{reply}=soap-reply|B{fault}=soap-fault)
         @keyword location: Override the location (url) for the service.
         @type location: str
         """
@@ -458,11 +458,15 @@ class SimClient(SoapClient):
         """
         lb = kwargs[SimClient.INJKEY]
         msg = lb.get('msg')
+        reply = lb.get('reply')
+        fault = lb.get('fault')
         if msg is None:
-            result = self.__reply(method, lb.get('reply'))
-        else:
-            result = self.__send(method, msg, kwargs)
-        return result
+            if reply is not None:
+                return self.__reply(method, reply)
+            if fault is not None:
+                return self.__fault(method, fault)
+            raise Exception('(reply|fault) expected when msg=None')
+        return self.__send(method, msg, kwargs)
         
     def __send(self, method, msg, kwargs):
         """ send the supplied soap message """
@@ -480,6 +484,15 @@ class SimClient(SoapClient):
         binding = self.wsdl.method(method.name).binding.output
         binding.faults = self.arg.faults
         return self.succeeded(binding, method, reply)
+    
+    def __fault(self, method, reply):
+        """ simulate the (fault) reply """
+        binding = self.wsdl.method(method.name).binding.output
+        binding.faults = self.arg.faults
+        if self.arg.faults:
+            return (500, binding.get_fault(reply))
+        else:
+            return (500, None)
 
 
 class ServiceDefinition:
