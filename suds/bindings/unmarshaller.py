@@ -107,15 +107,28 @@ class UMBase:
     def append_attributes(self, content):
         """
         Append attribute nodes into L{Content.data}.
+        Attributes in the I{schema} or I{xml} namespaces are skipped.
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
         for attr in content.node.attributes:
-            ns = attr.namespace()
-            if Namespace.xs(ns): continue
+            if self.skipattr(attr):
+                continue
             name = attr.name
             value = attr.value
             self.append_attr(name, value, content)
+
+    def skipattr(self, attr):
+        """
+        Get whether to skip or include the specified attribute.
+        Attributes in the I{schema} or I{xml} namespaces are skipped.
+        @param attr: An attribute to check.
+        @type attr: L{sax.attribute.Attribute}
+        @return: True if the attribute should be skipped.
+        @rtype: boolean
+        """
+        ns = attr.namespace()
+        return ( Namespace.xs(ns) or ns[1] == Namespace.xmlns[1] )
             
     def append_attr(self, name, value, content):
         """
