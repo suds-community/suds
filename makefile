@@ -43,6 +43,11 @@ rpm: dist
 	cp /usr/src/redhat/RPMS/noarch/*.rpm dist
 	cp /usr/src/redhat/SRPMS/*.rpm dist
 
+register: FORCE
+	sed -e "s/python-suds/suds/g" setup.py > reg.py
+	python reg.py register
+	rm -f reg.py
+
 clean: FORCE
 	rm -rf dist
 	rm -rf *.egg-info
