@@ -51,6 +51,19 @@ def asdict(sobject):
     """
     return dict(items(sobject))
 
+def merge(a, b):
+    """
+    Merge all attributes and metadata from I{a} to I{b}.
+    @param a: A I{source} object
+    @type a: L{Object}
+    @param b: A I{destination} object
+    @type b: L{Object}
+    """
+    for item in items(a):
+        setattr(b, item[0], item[1])
+        b.__metadata__ = b.__metadata__
+    return b
+
 
 class Factory:
     
@@ -175,13 +188,13 @@ class Printer:
         """ print object using the specified indent (n) and newline (nl). """
         if object is None:
             return 'None'
+        if isinstance(object, Property):
+            return self.print_property(object, h)
         if isinstance(object, Object):
             if len(object) == 0:
                 return '<empty>'
             else:
                 return self.print_object(object, h, n+2, nl)
-        if isinstance(object, Property):
-            return self.print_property(object, h)
         if isinstance(object, dict):
             if len(object) == 0:
                 return '<empty>'
@@ -206,7 +219,7 @@ class Printer:
             s.append('...')
             return ''.join(s)
         h.append(d)
-        s.append('=')
+        s.append(' = ')
         s.append(self.process(d.value, h))
         h.pop()
         return ''.join(s)
