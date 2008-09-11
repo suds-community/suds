@@ -89,20 +89,39 @@ class UMBase:
     def append(self, content):
         """
         Process the specified node and convert the XML document into
-        a I{suds} L{object}.
+        an L{Object}.  Some processing rules:
+          - Nodes that have: attributes B{or} child nodes B{and} contain I{text} cannot 
+             be represended by an L{Object} so the L{node<sax.element.Element>} is 
+             set as the I{value} component of the returned tuple. 
+          -  Nodes without attributes B{or} children are considered I{simple} in which 
+             case the I{text} is set as the I{value} component of the returned tuple.
         @param content: The current content being unmarshalled.
         @type content: L{Content}
-        @return: A suds object.
-        @rtype: L{Object}
+        @return: An I{appendResult} tuple as: (L{Object}, I{value}).
+        @rtype: I{appendResult}
         @note: This is not the proper entry point.
         @see: L{process()}
         """
         self.start(content)
-        self.append_attributes(content)
-        self.append_children(content)
-        self.append_text(content)
-        self.end(content)
-        return content.data, self.postprocess(content)
+        try:
+            node = content.node
+            if len(node.children) or len(AttrList(node.attributes)):
+                if node.getText() is not None:
+                    return (content.data, node)
+            else:
+                if node.getText() is None:
+                    if self.nillable(content.data) and content.node.isnil():
+                        return (content.data, None)
+                    else:
+                        return (content.data, '')
+                else:
+                    return (content.data, node.getText())
+            self.append_attributes(content)
+            self.append_children(content)
+            self.append_text(content)
+            return (content.data, content.data)
+        finally:
+            self.end(content)
     
     def append_attributes(self, content):
         """
@@ -111,26 +130,12 @@ class UMBase:
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
-        for attr in content.node.attributes:
-            if self.skipattr(attr):
-                continue
+        for attr in AttrList(content.node.attributes):
             name = attr.name
             value = attr.value
-            self.append_attr(name, value, content)
-
-    def skipattr(self, attr):
-        """
-        Get whether to skip or include the specified attribute.
-        Attributes in the I{schema} or I{xml} namespaces are skipped.
-        @param attr: An attribute to check.
-        @type attr: L{sax.attribute.Attribute}
-        @return: True if the attribute should be skipped.
-        @rtype: boolean
-        """
-        ns = attr.namespace()
-        return ( Namespace.xs(ns) or ns[1] == Namespace.xmlns[1] )
+            self.append_attribute(name, value, content)
             
-    def append_attr(self, name, value, content):
+    def append_attribute(self, name, value, content):
         """
         Append an attribute name/value into L{Content.data}.
         @param name: The attribute name
@@ -175,29 +180,8 @@ class UMBase:
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
-        text = content.node.getText()
-        if text is not None and \
-            len(text):
-                content.text = text
-            
-    def postprocess(self, content):
-        """
-        Perform final processing of the resulting data structure as follows:
-        simple elements (not attrs or children) with text nodes will have a string 
-        result equal to the value of the text node.
-        @param content: The current content being unmarshalled.
-        @type content: L{Content}
-        @return: The post-processed result.
-        @rtype: (L{Object}|I{list}|I{str}) 
-        """
-        if len(content.data):
-            return content.data
-        if content.text is None:
-            if self.nillable(content.data) and content.node.isnil():
-                return None
-            else:
-                return ''
-        return content.text
+        if content.node.hasText():
+            content.text = content.node.getText()
         
     def reset(self):
         pass
@@ -369,7 +353,7 @@ class Typed(UMBase):
             log.error('metadata error:\n%s', data, exc_info=True)
         return False
     
-    def append_attr(self, name, value, content):
+    def append_attribute(self, name, value, content):
         """
         Append an attribute name/value into L{Content.data}.
         @param name: The attribute name
@@ -385,7 +369,7 @@ class Typed(UMBase):
         else:
             resolved = type.resolve()
             value = type.translate(value)
-        UMBase.append_attr(self, name, value, content)
+        UMBase.append_attribute(self, name, value, content)
     
     def append_text(self, content):
         """
@@ -395,5 +379,37 @@ class Typed(UMBase):
         """
         UMBase.append_text(self, content)
         resolved = content.type.resolve()
-        content.text = \
-            resolved.translate(content.text)
+        content.text = resolved.translate(content.text)
+
+
+class AttrList:
+    """
+    A filtered attribute list.
+    Items are included during iteration if they are in either the (xs) or
+    (xml) namespaces.
+    """
+    def __init__(self, attributes):
+        self.attributes = attributes
+
+    def __len__(self):
+        return len(self.attributes)
+
+    def __iter__(self):
+        return self.myiter(self.attributes)
+
+    class myiter:
+        def __init__(self, attributes):
+            self.iter = iter(attributes)
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            while(1):
+                attr = self.iter.next()
+                if self.skip(attr): continue
+                return attr
+
+        def skip(self, attr):
+            ns = attr.namespace()
+            return ( Namespace.xs(ns) or ns[1] == Namespace.xmlns[1] )

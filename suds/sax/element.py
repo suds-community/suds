@@ -230,6 +230,15 @@ class Element:
             result = result.strip()
         return result
     
+    def hasText(self):
+        """
+        Get whether the element has I{text} and that it is not an empty
+        (zero length) string.
+        @return: True when has I{text}.
+        @rtype: boolean
+        """
+        return ( self.text is not None and len(self.text) )
+    
     def attrib(self, name, ns=None):
         """
         Get an attribute by name and (optional) namespace
