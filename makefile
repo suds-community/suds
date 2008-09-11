@@ -15,42 +15,52 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 #
 
+SPEC = suds.spec
+PUBSPEC = .pubsuds.spec
+SETUP = setup.py
+PUBSETUP = .pubsetup.py
+
 all: rpm tar egg
 
+egg: clean
+	sed -e "s/python-suds/suds/g" $(SETUP) > $(PUBSETUP)
+	python $(PUBSETUP) bdist_egg
+	rm -rf *.egg-info
+	rm -f $(PUBSETUP)
+
+pdist: clean
+	sed -e "s/python-suds/suds/g" $(SETUP) > $(PUBSETUP)
+	python $(PUBSETUP) sdist
+	rm -rf *.egg-info
+	rm -f $(PUBSETUP)
+
 dist: clean
-	python setup.py sdist
+	python $(SETUP) sdist
 	rm -rf *.egg-info
-
-egg: FORCE
-	python setup.py bdist_egg
-	cd dist; mv *.egg `ls *.egg|cut -c8-`
-	rm -rf *.egg-info
-
-tar: dist
-	cd dist; \
-	rm -rf tmp; \
-	mkdir tmp; \
-	cd tmp; \
-	tar xzvf ../*.gz; \
-	cd `ls`; \
-	tar czvf ../../`ls ../|cut -c8-`.tar.gz *
-	rm -rf dist/tmp
 
 rpm: dist
-	cp dist/*.gz /usr/src/redhat/SOURCES
-	cp suds.spec /usr/src/redhat/SPECS
-	rpmbuild -ba suds.spec
-	cp /usr/src/redhat/RPMS/noarch/*.rpm dist
-	cp /usr/src/redhat/SRPMS/*.rpm dist
+	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
+	rpmbuild -ba $(SPEC)
+	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
+	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
+
+prpm: pdist
+	cp dist/suds*.gz /usr/src/redhat/SOURCES
+	sed -e "s/python-suds/suds/g;s/$(SETUP)/$(PUBSETUP)/g" $(SPEC) > $(PUBSPEC)
+	rpmbuild -ba $(PUBSPEC)
+	cp /usr/src/redhat/RPMS/noarch/suds*.rpm dist
+	cp /usr/src/redhat/SRPMS/suds*.rpm dist
+	rm -f $(PUBSPEC)
 
 register: FORCE
-	sed -e "s/python-suds/suds/g" setup.py > reg.py
-	python reg.py register
-	rm -f reg.py
+	sed -e "s/python-suds/suds/g" $(SETUP) > $(PUBSETUP)
+	python $(PUBSETUP) register
+	rm -f $(PUBSETUP)
 
 clean: FORCE
 	rm -rf dist
 	rm -rf *.egg-info
 	find . -name "*.pyc" -exec rm -f {} \;
+	rm -f $(PUBSETUP) $(PUBSPEC)
 
 FORCE:
