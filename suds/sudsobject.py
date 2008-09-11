@@ -59,10 +59,11 @@ class Factory:
     @classmethod
     def subclass(cls, name, super):
         name = name.encode('utf-8')
-        myclass = cls.cache.get(name)
+        key = "%s.%s" % (name, super.__name__)
+        myclass = cls.cache.get(key)
         if myclass is None:
             myclass = classobj(name,(super,),{})
-            cls.cache[name] = myclass
+            cls.cache[key] = myclass
         init = '__init__'
         src = 'def %s(self):\n' % init
         src += '\t%s.%s(self)\n' % (super.__name__,init)
