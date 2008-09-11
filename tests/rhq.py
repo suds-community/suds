@@ -40,7 +40,7 @@ setup_logging()
 def start(url):
     global errors
     print '\n________________________________________________________________\n' 
-    print 'Test @ ( %s )\nerrors = %d\n' % (url, errors)
+    print 'Test @ ( %s ) %d' % (url, errors)
 
 def basic_doc_literal():
     

@@ -33,8 +33,9 @@ setup_logging()
 #logging.getLogger('suds').setLevel(logging.DEBUG)
 
 def start(url):
+    global errors
     print '\n________________________________________________________________\n' 
-    print 'Test @ ( %s )' % url
+    print 'Test @ ( %s ) %d' % (url, errors)
     
 try:
     url = 'http://www.zenfolio.com/zf/api/zfapi.asmx?wsdl'
