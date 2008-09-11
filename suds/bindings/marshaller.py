@@ -106,8 +106,8 @@ class ContentAppender:
         self.default = PrimativeAppender(marshaller)
         self.appenders = (
             (M(None), NoneAppender(marshaller)),
-            (M(Object), ObjectAppender(marshaller)),
             (M(Property), PropertyAppender(marshaller)),
+            (M(Object), ObjectAppender(marshaller)),
             (M(Element), ElementAppender(marshaller)),
             (M(list), ListAppender(marshaller)),
             (M(tuple), ListAppender(marshaller)),
@@ -260,10 +260,12 @@ class PropertyAppender(Appender):
         @type content: L{Object}
         """
         p = content.value
-        parent.setText(p.get())
+        child = self.node(content)
+        child.setText(p.get())
+        parent.append(child)
         for item in p.items():
             cont = Content(item[0], item[1])
-            Appender.append(self, parent, cont)
+            Appender.append(self, child, cont)
 
             
 class ObjectAppender(Appender):

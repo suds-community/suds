@@ -20,7 +20,7 @@ Provides classes for XML->object I{unmarshalling}.
 
 from logging import getLogger
 from suds import *
-from suds.sudsobject import Factory, Object
+from suds.sudsobject import Factory, Object, merge
 from suds.sax import Namespace
 from suds.resolver import NodeResolver
 
@@ -89,39 +89,50 @@ class UMBase:
     def append(self, content):
         """
         Process the specified node and convert the XML document into
-        an L{Object}.  Some processing rules:
-          - Nodes that have: attributes B{or} child nodes B{and} contain I{text} cannot 
-             be represended by an L{Object} so the L{node<sax.element.Element>} is 
-             set as the I{value} component of the returned tuple. 
-          -  Nodes without attributes B{or} children are considered I{simple} in which 
-             case the I{text} is set as the I{value} component of the returned tuple.
+        a I{suds} L{object}.
         @param content: The current content being unmarshalled.
         @type content: L{Content}
-        @return: An I{appendResult} tuple as: (L{Object}, I{value}).
-        @rtype: I{appendResult}
+        @return: A I{append-result} tuple as: (L{Object}, I{value})
+        @rtype: I{append-result}
         @note: This is not the proper entry point.
         @see: L{process()}
         """
         self.start(content)
-        try:
-            node = content.node
-            if len(node.children) or len(AttrList(node.attributes)):
-                if node.getText() is not None:
-                    return (content.data, node)
+        self.append_attributes(content)
+        self.append_children(content)
+        self.append_text(content)
+        self.end(content)
+        return content.data, self.postprocess(content)
+            
+    def postprocess(self, content):
+        """
+        Perform final processing of the resulting data structure as follows:
+          - Mixed values (children and text) will have a result of the I{content.node}.
+          - Simi-simple values (attributes, no-children and text) will have a result of a
+             property object.
+          - Simple values (no-attributes, no-children with text nodes) will have a string 
+             result equal to the value of the content.node.getText().
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
+        @return: The post-processed result.
+        @rtype: I{any}
+        """
+        node = content.node
+        if len(node.children) and node.hasText():
+            return node
+        if len(AttrList(node.attributes)) and \
+            not len(node.children) and \
+            node.hasText():
+                p = Factory.property(node.name, node.getText())
+                return merge(content.data, p)
+        if len(content.data):
+            return content.data
+        if not len(node.children) and content.text is None:
+            if self.nillable(content.data) and content.node.isnil():
+                return None
             else:
-                if node.getText() is None:
-                    if self.nillable(content.data) and content.node.isnil():
-                        return (content.data, None)
-                    else:
-                        return (content.data, '')
-                else:
-                    return (content.data, node.getText())
-            self.append_attributes(content)
-            self.append_children(content)
-            self.append_text(content)
-            return (content.data, content.data)
-        finally:
-            self.end(content)
+                return ''
+        return content.text
     
     def append_attributes(self, content):
         """
@@ -392,7 +403,9 @@ class AttrList:
         self.attributes = attributes
 
     def __len__(self):
-        return len(self.attributes)
+        n = 0
+        for a in self: n += 1
+        return n
 
     def __iter__(self):
         return self.myiter(self.attributes)
