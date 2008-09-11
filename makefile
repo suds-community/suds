@@ -16,26 +16,16 @@
 #
 
 SPEC = suds.spec
-PUBSPEC = .pubsuds.spec
 SETUP = setup.py
-PUBSETUP = .pubsetup.py
 
-all: rpm tar egg
+all: rpm egg
 
 egg: clean
-	sed -e "s/python-suds/suds/g" $(SETUP) > $(PUBSETUP)
-	python $(PUBSETUP) bdist_egg
+	python $(SETUP) bdist_egg register upload
 	rm -rf *.egg-info
-	rm -f $(PUBSETUP)
-
-pdist: clean
-	sed -e "s/python-suds/suds/g" $(SETUP) > $(PUBSETUP)
-	python $(PUBSETUP) sdist
-	rm -rf *.egg-info
-	rm -f $(PUBSETUP)
 
 dist: clean
-	python $(SETUP) sdist
+	python $(SETUP) sdist register upload
 	rm -rf *.egg-info
 
 rpm: dist
@@ -44,23 +34,14 @@ rpm: dist
 	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
 	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
 
-prpm: pdist
-	cp dist/suds*.gz /usr/src/redhat/SOURCES
-	sed -e "s/python-suds/suds/g;s/$(SETUP)/$(PUBSETUP)/g" $(SPEC) > $(PUBSPEC)
-	rpmbuild -ba $(PUBSPEC)
-	cp /usr/src/redhat/RPMS/noarch/suds*.rpm dist
-	cp /usr/src/redhat/SRPMS/suds*.rpm dist
-	rm -f $(PUBSPEC)
-
 register: FORCE
-	sed -e "s/python-suds/suds/g" $(SETUP) > $(PUBSETUP)
-	python $(PUBSETUP) register
-	rm -f $(PUBSETUP)
+	sed -e "s/python-suds/suds/g" $(SETUP) > .regsetup.py
+	python .regsetup.py register upload
+	rm -f .regsetup.py
 
 clean: FORCE
 	rm -rf dist
 	rm -rf *.egg-info
 	find . -name "*.pyc" -exec rm -f {} \;
-	rm -f $(PUBSETUP) $(PUBSPEC)
 
 FORCE:
