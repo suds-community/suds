@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 from suds import properties
 
 setup(
-    name="python-suds",
+    name="suds",
     version=properties['version'],
     description="Lightweight SOAP client",
     author="Jeff Ortel",
