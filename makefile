@@ -17,16 +17,20 @@
 
 SPEC = suds.spec
 SETUP = setup.py
+pythonSETUP = .python-suds
 
 all: rpm egg
 
-egg: FORCE
+egg: clean
 	python $(SETUP) bdist_egg
 	rm -rf *.egg-info
 
-dist: FORCE
+dist: clean
+	sed -e "s/name=\"suds\"/name=\"python-suds\"/" $(SETUP) > $(pythonSETUP)
 	python $(SETUP) sdist
+	python $(pythonSETUP) sdist
 	rm -rf *.egg-info
+	rm -f $(pythonSETUP)
 
 rpm: dist
 	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
@@ -35,9 +39,7 @@ rpm: dist
 	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
 
 register: FORCE
-	sed -e "s/python-suds/suds/g" $(SETUP) > .regsetup.py
-	python .regsetup.py sdist bdist_egg register upload
-	rm -f .regsetup.py
+	python setup.py sdist bdist_egg register upload
 
 clean: FORCE
 	rm -rf dist
