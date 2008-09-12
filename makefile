@@ -21,11 +21,16 @@ SETUP = setup.py
 all: rpm egg
 
 egg: clean
-	python $(SETUP) bdist_egg register upload
+	python $(SETUP) bdist_egg
 	rm -rf *.egg-info
 
 dist: clean
+	python $(SETUP) sdist
+	rm -rf *.egg-info
+
+register: clean
 	python $(SETUP) sdist register upload
+	python $(SETUP) bdist_egg register upload
 	rm -rf *.egg-info
 
 rpm: dist
