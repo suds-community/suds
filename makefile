@@ -28,11 +28,6 @@ dist: FORCE
 	python $(SETUP) sdist
 	rm -rf *.egg-info
 
-register: FORCE
-	python $(SETUP) sdist register upload
-	python $(SETUP) bdist_egg register upload
-	rm -rf *.egg-info
-
 rpm: dist
 	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
 	rpmbuild -ba $(SPEC)
@@ -41,7 +36,7 @@ rpm: dist
 
 register: FORCE
 	sed -e "s/python-suds/suds/g" $(SETUP) > .regsetup.py
-	python .regsetup.py register upload
+	python .regsetup.py sdist bdist_egg register upload
 	rm -f .regsetup.py
 
 clean: FORCE
