@@ -20,15 +20,15 @@ SETUP = setup.py
 
 all: rpm egg
 
-egg: clean
+egg: FORCE
 	python $(SETUP) bdist_egg
 	rm -rf *.egg-info
 
-dist: clean
+dist: FORCE
 	python $(SETUP) sdist
 	rm -rf *.egg-info
 
-register: clean
+register: FORCE
 	python $(SETUP) sdist register upload
 	python $(SETUP) bdist_egg register upload
 	rm -rf *.egg-info
