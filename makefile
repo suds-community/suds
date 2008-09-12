@@ -19,7 +19,7 @@ SPEC = suds.spec
 SETUP = setup.py
 pythonSETUP = .python-suds
 
-all: rpm egg
+all: rpm
 
 egg: clean
 	python $(SETUP) bdist_egg
@@ -27,8 +27,8 @@ egg: clean
 
 dist: clean
 	sed -e "s/name=\"suds\"/name=\"python-suds\"/" $(SETUP) > $(pythonSETUP)
-	python $(SETUP) sdist
-	python $(pythonSETUP) sdist
+	python $(SETUP) sdist bdist_egg
+	python $(pythonSETUP) sdist bdist_egg
 	rm -rf *.egg-info
 	rm -f $(pythonSETUP)
 
