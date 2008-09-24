@@ -127,7 +127,7 @@ class Binding:
         @return: The unmarshalled reply.  The returned value is an L{Object} for a
             I{list} depending on whether the service returns a single object or a 
             collection.
-        @rtype: L{Object}
+        @rtype: tuple ( L{Element}, L{Object} )
         """
         replyroot = self.parser.parse(string=reply)
         soapenv = replyroot.getChild('Envelope')
@@ -207,7 +207,7 @@ class Binding:
         @param reply: A soap reply message.
         @type reply: str
         @return: A fault object.
-        @rtype: L{Object}
+        @rtype: tuple ( L{Element}, L{Object} )
         """
         faultroot = self.parser.parse(string=reply)
         soapenv = faultroot.getChild('Envelope')
