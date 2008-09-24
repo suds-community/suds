@@ -424,7 +424,7 @@ class AttrList:
     def rlen(self):
         """
         Get the number of I{real} attributes which exclude xs and xml attributes.
-        @return:A count of I{real} attributes. 
+        @return: A count of I{real} attributes. 
         @rtype: L{int}
         """
         n = 0
