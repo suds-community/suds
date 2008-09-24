@@ -30,6 +30,7 @@ from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import Definitions
 from suds.sax import Namespace
+from suds.sax.document import Document
 
 log = getLogger(__name__)
 
@@ -65,6 +66,22 @@ class Client(object):
         self.service = Service(client)
         self.factory = Factory(client.wsdl)
         self.sd = ServiceDefinition(client.wsdl)
+        
+    def last_sent(self):
+        """
+        Get last sent I{soap} message.
+        @return: The last sent I{soap} message.
+        @rtype: L{Document}
+        """
+        return self.service.__client__.last_sent
+    
+    def last_received(self):
+        """
+        Get last received I{soap} message.
+        @return: The last received I{soap} message.
+        @rtype: L{Document}
+        """
+        return self.service.__client__.last_received
         
     def items(self, sobject):
         """
@@ -274,6 +291,7 @@ class SoapClient:
         self.builder = Builder(self.wsdl)
         self.cookiejar = CookieJar()
         self.last_sent = None
+        self.last_received = None
         
     def invoke(self, method, args, kwargs):
         """
@@ -321,8 +339,8 @@ class SoapClient:
         binding = self.wsdl.method(method.name).binding.input
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
-            self.last_sent = msg
-            request = Request(location, msg, headers)
+            self.last_sent = Document(msg)
+            request = Request(location, str(msg), headers)
             self.cookiejar.add_cookie_header(request) 
             self.set_proxies(location, request)
             fp = self.urlopen(request)
@@ -389,7 +407,8 @@ class SoapClient:
         """
         log.debug('http succeeded:\n%s', reply)
         if len(reply) > 0:
-            p = binding.get_reply(method.name, reply)
+            r, p = binding.get_reply(method.name, reply)
+            self.last_received = r
             if self.arg.faults:
                 return p
             else:
@@ -412,7 +431,9 @@ class SoapClient:
         log.debug('http failed:\n%s', reply)
         if status == 500:
             if len(reply) > 0:
-                return (status, binding.get_fault(reply))
+                r, p = binding.get_fault(reply)
+                self.last_received = r
+                return (status, p)
             else:
                 return (status, None)
         if self.arg.faults:

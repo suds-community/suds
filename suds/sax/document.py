@@ -28,8 +28,10 @@ log = getLogger(__name__)
 class Document(Element):
     """ simple document """
 
-    def __init__(self):
+    def __init__(self, root=None):
         Element.__init__(self, 'document')
+        if root is not None:
+            self.append(root)
         
     def root(self):
         if len(self.children) > 0:

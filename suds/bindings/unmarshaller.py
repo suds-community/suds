@@ -120,19 +120,21 @@ class UMBase:
         node = content.node
         if len(node.children) and node.hasText():
             return node
-        if len(AttrList(node.attributes)) and \
+        attributes = AttrList(node.attributes)
+        if attributes.rlen() and \
             not len(node.children) and \
             node.hasText():
                 p = Factory.property(node.name, node.getText())
                 return merge(content.data, p)
         if len(content.data):
             return content.data
+        lang = attributes.lang()
         if not len(node.children) and content.text is None:
             if self.nillable(content.data) and content.node.isnil():
                 return None
             else:
-                return ''
-        return content.text
+                return xlstr.string('', lang)
+        return xlstr.string(content.text, lang)
     
     def append_attributes(self, content):
         """
@@ -141,7 +143,8 @@ class UMBase:
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
-        for attr in AttrList(content.node.attributes):
+        attributes = AttrList(content.node.attributes)
+        for attr in attributes.real():
             name = attr.name
             value = attr.value
             self.append_attribute(name, value, content)
@@ -398,31 +401,60 @@ class AttrList:
     A filtered attribute list.
     Items are included during iteration if they are in either the (xs) or
     (xml) namespaces.
+    @ivar raw: The I{raw} attribute list.
+    @type raw: list
     """
     def __init__(self, attributes):
-        self.attributes = attributes
-
-    def __len__(self):
+        """
+        @param attributes: A list of attributes
+        @type attributes: list
+        """
+        self.raw = attributes
+        
+    def real(self):
+        """
+        Get list of I{real} attributes which exclude xs and xml attributes.
+        @return: A list of I{real} attributes.
+        @rtype: I{generator}
+        """
+        for a in self.raw:
+            if self.skip(a): continue
+            yield a
+            
+    def rlen(self):
+        """
+        Get the number of I{real} attributes which exclude xs and xml attributes.
+        @return:A count of I{real} attributes. 
+        @rtype: L{int}
+        """
         n = 0
-        for a in self: n += 1
+        for a in self.real():
+            n += 1
         return n
+            
+    def lang(self):
+        """
+        Get list of I{filtered} attributes which exclude xs.
+        @return: A list of I{filtered} attributes.
+        @rtype: I{generator}
+        """
+        for a in self.raw:
+            if a.qname() == 'xml:lang':
+                return a.value
+            return None
 
-    def __iter__(self):
-        return self.myiter(self.attributes)
+    def skip(self, attr):
+        ns = attr.namespace()
+        return ( Namespace.xs(ns) or ns[1] == Namespace.xmlns[1] )
 
-    class myiter:
-        def __init__(self, attributes):
-            self.iter = iter(attributes)
 
-        def __iter__(self):
-            return self
-
-        def next(self):
-            while(1):
-                attr = self.iter.next()
-                if self.skip(attr): continue
-                return attr
-
-        def skip(self, attr):
-            ns = attr.namespace()
-            return ( Namespace.xs(ns) or ns[1] == Namespace.xmlns[1] )
+class xlstr(unicode):
+    """ language aware string """
+    @classmethod
+    def string(cls, s, lang=None):
+        xls = xlstr(s)
+        xls.lang = lang
+        return xls
+    def __init__(self, s):
+        unicode.__init__(self, s)
+        self.lang = None

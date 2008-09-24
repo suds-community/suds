@@ -114,7 +114,7 @@ class Binding:
                 method.append(p)
             n += 1
         env.promotePrefixes()
-        return str(env)
+        return env
     
     def get_reply(self, method, reply):
         """
@@ -135,14 +135,17 @@ class Binding:
         nodes = soapbody[0].children
         rtypes = self.returned_types(method)
         if len(rtypes) == 1 and rtypes[0].unbounded():
-            return self.reply_list(rtypes[0], nodes)
+            result = self.reply_list(rtypes[0], nodes)
+            return (replyroot, result)
         if len(nodes) > 1:
-            return self.reply_composite(rtypes, nodes)
+            result = self.reply_composite(rtypes, nodes)
+            return (replyroot, result)
         if len(nodes) == 1:
             unmarshaller = self.unmarshaller.typed
             resolved = rtypes[0].resolve(nobuiltin=True)
-            return unmarshaller.process(nodes[0], resolved)
-        return None
+            result = unmarshaller.process(nodes[0], resolved)
+            return (replyroot, result)
+        return (replyroot, None)
     
     def reply_list(self, rt, nodes):
         """
@@ -213,9 +216,8 @@ class Binding:
         unmarshaller = self.unmarshaller.basic
         p = unmarshaller.process(fault)
         if self.faults:
-            raise WebFault(p)
-        else:
-            return p.detail
+            raise WebFault(p, faultroot)
+        return (faultroot, p.detail)
     
     def param(self, method, pdef, object):
         """
