@@ -83,6 +83,8 @@ def basic_doc_literal():
         #
         print 'addPersion()'
         result = client.service.addPerson(person)
+        sent = client.last_sent()
+        rcvd = client.last_received()
         print '\nreply(\n%s\n)\n' % result
         #
         # create a new name object used to update the person
@@ -189,6 +191,7 @@ def basic_doc_literal():
     except WebFault, f:
         print f
         print f.fault
+        print f.document
     except Exception, e:
         errors += 1
         print e
@@ -201,8 +204,10 @@ def basic_doc_literal():
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceTestBean?wsdl'
         start(url)
         client = Client(url, faults=False)
-        print 'testExceptions()'
+        print 'testExceptions() faults=No'
         result = client.service.testExceptions()
+        sent = client.last_sent()
+        rcvd = client.last_received()
         print '\nreply( %s )\n' % str(result)
     except WebFault, f:
         errors += 1

@@ -55,10 +55,11 @@ class BuildError(Exception):
         Exception.__init__(self, BuildError.msg % name)
     
 class WebFault(Exception):
-    def __init__(self, fault):
+    def __init__(self, fault, document):
         if hasattr(fault, 'faultstring'):
             Exception.__init__(self, "Server raised fault: '%s'" % fault.faultstring)
         self.fault = fault
+        self.document = document
 
 #
 # Logging
