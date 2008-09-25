@@ -31,6 +31,7 @@ from suds.builder import Builder
 from suds.wsdl import Definitions
 from suds.sax import Namespace
 from suds.sax.document import Document
+from sax.parser import Parser
 
 log = getLogger(__name__)
 
@@ -487,6 +488,7 @@ class SimClient(SoapClient):
             if fault is not None:
                 return self.__fault(method, fault)
             raise Exception('(reply|fault) expected when msg=None')
+        msg = Parser().parse(string=msg)
         return self.__send(method, msg, kwargs)
         
     def __send(self, method, msg, kwargs):
@@ -511,7 +513,9 @@ class SimClient(SoapClient):
         binding = self.wsdl.method(method.name).binding.output
         binding.faults = self.arg.faults
         if self.arg.faults:
-            return (500, binding.get_fault(reply))
+            r, p = binding.get_fault(reply)
+            self.last_received = r
+            return (500, p)
         else:
             return (500, None)
 
