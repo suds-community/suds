@@ -699,6 +699,9 @@ class Element:
                 ns = node.resolvePrefix(prefix)
             result = child.getChildren(leaf)
         return result
+    
+    def __len__(self):
+        return len(self.children)
                 
     def __getitem__(self, index):
         if isinstance(index, basestring):
