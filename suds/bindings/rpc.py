@@ -38,6 +38,27 @@ class RPC(Binding):
         """
         Binding.__init__(self, wsdl)
         
+    def bodycontent(self, method, args):
+        """
+        Get the content for the soap I{body}.
+        @param method: The method name.
+        @type method: str
+        @param args: method parameter values
+        @type args: list
+        @return: The xml content for the <body/>
+        @rtype: L{Element}
+        """
+        n = 0
+        root = self.method(method)
+        pdefs = self.param_defs(method)
+        for arg in args:
+            if len(pdefs) == n: break
+            p = self.param(method, pdefs[n], arg)
+            if p is not None:
+                root.append(p)
+            n += 1
+        return root
+        
     def method(self, name):
         """
         Get the document root.  For I{rpc/(literal|encoded)}, this is the
@@ -50,3 +71,14 @@ class RPC(Binding):
         ns = self.wsdl.method(name).soap.input.body.namespace
         method = Element(name, ns=ns)
         return method
+
+    def param_defs(self, method):
+        """
+        Get parameter definitions.  
+        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
+        @param method: A method name.
+        @type method: basestring
+        @return: A collection of parameter definitions
+        @rtype: [I{pdef},..]
+        """
+        return self.part_types(method)
