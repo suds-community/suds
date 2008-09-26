@@ -87,12 +87,12 @@ class Binding:
         self.encoded = True
         return self
 
-    def get_message(self, method_name, args, soapheaders):
+    def get_message(self, method, args, soapheaders):
         """
         Get the soap message for the specified method, args and soapheaders.
         This is the entry point for creating the outbound soap message.
-        @param method_name: The name of the method being invoked.
-        @type method_name: str
+        @param method: The name of the method being invoked.
+        @type method: str
         @param args: A I{list} of method arguments (parameters).
         @type args: list
         @param soapheaders: A list of objects to be encoded as soap-headers.
@@ -100,19 +100,10 @@ class Binding:
         @return: The soap message.
         @rtype: str
         """
-        method = self.method(method_name)
-        body = self.body(method)
+        content = self.bodycontent(method, args)
+        body = self.body(content)
         header = self.header(soapheaders)
         env = self.envelope(body, header)
-        ptypes = self.param_defs(method_name)
-        n = 0
-        for arg in args:
-            if n == len(ptypes): break
-            pdef = ptypes[n]
-            p = self.param(method_name, pdef, arg)
-            if p is not None:
-                method.append(p)
-            n += 1
         env.promotePrefixes()
         return env
     
@@ -328,17 +319,6 @@ class Binding:
             else:
                 result.append(pt)
         return result
-    
-    def param_defs(self, method):
-        """
-        Get parameter definitions.  
-        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
-        @param method: A method name.
-        @type method: basestring
-        @return: A collection of parameter definitions
-        @rtype: [I{pdef},..]
-        """
-        return self.part_types(method)
     
     def returned_types(self, method):
         """

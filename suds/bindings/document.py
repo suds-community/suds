@@ -30,6 +30,12 @@ class Document(Binding):
     """
     The document/literal style.  Literal is the only (@use) supported
     since document/encoded is pretty much dead.
+    Although the soap specification supports multiple documents within the soap
+    <body/>, it is very uncommon.  As such, suds presents an I{RPC} view of
+    service methods defined with a single document parameter.  This is done so 
+    that the user can pass individual parameters instead of one, single document.
+    To support the complete specification, service methods defined with multiple documents
+    (multiple message parts), must present a I{document} view for that method.
     """
 
     def __init__(self, wsdl):
@@ -39,21 +45,44 @@ class Document(Binding):
         """
         Binding.__init__(self, wsdl)
         
-    def method(self, name):
+    def bodycontent(self, method, args):
+        """
+        Get the content for the soap I{body} node.
+        @param method: The method name.
+        @type method: str
+        @param args: method parameter values
+        @type args: list
+        @return: The xml content for the <body/>
+        @rtype: [L{Element]},..]
+        """
+        n = 0
+        pts = self.part_types(method)
+        root = self.document(pts)
+        pdefs = self.param_defs(method)
+        for arg in args:
+            if len(pdefs) == n: break
+            p = self.param(method, pdefs[n], arg)
+            if p is not None:
+                root.append(p)
+            n += 1
+        if len(pts) > 1:
+            return root.children
+        else:
+            return root
+        
+    def document(self, pts):
         """
         Get the document root.  For I{document/literal}, this is the
         name of the wrapper element qualifed by the schema tns.
-        @param name: The method name.
-        @type name: str
+        @param method: The method name.
+        @type method: str
         @return: A root element.
         @rtype: L{Element}
         """
-        pts = self.part_types(name)
-        wt = pts[0]
-        tag = wt[1].name
-        ns = wt[1].namespace()
-        method = Element(tag, ns=ns)
-        return method
+        tag = pts[0][1].name
+        ns = pts[0][1].namespace()
+        d = Element(tag, ns=ns)
+        return d
         
     def param_defs(self, method):
         """
@@ -63,8 +92,11 @@ class Document(Binding):
         @return: A collection of parameter definitions
         @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
         """
+        pts = self.part_types(method)
+        if len(pts) > 1:
+            return pts
         result = []
-        for p in self.part_types(method):
+        for p in pts:
             resolved = p[1].resolve()
             for c in resolved.children:
                 result.append((c.name, c))
