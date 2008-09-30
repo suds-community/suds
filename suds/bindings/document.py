@@ -48,12 +48,12 @@ class Document(Binding):
     def bodycontent(self, method, args):
         """
         Get the content for the soap I{body} node.
-        @param method: The method name.
-        @type method: str
+        @param method: A service method.
+        @type method: I{service.Method}
         @param args: method parameter values
         @type args: list
         @return: The xml content for the <body/>
-        @rtype: [L{Element]},..]
+        @rtype: [L{Element},..]
         """
         n = 0
         pts = self.part_types(method)
@@ -74,8 +74,8 @@ class Document(Binding):
         """
         Get the document root.  For I{document/literal}, this is the
         name of the wrapper element qualifed by the schema tns.
-        @param method: The method name.
-        @type method: str
+        @param pts: The method name.
+        @type pts: str
         @return: A root element.
         @rtype: L{Element}
         """
