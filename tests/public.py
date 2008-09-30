@@ -42,6 +42,7 @@ try:
     start(url)
     client = Client(url)
     print client
+    client.setport(0)
     group = client.factory.create('Group')
     print 'Group:\n%s' % group
     print 'LoadGroupHierarchy("demo")'
@@ -61,7 +62,7 @@ try:
     start(url)
     client = Client(url)
     print client
-    # Ping(ns0:TPA_Extensions TPA_Extensions, xs:string EchoData, )
+    client.setport(0)
     tpa = client.factory.create('ns0:TPA_Extensions')
     print client.service.Ping(tpa, "hello")
 except WebFault, f:
@@ -172,6 +173,7 @@ try:
     start(url)
     client = Client(url)
     print client
+    client.setport(0)
     print client.service.getBank("76251020")
 except WebFault, f:
     errors += 1
@@ -203,6 +205,7 @@ try:
     start(url)
     timer.start()
     client = Client(url)
+    client.setport(0)
     timer.stop()
     print 'create client: %s' % timer
     timer.start()
