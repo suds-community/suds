@@ -424,7 +424,7 @@ class Element(Promotable):
         @return: True if optional, else False
         @rtype: boolean
         """
-        return ( self.container.optional() or self.min == '0' )
+        return ( self.container_optional() or self.min == '0' )
             
     def derived(self):
         """
