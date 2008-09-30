@@ -91,8 +91,8 @@ class Binding:
         """
         Get the soap message for the specified method, args and soapheaders.
         This is the entry point for creating the outbound soap message.
-        @param method: The name of the method being invoked.
-        @type method: str
+        @param method: The method being invoked.
+        @type method: I{service.Method}
         @param args: A I{list} of method arguments (parameters).
         @type args: list
         @param soapheaders: A list of objects to be encoded as soap-headers.
@@ -295,15 +295,14 @@ class Binding:
         """
         Get a list of I{parameter definitions} (pdef) defined for the specified method.
         Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
-        @param method: The I{name} of a method.
-        @type method: str
+        @param method: A service method.
+        @type method: I{service.Method}
         @param input: Defines input/output message.
         @type input: boolean
         @return:  A list of parameter definitions
         @rtype: [I{pdef},]
         """
         result = []
-        method = self.wsdl.method(method)
         if input:
             parts = method.message.input.parts
         else:
@@ -323,8 +322,8 @@ class Binding:
     def returned_types(self, method):
         """
         Get the L{xsd.sxbase.SchemaObject} returned by the I{method}.
-        @param method: The name of a method.
-        @type method: str
+        @param method: A service method.
+        @type method: I{service.Method}
         @return: The name of the type return by the method.
         @rtype: [I{rtype},..]
         """

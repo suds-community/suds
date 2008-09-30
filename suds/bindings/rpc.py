@@ -41,8 +41,8 @@ class RPC(Binding):
     def bodycontent(self, method, args):
         """
         Get the content for the soap I{body}.
-        @param method: The method name.
-        @type method: str
+        @param method: A service method.
+        @type method: I{service.Method}
         @param args: method parameter values
         @type args: list
         @return: The xml content for the <body/>
@@ -59,25 +59,25 @@ class RPC(Binding):
             n += 1
         return root
         
-    def method(self, name):
+    def method(self, method):
         """
         Get the document root.  For I{rpc/(literal|encoded)}, this is the
         name of the method qualifed by the schema tns.
-        @param name: The method name.
-        @type name: str
+        @param method: A service method.
+        @type method: I{service.Method}
         @return: A root element.
         @rtype: L{Element}
         """
-        ns = self.wsdl.method(name).soap.input.body.namespace
-        method = Element(name, ns=ns)
+        ns = method.soap.input.body.namespace
+        method = Element(method.name, ns=ns)
         return method
 
     def param_defs(self, method):
         """
         Get parameter definitions.  
         Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
-        @param method: A method name.
-        @type method: basestring
+        @param method: A servic emethod.
+        @type method: I{service.Method}
         @return: A collection of parameter definitions
         @rtype: [I{pdef},..]
         """

@@ -173,7 +173,6 @@ class Definitions(WObject):
         self.port_types = {}
         self.bindings = {}
         self.service = None
-        self.methods = {}
         self.add_children(self.root)
         self.children.sort()
         pmd = self.__metadata__.__print__
@@ -272,20 +271,9 @@ class Definitions(WObject):
                 m.message = SFactory.object('message')
                 m.message.input = op.input
                 m.message.output = op.output
-                self.methods[name] = m
-    
-    def method(self, name):
-        """
-        Get a method defined an one of the portTypes by name.
-        @param name: A method name.
-        @type name: str
-        @return: The requested method object.
-        @rtype: I{Method}
-        """
-        m = self.methods.get(name)
-        if m is None:
-            raise Exception('method "%s", not-found', name)
-        return m
+                m.qname = ':'.join((p.name, name))
+                self.service.methods[m.name] = m
+                self.service.methods[m.qname] = m
 
 
 class Import(WObject):
@@ -580,8 +568,10 @@ class Binding(NamedObject):
 class Service(NamedObject):
     """
     Represents <service/>.
-    @ivar port: The contained port.
-    @type port: Port
+    @ivar port: The contained ports.
+    @type port: [Port,..]
+    @ivar methods: The contained methods for all ports.
+    @type methods: [Method,..]
     """
     
     def __init__(self, root, definitions):
@@ -593,6 +583,7 @@ class Service(NamedObject):
         """
         NamedObject.__init__(self, root, definitions)
         self.ports = []
+        self.methods = {}
         for p in root.getChildren('port'):
             port = SFactory.object('Port')
             port.name = p.get('name')
@@ -600,6 +591,32 @@ class Service(NamedObject):
             address = p.getChild('address')
             port.location = address.get('location').encode('utf-8')
             self.ports.append(port)
+            
+    def port(self, name):
+        """
+        Locate a port by name.
+        @param name: A port name.
+        @type name: str
+        @return: The port object.
+        @rtype: I{Port} 
+        """
+        for p in self.ports:
+            if p.name == name:
+                return p
+        raise PortNotFound(name)
+    
+    def method(self, name):
+        """
+        Get a method defined an one of the portTypes by name.
+        @param name: A method name.
+        @type name: str
+        @return: The requested method object.
+        @rtype: I{Method}
+        """
+        m = self.methods.get(name)
+        if m is None:
+            raise MethodNotFound(name)
+        return m
         
     def resolve(self, definitions):
         """

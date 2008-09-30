@@ -24,12 +24,12 @@ import suds.metrics as metrics
 from cookielib import CookieJar
 from urllib2 import Request, HTTPError, urlopen, urlparse
 from suds import *
+from suds.servicedefinition import ServiceDefinition
 from suds import sudsobject
 from sudsobject import Factory as InstFactory, Object
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import Definitions
-from suds.sax import Namespace
 from suds.sax.document import Document
 from sax.parser import Parser
 
@@ -37,10 +37,11 @@ log = getLogger(__name__)
 
 
 class Client(object):
-    
     """ 
     A lightweight web services client.
     I{(2nd generation)} API.
+    @ivar wsdl: The WSDL object.
+    @type wsdl:L{Definitions}
     @ivar service: The service proxy used to invoke operations.
     @type service: L{Service}
     @ivar factory: The factory used to create objects.
@@ -64,9 +65,34 @@ class Client(object):
         @type opener: A I{urllib2.Opener}
         """
         client = SoapClient(url, kwargs)
+        self.wsdl = client.wsdl
         self.service = Service(client)
         self.factory = Factory(client.wsdl)
         self.sd = ServiceDefinition(client.wsdl)
+        
+    def merge_methods(self):
+        """
+        Merge methods across multiple service ports.  By doing this, methods may
+        be invoked without being qualified by service port name as: <port>.<method>.
+        Merging should only be used when a service has (2+) ports and method names
+        are unique across ports.  Methods defined in services that only define (1) port
+        may already be access without being qualified by port name.
+        """
+        self.service.__merged__ = True
+        
+    def setport(self, name):
+        """
+        Set the default service port name.  This should only be set when the service
+        defines multiple ports and you want to invoke method within a particular
+        port only without specifying a qualified name as: <port>.<method>.
+        @param name: A service port name.
+        @type name: str|int
+        """
+        if isinstance(name, basestring):
+            port = self.wsdl.service.port(name)
+        else:
+            port = self.wsdl.service.ports[name]
+        self.service.__dport__  = port
         
     def last_sent(self):
         """
@@ -126,14 +152,16 @@ class Client(object):
 
 
 class Service:
-    
     """ 
-    Service wrapper object.
-    
+    Service I{wrapper} object.
     B{See:}  L{Method} for Service.I{method()} invocation API.
-    
     @ivar __client__: The soap client.
     @type __client__: L{SoapClient}
+    @ivar __merged__: A flag indicating that method names are unique and lookups
+        may be performed as if the methods in all ports have been merged.
+    @type __merged__: boolean
+    @ivar __dport__: The default service port name.
+    @type __dport__: str
     """
     
     def __init__(self, client):
@@ -142,22 +170,81 @@ class Service:
         @type client: L{SoapClient}
         """
         self.__client__ = client
+        self.__merged__ = ( len(client.wsdl.service.ports) < 2 )
+        self.__dport__ = None
     
     def __getattr__(self, name):
+        """
+        Find and return a service method or port by name depending on how may
+        ports are defined for the service.  When only one port is defined (as in most
+        cases), it returns the method so users don't have to qualify methods by port. 
+        @param name: A port/method name.
+        @type name: str
+        @return: Either a L{Port} or an L{Method}.
+        @rtype: L{Port}|L{Method}
+        @see: Client.merge_methods()
+        @see: Client.setport()
+        """
         builtin =  name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
-        method = self.__client__.wsdl.method(name)
-        if method is None:
-            raise MethodNotFound(name)
-        method = Method(self.__client__, name)
-        return method
+        service = self.__client__.wsdl.service
+        if self.__merged__:
+            log.debug('method lookup using "%s"', name)
+            method = service.method(name)
+            return Method(self.__client__, method)
+        if self.__dport__ is None:
+            port = service.port(name)
+            log.debug('method "%s" lookup on port "%s"', name, port.name)
+            return Port(self.__client__, port)
+        else:
+            port = self.__dport__
+            log.debug('method "%s" lookup on port "%s"', name, port.name)
+            port = Port(self.__client__, port)
+            return getattr(port, name)
     
     def __str__(self):
         return str(self.__client__)
         
     def __unicode__(self):
         return unicode(self.__client__)
+    
+    
+class Port(object):
+    """ 
+    Service port I{wrapper} object.
+    B{See:}  L{Method} for Service.I{method()} invocation API.
+    @ivar __client__: The soap client.
+    @type __client__: L{SoapClient}
+    @ivar __port__: The service port.
+    @type __port__: I{service.Port}
+    """
+    
+    def __init__(self, client, port):
+        """
+        @param client: A service client.
+        @type client: L{SoapClient}
+        @param port: A service port.
+        @type port: I{service.Port}
+        """
+        self.__client__ = client
+        self.__port__ = port
+        
+    def __getattr__(self, name):
+        """
+        Find and return a service method by name.
+        @param name: A method name.
+        @type name: str
+        @return: a L{Method}.
+        @rtype: L{Method}.
+        """
+        builtin =  name.startswith('__') and name.endswith('__')
+        if builtin:
+            return self.__dict__[name]
+        service = self.__client__.wsdl.service
+        qname = ':'.join((self.__port__.name, name))
+        method = service.method(qname)
+        return Method(self.__client__, method)
 
 
 class Method(object):
@@ -170,15 +257,15 @@ class Method(object):
     @type name: basestring
     """ 
     
-    def __init__(self, client, name):
+    def __init__(self, client, method):
         """
         @param client: A client object.
         @type client: L{SoapClient}
-        @param name: The method's name.
-        @type name: str
+        @param method: The (wsdl) method.
+        @type method: I{method}
         """
         self.client = client
-        self.name = name
+        self.method = method
         
     def __call__(self, *args, **kwargs):
         """
@@ -199,9 +286,9 @@ class Method(object):
         try:
             if SimClient.simulation(kwargs):
                 simulator = SimClient(self.client)
-                result = simulator.invoke(self, args, kwargs)
+                result = simulator.invoke(self.method, args, kwargs)
             else:
-                result = self.client.invoke(self, args, kwargs)
+                result = self.client.invoke(self.method, args, kwargs)
         except WebFault, e:
             if self.client.arg.faults:
                 log.debug('raising (%s)', e)
@@ -298,7 +385,7 @@ class SoapClient:
         """
         Send the required soap message to invoke the specified method
         @param method: A method object to be invoked.
-        @type method: L{Method}
+        @type method: I{service.Method}
         @param args: Arguments
         @type args: [arg,...]
         @param kwargs: Keyword Arguments
@@ -309,23 +396,23 @@ class SoapClient:
         timer = metrics.Timer()
         timer.start()
         result = None
-        binding = self.wsdl.method(method.name).binding.input
+        binding = method.binding.input
         binding.faults = self.arg.faults
         soapheaders = kwargs.get('soapheaders', ())
-        msg = binding.get_message(method.name, args, soapheaders)
+        msg = binding.get_message(method, args, soapheaders)
         timer.stop()
-        metrics.log.debug("message for '%s' created: %s", method.name, timer)
+        metrics.log.debug("message for '%s' created: %s", method.qname, timer)
         timer.start()
         result = self.send(method, msg, kwargs)
         timer.stop()
-        metrics.log.debug("method '%s' invoked: %s", method.name, timer)
+        metrics.log.debug("method '%s' invoked: %s", method.qname, timer)
         return result
     
     def send(self, method, msg, kwargs):
         """
         Send soap message.
         @param method: The method being invoked.
-        @type method: L{Method}
+        @type method: I{service.Method}
         @param msg: A soap message to send.
         @type msg: basestring
         @param kwargs: keyword args
@@ -334,10 +421,10 @@ class SoapClient:
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         result = None
-        headers = self.headers(method.name)
-        location = self.wsdl.method(method.name).location
+        headers = self.headers(method)
+        location = method.location
         location = kwargs.get('location', location)
-        binding = self.wsdl.method(method.name).binding.input
+        binding = method.binding.input
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent = Document(msg)
@@ -353,7 +440,7 @@ class SoapClient:
                 result = None
             else:
                 log.error(self.last_sent)
-                result = self.failed(binding, method, e)
+                result = self.failed(binding, e)
         return result
     
     def urlopen(self, request):
@@ -385,12 +472,12 @@ class SoapClient:
     def headers(self, method):
         """
         Get http headers or the http/https request.
-        @param method: The B{name} of method being invoked.
-        @type method: str
+        @param method: The method being invoked.
+        @type method: I{service.Method}
         @return: A dictionary of header/values.
         @rtype: dict
         """
-        action = self.wsdl.method(method).soap.action
+        action = method.soap.action
         result = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
         log.debug('headers = %s', result)
         return result
@@ -401,14 +488,14 @@ class SoapClient:
         @param binding: The binding to be used to process the reply.
         @type binding: L{bindings.binding.Binding}
         @param method: The service method that was invoked.
-        @type method: L{Method}
+        @type method: I{service.Method}
         @return: The method result.
         @rtype: I{builtin}, L{Object}
         @raise WebFault: On server.
         """
         log.debug('http succeeded:\n%s', reply)
         if len(reply) > 0:
-            r, p = binding.get_reply(method.name, reply)
+            r, p = binding.get_reply(method, reply)
             self.last_received = r
             if self.arg.faults:
                 return p
@@ -417,13 +504,11 @@ class SoapClient:
         else:
             return (200, None)
         
-    def failed(self, binding, method, error):
+    def failed(self, binding, error):
         """
         Request failed, process reply based on reason
         @param binding: The binding to be used to process the reply.
         @type binding: L{suds.bindings.binding.Binding}
-        @param method: The service method that was invoked.
-        @type method: L{Method}
         @param error: The http error message
         @type error: urllib2.HTTPException
         """
@@ -470,7 +555,7 @@ class SimClient(SoapClient):
         """
         Send the required soap message to invoke the specified method
         @param method: A method object to be invoked.
-        @type method: L{Method}
+        @type method: I{service.Method}
         @param args: Arguments
         @type args: [arg,...]
         @param kwargs: Keyword Arguments
@@ -489,28 +574,17 @@ class SimClient(SoapClient):
                 return self.__fault(method, fault)
             raise Exception('(reply|fault) expected when msg=None')
         msg = Parser().parse(string=msg)
-        return self.__send(method, msg, kwargs)
-        
-    def __send(self, method, msg, kwargs):
-        """ send the supplied soap message """
-        result = None
-        binding = self.wsdl.method(method.name).binding.input
-        binding.faults = self.arg.faults
-        headers = self.headers(method.name)
-        location = self.wsdl.method(method.name).location
-        location = kwargs.get('location', location)
-        log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         return self.send(method, msg, kwargs)
     
     def __reply(self, method, reply):
         """ simulate the reply """
-        binding = self.wsdl.method(method.name).binding.output
+        binding = method.binding.output
         binding.faults = self.arg.faults
         return self.succeeded(binding, method, reply)
     
     def __fault(self, method, reply):
         """ simulate the (fault) reply """
-        binding = self.wsdl.method(method.name).binding.output
+        binding = method.binding.output
         binding.faults = self.arg.faults
         if self.arg.faults:
             r, p = binding.get_fault(reply)
@@ -518,131 +592,6 @@ class SimClient(SoapClient):
             return (500, p)
         else:
             return (500, None)
-
-
-class ServiceDefinition:
-    
-    def __init__(self, wsdl):
-        self.wsdl = wsdl
-        self.name = wsdl.service.name
-        self.methods = []
-        self.prefixes = []
-        self.types = []
-        self.__addmethods(wsdl)
-        self.__addtypes()
-        self.__pushprefixes()
-        
-    def get_method(self, name):
-        """ get a method by name """
-        for m in self.methods:
-            if m[0] == name:
-                return m
-        return None
-    
-    def __pushprefixes(self):
-        """ add our prefixes to the wsdl """
-        for ns in self.prefixes:
-            self.wsdl.root.addPrefix(ns[0], ns[1])
-
-    def __addmethods(self, w):
-        """ create our list of methods """
-        timer = metrics.Timer()
-        for m in w.methods.values():
-            timer.start()
-            binding = m.binding.input
-            method = (m.name, binding.param_defs(m.name))
-            self.methods.append(method)
-            timer.stop()
-            metrics.log.debug("method '%s' created: %s", m.name, timer)
-        self.methods.sort()
-            
-    def __addtypes(self):
-        """ create our list of top level types """
-        namespaces = []
-        self.types = []
-        for type in self.wsdl.schema.children:
-            if type.name is None:
-                continue
-            self.types.append(type)
-        for t in self.types:
-            ns = t.namespace()
-            if ns in namespaces:
-                continue
-            namespaces.append(ns)
-        i = 0
-        namespaces.sort()
-        for ns in namespaces:
-            p = self.__nextprefix()
-            ns = (p, ns[1])
-            self.prefixes.append(ns)
-        self.types.sort()
-        
-    def __nextprefix(self):
-        """ get the next available prefix  """
-        used = [ns[0] for ns in self.prefixes]
-        used += [ns[0] for ns in self.wsdl.root.nsprefixes.items()]
-        for n in range(0,1024):
-            p = 'ns%d'%n
-            if p not in used:
-                return p
-        raise Exception('prefixes exhausted')
-    
-    def __getprefix(self, u):
-        """ get the prefix for the specified namespace (uri) """
-        for ns in Namespace.all:
-            if u == ns[1]:
-                return ns[0]
-        for ns in self.prefixes:
-            if u == ns[1]:
-                return ns[0]
-        raise Exception('ns (%s) not mapped'  % u)
-    
-    def __xlate(self, type):
-        """ get a (namespace) translated name for type """
-        resolved = type.resolve()
-        name = resolved.name
-        if type.unbounded():
-            name += '[]'
-        ns = resolved.namespace()
-        if ns[1] == self.wsdl.tns[1]:
-            return name
-        prefix = self.__getprefix(ns[1])
-        return ':'.join((prefix, name))
-        
-    def description(self):
-        """ get a str description of the service """
-        s = []
-        s.append('service ( %s )' % self.name)
-        s.append('\tprefixes:')
-        for p in self.prefixes:
-            s.append('\t\t%s = "%s"' % p)
-        s.append('\tmethods (%d):' % len(self.methods))
-        for m in self.methods:
-            sig = []
-            sig.append('\t\t')
-            sig.append(m[0])
-            sig.append('(')
-            for p in m[1]:
-                sig.append(self.__xlate(p[1]))
-                sig.append(' ')
-                sig.append(p[0])
-                sig.append(', ')
-            sig.append(')')
-            s.append(''.join(sig))
-        s.append('\ttypes (%d):' % len(self.types))
-        for t in self.types:
-            s.append('\t\t%s'% self.__xlate(t))
-        return '\n'.join(s)
-    
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-        
-    def __unicode__(self):
-        try:
-            return self.description()
-        except Exception, e:
-            log.exception(e)
-        return tostr(e)
         
 
 
