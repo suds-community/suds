@@ -43,6 +43,7 @@ register: FORCE
 
 clean: FORCE
 	rm -rf dist
+	rm -rf build
 	rm -rf *.egg-info
 	find . -name "*.pyc" -exec rm -f {} \;
 
