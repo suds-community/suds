@@ -60,19 +60,21 @@ methods provide by the service:
   > print client
   >
 service (WebServiceTestBeanService)
-   prefixes:
+   prefixes (1):
       ns0 = "http://test.server.enterprise.rhq.org/"
-   methods:
-      addPerson(person person, )
-      echo(xs:string arg0, )
-      getList(xs:string str, xs:int length, )
-      getPersonByName(name name, )
-      hello()
-      testExceptions()
-      testListArg(xs:string[] list, )
-      testVoid()
-      updatePerson(anotherPerson person, name name, )
-   types:
+   ports (1):
+      (Soap)
+         methods:
+            addPerson(person person, )
+            echo(xs:string arg0, )
+            getList(xs:string str, xs:int length, )
+            getPersonByName(name name, )
+            hello()
+            testExceptions()
+            testListArg(xs:string[] list, )
+            testVoid()
+            updatePerson(anotherPerson person, name name, )
+   types (23):
       hello
       testListArg
       person
@@ -96,6 +98,8 @@ service (WebServiceTestBeanService)
       echo
       updatePersonResponse
       echoResponse
+      
+      ** See example of service with multiple ports below.
   
  The sample ouput lists that the service named "WebServiceTestBeanService"
  has methods such as addPerson() which takes a 'person' argument of type: 'person'.
@@ -222,6 +226,95 @@ prefix such as:
  Qualified names can only be used for the *first* part of the name, when using (.) dot
  notation to specify a path.
  
+SERVICES WITH MULTIPLE PORTS:
+
+Many services are defined with multiple ports as:
+
+    <wsdl:service name="BLZService">
+        <wsdl:port name="BLZServiceSOAP11port_http" binding="tns:BLZServiceSOAP11Binding">
+            <soap:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+        </wsdl:port>
+        <wsdl:port name="BLZServiceSOAP12port_http" binding="tns:BLZServiceSOAP12Binding">
+            <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+
+        </wsdl:port>
+        <wsdl:port name="BLZServiceHttpport" binding="tns:BLZServiceHttpBinding">
+            <http:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+        </wsdl:port>
+    </wsdl:service>
+    
+And are reported by suds as:
+
+>
+> url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
+> client = Client(url) 
+> print client
+
+suds ( version=0.3 )
+
+service ( BLZService )
+   prefixes (1)
+      ns0 = "http://thomas-bayer.com/blz/"
+   ports (3):
+         (BLZServiceSOAP11port_http)
+            methods (1):
+               getBank(xs:string blz, )
+         (BLZServiceSOAP12port_http)
+            methods (1):
+               getBank(xs:string blz, )
+         (BLZServiceHttpport)
+            methods (1):
+               getBank(xs:string blz, )
+   types (5):
+      getBankType
+      getBankResponseType
+      getBankType
+      getBankResponseType
+      detailsType
+      
+This example only has (1) method defined for each port but it could very likely have
+may methods defined.  When only (1) method is defined, suds does not require the
+method invocation to be qualifed (as shown above) by the port as:
+
+   client.service.<port>.getBank()
+
+In order to invoke the getBank() method on this service, the user must qualify
+the method name with the port.  Not doing so will raise a PortNotFound exception
+because when multiple ports are specified, suds expects method (operation) names
+to be qualified by port.
+
+There are (3) ways to deal with this:
+
+1) Select a default port using the Client.setport() method before invoking the
+   method as:
+   
+   >
+   > client.setport('BLZServiceSOAP11port_http')
+   > client.service.getBank()
+   >
+   -or-
+   >
+   > client.setport(0)
+   > client.service.getBank()
+   >
+   
+2) fully qualify the method as:
+
+   >
+   > client.service.BLZServiceSOAP11port_http.getBank()
+   >
+
+3) Merge the methods using the Client.merge_methods() method.  This really
+   can't be used in this example because the 'merge' is for cases where each port
+   defines a unique method.  In other words, the method names are unique across
+   ALL of the ports.   This can be done as:
+   
+   >
+   > client.merge_methods()
+   > client.service.getBank()
+   >
+
+ 
 SOAP HEADERS
   
 SOAP headers may be passed during the service invocation by using the
@@ -249,8 +342,78 @@ special (soapheaders) keyword as follows:
  (or Property) object(s) obtained from the client.factory.
  
  
+MULTI-DOCUMENT Docuemnt/Literal:
+
+In most cases, services defined using the document/literal SOAP binding style
+will define a single document as the message payload.  The <message/> will only
+have (1) <part/> which references an <element/> in the schema.  In this case, suds
+presents a RPC view of that method by displaying the method signature as the
+contents (nodes) of the document.
+Eg:
+
+<schema>
+...
+<xs:element name="Foo" type = "tns:Foo"/>
+<xs:complexType name="Foo">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"/>
+    <xs:element name="age" type="xs:int"/>
+  </xs:sequence>
+</xs:complexType>
+...
+</schema>
+
+<definitions>
+...
+<message name="FooMessage">
+  <part name="parameters" element="Foo">
+</message>
+...
+</definitions>
+
+Suds will report the method "foo" signature as:
+
+   foo(xs:string name, xs:int age,)
+   
+This provides an RPC feel to the document/literal soap binding style.
+
+Now, if the wsdl defines:
+
+<schema>
+...
+<xs:element name="Foo" type = "tns:Foo"/>
+<xs:element name="Bar" type = "xs:string"/>
+<xs:complexType name="Foo">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"/>
+    <xs:element name="age" type="xs:int"/>
+  </xs:sequence>
+</xs:complexType>
+...
+</schema>
+
+<definitions>
+...
+<message name="FooMessage">
+  <part name="foo" element="Foo">
+  <part name="bar" element="Bar">
+</message>
+...
+</definitions>
+
+Suds will be forced to report the method "foo" signature as:
+
+   foo(Foo foo, xs:int bar)
+   
+The message has (2) parts which defines that the message payload contains
+(2) documents.  In this case, suds must present a /Document/ view of the method.
+
   
 BASIC USAGE (legacy):
+
+** THIS API MAY ONLY BE USED WITH WSDLs THAT DEFINE SERVICES
+     WITH ONLY (1) PORT.  IT LACKS THE TOOLS TO DEAL WITH MULIPORT
+     SERVICES.
 
 You will need to know the url for WSDL for each service used.  Simply create
 a proxy for that service as follows:
@@ -269,19 +432,21 @@ methods provide by the service:
   > print myservice
   >
 service (WebServiceTestBeanService)
-   prefixes:
+   prefixes (1):
       ns0 = "http://test.server.enterprise.rhq.org/"
-   methods:
-      addPerson(person person, )
-      echo(xs:string arg0, )
-      getList(xs:string str, xs:int length, )
-      getPersonByName(name name, )
-      hello()
-      testExceptions()
-      testListArg(xs:string[] list, )
-      testVoid()
-      updatePerson(anotherPerson person, name name, )
-   types:
+   ports (1):
+      (Soap)
+         methods:
+            addPerson(person person, )
+            echo(xs:string arg0, )
+            getList(xs:string str, xs:int length, )
+            getPersonByName(name name, )
+            hello()
+            testExceptions()
+            testListArg(xs:string[] list, )
+            testVoid()
+            updatePerson(anotherPerson person, name name, )
+   types (23):
       hello
       testListArg
       person
@@ -990,3 +1155,16 @@ version 0.2.9 (9-09-08):
    * Support for multiple ports within a service.
    * Attribute references <xs:attribute ref=""/>
    * Make XML special character encoder in sax package - pluggable 
+   
+version 0.3 (9-30-08):
+
+  * Extends the support for multi-port services introduced in 0.2.9.  This addition,
+     provides for multiple services to define the *same* method and suds will
+     handle it properly.  See section 'SERVICES WITH MULTIPLE PORTS:'
+     
+  * Add support for multi-document document/literal soap binding style.
+     See section 'MULTI-DOCUMENT Docuemnt/Literal:'
+  
+  * Add support for (xs:group, xs:attributeGroup) tags.
+  
+  * Add Client.last_sent() and Client.last_received().
