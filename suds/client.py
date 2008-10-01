@@ -70,29 +70,24 @@ class Client(object):
         self.factory = Factory(client.wsdl)
         self.sd = ServiceDefinition(client.wsdl)
         
-    def merge_methods(self):
-        """
-        Merge methods across multiple service ports.  By doing this, methods may
-        be invoked without being qualified by service port name as: <port>.<method>.
-        Merging should only be used when a service has (2+) ports and method names
-        are unique across ports.  Methods defined in services that only define (1) port
-        may already be access without being qualified by port name.
-        """
-        self.service.__merged__ = True
-        
     def setport(self, name):
         """
         Set the default service port name.  This should only be set when the service
         defines multiple ports and you want to invoke method within a particular
         port only without specifying a qualified name as: <port>.<method>.
+        The default port may be I{unset} by setting the value to None.
         @param name: A service port name.
         @type name: str|int
         """
+        if name is None:
+            self.service.__dport__ = None
+            return
         if isinstance(name, basestring):
-            port = self.wsdl.service.port(name)
-        else:
-            port = self.wsdl.service.ports[name]
-        self.service.__dport__  = port
+            self.service.__dport__ = self.wsdl.service.port(name)
+            return
+        if isinstance(name, (int, long)):
+            self.service.__dport__ = self.wsdl.service.ports[name]
+            return
         
     def last_sent(self):
         """
@@ -157,9 +152,6 @@ class Service:
     B{See:}  L{Method} for Service.I{method()} invocation API.
     @ivar __client__: The soap client.
     @type __client__: L{SoapClient}
-    @ivar __merged__: A flag indicating that method names are unique and lookups
-        may be performed as if the methods in all ports have been merged.
-    @type __merged__: boolean
     @ivar __dport__: The default service port name.
     @type __dport__: str
     """
@@ -170,38 +162,38 @@ class Service:
         @type client: L{SoapClient}
         """
         self.__client__ = client
-        self.__merged__ = ( len(client.wsdl.service.ports) < 2 )
         self.__dport__ = None
     
     def __getattr__(self, name):
         """
         Find and return a service method or port by name depending on how may
         ports are defined for the service.  When only one port is defined (as in most
-        cases), it returns the method so users don't have to qualify methods by port. 
+        cases), it returns the method so users don't have to qualify methods by port.
         @param name: A port/method name.
         @type name: str
         @return: Either a L{Port} or an L{Method}.
         @rtype: L{Port}|L{Method}
-        @see: Client.merge_methods()
         @see: Client.setport()
         """
         builtin =  name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
         service = self.__client__.wsdl.service
-        if self.__merged__:
-            log.debug('method lookup using "%s"', name)
-            method = service.method(name)
-            return Method(self.__client__, method)
         if self.__dport__ is None:
+            log.debug('lookup service-method using "%s"', name)
+            method = service.method(name)
+            if method is not None:
+                return Method(self.__client__, method)
+            log.debug('lookup service-port using "%s"', name)
             port = service.port(name)
-            log.debug('method "%s" lookup on port "%s"', name, port.name)
-            return Port(self.__client__, port)
+            if port is not None:
+                return Port(self.__client__, port)
         else:
             port = self.__dport__
-            log.debug('method "%s" lookup on port "%s"', name, port.name)
             port = Port(self.__client__, port)
             return getattr(port, name)
+        raise MethodNotFound(name)
+        
     
     def __str__(self):
         return str(self.__client__)

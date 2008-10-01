@@ -36,6 +36,9 @@ from urlparse import urljoin
 log = getLogger(__name__)
 
 wsdlns = (None, "http://schemas.xmlsoap.org/wsdl/")
+soapns = (None, 'http://schemas.xmlsoap.org/wsdl/soap/')
+soap12ns = (None, 'http://schemas.xmlsoap.org/wsdl/soap12/')
+
 
 class Factory:
     """
@@ -492,11 +495,23 @@ class Binding(NamedObject):
         NamedObject.__init__(self, root, definitions)
         self.operations = {}
         self.type = root.get('type')
-        sr = root.getChild('binding')
+        sr = self.soaproot()
+        if sr is None:
+            self.soap = None
+            log.debug('binding: "%s" not a soap binding', self.name)
+            return
         soap = SFactory.object('soap')
         self.soap = soap
         self.soap.style = sr.get('style', default='document')
         self.add_operations(self.root, definitions)
+        
+    def soaproot(self):
+        """ get the soap:binding """
+        for ns in (soapns, soap12ns):
+            sr =  self.root.getChild('binding', ns=ns)
+            if sr is not None:
+                return sr
+        return None
         
     def add_operations(self, root, definitions):
         """ Add <operation/> children """
@@ -603,7 +618,7 @@ class Service(NamedObject):
         for p in self.ports:
             if p.name == name:
                 return p
-        raise PortNotFound(name)
+        return None
     
     def method(self, name):
         """
@@ -613,24 +628,27 @@ class Service(NamedObject):
         @return: The requested method object.
         @rtype: I{Method}
         """
-        m = self.methods.get(name)
-        if m is None:
-            raise MethodNotFound(name)
-        return m
+        return self.methods.get(name)
         
     def resolve(self, definitions):
         """
         Resolve named references to other WSDL objects.
+        Ports without soap bindings are discarded.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
+        filtered = []
         for p in self.ports:
             ref = qualify(p.binding, self.root, wsdlns)
             binding = definitions.bindings.get(ref)
             if binding is None:
                 raise Exception("binding '%s', not-found" % p.binding)
-            else:
-                p.binding = binding
+            if binding.soap is None:
+                log.debug('binding "%s" - not a soap, discarded', binding.name)
+                continue
+            p.binding = binding
+            filtered.append(p)
+        self.ports = filtered
         
     def __gt__(self, other):
         return True

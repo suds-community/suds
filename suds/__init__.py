@@ -29,15 +29,11 @@ import socket
 # Project properties
 #
 
-properties = dict(version='0.3')
+properties = dict(version='0.3.1')
 
 #
 # Exceptions
 #
-
-class PortNotFound(Exception):
-    def __init__(self, name):
-        Exception.__init__(self, "Service port not found: '%s'" % name)
 
 class MethodNotFound(Exception):
     def __init__(self, name):
