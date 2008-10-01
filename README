@@ -228,19 +228,14 @@ prefix such as:
  
 SERVICES WITH MULTIPLE PORTS:
 
-Many services are defined with multiple ports as:
+Some services are defined with multiple ports as:
 
     <wsdl:service name="BLZService">
-        <wsdl:port name="BLZServiceSOAP11port_http" binding="tns:BLZServiceSOAP11Binding">
+        <wsdl:port name="soap" binding="tns:BLZServiceSOAP11Binding">
             <soap:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
         </wsdl:port>
-        <wsdl:port name="BLZServiceSOAP12port_http" binding="tns:BLZServiceSOAP12Binding">
+        <wsdl:port name="soap12" binding="tns:BLZServiceSOAP12Binding">
             <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
-
-        </wsdl:port>
-        <wsdl:port name="BLZServiceHttpport" binding="tns:BLZServiceHttpBinding">
-            <http:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
-        </wsdl:port>
     </wsdl:service>
     
 And are reported by suds as:
@@ -255,14 +250,11 @@ suds ( version=0.3 )
 service ( BLZService )
    prefixes (1)
       ns0 = "http://thomas-bayer.com/blz/"
-   ports (3):
-         (BLZServiceSOAP11port_http)
+   ports (2):
+         (soap)
             methods (1):
                getBank(xs:string blz, )
-         (BLZServiceSOAP12port_http)
-            methods (1):
-               getBank(xs:string blz, )
-         (BLZServiceHttpport)
+         (soap12)
             methods (1):
                getBank(xs:string blz, )
    types (5):
@@ -273,23 +265,22 @@ service ( BLZService )
       detailsType
       
 This example only has (1) method defined for each port but it could very likely have
-may methods defined.  When only (1) method is defined, suds does not require the
-method invocation to be qualifed (as shown above) by the port as:
+may methods defined.  Suds does not require the method invocation to be qualifed
+(as shown above) by the port as:
 
    client.service.<port>.getBank()
 
-In order to invoke the getBank() method on this service, the user must qualify
-the method name with the port.  Not doing so will raise a PortNotFound exception
-because when multiple ports are specified, suds expects method (operation) names
-to be qualified by port.
+in less the user wants to specify a particular port.  In most cases, the server will
+work properly with any of the soap ports.  However, if you want to invoke the
+getBank() method on this service the user may qualify the method name with the port.
 
-There are (3) ways to deal with this:
+There are (1) ways to do this:
 
 1) Select a default port using the Client.setport() method before invoking the
    method as:
    
    >
-   > client.setport('BLZServiceSOAP11port_http')
+   > client.setport('soap')
    > client.service.getBank()
    >
    -or-
@@ -301,17 +292,7 @@ There are (3) ways to deal with this:
 2) fully qualify the method as:
 
    >
-   > client.service.BLZServiceSOAP11port_http.getBank()
-   >
-
-3) Merge the methods using the Client.merge_methods() method.  This really
-   can't be used in this example because the 'merge' is for cases where each port
-   defines a unique method.  In other words, the method names are unique across
-   ALL of the ports.   This can be done as:
-   
-   >
-   > client.merge_methods()
-   > client.service.getBank()
+   > client.service.soap.getBank()
    >
 
  
@@ -1168,3 +1149,15 @@ version 0.3 (9-30-08):
   * Add support for (xs:group, xs:attributeGroup) tags.
   
   * Add Client.last_sent() and Client.last_received().
+  
+version 0.3.1 (10-1-08):
+
+ * Quick follow up to the 0.3 release that made working multi-port service definitions
+    harder then necessary.  After consideration (and a good night sleep),
+    it seemed obvious that a few changes would make this much easier: 1) filter out 
+    the non-soap bindings - they were causing the real trouble;  2) since most servers
+    are happy with any of the soap bindings (soap 1.1 and 1.2), ambigious references to methods 
+    when invoking then without the port qualification will work just fine in almost every
+    case.  So, why not just allow suds to select the port.  Let's not make the user do it 
+    when it's not necessary.  In most cases, uses on 0.2.9 and earlier will not have to
+    update there code when moving to 0.3.1 as they might have in 0.3.
