@@ -77,7 +77,7 @@ class MultiRef:
         id = href.getValue()
         ref = self.catalog.get(id)
         if ref is None:
-            log.debug('multiRef: %s, not-resolved', id)
+            log.error('multiRef: %s, not-resolved', id)
             return
         node.append(ref.children)
         node.remove(href)
