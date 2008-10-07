@@ -104,7 +104,6 @@ class Binding:
         """
         content = self.bodycontent(method, args)
         body = self.body(content)
-        body = self.multiref.process(body)
         header = self.header(soapheaders)
         env = self.envelope(body, header)
         env.promotePrefixes()
@@ -127,6 +126,7 @@ class Binding:
         soapenv = replyroot.getChild('Envelope')
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild('Body')
+        soapbody = self.multiref.process(soapbody)
         nodes = soapbody[0].children
         rtypes = self.returned_types(method)
         if len(rtypes) == 1 and rtypes[0].unbounded():
