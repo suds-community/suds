@@ -24,7 +24,7 @@ from suds.sax.element import Element
 
 log = getLogger(__name__)
 
-class Resolver:
+class MultiRef:
     """
     Resolves and replaces multirefs.
     @ivar nodes: A list of non-multiref nodes.
@@ -75,11 +75,9 @@ class Resolver:
         if href is None:
             return
         id = href.getValue()
-        if not len(id) or id[0] != '#':
-            return
-        ref = self.catalog.get(id[1:])
+        ref = self.catalog.get(id)
         if ref is None:
-            log.debug('multiref: %s, not-resolved', id)
+            log.debug('multiRef: %s, not-resolved', id)
             return
         node.append(ref.children)
         node.remove(href)
@@ -93,7 +91,8 @@ class Resolver:
         """
         for c in body.children:
             if c.name == 'multiRef':
-                id = c.get('id')
-                self.catalog[id] = c
+                key = '#'+c.get('id')
+                self.catalog[key] = c
             else:
                 self.nodes.append(c)
+

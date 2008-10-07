@@ -27,7 +27,7 @@ from suds.sudsobject import Factory, Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
 from suds.xsd.query import Query
-from suds.bindings.multiref import Resolver
+from suds.bindings.multiref import MultiRef
 
 log = getLogger(__name__)
 
@@ -66,7 +66,7 @@ class Binding:
         self.parser = Parser()
         self.unmarshaller = Unmarshaller(self.schema)
         self.marshaller = Marshaller(self.schema)
-        self.multiref = Resolver()
+        self.multiref = MultiRef()
         self.encoded = False
         
     def use_literal(self):
@@ -125,6 +125,7 @@ class Binding:
         """
         replyroot = self.parser.parse(string=reply)
         soapenv = replyroot.getChild('Envelope')
+        soapenv.promotePrefixes()
         soapbody = soapenv.getChild('Body')
         nodes = soapbody[0].children
         rtypes = self.returned_types(method)
