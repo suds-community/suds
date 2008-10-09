@@ -38,6 +38,36 @@ def start(url):
     print 'Test @ ( %s ) %d' % (url, errors)
     
 try:
+    url = ' http://www.webservicex.net/WeatherForecast.asmx?WSDL '
+    start(url)
+    client = Client(url)
+    print client
+    print client.service.GetWeatherByZipCode('27606')
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e: 
+    errors += 1
+    print e
+    tb.print_exc()
+    
+try:
+    url = ' http://www.boyzoid.com/comp/randomQuote.cfc?wsdl '
+    start(url)
+    client = Client(url)
+    print client
+    print client.service.getQuote(False)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    tb.print_exc()
+    
+try:
     url = 'http://www.zenfolio.com/zf/api/zfapi.asmx?wsdl'
     start(url)
     client = Client(url)
