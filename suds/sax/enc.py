@@ -18,17 +18,23 @@
 Provides XML I{special character} encoder classes.
 """
 
+import re
+
 class Encoder:
     """
     An XML special character encoder/decoder.
-    @cvar encodings: A mapping of special characters <-> encoding.
-    @type encodings: [(char,str)]
+    @cvar encodings: A mapping of special characters encoding.
+    @type encodings: [(str,str)]
+    @cvar encodings: A mapping of special characters decoding.
+    @type encodings: [(str,str)]
     @cvar special: A list of special characters
     @type special: [char]
     """
     
     encodings = \
-        (( '&', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
+        (( '&(?!amp;)', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
+    decodings = \
+        (( '&amp;', '&' ),( '&lt;', '<' ),( '&gt;', '>' ),( '&quot;', '"' ),( '&apos;', "'" ))
     special = \
         ('&', '<', '>', '"', "'")
     
@@ -55,7 +61,7 @@ class Encoder:
         """
         if isinstance(s, basestring) and self.needsEncoding(s):
             for x in self.encodings:
-                s = s.replace(x[0], x[1])
+                s = re.sub(x[0], x[1], s)
         return s
     
     def decode(self, s):
@@ -67,6 +73,6 @@ class Encoder:
         @rtype: str
         """
         if isinstance(s, basestring) and '&' in s:
-            for x in self.encodings:
-                s = s.replace(x[1], x[0])
+            for x in self.decodings:
+                s = s.replace(x[0], x[1])
         return s
