@@ -46,5 +46,6 @@ clean: FORCE
 	rm -rf build
 	rm -rf *.egg-info
 	find . -name "*.pyc" -exec rm -f {} \;
+	find . -name "*~" -exec rm -f {} \;
 
 FORCE:
