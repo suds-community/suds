@@ -1,5 +1,5 @@
 %define name python-suds
-%define version 0.3.1
+%define version 0.3.2
 %define release 1
 
 Summary: A python SOAP client
