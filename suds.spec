@@ -2,15 +2,14 @@
 %define version 0.3.1
 %define release 1
 
-Summary: Lightweight SOAP client
+Summary: A python SOAP client
 Name: %{name}
 Version: %{version}
 Release: %{release}
 Source0: %{name}-%{version}.tar.gz
-License: LGPL
+License: LGPLv3+
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Prefix: %{_prefix}
 BuildArch: noarch
 Requires: python >= 2.3
 %if 0%{?fedora} >= 8
@@ -41,3 +40,15 @@ python setup.py install --optimize=1 --root=$RPM_BUILD_ROOT --record=INSTALLED_F
 rm -rf $RPM_BUILD_ROOT
 
 %files -f INSTALLED_FILES
+
+%doc README
+
+%changelog
+ * Fri Oct 10 2008 jortel <jortel@redhat.com> - release 0.3.1-1
+  - Extends the support for multi-port services introduced earlier.  This addition,
+    provides for multiple services to define the *same* method and suds will
+    handle it properly.  See section 'SERVICES WITH MULTIPLE PORTS:'
+  - Add support for multi-document document/literal soap binding style.
+    See section 'MULTI-DOCUMENT Docuemnt/Literal:'
+  - Add support for (xs:group, xs:attributeGroup) tags.
+  - Add Client.last_sent() and Client.last_received().
