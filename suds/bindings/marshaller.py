@@ -370,8 +370,7 @@ class MBase:
         document = Document()
         if isinstance(content.value, Property):
             root = self.node(content)
-            document.append(root)
-            self.append(root, content)
+            self.append(document, content)
         elif content.value is None or \
             isinstance(content.value, Object):
                 self.append(document, content)

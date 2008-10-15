@@ -88,7 +88,7 @@ class PathResolver(Resolver):
         leaf = parts[-1]
         if resolved or \
             result != leaf:
-                result = result.resolve()
+                result = result.resolve(nobuiltin=True)
         for part in parts[1:]:
             name = splitPrefix(part)[1]
             log.debug('searching parent (%s) for (%s)', Repr(result), name)
@@ -102,7 +102,7 @@ class PathResolver(Resolver):
             log.debug('found (%s) as (%s)', name, Repr(result))
             if resolved or \
                 result != leaf:
-                    result = result.resolve()
+                    result = result.resolve(nobuiltin=True)
         return result
     
     def qualify(self, name):

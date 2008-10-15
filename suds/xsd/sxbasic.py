@@ -465,6 +465,11 @@ class Element(Promotable):
         resolved = query.execute(self.schema)
         if resolved is None:
             raise TypeNotFound(qref)
+        if resolved.builtin():
+            if nobuiltin:
+                result = self
+            else:
+                result = resolved
         else:
             result = resolved.resolve(nobuiltin)
         return result
