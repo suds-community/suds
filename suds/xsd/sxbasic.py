@@ -42,7 +42,9 @@ class Factory:
     tags =\
     {
         'import' : lambda x,y: Import(x,y), 
-        'complexType' : lambda x,y: Complex(x,y), 
+        'complexType' : lambda x,y: Complex(x,y),
+        'group' : lambda x,y: Group(x,y),
+        'attributeGroup' : lambda x,y: AttributeGroup(x,y), 
         'simpleType' : lambda x,y: Simple(x,y), 
         'element' : lambda x,y: Element(x,y),
         'attribute' : lambda x,y: Attribute(x,y),
@@ -105,6 +107,8 @@ class Factory:
         elements = {}
         attributes = {}
         types = {}
+        groups = {}
+        agrps = {}
         for c in children:
             if isinstance(c, Import):
                 imports.append(c)
@@ -115,10 +119,16 @@ class Factory:
             if isinstance(c, Element):
                 elements[c.qname] = c
                 continue
+            if isinstance(c, Group):
+                groups[c.qname] = c
+                continue
+            if isinstance(c, AttributeGroup):
+                agrps[c.qname] = c
+                continue
             types[c.qname] = c
         for i in imports:
             children.remove(i)
-        return (children, imports, attributes, elements, types)
+        return (children, imports, attributes, elements, types, groups, agrps)
 
 
 class Complex(SchemaObject):
@@ -143,7 +153,7 @@ class Complex(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'sequence', 'all', 'choice', 'complexContent', 'any')
+        return ('attribute', 'attributeGroup', 'sequence', 'all', 'choice', 'complexContent', 'any', 'group')
     
     def derived(self):
         """
@@ -170,6 +180,179 @@ class Complex(SchemaObject):
         """
         return ('name',)
 
+
+class Group(SchemaObject):
+    """
+    Represents an (xsd) schema <xs:group/> node.
+    @cvar childtags: A list of valid child node names
+    @type childtags: (I{str},...)
+    """
+    
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        @param root: The xml root node.
+        @type root: L{sax.element.Element}
+        """
+        SchemaObject.__init__(self, schema, root)
+        self.ref = root.get('ref')
+        self.min = root.get('minOccurs', default='1')
+        self.max = root.get('maxOccurs', default='1')
+        self.mutated = ( self.ref is None )
+        
+    def childtags(self):
+        """
+        Get a list of valid child tag names.
+        @return: A list of child tag names.
+        @rtype: [str,...]
+        """
+        return ('sequence', 'all', 'choice')
+    
+    def unbounded(self):
+        """
+        Get whether this node is unbounded I{(a collection)}.
+        @return: True if unbounded, else False.
+        @rtype: boolean
+        """
+        if self.container_unbounded():
+            return True
+        if self.max.isdigit():
+            return (int(self.max) > 1)
+        else:
+            return ( self.max == 'unbounded' )
+        
+    def optional(self):
+        """
+        Get whether this type is optional.
+        @return: True if optional, else False
+        @rtype: boolean
+        """
+        return ( self.container_optional() or self.min == '0' )
+    
+    def container_unbounded(self):
+        """ get whether container is unbounded """
+        if self.container is None:
+            return False
+        else:
+            return self.container.unbounded()
+        
+    def container_optional(self):
+        """ get whether container is optional """
+        if self.container is None:
+            return False
+        else:
+            return self.container.optional()
+        
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
+        """
+        if self.mutated:
+            return
+        self.mutated = True
+        classes = (Group,)
+        defns = self.default_namespace()
+        qref = qualify(self.ref, self.root, defns)
+        e = self.schema.groups.get(qref)
+        if e is not None:
+            self.merge(deepcopy(e))
+            return
+        for c in self.schema.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                self.merge(deepcopy(p))
+                return
+        raise TypeNotFound(self.ref)
+    
+    def merge(self, e):
+        """
+        Merge the referenced object.
+        @param e: A resoleve reference.
+        @type e: L{Element}
+        """
+        self.name = e.name
+        self.qname = e.qname
+        self.children = e.children
+
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('name',)
+    
+
+class AttributeGroup(SchemaObject):
+    """
+    Represents an (xsd) schema <xs:attributeGroup/> node.
+    @cvar childtags: A list of valid child node names
+    @type childtags: (I{str},...)
+    """
+    
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        @param root: The xml root node.
+        @type root: L{sax.element.Element}
+        """
+        SchemaObject.__init__(self, schema, root)
+        self.ref = root.get('ref')
+        self.min = root.get('minOccurs', default='1')
+        self.max = root.get('maxOccurs', default='1')
+        self.mutated = ( self.ref is None )
+        
+    def childtags(self):
+        """
+        Get a list of valid child tag names.
+        @return: A list of child tag names.
+        @rtype: [str,...]
+        """
+        return ('attribute', 'attributeGroup')
+
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
+        """
+        if self.mutated:
+            return
+        self.mutated = True
+        classes = (AttributeGroup,)
+        defns = self.default_namespace()
+        qref = qualify(self.ref, self.root, defns)
+        e = self.schema.agrps.get(qref)
+        if e is not None:
+            self.merge(deepcopy(e))
+            return
+        for c in self.schema.children:
+            p = c.find(qref, classes)
+            if p is not None:
+                self.merge(deepcopy(p))
+                return
+        raise TypeNotFound(self.ref)
+    
+    def merge(self, e):
+        """
+        Merge the referenced object.
+        @param e: A resoleve reference.
+        @type e: L{Element}
+        """
+        self.name = e.name
+        self.qname = e.qname
+        self.children = e.children
+
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('name',)
+    
 
 class Simple(SchemaObject):
     """
@@ -226,6 +409,8 @@ class Restriction(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
+        self.base = root.get('base')
+        self.mutated = ( self.base is None )
 
     def childtags(self):
         """
@@ -233,7 +418,40 @@ class Restriction(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('enumeration',)
+        return ('enumeration', 'attribute', 'attributeGroup')
+    
+    def mutate(self):
+        """
+        Mutate into a I{true} type as defined by a reference to
+        another object.
+        """
+        if self.mutated:
+            return
+        self.mutated = True
+        log.debug(Repr(self))
+        defns = self.default_namespace()
+        qref = qualify(self.base, self.root, defns)
+        query = Query(type=qref)
+        super = query.execute(self.schema)
+        if super is None:
+            log.error(self.schema)
+            raise TypeNotFound(qref)
+        if not super.builtin():
+            self.merge(deepcopy(super))
+
+    def merge(self, b):
+        """
+        Merge the resolved I{base} object with myself.
+        @param b: A resolved base object.
+        @type b: L{SchemaObject}
+        """
+        b.dereference()
+        filter = UniqueFilter(self.attributes)
+        self.prepend(self.attributes, b.attributes, filter)
+        filter = UniqueFilter(self.children)
+        for c in b.children:
+            c.mark_inherited()
+        self.prepend(self.children, b.children, filter)
     
     
 class Collection(SchemaObject):
@@ -261,7 +479,7 @@ class Collection(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('element', 'sequence', 'all', 'choice', 'any')
+        return ('element', 'sequence', 'all', 'choice', 'any', 'group')
 
     def promote(self, pa, pc):
         """
@@ -354,7 +572,7 @@ class ComplexContent(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'extension',)
+        return ('attribute', 'attributeGroup', 'extension', 'restriction')
 
 
 class Enumeration(Promotable):
@@ -570,7 +788,7 @@ class Extension(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'sequence', 'all', 'choice', 'any')
+        return ('attribute', 'attributeGroup', 'sequence', 'all', 'choice', 'group')
         
     def mutate(self):
         """

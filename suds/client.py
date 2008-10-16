@@ -89,6 +89,16 @@ class Client(object):
             self.service.__dport__ = self.wsdl.service.ports[name]
             return
         
+    def setlocation(self, url, names=None):
+        """
+        Override the invocation location (url) for service method.
+        @param url: A url location.
+        @type url: A url.
+        @param names:  A list of method names.  None=ALL
+        @type names: [str,..]
+        """
+        self.wsdl.service.setlocation(url, names)
+        
     def last_sent(self):
         """
         Get last sent I{soap} message.
