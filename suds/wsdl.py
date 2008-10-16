@@ -524,15 +524,21 @@ class Binding(NamedObject):
             soap.style = sr.get('style', default=self.soap.style)
             soap.input = SFactory.object('Input')
             soap.input.body = SFactory.object('Body')
+            soap.input.header = SFactory.object('Header')
             soap.output = SFactory.object('Output')
             soap.output.body = SFactory.object('Body')
+            soap.output.header = SFactory.object('Header')
             op.soap = soap
             input = c.getChild('input')
             body = input.getChild('body')
             self.body(definitions, soap.input.body, body)
+            header = input.getChild('header')
+            self.header(definitions, soap.input.header, header)
             output = c.getChild('output')
             body = output.getChild('body')
             self.body(definitions, soap.output.body, output)
+            header = output.getChild('header')
+            self.header(definitions, soap.output.header, header)
             self.operations[op.name] = op
             
     def body(self, definitions, body, root):
@@ -548,6 +554,26 @@ class Binding(NamedObject):
         else:
             prefix = root.findPrefix(ns)
             body.namespace = (prefix, ns)
+            
+    def header(self, definitions, header, root):
+        """ add the input/output header properties """
+        if root is None:
+            header.use = 'literal'
+            header.namespace = definitions.tns
+            return
+        header.use = root.get('use', default='literal')
+        ns = root.get('namespace')
+        if ns is None:
+            header.namespace = definitions.tns
+        else:
+            prefix = root.findPrefix(ns)
+            header.namespace = (prefix, ns)
+        msg = root.get('message')
+        if msg is not None:
+            header.message = msg
+        part = root.get('part')
+        if part is not None:
+            header.part = part
             
     def resolve(self, definitions):
         """

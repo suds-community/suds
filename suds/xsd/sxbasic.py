@@ -671,6 +671,7 @@ class Import(SchemaObject):
                 log.debug('imported schema (%s) not-found', self.ns[1])
             else:
                 result = self.download()
+        log.debug('imported:\n%s', result)
         return result
 
     def download(self):
