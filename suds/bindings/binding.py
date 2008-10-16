@@ -39,6 +39,8 @@ class Binding:
     """
     The soap binding class used to process outgoing and imcoming
     soap messages per the WSDL port binding.
+    @cvar replypp: The reply preprocessor.
+    @type replypp: (lambda s,r: r)
     @ivar wsdl: The wsdl.
     @type wsdl: L{suds.wsdl.Definitions}
     @ivar schema: The collective schema contained within the wsdl.
@@ -57,7 +59,10 @@ class Binding:
     @ivar encoded: The I{usr=literal} vs I{use=encoded} flag defines with version
         of the I{marshaller} and I{unmarshaller} should be used to encode/decode
         soap messages.
+    @type encoded: boolean
     """
+    
+    replyfilter = (lambda s,r: r)
 
     def __init__(self, wsdl):
         self.wsdl = wsdl
@@ -122,6 +127,7 @@ class Binding:
             collection.
         @rtype: tuple ( L{Element}, L{Object} )
         """
+        reply = self.replyfilter(reply)
         replyroot = self.parser.parse(string=reply)
         soapenv = replyroot.getChild('Envelope')
         soapenv.promotePrefixes()

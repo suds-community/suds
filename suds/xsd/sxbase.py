@@ -290,20 +290,19 @@ class SchemaObject:
         uninteresting nodes.  Nodes that don't directly contribute to the
         structure of the data are omitted.
         """
-        if self.flattened:
-            return
-        self.flattened = True
-        log.debug(Repr(self))
         pa, pc = [],[]
-        for c in self.children:
-            a, c = c.flatten(self)
-            pa += a
-            pc += c
-        if parent is None:
-            self.attributes += pa
-            self.children = pc
-        else:
-            self.promote(pa, pc)
+        if not self.flattened:
+            self.flattened = True
+            log.debug(Repr(self))
+            for c in self.children:
+                a, c = c.flatten(self)
+                pa += a
+                pc += c
+            if parent is None:
+                self.attributes += pa
+                self.children = pc
+            else:
+                self.promote(pa, pc)
         return (pa, pc)
             
     def promote(self, pa, pc):

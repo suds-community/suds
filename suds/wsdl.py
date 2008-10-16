@@ -655,6 +655,18 @@ class Service(NamedObject):
         @rtype: I{Method}
         """
         return self.methods.get(name)
+    
+    def setlocation(self, url, names=None):
+        """
+        Override the invocation location (url) for service method.
+        @param url: A url location.
+        @type url: A url.
+        @param names:  A list of method names.  None=ALL
+        @type names: [str,..]
+        """
+        for m in self.methods.values():
+            if names is None or m.name in names:
+                m.location = url
         
     def resolve(self, definitions):
         """

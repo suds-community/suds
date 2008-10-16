@@ -82,10 +82,10 @@ class SchemaCollection:
             child.open_imports()
         log.debug('loaded:\n%s', self)
         merged = self.merge()
-        log.debug('marged\n%s', merged)
+        log.debug('merged\n%s', merged)
         merged.dereference()
         merged.flatten()
-        log.debug('flattend-marged\n%s', merged)
+        log.debug('flattened-merged\n%s', merged)
         return merged
         
     def locate(self, ns):
@@ -138,6 +138,8 @@ class Schema:
     @type container: L{SchemaCollection}
     @ivar types: A schema types cache.
     @type types: {name:L{SchemaObject}}
+    @ivar groups: A schema groups cache.
+    @type groups: {name:L{SchemaObject}}
     @ivar children: A list of children.
     @type children: [L{SchemaObject},...]
     @ivar imports: A list of import objects.
@@ -163,12 +165,13 @@ class Schema:
         self.tns = self.mktns()
         self.baseurl = baseurl
         self.container = container
-        self.types = {}
         self.children = []
+        self.types = {}
         self.imports = []
         self.elements = {}
         self.attributes = {}
-        self.types = {}
+        self.groups = {}
+        self.agrps = {}
         self.merged = False
         form = self.root.get('elementFormDefault')
         if form is None:
@@ -208,6 +211,8 @@ class Schema:
         self.imports = collated[1]
         self.elements = collated[3]
         self.types = collated[4]
+        self.groups = collated[5]
+        self.agrps = collated[6]
         
     def merge(self, schema):
         """
@@ -230,6 +235,16 @@ class Schema:
             if item[0] in self.types:
                 continue
             self.types[item[0]] = item[1]
+            self.children.append(item[1])
+        for item in schema.groups.items():
+            if item[0] in self.groups:
+                continue
+            self.groups[item[0]] = item[1]
+            self.children.append(item[1])
+        for item in schema.agrps.items():
+            if item[0] in self.agrps:
+                continue
+            self.agrps[item[0]] = item[1]
             self.children.append(item[1])
         schema.merged = True
         return self
