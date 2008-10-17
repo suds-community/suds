@@ -513,21 +513,21 @@ class Binding(NamedObject):
             soap.style = sr.get('style', default=self.soap.style)
             soap.input = SFactory.object('Input')
             soap.input.body = SFactory.object('Body')
-            soap.input.header = SFactory.object('Header')
+            soap.input.header = None
             soap.output = SFactory.object('Output')
             soap.output.body = SFactory.object('Body')
-            soap.output.header = SFactory.object('Header')
+            soap.output.header = None
             op.soap = soap
             input = c.getChild('input')
             body = input.getChild('body')
             self.body(definitions, soap.input.body, body)
             header = input.getChild('header')
-            self.header(definitions, soap.input.header, header)
+            self.header(definitions, soap.input, header)
             output = c.getChild('output')
             body = output.getChild('body')
             self.body(definitions, soap.output.body, output)
             header = output.getChild('header')
-            self.header(definitions, soap.output.header, header)
+            self.header(definitions, soap.output, header)
             self.operations[op.name] = op
             
     def body(self, definitions, body, root):
@@ -544,13 +544,12 @@ class Binding(NamedObject):
             prefix = root.findPrefix(ns)
             body.namespace = (prefix, ns)
             
-    def header(self, definitions, header, root):
+    def header(self, definitions, parent, root):
         """ add the input/output header properties """
         if root is None:
-            header.use = 'literal'
-            header.namespace = definitions.tns
-            header.message = None
             return
+        header = SFactory.object('Header')
+        parent.header = header
         header.use = root.get('use', default='literal')
         ns = root.get('namespace')
         if ns is None:
@@ -596,8 +595,9 @@ class Binding(NamedObject):
         for op in self.operations.values():
             soap = op.soap
             for header in (soap.input.header, soap.output.header):
+                if header is None:
+                    continue
                 mn = header.message
-                if mn is None: continue
                 ref = qualify(mn, self.root, wsdlns)
                 message = definitions.messages.get(ref)
                 if message is None:

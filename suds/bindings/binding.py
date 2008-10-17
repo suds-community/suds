@@ -289,6 +289,8 @@ class Binding:
         n = 0
         content = []
         if len(headers):
+            if method.soap.input.header is None:
+                raise SoapHeadersNotPermitted(method.name)
             pts = self.part_types(method, header=True)
             for header in headers:
                 if len(pts) == n: break
