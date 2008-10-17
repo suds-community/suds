@@ -210,6 +210,7 @@ class Binding:
         @return: A fault object.
         @rtype: tuple ( L{Element}, L{Object} )
         """
+        reply = self.replyfilter(reply)
         faultroot = self.parser.parse(string=reply)
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
