@@ -367,17 +367,6 @@ class Part(NamedObject):
         self.element = self.__getref('element', tns)
         self.type = self.__getref('type', tns)
         
-    def xsref(self):
-        """
-        Get the value of whichever is defined ( I{element} | I{type} ).
-        @return: The value of whichever is defined ( I{element} | I{type} ).
-        @rtype: (name, I{namespace}).
-        """
-        if self.element is None:
-            return self.type
-        else:
-            return self.element
-        
     def __getref(self, a, tns):
         """ Get the qualified value of attribute named 'a'."""
         s = self.root.get(a)
@@ -560,6 +549,7 @@ class Binding(NamedObject):
         if root is None:
             header.use = 'literal'
             header.namespace = definitions.tns
+            header.message = None
             return
         header.use = root.get('use', default='literal')
         ns = root.get('namespace')
@@ -581,12 +571,48 @@ class Binding(NamedObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
+        self.resolveport(definitions)
+        self.resolveheaders(definitions)
+        
+    def resolveport(self, definitions):
+        """
+        Resolve port_type reference.
+        @param definitions: A definitions object.
+        @type definitions: L{Definitions}
+        """
         ref = qualify(self.type, self.root, wsdlns)
         port_type = definitions.port_types.get(ref)
         if port_type is None:
             raise Exception("portType '%s', not-found" % self.type)
         else:
             self.type = port_type
+            
+    def resolveheaders(self, definitions):
+        """
+        Resolve soap header I{message} references.
+        @param definitions: A definitions object.
+        @type definitions: L{Definitions}
+        """
+        for op in self.operations.values():
+            soap = op.soap
+            for header in (soap.input.header, soap.output.header):
+                mn = header.message
+                if mn is None: continue
+                ref = qualify(mn, self.root, wsdlns)
+                message = definitions.messages.get(ref)
+                if message is None:
+                    raise Exception("message'%s', not-found" % mn)
+                if header.part is None:
+                    header.message = message
+                    continue
+                header.message = SFactory.object('Message')
+                header.message.name = message.name
+                header.message.qname = message.qname
+                header.message.parts = []
+                for p in message.parts:
+                    if p.name == header.part:
+                        header.message.parts.append(p)
+                        break
             
     def operation(self, name):
         """

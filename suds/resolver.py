@@ -24,7 +24,7 @@ from logging import getLogger
 from suds import *
 from suds.sax import splitPrefix, Namespace
 from suds.sudsobject import Object
-from suds.xsd.query import Query, qualify
+from suds.xsd.query import BlindQuery, qualify
 
 log = getLogger(__name__)
 
@@ -79,7 +79,7 @@ class PathResolver(Resolver):
         parts = self.split(path)
         log.debug('searching schema for (%s)', parts[0])
         qref = self.qualify(parts[0])
-        query = Query(qref)
+        query = BlindQuery(qref)
         result = query.execute(self.schema)
         if result is None:
             log.error('(%s) not-found', parts[0])
@@ -236,7 +236,7 @@ class TreeResolver(Resolver):
         """ find the type for name and optional parent """
         if parent is None:
             log.debug('searching schema for (%s)', name)
-            query = Query(name)
+            query = BlindQuery(name)
             result = query.execute(self.schema)
         else:
             log.debug('searching parent (%s) for (%s)', Repr(parent), name)

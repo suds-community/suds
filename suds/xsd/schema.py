@@ -290,34 +290,6 @@ class Schema:
         """
         for c in self.children:
             c.flatten()
-        
-    def execute(self, query):
-        """
-        Find a I{type} defined in one of the contained schemas.
-        @param query: A query.
-        @type query: L{query.Query}
-        @return: The found schema type. 
-        @rtype: L{SchemaObject()}
-        """
-        if self.builtin(query.ref):
-            name = query.ref[0]
-            b = BuiltinFactory.create(self, name)
-            log.debug('%s, found builtin (%s)', self.id, name)
-            return b
-        if query.element_priority:
-            collections = (self.elements, self.types)
-        else:
-            collections = (self.types,)
-        for d in collections:
-            result = d.get(query.ref)
-            if not query.filter(result):
-                break
-        if result is None:
-            return result
-        if query.resolved:
-            result = result.resolve()
-        query.result(result)
-        return result
 
     def custom(self, ref, context=None):
         """

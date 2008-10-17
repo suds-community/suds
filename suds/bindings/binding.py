@@ -26,7 +26,7 @@ from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
 from suds.bindings.marshaller import Marshaller
 from suds.bindings.unmarshaller import Unmarshaller
-from suds.xsd.query import Query
+from suds.xsd.query import TypeQuery, ElementQuery
 from suds.bindings.multiref import MultiRef
 
 log = getLogger(__name__)
@@ -107,10 +107,11 @@ class Binding:
         @return: The soap message.
         @rtype: str
         """
+        content = self.headercontent(method, soapheaders)
+        header = self.header(content)
         content = self.bodycontent(method, args)
         body = self.body(content)
-        header = self.header(soapheaders)
-        env = self.envelope(body, header)
+        env = self.envelope(header, body)
         env.promotePrefixes()
         return env
     
@@ -247,13 +248,13 @@ class Binding:
             return tags
         return marshaller.process(object, pdef[1], pdef[0])
             
-    def envelope(self, body, header):
+    def envelope(self, header, body):
         """
         Build the B{<Envelope/>} for an soap outbound message.
-        @param body: The soap message B{body}.
-        @type body: L{Element}
         @param header: The soap message B{header}.
         @type header: L{Element}
+        @param body: The soap message B{body}.
+        @type body: L{Element}
         @return: The soap envelope containing the body and header.
         @rtype: L{Element}
         """
@@ -264,45 +265,52 @@ class Binding:
         env.append(body)
         return env
     
-    def header(self, headers):
-        """
-        Build the B{<Header/>} for an soap outbound message.
-        @param headers: A collection of header objects.
-        @type headers: [L{Object},..]
-        @return: The soap header fragment.
-        @rtype: L{Element}
-        """
-        hdr = Element('Header', ns=envns)
-        if not isinstance(headers, (list,tuple)):
-            headers = (headers,)
-        if self.encoded:
-            marshaller = self.marshaller.encoded
-        else:
-            marshaller = self.marshaller.literal
-        for h in headers:
-            tag = h.__class__.__name__
-            if isinstance(h, Object):
-                value = h
-                type = h.__metadata__.__type__
-                node = marshaller.process(value, type, tag)
-                hdr.append(node)
-            else:
-                log.error('soapheader (%s) must be Object', tag)
-        return hdr
-    
-    def body(self, method):
+    def header(self, content):
         """
         Build the B{<Body/>} for an soap outbound message.
         @param method: The name of the method.
         @return: the soap body fragment.
         @rtype: L{Element}
         """
-        ns = self.wsdl.tns
+        header = Element('Header', ns=envns)
+        header.append(content)
+        return header
+    
+    def headercontent(self, method, headers):
+        """
+        Get the content for the soap I{Header} node.
+        @param method: A service method.
+        @type method: I{service.Method}
+        @param headers: method parameter values
+        @type headers: list
+        @return: The xml content for the <body/>
+        @rtype: [L{Element},..]
+        """
+        n = 0
+        content = []
+        if len(headers):
+            pts = self.part_types(method, header=True)
+            for header in headers:
+                if len(pts) == n: break
+                p = self.param(method, pts[n], header)
+                if p is not None:
+                    content.append(p)
+                n += 1
+        return content
+
+    
+    def body(self, content):
+        """
+        Build the B{<Body/>} for an soap outbound message.
+        @param method: The name of the method.
+        @return: the soap body fragment.
+        @rtype: L{Element}
+        """
         body = Element('Body', ns=envns)
-        body.append(method)
+        body.append(content)
         return body
     
-    def part_types(self, method, input=True):
+    def part_types(self, method, input=True, header=False):
         """
         Get a list of I{parameter definitions} (pdef) defined for the specified method.
         Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
@@ -310,17 +318,27 @@ class Binding:
         @type method: I{service.Method}
         @param input: Defines input/output message.
         @type input: boolean
+        @param header: Defines if parts are for soapheader.
+        @type header: boolean
         @return:  A list of parameter definitions
         @rtype: [I{pdef},]
         """
         result = []
         if input:
-            parts = method.message.input.parts
+            if header:
+                parts = method.soap.input.header.message.parts
+            else:
+                parts = method.message.input.parts
         else:
-            parts = method.message.output.parts
+            if header:
+                parts = method.soap.input.header.message.parts
+            else:
+                parts = method.message.output.parts
         for p in parts:
-            qref = p.xsref()
-            query = Query(qref)
+            if p.element is not None:
+                query = ElementQuery(p.element)
+            else:
+                query = TypeQuery(p.type)
             pt = query.execute(self.schema)
             if pt is None:
                 raise TypeNotFound(qref)
@@ -339,6 +357,6 @@ class Binding:
         @rtype: [I{rtype},..]
         """
         result = []
-        for rt in self.part_types(method, False):
+        for rt in self.part_types(method, input=False):
             result.append(rt)
         return result

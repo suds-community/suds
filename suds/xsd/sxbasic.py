@@ -23,7 +23,7 @@ from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.xsd.sxbase import *
-from suds.xsd.query import Query
+from suds.xsd.query import TypeQuery, ElementQuery, GroupQuery, AttrGroupQuery
 from suds.sax import splitPrefix
 from suds.sax.parser import Parser
 from urlparse import urljoin
@@ -255,16 +255,12 @@ class Group(SchemaObject):
         classes = (Group,)
         defns = self.default_namespace()
         qref = qualify(self.ref, self.root, defns)
-        e = self.schema.groups.get(qref)
-        if e is not None:
-            self.merge(deepcopy(e))
-            return
-        for c in self.schema.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                self.merge(deepcopy(p))
-                return
-        raise TypeNotFound(self.ref)
+        query = GroupQuery(qref)
+        g = query.execute(self.schema)
+        if g is None:
+            log.debug(self.schema)
+            raise TypeNotFound(qref)
+        self.merge(deepcopy(g))
     
     def merge(self, e):
         """
@@ -321,19 +317,14 @@ class AttributeGroup(SchemaObject):
         if self.mutated:
             return
         self.mutated = True
-        classes = (AttributeGroup,)
         defns = self.default_namespace()
         qref = qualify(self.ref, self.root, defns)
-        e = self.schema.agrps.get(qref)
-        if e is not None:
-            self.merge(deepcopy(e))
-            return
-        for c in self.schema.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                self.merge(deepcopy(p))
-                return
-        raise TypeNotFound(self.ref)
+        query = AttrGroupQuery(qref)
+        ag = query.execute(self.schema)
+        if ag is None:
+            log.debug(self.schema)
+            raise TypeNotFound(qref)
+        self.merge(deepcopy(ag))
     
     def merge(self, e):
         """
@@ -431,10 +422,10 @@ class Restriction(SchemaObject):
         log.debug(Repr(self))
         defns = self.default_namespace()
         qref = qualify(self.base, self.root, defns)
-        query = Query(type=qref)
+        query = TypeQuery(qref)
         super = query.execute(self.schema)
         if super is None:
-            log.error(self.schema)
+            log.debug(self.schema)
             raise TypeNotFound(qref)
         if not super.builtin():
             self.merge(deepcopy(super))
@@ -677,11 +668,12 @@ class Element(Promotable):
         result = self
         defns = self.root.defaultNamespace()
         qref = qualify(self.type, self.root, defns)
-        query = Query(type=qref)
+        query = TypeQuery(qref)
         query.history = [self]
         log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
         resolved = query.execute(self.schema)
         if resolved is None:
+            log.debug(self.schema)
             raise TypeNotFound(qref)
         if resolved.builtin():
             if nobuiltin:
@@ -703,16 +695,12 @@ class Element(Promotable):
         classes = (Element,)
         defns = self.default_namespace()
         qref = qualify(self.ref, self.root, defns)
-        e = self.schema.elements.get(qref)
-        if e is not None:
-            self.merge(deepcopy(e))
-            return
-        for c in self.schema.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                self.merge(deepcopy(p))
-                return
-        raise TypeNotFound(self.ref)
+        query = ElementQuery(qref)
+        e = query.execute(self.schema)
+        if e is None:
+            log.debug(self.schema)
+            raise TypeNotFound(qref)
+        self.merge(deepcopy(e))
     
     def merge(self, e):
         """
@@ -801,10 +789,10 @@ class Extension(SchemaObject):
         log.debug(Repr(self))
         defns = self.default_namespace()
         qref = qualify(self.base, self.root, defns)
-        query = Query(type=qref)
+        query = TypeQuery(qref)
         super = query.execute(self.schema)
         if super is None:
-            log.error(self.schema)
+            log.debug(self.schema)
             raise TypeNotFound(qref)
         self.merge(deepcopy(super))
 
