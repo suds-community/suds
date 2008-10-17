@@ -297,7 +297,6 @@ class Binding:
                     content.append(p)
                 n += 1
         return content
-
     
     def body(self, content):
         """
@@ -331,7 +330,7 @@ class Binding:
                 parts = method.message.input.parts
         else:
             if header:
-                parts = method.soap.input.header.message.parts
+                parts = method.soap.output.header.message.parts
             else:
                 parts = method.message.output.parts
         for p in parts:
