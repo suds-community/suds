@@ -111,7 +111,7 @@ class Document(Binding):
         @rtype: [L{xsd.sxbase.SchemaObject}]
         """
         result = []
-        for pt in self.part_types(method, False):
+        for pt in self.part_types(method, input=False):
             pt = pt.resolve(nobuiltin=True)
             for rt in pt.children:
                 result.append(rt)
