@@ -151,9 +151,10 @@ class Client(object):
         return unicode(self)
         
     def __unicode__(self):
-        ver = properties['version']
+        ver = properties.get('version')
+        build = properties.get('build', '')
         desc = unicode(self.sd)
-        return 'suds ( version=%s )\n\n%s'  % (ver, desc)
+        return 'Suds - Web Service Client, %s %s\n\n%s'  % (ver, build, desc)
 
 
 class Service:
