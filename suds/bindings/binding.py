@@ -39,8 +39,8 @@ class Binding:
     """
     The soap binding class used to process outgoing and imcoming
     soap messages per the WSDL port binding.
-    @cvar replypp: The reply preprocessor.
-    @type replypp: (lambda s,r: r)
+    @cvar replyfilter: The reply filter function.
+    @type replyfilter: (lambda s,r: r)
     @ivar wsdl: The wsdl.
     @type wsdl: L{suds.wsdl.Definitions}
     @ivar schema: The collective schema contained within the wsdl.
