@@ -296,6 +296,8 @@ class Binding:
                 if len(pts) == n: break
                 p = self.param(method, pts[n], header)
                 if p is not None:
+                    ns = pts[n][1].namespace()
+                    p.setPrefix(ns[0], ns[1])
                     content.append(p)
                 n += 1
         return content

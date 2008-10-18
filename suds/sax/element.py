@@ -113,6 +113,18 @@ class Element:
             raise Exception('name (%s) not-valid' % name)
         else:
             self.prefix, self.name = splitPrefix(name)
+            
+    def setPrefix(self, p, u=None):
+        """
+        Set the element namespace prefix.
+        @param p: A new prefix for the element.
+        @type p: basestring 
+        @param u: A namespace URI to be mapped to the prefix.
+        @type u: basestring
+        """
+        self.prefix = p
+        if p is not None and u is not None:
+            self.addPrefix(p, u)
 
     def qname(self):
         """
