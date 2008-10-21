@@ -697,7 +697,7 @@ class Element:
         Match by (optional) name and/or (optional) namespace.
         @param name: The optional element tag name.
         @type name: str
-        @param ns: An optional namespace used to match the child.
+        @param ns: An optional namespace.
         @type ns: (I{prefix}, I{name})
         @return: True if matched.
         @rtype: boolean
