@@ -268,7 +268,8 @@ class Binding:
     def header(self, content):
         """
         Build the B{<Body/>} for an soap outbound message.
-        @param method: The name of the method.
+        @param content: The header content.
+        @type content: L{Element}
         @return: the soap body fragment.
         @rtype: L{Element}
         """
@@ -305,7 +306,8 @@ class Binding:
     def body(self, content):
         """
         Build the B{<Body/>} for an soap outbound message.
-        @param method: The name of the method.
+        @param content: The body content.
+        @type content: L{Element}
         @return: the soap body fragment.
         @rtype: L{Element}
         """
@@ -344,7 +346,7 @@ class Binding:
                 query = TypeQuery(p.type)
             pt = query.execute(self.schema)
             if pt is None:
-                raise TypeNotFound(qref)
+                raise TypeNotFound(query.ref)
             if input:
                 result.append((p.name, pt))
             else:
