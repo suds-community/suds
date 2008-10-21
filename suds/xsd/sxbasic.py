@@ -24,7 +24,7 @@ from suds import *
 from suds.xsd import *
 from suds.xsd.sxbase import *
 from suds.xsd.query import TypeQuery, ElementQuery, GroupQuery, AttrGroupQuery
-from suds.sax import splitPrefix
+from suds.sax import splitPrefix, Namespace
 from suds.sax.parser import Parser
 from urlparse import urljoin
 from copy import copy, deepcopy
@@ -88,7 +88,7 @@ class Factory:
         """
         children = []
         attributes = []
-        for node in root.children:
+        for node in root.getChildren(ns=Namespace.xsdns):
             if '*' in filter or node.name in filter:
                 child = cls.create(node, schema)
                 if child is None:

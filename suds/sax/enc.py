@@ -25,8 +25,8 @@ class Encoder:
     An XML special character encoder/decoder.
     @cvar encodings: A mapping of special characters encoding.
     @type encodings: [(str,str)]
-    @cvar encodings: A mapping of special characters decoding.
-    @type encodings: [(str,str)]
+    @cvar decodings: A mapping of special characters decoding.
+    @type decodings: [(str,str)]
     @cvar special: A list of special characters
     @type special: [char]
     """

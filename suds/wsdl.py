@@ -27,7 +27,7 @@ from suds.sax.parser import Parser
 from suds.sax.element import Element
 from suds.bindings.document import Document
 from suds.bindings.rpc import RPC
-from suds.xsd import qualify
+from suds.xsd import qualify, Namespace
 from suds.xsd.schema import SchemaCollection
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SFactory
@@ -50,7 +50,7 @@ class Factory:
     tags =\
     {
         'import' : lambda x,y: Import(x,y), 
-        'schema' : lambda x,y: Schema(x,y), 
+        'types' : lambda x,y: Types(x,y), 
         'message' : lambda x,y: Message(x,y), 
         'portType' : lambda x,y: PortType(x,y),
         'binding' : lambda x,y: Binding(x,y),
@@ -168,10 +168,10 @@ class Definitions(WObject):
         self.id = objid(self)
         self.url = url
         self.tns = self.mktns(root)
+        self.types = []
         self.schema = None
         self.children = []
         self.imports = []
-        self.schemas = []
         self.messages = {}
         self.port_types = {}
         self.bindings = {}
@@ -200,31 +200,28 @@ class Definitions(WObject):
         
     def add_children(self, root):
         """ Add child objects using the factory """
-        paths = \
-            ('import', 'types/schema', 'message', 'portType', 'binding', 'service')
-        for path in paths:
-            for c in root.childrenAtPath(path):
-                child = Factory.create(c, self)
-                if child is None: continue
-                self.children.append(child)
-                if isinstance(child, Import):
-                    self.imports.append(child)
-                    continue
-                if isinstance(child, Schema):
-                    self.schemas.append(child)
-                    continue
-                if isinstance(child, Message):
-                    self.messages[child.qname] = child
-                    continue
-                if isinstance(child, PortType):
-                    self.port_types[child.qname] = child
-                    continue
-                if isinstance(child, Binding):
-                    self.bindings[child.qname] = child
-                    continue
-                if isinstance(child, Service):
-                    self.service = child
-                    continue
+        for c in root.getChildren(ns=wsdlns):
+            child = Factory.create(c, self)
+            if child is None: continue
+            self.children.append(child)
+            if isinstance(child, Import):
+                self.imports.append(child)
+                continue
+            if isinstance(child, Types):
+                self.types.append(child)
+                continue
+            if isinstance(child, Message):
+                self.messages[child.qname] = child
+                continue
+            if isinstance(child, PortType):
+                self.port_types[child.qname] = child
+                continue
+            if isinstance(child, Binding):
+                self.bindings[child.qname] = child
+                continue
+            if isinstance(child, Service):
+                self.service = child
+                continue
                 
     def open_imports(self, opener):
         """ Import the I{imported} WSDLs. """
@@ -238,14 +235,15 @@ class Definitions(WObject):
             c.resolve(self)
                 
     def build_schema(self):
-        """ Process schema objects and create the schema collection """
+        """ Process L{Types} objects and create the schema collection """
         container = SchemaCollection(self)
-        for s in self.schemas:
-            entry = (s.root, s.definitions)
-            container.add(entry)
+        for t in self.types:
+            for s in t.schemas():
+                entry = (s, self)
+                container.add(entry)
         if not len(container): # empty
-            root = Element.buildPath(self.root, 'types/schema')
-            entry = (root, self)
+            s = Element.buildPath(self.root, 'types/schema')
+            entry = (s, self)
             container.add(entry)
         self.schema = container.load()
                 
@@ -311,7 +309,7 @@ class Import(WObject):
         if '://' not in url:
             url = urljoin(definitions.url, url)
         d = Definitions(url, opener)
-        definitions.schemas += d.schemas
+        definitions.types += d.types
         definitions.messages.update(d.messages)
         definitions.port_types.update(d.port_types)
         definitions.bindings.update(d.bindings)
@@ -321,7 +319,7 @@ class Import(WObject):
         return False
         
 
-class Schema(WObject):
+class Types(WObject):
     """
     Represents <types><schema/></types>.
     """
@@ -335,6 +333,9 @@ class Schema(WObject):
         """
         WObject.__init__(self, root, definitions)
         self.definitions = definitions
+        
+    def schemas(self):
+        return self.root.getChildren('schema', Namespace.xsdns)
         
     def __gt__(self, other):
         return isinstance(other, Import)
@@ -397,7 +398,7 @@ class Message(NamedObject):
             self.parts.append(part)
             
     def __gt__(self, other):
-        return isinstance(other, (Import, Schema))
+        return isinstance(other, (Import, Types))
 
 
 class PortType(NamedObject):
@@ -464,7 +465,7 @@ class PortType(NamedObject):
             raise MethodNotFound(name)
                 
     def __gt__(self, other):
-        return isinstance(other, (Import, Schema, Message))
+        return isinstance(other, (Import, Types, Message))
 
 
 class Binding(NamedObject):
