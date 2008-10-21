@@ -362,7 +362,7 @@ class Element:
 
     def getChild(self, name, ns=None, default=None):
         """
-        Get a child by name and (optional) namespace.
+        Get a child by (optional) name and/or (optional) namespace.
         @param name: The name of a child element (may contain prefix).
         @type name: basestring
         @param ns: An optional namespace used to match the child.
@@ -424,7 +424,7 @@ class Element:
         
     def getChildren(self, name=None, ns=None):
         """
-        Get a list of children by name and (optional) namespace.
+        Get a list of children by (optional) name and/or (optional) namespace.
         @param name: The name of a child element (may contain prefix).
         @type name: basestring
         @param ns: An optional namespace used to match the child.
@@ -694,7 +694,7 @@ class Element:
     
     def match(self, name=None, ns=None):
         """
-        Match by name and namespace.
+        Match by (optional) name and/or (optional) namespace.
         @param name: The optional element tag name.
         @type name: str
         @param ns: An optional namespace used to match the child.
