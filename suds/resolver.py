@@ -234,7 +234,8 @@ class TreeResolver(Resolver):
         """ find the type for name and optional parent """
         if parent is None:
             log.debug('searching schema for (%s)', name)
-            query = BlindQuery(name)
+            qref = qualify(name, self.schema.root, self.schema.tns)
+            query = BlindQuery(qref)
             result = query.execute(self.schema)
         else:
             log.debug('searching parent (%s) for (%s)', Repr(parent), name)
@@ -331,7 +332,10 @@ class GraphResolver(TreeResolver):
             result = self.__embedded(object)
             if result is not None:
                 pushed = self.push(result)
-                return pushed[1]
+                if resolved:
+                    return pushed[1]
+                else:
+                    return result
             name = object.__class__.__name__
         top = self.top()
         if top is None:
