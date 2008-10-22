@@ -539,8 +539,9 @@ class Literal(MBase):
         @note: This will I{push} the type in the resolver.
         """
         log.debug('starting content:\n%s', content)
-        if isinstance(content.value, Object):
-            content.type = self.__metatype(content)
+        if content.type is None:
+            if isinstance(content.value, Object):
+                content.type = self.__metatype(content)
         if content.type is None:
             name = content.tag
             if name.startswith('_'):
