@@ -44,6 +44,7 @@ class Builder:
                 raise TypeNotFound(name)
         else:
             type = name
+        resolved = type.resolve()
         cls = type.name
         if len(type):
             data = Factory.object(cls)
@@ -52,8 +53,8 @@ class Builder:
         md = data.__metadata__
         md.__type__ = type
         history = []
-        self.add_attributes(data, type)
-        for c in type.children:
+        self.add_attributes(data, resolved)
+        for c in resolved.children:
             if self.skip_child(c):
                 continue
             self.process(data, c, history)

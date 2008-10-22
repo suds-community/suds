@@ -104,12 +104,17 @@ class BlindQuery(Query):
             b = Factory.create(schema, name)
             log.debug('%s, found builtin (%s)', self.id, name)
             return b
+        result = None
         for d in (schema.elements, schema.types):
             result = d.get(self.ref)
             if self.filter(result):
                 result = None
             else:
                 break
+        if result is None:
+            eq = ElementQuery(self.ref)
+            eq.history = self.history
+            result = eq.execute(schema)
         return self.result(result)
 
 

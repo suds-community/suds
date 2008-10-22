@@ -327,7 +327,7 @@ class Factory:
         type = self.resolver.find(name)
         if type is None:
             raise TypeNotFound(name)
-        if type.enum():
+        if type.resolve().enum():
             result = InstFactory.object(name)
             for e in type.children:
                 enum = e.name
