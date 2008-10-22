@@ -63,7 +63,7 @@ class PathResolver(Resolver):
         Resolver.__init__(self, wsdl.schema)
         self.wsdl = wsdl
 
-    def find(self, path, resolved=True):
+    def find(self, path, resolved=False):
         """
         Get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
@@ -86,9 +86,8 @@ class PathResolver(Resolver):
             return result
         log.debug('found (%s) as (%s)', parts[0], Repr(result))
         leaf = parts[-1]
-        if resolved or \
-            result != leaf:
-                result = result.resolve(nobuiltin=True)
+        if resolved or result.name != leaf:
+            result = result.resolve(nobuiltin=True)
         for part in parts[1:]:
             name = splitPrefix(part)[1]
             log.debug('searching parent (%s) for (%s)', Repr(result), name)
@@ -100,9 +99,8 @@ class PathResolver(Resolver):
                 log.error('(%s) not-found', name)
                 break
             log.debug('found (%s) as (%s)', name, Repr(result))
-            if resolved or \
-                result != leaf:
-                    result = result.resolve(nobuiltin=True)
+            if resolved or result.name != leaf:
+                result = result.resolve(nobuiltin=True)
         return result
     
     def qualify(self, name):

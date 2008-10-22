@@ -46,9 +46,8 @@ class ServiceDefinition:
         self.service = wsdl.service
         self.ports = []
         self.prefixes = []
-        self.types = []
         self.addports(wsdl.service)
-        self.addtypes()
+        self.getprefixes()
         self.pushprefixes()
     
     def pushprefixes(self):
@@ -90,34 +89,28 @@ class ServiceDefinition:
         @rtype: (port, [method])
         """
         for p in self.ports:
-            if p[0] == p:
-                return p
+            if p[0] == p: return p
         p = (port, [])
         self.ports.append(p)
         return p
             
-    def addtypes(self):
+    def getprefixes(self):
         """
-        Create our list of top level types defined in all schema's in the wsdl.
+        Add prefixes foreach namespace referenced by parameter types.
         """
         namespaces = []
-        self.types = []
-        for type in self.wsdl.schema.children:
-            if type.name is None:
-                continue
-            self.types.append(type)
-        for t in self.types:
-            ns = t.namespace()
-            if ns in namespaces:
-                continue
-            namespaces.append(ns)
+        for m in [p[1] for p in self.ports]:
+            for p in [p[1] for p in m]:
+                for pd in p:
+                    ns = pd[1].namespace()
+                    if ns in namespaces: continue
+                    namespaces.append(ns)
         i = 0
         namespaces.sort()
         for ns in namespaces:
             p = self.nextprefix()
             ns = (p, ns[1])
             self.prefixes.append(ns)
-        self.types.sort()
         
     def nextprefix(self):
         """
@@ -142,11 +135,9 @@ class ServiceDefinition:
         @rtype: (prefix, uri).
         """
         for ns in Namespace.all:
-            if u == ns[1]:
-                return ns[0]
+            if u == ns[1]: return ns[0]
         for ns in self.prefixes:
-            if u == ns[1]:
-                return ns[0]
+            if u == ns[1]: return ns[0]
         raise Exception('ns (%s) not mapped'  % u)
     
     def xlate(self, type):
@@ -158,10 +149,11 @@ class ServiceDefinition:
         @rtype: str
         """
         resolved = type.resolve()
-        name = resolved.name
+        if resolved.builtin(): type = resolved
+        name = type.name
         if type.unbounded():
             name += '[]'
-        ns = resolved.namespace()
+        ns = type.namespace()
         if ns[1] == self.wsdl.tns[1]:
             return name
         prefix = self.getprefix(ns[1])
@@ -184,13 +176,13 @@ class ServiceDefinition:
         s.append(indent(1))
         s.append('ports (%d):' % len(self.ports))
         for p in self.ports:
-            s.append(indent(3))
+            s.append(indent(2))
             s.append('(%s)' % p[0].name)
-            s.append(indent(4))
+            s.append(indent(3))
             s.append('methods (%d):' % len(p[1]))
             for m in p[1]:
                 sig = []
-                s.append(indent(5))
+                s.append(indent(4))
                 sig.append(m[0])
                 sig.append('(')
                 for p in m[1]:
@@ -200,11 +192,7 @@ class ServiceDefinition:
                     sig.append(', ')
                 sig.append(')')
                 s.append(''.join(sig))
-        s.append(indent(1))
-        s.append('types (%d):' % len(self.types))
-        for t in self.types:
-            s.append(indent(2))
-            s.append(self.xlate(t))
+        s.append('\n\n')
         return ''.join(s)
     
     def __str__(self):
