@@ -234,9 +234,14 @@ class TreeResolver(Resolver):
         """ find the type for name and optional parent """
         if parent is None:
             log.debug('searching schema for (%s)', name)
-            qref = qualify(name, self.schema.root, self.schema.tns)
+            schema = self.schema
+            wsdl = self.__wsdl()
+            if wsdl is None:
+                qref = qualify(name, schema.root, schema.tns)
+            else:
+                qref = qualify(name, wsdl.root, wsdl.tns)
             query = BlindQuery(qref)
-            result = query.execute(self.schema)
+            result = query.execute(schema)
         else:
             log.debug('searching parent (%s) for (%s)', Repr(parent), name)
             if name.startswith('@'):
@@ -248,6 +253,13 @@ class TreeResolver(Resolver):
         else:
             log.debug('(%s) found as (%s)', name, Repr(result))
         return result
+    
+    def __wsdl(self):
+        container = self.schema.container
+        if container is None:
+            return None
+        else:
+            return container.wsdl
 
 
 

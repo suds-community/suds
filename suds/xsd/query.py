@@ -236,9 +236,10 @@ class ElementQuery(Query):
         return self.result(result)
     
     def __deepsearch(self, schema):
+        from suds.xsd.sxbasic import Element
         result = None
-        for e in schema.elements.values():
-            result = e.find(self.ref)
+        for e in schema.children:
+            result = e.find(self.ref, (Element,))
             if self.filter(result):
                 result = None
             else:

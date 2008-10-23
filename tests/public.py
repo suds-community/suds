@@ -28,6 +28,9 @@ errors = 0
 
 setup_logging()
 
+from suds.xsd.sxbasic import Import
+Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
+
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
 #logging.getLogger('suds').setLevel(logging.DEBUG)
@@ -111,22 +114,8 @@ try:
     client = Client(url)
     print client
     #client.setport(0)
-    tpa = client.factory.create('ns0:TPA_Extensions')
+    tpa = client.factory.create('ns1:TPA_Extensions')
     print client.service.Ping(tpa, "hello")
-except WebFault, f:
-    errors += 1
-    print f
-    print f.fault
-except Exception, e:
-    errors += 1
-    print e
-    tb.print_exc()
-    
-try:
-    url = 'http://www.netunitysoftware.com/wsrp2interop/wsrpproducer.asmx?Operation=WSDL&WsrpVersion=Two'
-    start(url)
-    client = Client(url)
-    print client
 except WebFault, f:
     errors += 1
     print f
@@ -203,7 +192,7 @@ try:
     start(url)
     client = Client(url)
     print client
-    env = client.factory.create('ns0:Envelope')
+    env = client.factory.create('ns2:Envelope')
     print env
     options = client.factory.create('ns1:MapImageOptions')
     print options
