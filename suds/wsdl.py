@@ -246,7 +246,6 @@ class Definitions(WObject):
             entry = (s, self)
             container.add(entry)
         self.schema = container.load()
-        self.schema.tns = self.tns
                 
     def add_methods(self):
         bindings = {

@@ -102,14 +102,18 @@ class ServiceDefinition:
         for m in [p[1] for p in self.ports]:
             for p in [p[1] for p in m]:
                 for pd in p:
-                    ns = pd[1].namespace()
-                    if ns in namespaces: continue
-                    namespaces.append(ns)
+                    u = pd[1].namespace()[1]
+                    if u in namespaces: continue
+                    namespaces.append(u)
+        for t in self.wsdl.schema.types.values():
+            u = t.namespace()[1]
+            if u in namespaces: continue
+            namespaces.append(u)
         i = 0
         namespaces.sort()
-        for ns in namespaces:
+        for u in namespaces:
             p = self.nextprefix()
-            ns = (p, ns[1])
+            ns = (p, u)
             self.prefixes.append(ns)
         
     def nextprefix(self):
@@ -167,19 +171,19 @@ class ServiceDefinition:
         """
         s = []
         indent = (lambda n :  '\n%*s'%(n*3,' '))
-        s.append('service ( %s )' % self.service.name)
+        s.append('Service ( %s ) tns="%s"' % (self.service.name, self.wsdl.tns[1]))
         s.append(indent(1))
-        s.append('prefixes (%d)' % len(self.prefixes))
+        s.append('Prefixes (%d)' % len(self.prefixes))
         for p in self.prefixes:
             s.append(indent(2))
             s.append('%s = "%s"' % p)
         s.append(indent(1))
-        s.append('ports (%d):' % len(self.ports))
+        s.append('Ports (%d):' % len(self.ports))
         for p in self.ports:
             s.append(indent(2))
             s.append('(%s)' % p[0].name)
             s.append(indent(3))
-            s.append('methods (%d):' % len(p[1]))
+            s.append('Methods (%d):' % len(p[1]))
             for m in p[1]:
                 sig = []
                 s.append(indent(4))

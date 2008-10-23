@@ -28,10 +28,13 @@ import suds.metrics as metrics
 from tests import *
 from suds import WebFault
 from suds.client import Client
+from suds.xsd.sxbasic import Import
 
 errors = 0
 
 setup_logging()
+
+Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
@@ -397,6 +400,10 @@ def authentication():
         start(url)
         client = Client(url)
         print client
+        #
+        # test enumerations
+        #
+        permission = client.factory.create('permission')
         #
         # login
         #
