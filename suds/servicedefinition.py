@@ -99,13 +99,11 @@ class ServiceDefinition:
         Add prefixes foreach namespace referenced by parameter types.
         """
         namespaces = []
-        for m in [p[1] for p in self.ports]:
-            for p in [p[1] for p in m]:
-                for pd in p:
-                    u = pd[1].namespace()[1]
-                    if u in namespaces: continue
-                    namespaces.append(u)
-        for t in self.wsdl.schema.types.values():
+        for t,r in self.paramtypes():
+            u = r.namespace()[1]
+            if u in namespaces: continue
+            namespaces.append(u)
+            if t == r: continue
             u = t.namespace()[1]
             if u in namespaces: continue
             namespaces.append(u)
@@ -115,6 +113,13 @@ class ServiceDefinition:
             p = self.nextprefix()
             ns = (p, u)
             self.prefixes.append(ns)
+            
+    def paramtypes(self):
+        """ get all parameter types """
+        for m in [p[1] for p in self.ports]:
+            for p in [p[1] for p in m]:
+                for pd in p:
+                    yield (pd[1], pd[1].resolve())
         
     def nextprefix(self):
         """
@@ -153,11 +158,10 @@ class ServiceDefinition:
         @rtype: str
         """
         resolved = type.resolve()
-        if resolved.builtin(): type = resolved
-        name = type.name
+        name = resolved.name
         if type.unbounded():
             name += '[]'
-        ns = type.namespace()
+        ns = resolved.namespace()
         if ns[1] == self.wsdl.tns[1]:
             return name
         prefix = self.getprefix(ns[1])

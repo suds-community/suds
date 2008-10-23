@@ -482,7 +482,7 @@ def content_source():
         # create a configuration
         #
         configuration = client.factory.create('configuration')
-        entry = client.factory.create('configuration.tns:properties.tns:entry')
+        entry = client.factory.create('configuration.properties.entry')
         simple = client.factory.create('propertySimple')
         entry.key = 'location'
         simple.name = 'location'
