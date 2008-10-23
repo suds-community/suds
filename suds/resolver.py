@@ -77,30 +77,80 @@ class PathResolver(Resolver):
         """
         result = None
         parts = self.split(path)
-        log.debug('searching schema for (%s)', parts[0])
+        try:
+            result = self.root(parts)
+            if len(parts) > 1:
+                result = result.resolve(nobuiltin=True)
+            if len(parts) > 2:
+                result = self.branch(result, parts)
+                result = self.leaf(result, parts)
+            if resolved:
+                result = result.resolve(nobuiltin=True)
+        except PathResolver.BadPath:
+            log.error('path: "%s", not-found' % path)
+        return result
+    
+    def root(self, parts):
+        """
+        Find the path root.
+        @param parts: A list of path parts.
+        @type parts: [str,..]
+        @return: The root.
+        @rtype: L{xsd.sxbase.SchemaObject}
+        """
+        result = None
+        name = parts[0]
+        log.debug('searching schema for (%s)', name)
         qref = self.qualify(parts[0])
         query = BlindQuery(qref)
         result = query.execute(self.schema)
         if result is None:
-            log.error('(%s) not-found', parts[0])
-            return result
-        log.debug('found (%s) as (%s)', parts[0], Repr(result))
-        leaf = parts[-1]
-        if resolved or result.name != leaf:
-            result = result.resolve(nobuiltin=True)
-        for part in parts[1:]:
+            log.error('(%s) not-found', name)
+            raise PathResolver.BadPath(name)
+        else:
+            log.debug('found (%s) as (%s)', name, Repr(result))
+        return result
+    
+    def branch(self, root, parts):
+        """
+        Traverse the path until the leaf is reached.
+        @param parts: A list of path parts.
+        @type parts: [str,..]
+        @param root: The root.
+        @type root: L{xsd.sxbase.SchemaObject}
+        @return: The end of the branch.
+        @rtype: L{xsd.sxbase.SchemaObject}
+        """
+        result = root
+        for part in parts[1:-1]:
             name = splitPrefix(part)[1]
             log.debug('searching parent (%s) for (%s)', Repr(result), name)
-            if name.startswith('@'):
-                result = result.get_attribute(name[1:])
-            else:
-                result = result.get_child(name)
+            result = result.get_child(name)
             if result is None:
                 log.error('(%s) not-found', name)
-                break
-            log.debug('found (%s) as (%s)', name, Repr(result))
-            if resolved or result.name != leaf:
+                raise PathResolver.BadPath(name)
+            else:
                 result = result.resolve(nobuiltin=True)
+                log.debug('found (%s) as (%s)', name, Repr(result))
+        return result
+    
+    def leaf(self, parent, parts):
+        """
+        Find the leaf.
+        @param parts: A list of path parts.
+        @type parts: [str,..]
+        @param parent: The leaf's parent.
+        @type parent: L{xsd.sxbase.SchemaObject}
+        @return: The leaf.
+        @rtype: L{xsd.sxbase.SchemaObject}
+        """
+        name = splitPrefix(parts[-1])[1]
+        if name.startswith('@'):
+            result = parent.get_attribute(name[1:])
+        else:
+            result = parent.get_child(name)
+        if result is None:
+            raise PathResolver.BadPath(name)
         return result
     
     def qualify(self, name):
@@ -139,6 +189,9 @@ class PathResolver(Resolver):
             parts.append(s[b:e])
             b = e+1
         return parts
+    
+    class BadPath(Exception): pass
+        
 
 
 class TreeResolver(Resolver):
