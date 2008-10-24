@@ -192,9 +192,9 @@ try:
     start(url)
     client = Client(url)
     print client
-    env = client.factory.create('ns0:Envelope')
+    env = client.factory.create('ns2:Envelope')
     print env
-    options = client.factory.create('ns2:MapImageOptions')
+    options = client.factory.create('ns4:MapImageOptions')
     print options
 except WebFault, f:
     errors += 1
