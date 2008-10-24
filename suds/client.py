@@ -114,7 +114,8 @@ class Client(object):
         mapped = root.resolvePrefix(prefix, None)
         if mapped is None:
             root.addPrefix(prefix, uri)
-        else:
+            return
+        if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
         
     def last_sent(self):
