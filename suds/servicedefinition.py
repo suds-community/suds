@@ -45,8 +45,12 @@ class ServiceDefinition:
         self.wsdl = wsdl
         self.service = wsdl.service
         self.ports = []
+        self.params = []
+        self.types = []
         self.prefixes = []
         self.addports(wsdl.service)
+        self.paramtypes()
+        self.publictypes()
         self.getprefixes()
         self.pushprefixes()
     
@@ -99,14 +103,15 @@ class ServiceDefinition:
         Add prefixes foreach namespace referenced by parameter types.
         """
         namespaces = []
-        for t,r in self.paramtypes():
-            u = r.namespace()[1]
-            if u in namespaces: continue
-            namespaces.append(u)
-            if t == r: continue
-            u = t.namespace()[1]
-            if u in namespaces: continue
-            namespaces.append(u)
+        for l in (self.params, self.types):
+            for t,r in l:
+                u = r.namespace()[1]
+                if u in namespaces: continue
+                namespaces.append(u)
+                if t == r: continue
+                u = t.namespace()[1]
+                if u in namespaces: continue
+                namespaces.append(u)
         i = 0
         namespaces.sort()
         for u in namespaces:
@@ -119,7 +124,19 @@ class ServiceDefinition:
         for m in [p[1] for p in self.ports]:
             for p in [p[1] for p in m]:
                 for pd in p:
-                    yield (pd[1], pd[1].resolve())
+                    if pd[1] in self.params: continue
+                    item = (pd[1], pd[1].resolve())
+                    self.params.append(item)
+                    
+    def publictypes(self):
+        """ get all public types """
+        for t in self.wsdl.schema.types.values():
+            if t in self.params: continue
+            if t in self.types: continue
+            item = (t, t)
+            self.types.append(item)
+        tc = lambda x,y: cmp(x[0].name, y[0].name)
+        self.types.sort(cmp=tc)
         
     def nextprefix(self):
         """
@@ -200,6 +217,11 @@ class ServiceDefinition:
                     sig.append(', ')
                 sig.append(')')
                 s.append(''.join(sig))
+            s.append(indent(3))
+            s.append('Types (%d):' % len(self.types))
+            for t in self.types:
+                s.append(indent(4))
+                s.append(self.xlate(t[0]))
         s.append('\n\n')
         return ''.join(s)
     

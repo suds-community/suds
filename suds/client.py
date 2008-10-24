@@ -99,6 +99,24 @@ class Client(object):
         """
         self.wsdl.service.setlocation(url, names)
         
+    def addprefix(self, prefix, uri):
+        """
+        Add I{static} mapping of an XML namespace prefix to a namespace.
+        This is useful for cases when a wsdl and referenced schemas make heavy
+        use of namespaces and those namespaces are subject to changed.
+        @param prefix: An XML namespace prefix.
+        @type prefix: str
+        @param uri: An XML namespace URI.
+        @type prefix: str
+        @raise Exception: when prefix is already mapped.
+        """
+        root = self.wsdl.root
+        mapped = root.resolvePrefix(prefix, None)
+        if mapped is None:
+            root.addPrefix(prefix, uri)
+        else:
+            raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
+        
     def last_sent(self):
         """
         Get last sent I{soap} message.
