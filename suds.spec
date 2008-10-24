@@ -3,7 +3,7 @@
 Summary: A python SOAP client
 Name:  python-suds
 Version: 0.3.2
-Release: 1
+Release: 1%{?dist}
 Source0: %{name}-%{version}.tar.gz
 License: LGPLv3+
 Group: Development/Libraries
