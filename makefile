@@ -29,7 +29,7 @@ dist: clean
 	sed -e "s/name=\"suds\"/name=\"python-suds\"/" $(SETUP) > $(pythonSETUP)
 	python $(SETUP) sdist bdist_egg
 	python $(pythonSETUP) sdist bdist_egg
-    scp dist/*.gz fedorahosted.org:suds
+    scp dist/python-*.gz fedorahosted.org:suds
 	rm -rf *.egg-info
 	rm -f $(pythonSETUP)
 
