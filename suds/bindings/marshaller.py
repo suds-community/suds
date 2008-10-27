@@ -632,8 +632,9 @@ class Literal(MBase):
         @type content: L{Object}
         """
         if not content.type.any() and  content.type.derived():
-            name = content.type.name
-            ns = content.type.namespace()
+            resolved = content.type.resolve()
+            name = resolved.name
+            ns = resolved.namespace()
             node.set('xsi:type', name)
             log.debug('encoding name=(%s)', name)
             node.addPrefix(ns[0], ns[1])
@@ -690,8 +691,9 @@ class Encoded(Literal):
         @type content: L{Object}
         """
         if not content.type.any():
-            name = content.type.name
-            ns = content.type.namespace()
+            resolved = content.type.resolve()
+            name = resolved.name
+            ns = resolved.namespace()
             ref = ':'.join((ns[0], name))
             node.set('xsi:type', ref)
             log.debug('encoding name=(%s)', name)

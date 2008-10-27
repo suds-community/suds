@@ -36,7 +36,7 @@ from suds.xsd.sxbasic import Import
 Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 
 
-#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -51,7 +51,7 @@ try:
     # create a name object using the wsdl
     #
     print 'create name'
-    name = client.factory.create('ns1:Name')
+    name = client.factory.create('ns0:Name')
     name.first = u'jeff'+unichr(1234)
     name.last = 'ortel'
     print name
@@ -59,24 +59,24 @@ try:
     # create a phone object using the wsdl
     #
     print 'create phone'
-    phoneA = client.factory.create('ns1:Phone')
+    phoneA = client.factory.create('ns0:Phone')
     phoneA.npa = 410
     phoneA.nxx = 555
     phoneA.number = 5138
-    phoneB = client.factory.create('ns1:Phone')
+    phoneB = client.factory.create('ns0:Phone')
     phoneB.npa = 919
     phoneB.nxx = 555
     phoneB.number = 4406
     #
     # create a dog
     #
-    dog = client.factory.create('ns1:Dog')
+    dog = client.factory.create('ns0:Dog')
     dog.name = 'Chance'
     dog.trained = True
     #
     # create a person object using the wsdl
     #
-    person = client.factory.create('ns1:Person')
+    person = client.factory.create('ns0:Person')
     print '{empty} person=\n%s' % person
     person.name = name
     person.age = 43
@@ -92,13 +92,13 @@ try:
     #
     # create a new name object used to update the person
     #
-    newname = client.factory.create('ns1:Name')
+    newname = client.factory.create('ns0:Name')
     newname.first = 'Todd'
     newname.last = None
     #
     # create AnotherPerson using Person
     #
-    ap = client.factory.create('ns1:AnotherPerson')
+    ap = client.factory.create('ns0:AnotherPerson')
     ap.name = person.name
     ap.age = person.age
     ap.phone = person.phone
