@@ -118,6 +118,17 @@ class Client(object):
         if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
         
+    def setheaders(self, headers):
+        """
+        Set the soap headers for B{all} method calls.
+        This is the same as specifying I{soapheaders=headers} using the keyword.
+        @param headers: The soap header(s) values.  I{None} = clear headers.
+        @type headers: An object or (list|tuple) of objects. 
+        """
+        if headers is None:
+            headers = ()
+        self.service.__client__.soapheaders = headers
+        
     def last_sent(self):
         """
         Get last sent I{soap} message.
@@ -396,6 +407,7 @@ class SoapClient:
         self.arg.faults = kwargs.get('faults', True)
         self.arg.proxies = kwargs.get('proxy', {})
         self.arg.opener = kwargs.get('opener', None)
+        self.soapheaders = kwargs.get('soapheaders', ())
         self.wsdl = Definitions(url, self.arg.opener)
         self.schema = self.wsdl.schema
         self.builder = Builder(self.wsdl)
@@ -420,8 +432,7 @@ class SoapClient:
         result = None
         binding = method.binding.input
         binding.faults = self.arg.faults
-        soapheaders = kwargs.get('soapheaders', ())
-        msg = binding.get_message(method, args, soapheaders)
+        msg = binding.get_message(method, args, self.soapheaders)
         timer.stop()
         metrics.log.debug("message for '%s' created: %s", method.qname, timer)
         timer.start()

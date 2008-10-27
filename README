@@ -319,8 +319,24 @@ special (soapheaders) keyword as follows:
  > result = client.service.addPerson(person, soapheaders=(userid,password))
  >
  
+ OR
+ 
+  > client = client(url)
+ > userid = client.factory.create('Auth.UserID')
+ > userid.set('Elvis')
+ > password = client.factory.create('Auth.Password')
+ > password.set('TheKing')
+ > headers = (userid,password)
+ > client.setheaders(headers)
+ > result = client.service.addPerson(person)
+ >
+ 
  The keyword (soapheaders) *must* value must be a ( or list/tuple of ) Object
- (or Property) object(s) obtained from the client.factory.
+ (or Property) object(s) obtained from the client.factory when types are *not*
+ simple types such as (xs:string, xs:int, etc ).
+ 
+ The Client.setheaders() method may be used to set the soap headers for *all*
+ method invocations.
  
  
 MULTI-DOCUMENT Docuemnt/Literal:
