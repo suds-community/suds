@@ -310,6 +310,7 @@ class Element:
         element or an attrbuite.
         @param objects: A (single|collection) of attribute(s) or element(s)
             to be added as children.
+        @type objects: (L{Element}|L{Attribute})
         @return: self
         @rtype: L{Element}
         """
@@ -325,6 +326,26 @@ class Element:
                 child.parent = self
                 continue
             raise Exception('append %s not-valid' % child.__class__.__name__)
+        return self
+    
+    def insert(self, objects, index=0):
+        """
+        Insert an L{Element} content at the specified index.
+        @param objects: A (single|collection) of attribute(s) or element(s)
+            to be added as children.
+        @type objects: (L{Element}|L{Attribute})
+        @param index: The position in the list of children to insert.
+        @type index: int
+        @return: self
+        @rtype: L{Element}
+        """
+        objects = (objects,)
+        for child in objects:
+            if isinstance(child, Element):
+                self.children.insert(index, child)
+                child.parent = self
+            else:
+                raise Exception('append %s not-valid' % child.__class__.__name__)
         return self
     
     def remove(self, child):

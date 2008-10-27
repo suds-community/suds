@@ -29,7 +29,7 @@ dist: clean
 	sed -e "s/name=\"suds\"/name=\"python-suds\"/" $(SETUP) > $(pythonSETUP)
 	python $(SETUP) sdist bdist_egg
 	python $(pythonSETUP) sdist bdist_egg
-    scp dist/python-*.gz fedorahosted.org:suds
+	scp dist/python* fedorahosted.org:suds
 	rm -rf *.egg-info
 	rm -f $(pythonSETUP)
 
@@ -38,6 +38,7 @@ rpm: dist
 	rpmbuild -ba $(SPEC)
 	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
 	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
+	scp dist/python*.rpm fedorahosted.org:suds
 
 register: FORCE
 	python setup.py sdist bdist_egg register upload
@@ -46,6 +47,10 @@ clean: FORCE
 	rm -rf dist
 	rm -rf build
 	rm -rf *.egg-info
+	rm -rf /usr/src/redhat/BUILD/python-suds*
+	rm -rf /usr/src/redhat/RPMS/noarch/python-suds*
+	rm -rf /usr/src/redhat/SOURCES/python-suds*
+	rm -rf /usr/src/redhat/SRPMS/python-suds*
 	find . -name "*.pyc" -exec rm -f {} \;
 	find . -name "*~" -exec rm -f {} \;
 
