@@ -107,7 +107,7 @@ class Client(object):
         @param prefix: An XML namespace prefix.
         @type prefix: str
         @param uri: An XML namespace URI.
-        @type prefix: str
+        @type uri: str
         @raise Exception: when prefix is already mapped.
         """
         root = self.wsdl.root
