@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 #
 
-SPEC = suds.spec
+SPEC = python-suds.spec
 SETUP = setup.py
 pythonSETUP = .python-suds
 
