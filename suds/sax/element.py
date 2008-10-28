@@ -18,7 +18,6 @@
 Provides XML I{element} classes.
 """
 
-import suds.sax
 from logging import getLogger
 from suds import *
 from suds.sax import *

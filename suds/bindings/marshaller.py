@@ -22,7 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sudsobject import Factory, Object, Property, items
 from suds.resolver import GraphResolver
-from suds.sax import splitPrefix, Namespace
+from suds.sax import Namespace as NS
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.attribute import Attribute
@@ -635,10 +635,7 @@ class Literal(MBase):
             resolved = content.type.resolve()
             name = resolved.name
             ns = resolved.namespace()
-            node.set('xsi:type', name)
-            log.debug('encoding name=(%s)', name)
-            node.addPrefix(ns[0], ns[1])
-            node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
+            Typer.manual(node, name)
     
     def __metatype(self, content):
         """
@@ -690,12 +687,84 @@ class Encoded(Literal):
         @param content: The content for which proccessing has ended.
         @type content: L{Object}
         """
-        if not content.type.any():
+        if content.type.any():
+            Typer.auto(node, content.value)
+        else:
             resolved = content.type.resolve()
             name = resolved.name
             ns = resolved.namespace()
-            ref = ':'.join((ns[0], name))
-            node.set('xsi:type', ref)
-            log.debug('encoding name=(%s)', name)
+            Typer.manual(node, ns, name)
+            log.debug('encoded name=(%s)', name)
+
+
+class Typer:
+    """
+    Provides XML node typing as either automatic or manual.
+    @cvar types:  A dict of class to xs type mapping.
+    @type int: dict
+    """
+
+    types = {
+        int : ('int', NS.xsdns),
+        long : ('long', NS.xsdns),
+        str : ('string', NS.xsdns),
+        unicode : ('string', NS.xsdns),
+        bool : ('boolean', NS.xsdns),
+     }
+                
+    @classmethod
+    def auto(cls, node, value=None):
+        """
+        Automatically set the node's xsi:type attribute based on either I{value}'s
+        class or the class of the node's text.  When I{value} is an unmapped class,
+        the default type (xs:any) is set.
+        @param node: An XML node
+        @type node: L{sax.element.Element}
+        @param value: An object that is or would be the node's text.
+        @type value: I{any}
+        @return: The specified node.
+        @rtype: L{sax.element.Element}
+        """
+        if value is None:
+            value = node.getText()
+        tm = cls.types.get(value.__class__, ('any', NS.xsdns))
+        cls.manual(node, *tm)
+        return node
+
+    @classmethod
+    def manual(cls, node, tval, ns=None):
+        """
+        Set the node's xsi:type attribute based on either I{value}'s
+        class or the class of the node's text.  Then adds the referenced
+        prefix(s) to the node's prefix mapping.
+        @param node: An XML node
+        @type node: L{sax.element.Element}
+        @param tval: The name of the schema type.
+        @type tval: str
+        @param ns: The XML namespace of I{tval}.
+        @type ns: (prefix, uri)
+        @return: The specified node.
+        @rtype: L{sax.element.Element}
+        """
+        a = cls.qname(NS.xsins, 'type')
+        node.addPrefix(NS.xsins[0], NS.xsins[1])
+        if ns is None:
+            node.set(a, tval)
+        else:
+            node.set(a, cls.qname(ns, tval))
             node.addPrefix(ns[0], ns[1])
-            node.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
+        return node
+    
+    @classmethod
+    def qname(self, ns, tval):
+        """
+        Create a I{qname} for I{tval} and the specified namespace.
+        @param ns: The namespace of I{tval}.
+        @type ns: (prefix, uri)
+        @param tval: The name of the schema type.
+        @type tval: str
+        @return: The prefix:tval.
+        @rtype: str
+        """
+        return ':'.join((ns[0], tval))
+

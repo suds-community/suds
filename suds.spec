@@ -32,7 +32,8 @@ pluggable soap bindings.
 python setup.py sdist
 
 %install
-python setup.py install --optimize=1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
+rm -rf $RPM_BUILD_ROOT
+python setup.py install --optimize=1 --root=$RPM_BUILD_ROOT
 
 %clean
 rm -rf $RPM_BUILD_ROOT
