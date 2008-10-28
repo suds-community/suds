@@ -18,8 +18,10 @@
 SPEC = python-suds.spec
 SETUP = setup.py
 pythonSETUP = .python-suds
+DOCTAR = suds-docs.tar.gz
+FEDORAPEOPLE = jortel@fedorapeople.org
 
-all: rpm
+all: rpm docs
 
 egg: clean
 	python $(SETUP) bdist_egg
@@ -43,9 +45,18 @@ rpm: dist
 register: FORCE
 	python setup.py sdist bdist_egg register upload
 
+docs: FORCE
+	rm -rf doc
+	rm -f /tmp/$(DOCTAR)
+	epydoc -o doc `find suds -name "*.py"`
+	tar czvf /tmp/$(DOCTAR) doc
+	scp /tmp/$(DOCTAR) $(FEDORAPEOPLE):
+	ssh $(FEDORAPEOPLE) 'cd public_html/suds; rm -rf doc; tar xzvf ~/$(DOCTAR)'
+
 clean: FORCE
 	rm -rf dist
 	rm -rf build
+	rm -rf doc/*
 	rm -rf *.egg-info
 	rm -rf /usr/src/redhat/BUILD/python-suds*
 	rm -rf /usr/src/redhat/RPMS/noarch/python-suds*
