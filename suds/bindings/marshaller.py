@@ -693,7 +693,7 @@ class Encoded(Literal):
             resolved = content.type.resolve()
             name = resolved.name
             ns = resolved.namespace()
-            Typer.manual(node, ns, name)
+            Typer.manual(node, name, ns)
             log.debug('encoded name=(%s)', name)
 
 
@@ -766,5 +766,8 @@ class Typer:
         @return: The prefix:tval.
         @rtype: str
         """
-        return ':'.join((ns[0], tval))
+        try:
+            return ':'.join((ns[0], tval))
+        except:
+            pass
 
