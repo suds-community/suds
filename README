@@ -602,7 +602,7 @@ as follows:
 > opener = urllib2.build_opener(authhandler)
 >
 > myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
-> client = Client(myurl, urlopener=opener)
+> client = Client(myurl, opener=opener)
 >
 
 Since suds uses urllib2.urlopen(), basic http authentication is handled
