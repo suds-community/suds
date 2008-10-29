@@ -151,6 +151,8 @@ class Schema:
     @type form_qualified: bool
     """
     
+    Tag = 'schema'
+    
     def __init__(self, root, baseurl, container=None):
         """
         @param root: The xml root.
