@@ -195,20 +195,24 @@ class XDate(XBuiltin):
             return 0
     
     def toPython(self, value):
-        if len(value) == 0:
+        if value is None or len(value) == 0:
             return None
             
         year, month, day = value.rsplit('-', 3)
         
         #if it has a tz set, convert to user's tz
         if len(day) > 2:
-            date = datetime.datetime(int(year), int(month), int(day[:2]), tzinfo=LocalTimezone())
-
-            offset = time.timezone - self.get_offset(day[2:])
-
-            return date - datetime.timedelta(seconds=offset)
-        else:
-            return datetime.datetime(int(year), int(month), int(day))
+            try:
+                date = datetime.datetime(
+                                int(year), 
+                                int(month), 
+                                int(day[:2]), 
+                                tzinfo=LocalTimezone())
+                offset = time.timezone - self.get_offset(day[2:])
+                return date - datetime.timedelta(seconds=offset)
+            except:
+                log.warn('date "%s", invalid-timezone', value)
+        return datetime.datetime(int(year), int(month), int(day))
     
     def toString(self, value):
         if value is None:
@@ -257,7 +261,7 @@ class XTime(XDate):
         done differently from parent since datetime.timedelta does not work with the time object
         returns None, None if there is no tz set
         """
-        if len(value) == 0:
+        if value is None or len(value) == 0:
             return None, None
         elif value.lower() == "z":
             return 0, 0
@@ -309,9 +313,18 @@ class XTime(XDate):
         hour, minute, second, microsec, has_tz_set = self.get_time(value)
         
         if has_tz_set is not None:
-            return datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=microsec, tzinfo=LocalTimezone())
+            return datetime.time(
+                            hour=int(hour), 
+                            minute=int(minute), 
+                            second=int(second), 
+                            microsecond=microsec, 
+                            tzinfo=LocalTimezone())
         else:
-            return datetime.time(hour=int(hour), minute=int(minute), second=int(second), microsecond=microsec)
+            return datetime.time(
+                            hour=int(hour), 
+                            minute=int(minute), 
+                            second=int(second), 
+                            microsecond=microsec)
             
     def toString(self, value):
         if value is None:
@@ -354,7 +367,7 @@ class XDateTime(XTime, XDate):
         return int(hour), int(minute), second, microsec, leftover
 
     def toPython(self, value):
-        if len(value) == 0:
+        if value is None or len(value) == 0:
             return None
             
         date, mytime = value.split('T')
@@ -364,12 +377,29 @@ class XDateTime(XTime, XDate):
         
         #if it has a tz set, convert to user's tz
         if len(leftover) > 0:
-            date = datetime.datetime(int(year), int(month),  int(day), hour, minute, second, microsec, tzinfo=LocalTimezone())
-            #best way to convert timezone
-            offset = time.timezone - self.get_offset(leftover)
-            return date - datetime.timedelta(seconds=offset)
-        else:
-            return datetime.datetime(int(year), int(month),  int(day), hour, minute, second, microsec)
+            try:
+                date = datetime.datetime(
+                                int(year), 
+                                int(month),
+                                int(day), 
+                                hour, 
+                                minute, 
+                                second, 
+                                microsec, 
+                                tzinfo=LocalTimezone())
+                #best way to convert timezone
+                offset = time.timezone - self.get_offset(leftover)
+                return date - datetime.timedelta(seconds=offset)
+            except:
+                log.warn('datetime "%s", invalid-timezone', value)
+        return datetime.datetime(
+                        int(year), 
+                        int(month),  
+                        int(day), 
+                        hour, 
+                        minute, 
+                        second, 
+                        microsec)
 
     def toString(self, value):
         if value is None:
