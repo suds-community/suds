@@ -28,7 +28,7 @@ from suds.sax.element import Element
 from suds.bindings.document import Document
 from suds.bindings.rpc import RPC
 from suds.xsd import qualify, Namespace
-from suds.xsd.schema import SchemaCollection
+from suds.xsd.schema import Schema, SchemaCollection
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SFactory
 from urlparse import urljoin
@@ -153,6 +153,8 @@ class Definitions(WObject):
     @ivar service: The service object.
     @type service: L{Service}
     """
+    
+    Tag = 'definitions'
 
     def __init__(self, url, opener=None):
         """
@@ -309,12 +311,33 @@ class Import(WObject):
         if '://' not in url:
             url = urljoin(definitions.url, url)
         d = Definitions(url, opener)
+        if d.root.match(Definitions.Tag, wsdlns):
+            self.import_definitions(definitions, d)
+            return
+        if d.root.match(Schema.Tag, Namespace.xsdns):
+            self.import_schema(definitions, d)
+            return
+        raise Exception('document at "%s" is unknown' % url)
+    
+    def import_definitions(self, definitions, d):
+        """ import/merge wsdl definitions """
         definitions.types += d.types
         definitions.messages.update(d.messages)
         definitions.port_types.update(d.port_types)
         definitions.bindings.update(d.bindings)
         self.imported = d
+        log.debug('imported (WSDL):\n%s', d)
         
+    def import_schema(self, definitions, d):
+        """ import schema as <types/> content """
+        if not len(definitions.types):
+            types = Types.create(definitions)
+            definitions.types.append(types)
+        else:
+            types = definitions.types[:-1]
+        types.root.append(d.root)
+        log.debug('imported (XSD):\n%s', d.root)
+   
     def __gt__(self, other):
         return False
         
@@ -323,6 +346,12 @@ class Types(WObject):
     """
     Represents <types><schema/></types>.
     """
+    
+    @classmethod
+    def create(cls, definitions):
+        root = Element('types', ns=wsdlns)
+        definitions.root.insert(root)
+        return Types(root, definitions)
 
     def __init__(self, root, definitions):
         """
