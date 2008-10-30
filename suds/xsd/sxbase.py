@@ -101,6 +101,8 @@ class SchemaObject:
         self.name = root.get('name')
         self.qname = (self.name, schema.tns[1])
         self.type = root.get('type')
+        self.ref = [root.get('ref'), False]
+        self.ref[1] = ( self.ref[0] is not None )
         self.form_qualified = schema.form_qualified
         self.nillable = False
         self.inherited = False
@@ -227,7 +229,7 @@ class SchemaObject:
         @return: True if contained by choice.
         @rtype: boolean
         """
-        pass
+        return False
     
     def isattr(self):
         """
@@ -326,12 +328,10 @@ class SchemaObject:
         node the opportunity to resolve references to other types
         and mutate as needed.
         """
+        if not self.ref[1]: return
         log.debug(Repr(self))
+        self.ref[1] = False
         self.mutate()
-        for a in self.attributes:
-            a.dereference()
-        for c in self.children:
-            c.dereference()
             
     def mutate(self):
         """
@@ -347,6 +347,21 @@ class SchemaObject:
         self.inherited = True
         for c in self.children:
             c.mark_inherited()
+            
+    def contents(self, collection):
+        """
+        Get a I{flattened} list of this nodes contents.
+        @param collection: A list to fill.
+        @type collection: list
+        @return: The filled list.
+        @rtype: list
+        """
+        collection.append(self)
+        for a in self.attributes:
+            collection.append(a)
+        for c in self.children:
+            c.contents(collection)
+        return collection
     
     def str(self, indent=0):
         """

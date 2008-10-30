@@ -23,7 +23,7 @@ from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.xsd.sxbase import *
-from suds.xsd.query import TypeQuery, ElementQuery, GroupQuery, AttrGroupQuery
+from suds.xsd.query import *
 from suds.sax import splitPrefix, Namespace
 from suds.sax.parser import Parser
 from urlparse import urljoin
@@ -52,6 +52,7 @@ class Factory:
         'all' : lambda x,y: All(x,y),
         'choice' : lambda x,y: Choice(x,y),
         'complexContent' : lambda x,y: ComplexContent(x,y),
+        'simpleContent' : lambda x,y: SimpleContent(x,y),
         'restriction' : lambda x,y: Restriction(x,y),
         'enumeration' : lambda x,y: Enumeration(x,y),
         'extension' : lambda x,y: Extension(x,y),
@@ -86,8 +87,8 @@ class Factory:
         @return: A schema object graph.
         @rtype: L{sxbase.SchemaObject}
         """
-        children = []
         attributes = []
+        children = []
         for node in root.getChildren(ns=Namespace.xsdns):
             if '*' in filter or node.name in filter:
                 child = cls.create(node, schema)
@@ -97,8 +98,9 @@ class Factory:
                     attributes.append(child)
                 else:
                     children.append(child)
-                child.attributes, child.children = \
-                    cls.build(node, schema, child.childtags())
+                a, c = cls.build(node, schema, child.childtags())
+                child.attributes = a
+                child.children = c
         return (attributes, children)
     
     @classmethod
@@ -153,7 +155,16 @@ class Complex(SchemaObject):
         @return: A list of child tag names.
         @rtype: [str,...]
         """
-        return ('attribute', 'attributeGroup', 'sequence', 'all', 'choice', 'complexContent', 'any', 'group')
+        return (
+            'attribute', 
+            'attributeGroup', 
+            'sequence', 
+            'all', 
+            'choice', 
+            'complexContent',
+            'simpleContent', 
+            'any', 
+            'group')
     
     def derived(self):
         """
@@ -196,10 +207,8 @@ class Group(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.ref = root.get('ref')
         self.min = root.get('minOccurs', default='1')
         self.max = root.get('maxOccurs', default='1')
-        self.mutated = ( self.ref is None )
         
     def childtags(self):
         """
@@ -249,12 +258,8 @@ class Group(SchemaObject):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.mutated:
-            return
-        self.mutated = True
-        classes = (Group,)
         defns = self.default_namespace()
-        qref = qualify(self.ref, self.root, defns)
+        qref = qualify(self.ref[0], self.root, defns)
         query = GroupQuery(qref)
         g = query.execute(self.schema)
         if g is None:
@@ -262,15 +267,16 @@ class Group(SchemaObject):
             raise TypeNotFound(qref)
         self.merge(deepcopy(g))
     
-    def merge(self, e):
+    def merge(self, g):
         """
         Merge the referenced object.
-        @param e: A resoleve reference.
-        @type e: L{Element}
+        @param g: A resoleve reference.
+        @type g: L{Group}
         """
-        self.name = e.name
-        self.qname = e.qname
-        self.children = e.children
+        g.dereference()
+        self.name = g.name
+        self.qname = g.qname
+        self.children = g.children
 
     def description(self):
         """
@@ -278,7 +284,7 @@ class Group(SchemaObject):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('name',)
+        return ('name', 'ref',)
     
 
 class AttributeGroup(SchemaObject):
@@ -296,10 +302,8 @@ class AttributeGroup(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.ref = root.get('ref')
         self.min = root.get('minOccurs', default='1')
         self.max = root.get('maxOccurs', default='1')
-        self.mutated = ( self.ref is None )
         
     def childtags(self):
         """
@@ -314,11 +318,8 @@ class AttributeGroup(SchemaObject):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.mutated:
-            return
-        self.mutated = True
         defns = self.default_namespace()
-        qref = qualify(self.ref, self.root, defns)
+        qref = qualify(self.ref[0], self.root, defns)
         query = AttrGroupQuery(qref)
         ag = query.execute(self.schema)
         if ag is None:
@@ -326,15 +327,17 @@ class AttributeGroup(SchemaObject):
             raise TypeNotFound(qref)
         self.merge(deepcopy(ag))
     
-    def merge(self, e):
+    def merge(self, ag):
         """
         Merge the referenced object.
-        @param e: A resoleve reference.
-        @type e: L{Element}
+        @param ag: A resoleve reference.
+        @type ag: L{AttributeGroup}
         """
-        self.name = e.name
-        self.qname = e.qname
-        self.children = e.children
+        ag.dereference()
+        self.name = ag.name
+        self.qname = ag.qname
+        self.attributes = ag.attributes
+        self.children = ag.children
 
     def description(self):
         """
@@ -342,7 +345,7 @@ class AttributeGroup(SchemaObject):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('name',)
+        return ('name', 'ref',)
     
 
 class Simple(SchemaObject):
@@ -400,8 +403,9 @@ class Restriction(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.base = root.get('base')
-        self.mutated = ( self.base is None )
+        base = root.get('base')
+        self.ref = [base, True]
+        self.ref[1] = ( base is not None )
 
     def childtags(self):
         """
@@ -416,12 +420,9 @@ class Restriction(SchemaObject):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.mutated:
-            return
-        self.mutated = True
         log.debug(Repr(self))
         defns = self.default_namespace()
-        qref = qualify(self.base, self.root, defns)
+        qref = qualify(self.ref[0], self.root, defns)
         query = TypeQuery(qref)
         super = query.execute(self.schema)
         if super is None:
@@ -443,6 +444,14 @@ class Restriction(SchemaObject):
         for c in b.children:
             c.mark_inherited()
         self.prepend(self.children, b.children, filter)
+        
+    def description(self):
+        """
+        Get the names used for str() and repr() description.
+        @return:  A dictionary of relavent attributes.
+        @rtype: [str,...]
+        """
+        return ('ref',)
     
     
 class Collection(SchemaObject):
@@ -566,6 +575,29 @@ class ComplexContent(SchemaObject):
         return ('attribute', 'attributeGroup', 'extension', 'restriction')
 
 
+class SimpleContent(SchemaObject):
+    """
+    Represents an (xsd) schema <xs:simpleContent/> node.
+    """
+    
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        @param root: The xml root node.
+        @type root: L{sax.element.Element}
+        """
+        SchemaObject.__init__(self, schema, root)
+        
+    def childtags(self):
+        """
+        Get a list of valid child tag names.
+        @return: A list of child tag names.
+        @rtype: [str,...]
+        """
+        return ('extension', 'restriction')
+
+
 class Enumeration(Promotable):
     """
     Represents an (xsd) schema <xs:enumeration/> node
@@ -595,7 +627,6 @@ class Element(Promotable):
         @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
-        self.ref = root.get('ref')
         a = root.get('form')
         if a is not None:
             self.form_qualified = ( a == 'qualified' )
@@ -604,7 +635,6 @@ class Element(Promotable):
             self.nillable = ( a in ('1', 'true') )
         self.min = root.get('minOccurs', default='1')
         self.max = root.get('maxOccurs', default='1')
-        self.mutated = ( self.ref is None )
         
     def childtags(self):
         """
@@ -689,12 +719,8 @@ class Element(Promotable):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.mutated:
-            return
-        self.mutated = True
-        classes = (Element,)
         defns = self.default_namespace()
-        qref = qualify(self.ref, self.root, defns)
+        qref = qualify(self.ref[0], self.root, defns)
         query = ElementQuery(qref)
         e = query.execute(self.schema)
         if e is None:
@@ -708,11 +734,12 @@ class Element(Promotable):
         @param e: A resoleve reference.
         @type e: L{Element}
         """
+        e.dereference()
         self.name = e.name
         self.qname = e.qname
         self.type = e.type
-        self.children = e.children
         self.attributes = e.attributes
+        self.children = e.children
         
     def promote(self, pa, pc):
         """
@@ -767,8 +794,9 @@ class Extension(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        self.base = root.get('base')
-        self.mutated = False
+        base = root.get('base')
+        self.ref = [base, True]
+        self.ref[1] = ( base is not None )
         
     def childtags(self):
         """
@@ -783,12 +811,9 @@ class Extension(SchemaObject):
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.mutated:
-            return
-        self.mutated = True
         log.debug(Repr(self))
         defns = self.default_namespace()
-        qref = qualify(self.base, self.root, defns)
+        qref = qualify(self.ref[0], self.root, defns)
         query = TypeQuery(qref)
         super = query.execute(self.schema)
         if super is None:
@@ -816,7 +841,7 @@ class Extension(SchemaObject):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('base',)
+        return ('ref',)
 
 
 class Import(SchemaObject):
@@ -914,8 +939,7 @@ class Attribute(Promotable):
         @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
-        self.ref = root.get('ref')
-        self.mutated = ( self.ref is None )
+        self.use = root.get('use', default='')
         
     def isattr(self):
         """
@@ -939,40 +963,32 @@ class Attribute(Promotable):
         @return: True if optional, else False
         @rtype: boolean
         """
-        use = self.root.get('use', default='')
-        return ( use == 'optional' )
-    
-    def merge(self, e):
-        """
-        Merge the referenced object.
-        @param e: A resoleve reference.
-        @type e: L{Attribute}
-        """
-        self.name = e.name
-        self.qname = e.qname
-        self.type = e.type
+        return ( self.use != 'required' )
 
     def mutate(self):
         """
         Mutate into a I{true} type as defined by a reference to
         another object.
         """
-        if self.mutated:
-            return
-        self.mutated = True
-        classes = (Attribute,)
         defns = self.default_namespace()
-        qref = qualify(self.ref, self.root, defns)
-        a = self.schema.attributes.get(qref)
-        if a is not None:
-            self.merge(deepcopy(a))
-            return
-        for c in self.schema.children:
-            p = c.find(qref, classes)
-            if p is not None:
-                self.merge(deepcopy(p))
-                return
-        raise TypeNotFound(self.ref)
+        qref = qualify(self.ref[0], self.root, defns)
+        query = AttrQuery(qref)
+        a = query.execute(self.schema)
+        if a is None:
+            log.debug(self.schema)
+            raise TypeNotFound(qref)
+        self.merge(deepcopy(a))
+        
+    def merge(self, a):
+        """
+        Merge the referenced object.
+        @param a: A resoleve reference.
+        @type a: L{Attribute}
+        """
+        a.dereference()
+        self.name = a.name
+        self.qname = a.qname
+        self.type = a.type
     
     def description(self):
         """
@@ -980,7 +996,7 @@ class Attribute(Promotable):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('name','type')
+        return ('name', 'ref', 'type')
 
 
 class Any(Promotable):

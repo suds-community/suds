@@ -313,6 +313,7 @@ class Typed(UMBase):
         if content.type is None:
             found = self.resolver.find(content.node)
             if found is None:
+                log.error(self.resolver.schema)
                 raise TypeNotFound(content.node.qname())
             content.type = found
         else:

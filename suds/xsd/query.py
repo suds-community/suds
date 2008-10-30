@@ -150,7 +150,6 @@ class TypeQuery(Query):
             result = None
         return self.result(result)
 
-
 class GroupQuery(Query):
     """
     Schema query class that searches for Group references in
@@ -177,6 +176,46 @@ class GroupQuery(Query):
         if self.filter(result):
             result = None
         return self.result(result)
+
+
+class AttrQuery(Query):
+    """
+    Schema query class that searches for Attribute references in
+    the specified schema.  Matches on root Attribute by qname first, then searches
+    deep into the document.
+    """
+    
+    def __init__(self, ref):
+        """
+        @param ref: The schema reference being queried.
+        @type ref: qref
+        """
+        Query.__init__(self, ref)
+        
+    def execute(self, schema):
+        """
+        Execute this query using the specified schema.
+        @param schema: The schema associated with the query.  The schema
+            is used by the query to search for items.
+        @type schema: L{schema.Schema}
+        @return: The item matching the search criteria.
+        @rtype: L{sxbase.SchemaObject}
+        """
+        result = schema.attributes.get(self.ref)
+        if self.filter(result):
+            result = self.__deepsearch(schema)
+        return self.result(result)
+    
+    def __deepsearch(self, schema):
+        from suds.xsd.sxbasic import Attribute
+        result = None
+        for e in schema.children:
+            result = e.find(self.ref, (Attribute,))
+            if self.filter(result):
+                result = None
+            else:
+                break
+        return result
 
 
 class AttrGroupQuery(Query):
