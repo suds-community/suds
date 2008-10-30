@@ -41,7 +41,8 @@ class Factory:
 
     tags =\
     {
-        'import' : lambda x,y: Import(x,y), 
+        'import' : lambda x,y: Import(x,y),
+        'include' : lambda x,y: Include(x,y), 
         'complexType' : lambda x,y: Complex(x,y),
         'group' : lambda x,y: Group(x,y),
         'attributeGroup' : lambda x,y: AttributeGroup(x,y), 
@@ -112,7 +113,7 @@ class Factory:
         groups = {}
         agrps = {}
         for c in children:
-            if isinstance(c, Import):
+            if isinstance(c, (Import, Include)):
                 imports.append(c)
                 continue
             if isinstance(c, Attribute):
@@ -911,6 +912,7 @@ class Import(SchemaObject):
                 if '://' not in url:
                     url = urljoin(self.schema.baseurl, url)
                 root = Parser().parse(url=url).root()
+                root.set('url', url)
                 return self.schema.instance(root, url)
             except (URLError, HTTPError):
                 msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
@@ -924,6 +926,10 @@ class Import(SchemaObject):
         @rtype: [str,...]
         """
         return ('ns', 'location')
+    
+    
+class Include(Import):
+    pass
 
    
 class Attribute(Promotable):
