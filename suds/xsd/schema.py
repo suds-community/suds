@@ -141,8 +141,6 @@ class Schema:
     @type types: {name:L{SchemaObject}}
     @ivar groups: A schema groups cache.
     @type groups: {name:L{SchemaObject}}
-    @ivar all: A contained objects.
-    @type all: [L{SchemaObject},...]
     @ivar children: A list of top level children.
     @type children: [L{SchemaObject},...]
     @ivar imports: A list of import objects.
