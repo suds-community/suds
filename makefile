@@ -56,7 +56,7 @@ docs: FORCE
 clean: FORCE
 	rm -rf dist
 	rm -rf build
-	rm -rf doc/*
+	rm -rf doc
 	rm -rf *.egg-info
 	rm -rf /usr/src/redhat/BUILD/python-suds*
 	rm -rf /usr/src/redhat/RPMS/noarch/python-suds*
