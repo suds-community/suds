@@ -82,10 +82,11 @@ class SchemaCollection:
             child.open_imports()
         log.debug('loaded:\n%s', self)
         merged = self.merge()
-        log.debug('merged\n%s', merged)
+        log.debug('MERGED:\n%s', merged)
         merged.dereference()
+        log.debug('MERGED: dereferenced:\n%s', merged)
         merged.flatten()
-        log.debug('flattened-merged\n%s', merged)
+        log.debug('MERGED: dereferenced & flattened\n%s', merged)
         return merged
         
     def locate(self, ns):
@@ -140,7 +141,9 @@ class Schema:
     @type types: {name:L{SchemaObject}}
     @ivar groups: A schema groups cache.
     @type groups: {name:L{SchemaObject}}
-    @ivar children: A list of children.
+    @ivar all: A contained objects.
+    @type all: [L{SchemaObject},...]
+    @ivar children: A list of top level children.
     @type children: [L{SchemaObject},...]
     @ivar imports: A list of import objects.
     @type imports: [L{SchemaObject},...]
@@ -183,8 +186,11 @@ class Schema:
         if container is None:
             self.build()
             self.open_imports()
+            log.debug('built:\n%s', self)
             self.dereference()
+            log.debug('dereferenced:\n%s', self)
             self.flatten()
+            log.debug('dereferenced & flattened:\n%s', self)
                 
     def mktns(self):
         """
@@ -228,6 +234,7 @@ class Schema:
             if item[0] in self.attributes:
                 continue
             self.attributes[item[0]] = item[1]
+            self.children.append(item[1])
         for item in schema.elements.items():
             if item[0] in self.elements:
                 continue
@@ -262,6 +269,7 @@ class Schema:
             if imported is None:
                 continue
             imported.open_imports()
+            log.debug('imported:\n%s', imported)
             self.merge(imported)
         
     def locate(self, ns):
@@ -283,15 +291,18 @@ class Schema:
         """
         Instruct all children to perform dereferencing.
         """
-        for c in self.children:
-            c.dereference()
+        all = []
+        for child in self.children:
+            child.contents(all)
+        for child in all:
+            child.dereference()
         
     def flatten(self):
         """
         Instruct all children to I{flatten}.
         """
-        for c in self.children:
-            c.flatten()
+        for child in self.children:
+            child.flatten()
 
     def custom(self, ref, context=None):
         """
