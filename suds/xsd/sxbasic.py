@@ -907,17 +907,17 @@ class Import(SchemaObject):
         return result
 
     def download(self):
-            url = self.location
-            try:
-                if '://' not in url:
-                    url = urljoin(self.schema.baseurl, url)
-                root = Parser().parse(url=url).root()
-                root.set('url', url)
-                return self.schema.instance(root, url)
-            except (URLError, HTTPError):
-                msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
-                log.error('%s, %s', self.id, msg, exc_info=True)
-                raise Exception(msg)
+        url = self.location
+        try:
+            if '://' not in url:
+                url = urljoin(self.schema.baseurl, url)
+            root = Parser().parse(url=url).root()
+            root.set('url', url)
+            return self.schema.instance(root, url)
+        except (URLError, HTTPError):
+            msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
+            log.error('%s, %s', self.id, msg, exc_info=True)
+            raise Exception(msg)
  
     def description(self):
         """
