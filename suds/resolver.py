@@ -264,7 +264,7 @@ class TreeResolver(Resolver):
         Get the I{item} at the top of the stack where I{item} is a tuple
         as (I{type},I{resolved}).
         @param index: The index (0|1) into the tuple.  {0=type, 1=resolved}.
-        @type iindex: int
+        @type index: int
         @return: The top I{item}, else None.
         @rtype: I{type}
         """
