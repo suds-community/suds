@@ -707,7 +707,7 @@ class Typer:
     """
     Provides XML node typing as either automatic or manual.
     @cvar types:  A dict of class to xs type mapping.
-    @type int: dict
+    @type types: dict
     """
 
     types = {
