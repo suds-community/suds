@@ -83,7 +83,7 @@ class Content(Object):
         self.type = type
         self.resolved = None
 
-    def ns(self):
+    def namespace(self):
         """
         Get the tag's namesapce by looking at the parent's resolved
         schema type.  If the parent is an L{Element}, its namespace is used.
@@ -94,6 +94,9 @@ class Content(Object):
         if isinstance(p, Element):
             return p.namespace()
         if isinstance(p, Content):
+            pr = self.parent.resolved
+            if pr is not None:
+                return pr.namespace()
             pt = self.parent.type
             if pt is not None:
                 return pt.resolve().namespace()
@@ -626,7 +629,7 @@ class Literal(MBase):
         @return: A new node.
         @rtype: L{Element}
         """
-        ns = content.ns()
+        ns = content.namespace()
         if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
