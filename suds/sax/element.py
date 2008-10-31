@@ -702,14 +702,22 @@ class Element:
         @rtype: basestring
         """
         result = ''
-        if self.expns is not None:
-            result += ' xmlns="%s"' % self.expns
-        for (p,u) in self.nsprefixes.items():
+        myns = self.namespace()
+        if self.parent is None:
+            pns = Namespace.default
+        else:
+            pns = self.parent.namespace()
+        if myns[1] != pns[1]:
+            if self.expns is not None:
+                decl = ' xmlns="%s"' % self.expns
+                result += decl
+        for item in self.nsprefixes.items():
+            (p,u) = item
             if self.parent is not None:
                 ns = self.parent.resolvePrefix(p)
-                if ns[1] == u: # already declared
-                    continue
-            result += ' xmlns:%s="%s"' % (p, u)
+                if ns[1] == u: continue
+            decl = ' xmlns:%s="%s"' % (p, u)
+            result += decl
         return result
     
     def match(self, name=None, ns=None):

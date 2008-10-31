@@ -63,7 +63,7 @@ class PathResolver(Resolver):
         Resolver.__init__(self, wsdl.schema)
         self.wsdl = wsdl
 
-    def find(self, path, resolved=False):
+    def find(self, path, resolved=True):
         """
         Get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
@@ -234,7 +234,7 @@ class TreeResolver(Resolver):
         @rtype: L{xsd.sxbase.SchemaObject}
         """
         attr = '@%s'%name
-        parent = self.top()[1]
+        parent = self.top(1)
         result = self.__find(attr, parent)
         if result is None:
             return result
@@ -251,20 +251,25 @@ class TreeResolver(Resolver):
         @return: The pushed item.
         @rtype: (I{type},I{resolved})
         """
-        item = (item, item.resolve())
+        if isinstance(item, tuple):
+            item = (item[0], item[1].resolve())
+        else:
+            item = (item, item.resolve())
         self.stack.append(item)
         log.debug('push: (%s)\n%s', Repr(item), Repr(self.stack))
         return item
     
-    def top(self):
+    def top(self, index=1):
         """
         Get the I{item} at the top of the stack where I{item} is a tuple
         as (I{type},I{resolved}).
+        @param index: The index (0|1) into the tuple.  {0=type, 1=resolved}.
+        @type iindex: int
         @return: The top I{item}, else None.
-        @rtype: (I{type},I{resolved})
+        @rtype: I{type}
         """
         if len(self.stack):
-            return self.stack[-1]
+            return self.stack[-1][index]
         else:
             return None
         
@@ -345,11 +350,7 @@ class NodeResolver(TreeResolver):
         @rtype: L{xsd.sxbase.SchemaObject}
         """
         name = node.name
-        top = self.top()
-        if top is None:
-            parent = None
-        else:
-            parent = top[1]
+        parent = self.top(1)
         result = self._TreeResolver__find(name, parent)
         if result is None and parent is None:
             name = node.get('type', Namespace.xsins)
@@ -393,30 +394,23 @@ class GraphResolver(TreeResolver):
         @return: The found schema I{type}
         @rtype: L{xsd.sxbase.SchemaObject}
         """
-        if isinstance(object, Object):
-            result = self.__embedded(object)
-            if result is not None:
-                pushed = self.push(result)
-                if resolved:
-                    return pushed[1]
-                else:
-                    return result
-            name = object.__class__.__name__
-        top = self.top()
-        if top is None:
-            parent = None
-        else:
-            parent = top[1]
+        known = None
+        parent = self.top(1)
         result = self._TreeResolver__find(name, parent)
         if result is None:
-            return result
+            return None
+        if isinstance(object, Object):
+            known = self.known(object)
         if push:
-            pushed = self.push(result)
+            if known is None:
+                pushed = self.push(result)
+            else:
+                pushed = self.push((result, known))
         if resolved:
             result = pushed[1]
         return result
     
-    def __embedded(self, object):
+    def known(self, object):
         try:
             md = object.__metadata__
             return md.__type__
