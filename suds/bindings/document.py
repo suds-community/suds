@@ -58,10 +58,11 @@ class Document(Binding):
         n = 0
         pts = self.part_types(method)
         root = self.document(pts)
+        method.soap.input.body.root = root
         pdefs = self.param_defs(method)
         for arg in args:
             if len(pdefs) == n: break
-            p = self.param(method, pdefs[n], arg)
+            p = self.mkparam(method, pdefs[n], arg)
             if p is not None:
                 root.append(p)
             n += 1

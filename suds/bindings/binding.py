@@ -24,7 +24,7 @@ from suds.sax import Namespace
 from suds.sax.parser import Parser
 from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
-from suds.bindings.marshaller import Marshaller
+from suds.bindings.marshaller import Marshaller, Content
 from suds.bindings.unmarshaller import Unmarshaller
 from suds.xsd.query import TypeQuery, ElementQuery
 from suds.bindings.multiref import MultiRef
@@ -222,7 +222,7 @@ class Binding:
             raise WebFault(p, faultroot)
         return (faultroot, p.detail)
     
-    def param(self, method, pdef, object):
+    def mkparam(self, method, pdef, object):
         """
         Builds a parameter for the specified I{method} using the parameter
         definition (pdef) and the specified value (object).
@@ -239,14 +239,46 @@ class Binding:
             marshaller = self.marshaller.encoded
         else:
             marshaller = self.marshaller.literal
-        if isinstance(object, (Object, dict)):
-            return marshaller.process(object, pdef[1], pdef[0])
         if isinstance(object, (list, tuple)):
             tags = []
             for item in object:
-                tags.append(self.param(method, pdef, item))
+                tags.append(self.mkparam(method, pdef, item))
             return tags
-        return marshaller.process(object, pdef[1], pdef[0])
+        content = Content(
+            parent=method.soap.input.body.root,
+            tag=pdef[0], 
+            value=object, 
+            type=pdef[1])
+        return marshaller.process(content)
+    
+    def mkheader(self, method, hdef, object):
+        """
+        Builds a soapheader for the specified I{method} using the header
+        definition (hdef) and the specified value (object).
+        @param method: A method name.
+        @type method: str
+        @param hdef: A header definition.
+        @type hdef: tuple: (I{name}, L{xsd.sxbase.SchemaObject})
+        @param object: The header value.
+        @type object: any
+        @return: The parameter fragment.
+        @rtype: L{Element}
+        """
+        if self.encoded:
+            marshaller = self.marshaller.encoded
+        else:
+            marshaller = self.marshaller.literal
+        if isinstance(object, (list, tuple)):
+            tags = []
+            for item in object:
+                tags.append(self.mkheader(method, hdef, item))
+            return tags
+        content = Content(
+            parent=method.soap.input.header.root,
+            tag=hdef[0], 
+            value=object, 
+            type=hdef[1])
+        return marshaller.process(content)
             
     def envelope(self, header, body):
         """
@@ -294,10 +326,12 @@ class Binding:
                 raise SoapHeadersNotPermitted(method.name)
             if not isinstance(headers, (tuple,list)):
                 headers = (headers,)
+            method.soap.input.header.root = \
+                Element('ghost', ns=method.soap.input.header.namespace)
             pts = self.part_types(method, header=True)
             for header in headers:
                 if len(pts) == n: break
-                p = self.param(method, pts[n], header)
+                p = self.mkheader(method, pts[n], header)
                 if p is not None:
                     ns = pts[n][1].namespace()
                     p.setPrefix(ns[0], ns[1])

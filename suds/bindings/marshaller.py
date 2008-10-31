@@ -53,19 +53,51 @@ class Marshaller:
 
 class Content(Object):
     """
+    Marshaller Content.
+    @ivar parent: The content parent.
+    @type parent: (L{Element}|L{Content})
     @ivar tag: The content tag.
     @type tag: str
-    @ivar type: The (optional) content schema type.
-    @type type: L{xsd.sxbase.SchemaObject}
     @ivar value: The content's value.
     @type value: I{any}
+    @ivar type: The (optional) content schema type.
+    @type type: L{xsd.sxbase.SchemaObject}
+    @ivar resolved: The content's I{resolved} type.
+    @type resolved: L{xsd.sxbase.SchemaObject}
     """
-
-    def __init__(self, tag, value, type=None):
+    def __init__(self, parent=None, tag=None, value=None, type=None):
+        """
+        @param parent: The content parent.
+        @type parent: (L{Element}|L{Content})
+        @param tag: The content tag.
+        @type tag: str
+        @param value: The content's value.
+        @type value: I{any}
+        @param type: The (optional) content schema type.
+        @type type: L{xsd.sxbase.SchemaObject}
+        """
         Object.__init__(self)
+        self.parent = parent
         self.tag = tag
         self.value = value
         self.type = type
+        self.resolved = None
+
+    def ns(self):
+        """
+        Get the tag's namesapce by looking at the parent's resolved
+        schema type.  If the parent is an L{Element}, its namespace is used.
+        @return: The tag's namespace.
+        @rtype: (prefix, uri)
+        """
+        p = self.parent
+        if isinstance(p, Element):
+            return p.namespace()
+        if isinstance(p, Content):
+            pt = self.parent.type
+            if pt is not None:
+                return pt.resolve().namespace()
+        return NS.default
 
 
 class M:
@@ -265,7 +297,10 @@ class PropertyAppender(Appender):
         child.setText(p.get())
         parent.append(child)
         for item in p.items():
-            cont = Content(item[0], item[1])
+            cont = Content(
+                parent=content,
+                tag=item[0], 
+                value=item[1])
             Appender.append(self, child, cont)
 
             
@@ -291,7 +326,10 @@ class ObjectAppender(Appender):
         child = self.node(content)
         parent.append(child)
         for item in items(object):
-            cont = Content(item[0], item[1])
+            cont = Content(
+                parent=content, 
+                tag=item[0], 
+                value=item[1])
             Appender.append(self, child, cont)
 
 
@@ -341,7 +379,10 @@ class ListAppender(Appender):
         if len(collection):
             self.suspend(content)
             for item in collection:
-                cont = Content(content.tag, item)
+                cont = Content(
+                    parent=content, 
+                    tag=content.tag, 
+                    value=item)
                 Appender.append(self, parent, cont)
             self.resume(content)
 
@@ -368,6 +409,8 @@ class MBase:
         """
         log.debug('processing:\n%s', content)
         self.reset()
+        if content.tag is None:
+            content.tag = content.value.__class__.__name__
         document = Document()
         if isinstance(content.value, Property):
             root = self.node(content)
@@ -475,11 +518,8 @@ class Basic(MBase):
         @return: An xml node.
         @rtype: L{Element}
         """
-        if tag is None:
-            tag = value.__class__.__name__
-        content = Content(tag, value)
-        result = \
-            MBase.process(self, content)
+        content = Content(tag=tag, value=value)
+        result = MBase.process(self, content)
         return result
 
        
@@ -502,26 +542,6 @@ class Literal(MBase):
         MBase.__init__(self)
         self.schema = schema
         self.resolver = GraphResolver(self.schema)
-        
-    def process(self, value, type, tag=None):
-        """
-        Process (marshal) the tag with the specified value using the
-        optional type information.
-        @param value: The value (content) of the XML node.
-        @type value: (L{Object}|any)
-        @param type: The value's schema type.
-        @type type: L{xsd.sxbase.SchemaObject}
-        @param tag: The (optional) tag name for the value.  The default is
-            value.__class__.__name__
-        @type tag: str
-        @return: An xml node.
-        @rtype: L{Element}
-        """
-        if tag is None:
-            tag = value.__class__.__name__
-        content = Content(tag, value, type)
-        result = MBase.process(self, content)
-        return result
     
     def reset(self):
         """
@@ -541,24 +561,27 @@ class Literal(MBase):
         """
         log.debug('starting content:\n%s', content)
         if content.type is None:
-            if isinstance(content.value, Object):
-                content.type = self.__metatype(content)
-        if content.type is None:
             name = content.tag
             if name.startswith('_'):
                 name = '@'+name[1:]
             content.type = self.resolver.find(name, content.value)
+            if content.type is None:
+                raise TypeNotFound(content.tag)
         else:
-            self.resolver.push(content.type)
-        if content.type is None:
-            raise TypeNotFound(content.tag)
-        resolved = content.type.resolve()
-        content.value = resolved.translate(content.value, False)
+            if isinstance(content.value, Object):
+                known = self.resolver.known(content.value)
+                item = (content.type, known)
+                self.resolver.push(item)
+            else:
+                self.resolver.push(content.type)
+        content.resolved = self.resolver.top(1)
+        content.value = content.resolved.translate(content.value, False)
         if self.__skip(content):
             log.debug('skipping (optional) content:\n%s', content)
             self.resolver.pop()
             return False
-        return True
+        else:
+            return True
         
     def suspend(self, content):
         """
@@ -585,7 +608,7 @@ class Literal(MBase):
         @type content: L{Object}
         """
         log.debug('ending content:\n%s', content)
-        current = self.resolver.top()[0]
+        current = self.resolver.top(0)
         if current == content.type:
             self.resolver.pop()
         else:
@@ -603,12 +626,12 @@ class Literal(MBase):
         @return: A new node.
         @rtype: L{Element}
         """
-        ns = content.type.namespace()
+        ns = content.ns()
         if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
         else:
-            node = Element(content.tag)
+            node = Element(content.tag, ns=(None, ns[1]))
         self.encode(node, content)
         log.debug('created - node:\n%s', node)
         return node
@@ -637,25 +660,6 @@ class Literal(MBase):
             name = resolved.name
             ns = resolved.namespace()
             Typer.manual(node, name)
-    
-    def __metatype(self, content):
-        """
-        Get the I{type} embedded in the content.I{value}.
-        This makes the assumption that content.I{value} is an
-        L{Object} and has I{type} metadata.
-        @param content: The content for which proccessing has ended.
-        @type content: L{Object}
-        @return: The type found in the metadata.
-        @rtype: L{xsd.sxbase.SchemaObject}
-        """
-        result = None
-        try:
-            md = content.value.__metadata__
-            result = md.__type__
-            log.debug('type (%s) found in metadata', result.name)
-        except AttributeError:
-            pass
-        return result
     
     def __skip(self, content):
         if content.type.optional():
@@ -690,12 +694,13 @@ class Encoded(Literal):
         """
         if content.type.any():
             Typer.auto(node, content.value)
-        else:
+            return
+        resolved = self.resolver.top(1)
+        if resolved is None:
             resolved = content.type.resolve()
-            name = resolved.name
-            ns = resolved.namespace()
-            Typer.manual(node, name, ns)
-            log.debug('encoded name=(%s)', name)
+        name = resolved.name
+        ns = resolved.namespace()
+        Typer.manual(node, name, ns)
 
 
 class Typer:
