@@ -31,7 +31,6 @@ dist: clean
 	sed -e "s/name=\"suds\"/name=\"python-suds\"/" $(SETUP) > $(pythonSETUP)
 	python $(SETUP) sdist bdist_egg
 	python $(pythonSETUP) sdist bdist_egg
-	scp dist/python* fedorahosted.org:suds
 	rm -rf *.egg-info
 	rm -f $(pythonSETUP)
 
@@ -40,7 +39,11 @@ rpm: dist
 	rpmbuild -ba $(SPEC)
 	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
 	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
+
+release: rpm docs
 	scp dist/python*.rpm fedorahosted.org:suds
+	scp /tmp/$(DOCTAR) $(FEDORAPEOPLE):
+	ssh $(FEDORAPEOPLE) 'cd public_html/suds; rm -rf doc; tar xzvf ~/$(DOCTAR)'
 
 register: FORCE
 	python setup.py sdist bdist_egg register upload
@@ -50,8 +53,6 @@ docs: FORCE
 	rm -f /tmp/$(DOCTAR)
 	epydoc -o doc `find suds -name "*.py"`
 	tar czvf /tmp/$(DOCTAR) doc
-	scp /tmp/$(DOCTAR) $(FEDORAPEOPLE):
-	ssh $(FEDORAPEOPLE) 'cd public_html/suds; rm -rf doc; tar xzvf ~/$(DOCTAR)'
 
 clean: FORCE
 	rm -rf dist
