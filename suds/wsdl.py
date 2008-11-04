@@ -549,11 +549,15 @@ class Binding(NamedObject):
             soap.output.header = None
             op.soap = soap
             input = c.getChild('input')
+            if input is None:
+                input = Element('input', ns=wsdlns)
             body = input.getChild('body')
             self.body(definitions, soap.input.body, body)
             header = input.getChild('header')
             self.header(definitions, soap.input, header)
             output = c.getChild('output')
+            if output is None:
+                output = Element('output', ns=wsdlns)
             body = output.getChild('body')
             self.body(definitions, soap.output.body, output)
             header = output.getChild('header')

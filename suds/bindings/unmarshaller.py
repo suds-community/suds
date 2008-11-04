@@ -134,7 +134,10 @@ class UMBase:
                 return None
             else:
                 return xlstr.string('', lang)
-        return xlstr.string(content.text, lang)
+        if isinstance(content.text, basestring):
+            return xlstr.string(content.text, lang)
+        else:
+            return content.text
     
     def append_attributes(self, content):
         """

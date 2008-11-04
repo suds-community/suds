@@ -57,6 +57,8 @@ class Document(Binding):
         """
         n = 0
         pts = self.part_types(method)
+        if not len(pts):
+            return ()
         root = self.document(pts)
         method.soap.input.body.root = root
         pdefs = self.param_defs(method)
