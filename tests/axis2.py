@@ -23,12 +23,13 @@ import suds.metrics as metrics
 from tests import *
 from suds import WebFault
 from suds.client import Client
+from datetime import datetime
 
 errors = 0
 
 setup_logging()
 
-#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
     
@@ -51,7 +52,7 @@ print client.service.printList(['a','b'])
 # create a name object using the wsdl
 #
 print 'create name'
-name = client.factory.create('ns0:Name')
+name = client.factory.create('ns2:Name')
 name.first = u'jeff'+unichr(1234)
 name.last = 'ortel'
 
@@ -61,12 +62,12 @@ print name
 # create a phone object using the wsdl
 #
 print 'create phone'
-phoneA = client.factory.create('ns0:Phone')
+phoneA = client.factory.create('ns2:Phone')
 phoneA.npa = 410
 phoneA.nxx = 822
 phoneA.number = 5138
 
-phoneB = client.factory.create('ns0:Phone')
+phoneB = client.factory.create('ns2:Phone')
 phoneB.npa = 919
 phoneB.nxx = 606
 phoneB.number = 4406
@@ -74,7 +75,7 @@ phoneB.number = 4406
 #
 # create a dog
 #
-dog = client.factory.create('ns0:Dog')
+dog = client.factory.create('ns2:Dog')
 print dog
 dog.name = 'Chance'
 dog.trained = True
@@ -83,7 +84,7 @@ print dog
 #
 # create a person object using the wsdl
 #
-person = client.factory.create('ns0:Person')
+person = client.factory.create('ns2:Person')
 
 #
 # inspect empty person
@@ -92,6 +93,7 @@ print '{empty} person=\n%s' % person
 
 person.name = name
 person.age = 43
+person.birthday = datetime.now()
 person.phone.append(phoneA)
 person.phone.append(phoneB)
 person.pets.append(dog)
@@ -111,7 +113,7 @@ print '\nreply(\n%s\n)\n' % result.encode('utf-8')
 #
 # create a new name object used to update the person
 #
-newname = client.factory.create('ns0:Name')
+newname = client.factory.create('ns2:Name')
 newname.first = 'Todd'
 newname.last = None
 
@@ -178,7 +180,7 @@ result = client.service.getList('hello', 3)
 print '\nreply( %s )\n' % str(result)
 
 print 'addPet()'
-dog = client.factory.create('ns0:Dog')
+dog = client.factory.create('ns2:Dog')
 dog.name = 'Chance'
 dog.trained = True
 print dog
