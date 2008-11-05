@@ -641,13 +641,15 @@ class Literal(MBase):
     
     def setnil(self, node, content):
         """
-        Set the value of the I{node} to nill.
+        Set the value of the I{node} to nill when nillable by the type or the
+        resolved type is a builtin B{and} it is nillable.
         @param node: A I{nil} node.
         @type node: L{Element}
         @param content: The content for which proccessing has ended.
         @type content: L{Object}
         """
-        if content.type.nillable:
+        resolved = content.type.resolve()
+        if ( content.type.nillable or ( resolved.builtin() and resolved.nillable ) ):
             node.setnil()
     
     def encode(self, node, content):
