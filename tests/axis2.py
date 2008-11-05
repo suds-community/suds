@@ -29,7 +29,7 @@ errors = 0
 
 setup_logging()
 
-#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
     
@@ -92,7 +92,7 @@ person = client.factory.create('ns2:Person')
 print '{empty} person=\n%s' % person
 
 person.name = name
-person.age = 43
+person.age = None
 person.birthday = datetime.now()
 person.phone.append(phoneA)
 person.phone.append(phoneB)
@@ -131,6 +131,7 @@ print '\nreply(\n%s\n)\n' % str(result)
 # invoke the echo service
 #
 print 'echo()'
+client.service.echo(None)
 result = client.service.echo('this is cool')
 print '\nreply( %s )\n' % str(result)
 

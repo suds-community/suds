@@ -49,7 +49,7 @@ class XDate(XBuiltin):
             return 0
     
     def toPython(self, value):
-        if value is None or len(value) == 0:
+        if len(value) == 0:
             return None
             
         year, month, day = value.rsplit('-', 3)
@@ -71,8 +71,6 @@ class XDate(XBuiltin):
     def toString(self, value):
         if not isinstance(value, datetime.datetime):
             return value
-        if value is None:
-            return ''
         #if tz was used here or not
         if value.tzinfo is None:
             return value.strftime("%Y-%m-%d")
@@ -184,8 +182,6 @@ class XTime(XDate):
     def toString(self, value):
         if not isinstance(value, datetime.datetime):
             return value
-        if value is None:
-            return ''
             
         time = value.strftime("%H:%M:%S")
         
@@ -224,7 +220,7 @@ class XDateTime(XTime, XDate):
         return int(hour), int(minute), second, microsec, leftover
 
     def toPython(self, value):
-        if value is None or len(value) == 0:
+        if len(value) == 0:
             return None
             
         date, mytime = value.split('T')
@@ -261,8 +257,6 @@ class XDateTime(XTime, XDate):
     def toString(self, value):
         if not isinstance(value, datetime.datetime):
             return value
-        if value is None:
-            return ''
         
         dt = value.strftime("%Y-%m-%dT%H:%M:%S")
         
