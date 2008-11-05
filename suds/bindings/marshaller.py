@@ -578,7 +578,7 @@ class Literal(MBase):
             else:
                 self.resolver.push(content.type)
         content.resolved = self.resolver.top(1)
-        content.value = content.resolved.translate(content.value, False)
+        content.value = self.__xlated(content.value, content.resolved)
         if self.__skip(content):
             log.debug('skipping (optional) content:\n%s', content)
             self.resolver.pop()
@@ -674,7 +674,13 @@ class Literal(MBase):
             if isinstance(v, (list,tuple)) and len(v) == 0:
                 return True
         return False
-
+    
+    def __xlated(self, value, resolved):
+        """ translate using the schema type """
+        if value is not None:
+            return resolved.translate(value, False)
+        else:
+            return None
 
 class Encoded(Literal):
     """

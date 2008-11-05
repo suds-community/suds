@@ -388,8 +388,7 @@ class Typed(UMBase):
         if type is None:
             log.warn('attribute (%s) type, not-found', name)
         else:
-            resolved = type.resolve()
-            value = type.translate(value)
+            value = self.__xlated(value, type)
         UMBase.append_attribute(self, name, value, content)
     
     def append_text(self, content):
@@ -400,7 +399,15 @@ class Typed(UMBase):
         """
         UMBase.append_text(self, content)
         resolved = content.type.resolve()
-        content.text = resolved.translate(content.text)
+        content.text = self.__xlated(content.text, content.type)
+            
+    def __xlated(self, value, type):
+        """ translate using the schema type """
+        if value is not None:
+            resolved = type.resolve()
+            return resolved.translate(value)
+        else:
+            return value
 
 
 class AttrList:
