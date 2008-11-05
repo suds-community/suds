@@ -130,7 +130,7 @@ class UMBase:
             return content.data
         lang = attributes.lang()
         if not len(node.children) and content.text is None:
-            if self.nillable(content.data) and content.node.isnil():
+            if self.nillable(content.data) or content.node.isnil():
                 return None
             else:
                 return xlstr.string('', lang)
