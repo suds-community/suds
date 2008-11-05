@@ -37,6 +37,10 @@ class Factory:
     {
         'anyType' : lambda x,y=None: Any(x,y),
         'boolean' : lambda x,y=None: XBoolean(x,y),
+        'int' : lambda x,y=None: XInteger(x,y),
+        'long' : lambda x,y=None: XInteger(x,y),
+        'float' : lambda x,y=None: XFloat(x,y),
+        'double' : lambda x,y=None: XFloat(x,y),
         'date' : lambda x,y=None: XDate(x,y),
         'time' : lambda x,y=None: XTime(x,y),
         'dateTime': lambda x,y=None: XDateTime(x,y),
@@ -123,13 +127,6 @@ class XBoolean(XBuiltin):
     translation = (
         { '1':True, 'true':True, '0':False, 'false':False },
         { True: 'true', False: 'false' },)
-
-    def __init__(self, schema, name):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        """
-        XBuiltin.__init__(self, schema, name)
         
     def translate(self, value, topython=True):
         """
@@ -142,6 +139,40 @@ class XBoolean(XBuiltin):
         else:
             table = XBoolean.translation[1]
         return table.get(value, value)
+
+   
+class XInteger(XBuiltin):
+    """
+    Represents an (xsd) xs:int builtin type.
+    """
+        
+    def translate(self, value, topython=True):
+        """
+        Convert a value from a schema type to a python type.
+        @param value: A value to convert.
+        @return: The converted I{language} type.
+        """
+        if topython:
+            return int(value)
+        else:
+            return str(value)
+
+       
+class XFloat(XBuiltin):
+    """
+    Represents an (xsd) xs:float builtin type.
+    """
+        
+    def translate(self, value, topython=True):
+        """
+        Convert a value from a schema type to a python type.
+        @param value: A value to convert.
+        @return: The converted I{language} type.
+        """
+        if topython:
+            return float(value)
+        else:
+            return str(value)
 
 
 class LocalTimezone(datetime.tzinfo):
@@ -215,14 +246,15 @@ class XDate(XBuiltin):
         return datetime.datetime(int(year), int(month), int(day))
     
     def toString(self, value):
+        if not isinstance(value, datetime.datetime):
+            return value
         if value is None:
             return ''
+        #if tz was used here or not
+        if value.tzinfo is None:
+            return value.strftime("%Y-%m-%d")
         else:
-            #if tz was used here or not
-            if value.tzinfo is None:
-                return value.strftime("%Y-%m-%d")
-            else:
-                return value.strftime("%Y-%m-%d") + value.tzinfo.tzname(None)                
+            return value.strftime("%Y-%m-%d") + value.tzinfo.tzname(None)                
     
     def translate(self, value, topython=True):
         if topython:
@@ -327,6 +359,8 @@ class XTime(XDate):
                             microsecond=microsec)
             
     def toString(self, value):
+        if not isinstance(value, datetime.datetime):
+            return value
         if value is None:
             return ''
             
@@ -402,6 +436,8 @@ class XDateTime(XTime, XDate):
                         microsec)
 
     def toString(self, value):
+        if not isinstance(value, datetime.datetime):
+            return value
         if value is None:
             return ''
         

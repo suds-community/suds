@@ -140,15 +140,6 @@ class Complex(SchemaObject):
     @cvar childtags: A list of valid child node names
     @type childtags: (I{str},...)
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
         
     def childtags(self):
         """
@@ -353,15 +344,6 @@ class Simple(SchemaObject):
     """
     Represents an (xsd) schema <xs:simpleType/> node
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
 
     def childtags(self):
         """
@@ -557,15 +539,6 @@ class ComplexContent(SchemaObject):
     """
     Represents an (xsd) schema <xs:complexContent/> node.
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
         
     def childtags(self):
         """
@@ -580,15 +553,6 @@ class SimpleContent(SchemaObject):
     """
     Represents an (xsd) schema <xs:simpleContent/> node.
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
         
     def childtags(self):
         """
@@ -1009,13 +973,6 @@ class Any(Promotable):
     """
     Represents an (xsd) <any/> node
     """
-
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        """
-        Promotable.__init__(self, schema, root)
         
     def get_child(self, name):
         """
