@@ -22,6 +22,7 @@ schema objects.
 from logging import getLogger
 from suds import *
 from suds.xsd import *
+from suds.sax.element import Element
 from copy import copy, deepcopy
 
 log = getLogger(__name__)
@@ -32,7 +33,7 @@ class SchemaObject:
     A schema object is an extension to object object with
     with schema awareness.
     @ivar root: The XML root element.
-    @type root: L{sax.element.Element}
+    @type root: L{Element}
     @ivar schema: The schema containing this object.
     @type schema: L{schema.Schema}
     @ivar form_qualified: A flag that inidcates that @elementFormDefault
@@ -93,7 +94,7 @@ class SchemaObject:
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.element.Element}
+        @type root: L{Element}
         """
         self.schema = schema
         self.root = root
@@ -435,6 +436,31 @@ class SchemaObject:
         clone.attributes = deepcopy(self.attributes)
         clone.children = deepcopy(self.children)
         return clone
+    
+    
+class XBuiltin(SchemaObject):
+    """
+    Represents an (xsd) schema <xs:*/> node
+    """
+    
+    def __init__(self, schema, name):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        """
+        root = Element(name)
+        SchemaObject.__init__(self, schema, root)
+        self.name = name
+        self.nillable = True
+            
+    def namespace(self):
+        return Namespace.xsdns
+    
+    def builtin(self):
+        return True
+    
+    def resolve(self, nobuiltin=False):
+        return self
 
 
 class Promotable(SchemaObject):
@@ -448,7 +474,7 @@ class Promotable(SchemaObject):
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
         @param root: The xml root node.
-        @type root: L{sax.element.Element}
+        @type root: L{Element}
         """
         SchemaObject.__init__(self, schema, root)
 

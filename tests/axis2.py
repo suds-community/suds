@@ -213,3 +213,4 @@ try:
 except Exception, e:
     print e
 
+print '\nfinished: errors=%d' % errors

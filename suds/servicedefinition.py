@@ -105,13 +105,15 @@ class ServiceDefinition:
         namespaces = []
         for l in (self.params, self.types):
             for t,r in l:
-                u = r.namespace()[1]
-                if u in namespaces: continue
-                namespaces.append(u)
+                ns = r.namespace()
+                if ns[1] in namespaces: continue
+                if Namespace.xs(ns) or Namespace.xsd(ns):
+                    continue
+                namespaces.append(ns[1])
                 if t == r: continue
-                u = t.namespace()[1]
-                if u in namespaces: continue
-                namespaces.append(u)
+                ns = t.namespace()
+                if ns[1] in namespaces: continue
+                namespaces.append(ns[1])
         i = 0
         namespaces.sort()
         for u in namespaces:

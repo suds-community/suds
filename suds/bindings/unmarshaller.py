@@ -366,7 +366,8 @@ class Typed(UMBase):
             if isinstance(data, Object):
                 md = data.__metadata__
                 type = md.__type__
-                return type.nillable
+                resolved = type.resolve()
+                return ( type.nillable or (resolved.builtin() and resolved.nillable ) )
         except:
             log.error('metadata error:\n%s', data, exc_info=True)
         return False
