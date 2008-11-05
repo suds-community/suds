@@ -142,10 +142,11 @@ class XInteger(XBuiltin):
         @param value: A value to convert.
         @return: The converted I{language} type.
         """
-        if value is None or not len(value):
-            return None
         if topython:
-            return int(value)
+            if isinstance(value, basestring) and len(value):
+                return int(value)
+            else:
+                return None
         else:
             return str(value)
 
@@ -161,9 +162,10 @@ class XFloat(XBuiltin):
         @param value: A value to convert.
         @return: The converted I{language} type.
         """
-        if value is None or not len(value):
-            return None
         if topython:
-            return float(value)
+            if isinstance(value, basestring) and len(value):
+                return float(value)
+            else:
+                return None
         else:
             return str(value)
