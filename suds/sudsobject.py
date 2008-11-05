@@ -126,6 +126,9 @@ class Object:
         if isinstance(name, int):
             name = self.__keylist__[int(name)]
         return getattr(self, name)
+    
+    def __setitem__(self, name, value):
+        setattr(self, name, value)
         
     def __iter__(self):
         return iter(self.__keylist__)
