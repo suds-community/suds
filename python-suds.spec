@@ -57,10 +57,28 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
-* Fri Nov 03 2008 jortel <jortel@redhat.com> - 0.3.2-1
-- New Features.
-- Bug Fixes.
-- See release notes in README.
+* Fri Nov 06 2008 jortel <jortel@redhat.com> - 0.3.2-1
+- Add SOAP MultiRef support
+- Add support for new schema tags:
+    <xs:include/>
+    <xs:simpleContent/>
+    <xs:group/>
+    <xs:attributeGroup/>
+- Added support for new xs <--> python type conversions:
+    xs:int
+    xs:long
+    xs:float
+    xs:double
+- Revise marshaller and binding to further sharpen the namespacing of nodes produced.
+- Infinite recursion fixed in ''xsd'' package dereference() during schema loading.
+- Add support for <wsdl:import/> of schema files into the wsdl root <definitions/>.
+- Fix double encoding of (&)
+- Add Client API:
+    setheaders()  - Same as keyword but works for all invocations.
+    addprefix()   - Mapping of namespace prefixes.
+    setlocation() - Override the location in the wsdl.
+- Add proper namespace prefix for soap headers.
+- Fixed Tickets: #5, #12, #34, #37, #40,#44, #45, #46, #48
 
 * Fri Nov 03 2008 jortel <jortel@redhat.com> - 0.3.1-5
 - Add LICENSE to %%doc.
