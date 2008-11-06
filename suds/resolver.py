@@ -413,7 +413,8 @@ class GraphResolver(TreeResolver):
     def known(self, object):
         try:
             md = object.__metadata__
-            return md.__type__
+            known = md.__type__
+            return known
         except:
             pass
 

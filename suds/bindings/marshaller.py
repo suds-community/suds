@@ -574,6 +574,9 @@ class Literal(MBase):
         else:
             if isinstance(content.value, Object):
                 known = self.resolver.known(content.value)
+                if known is None:
+                    log.debug('object has no type information', content.value)
+                    known = content.type
                 item = (content.type, known)
                 self.resolver.push(item)
             else:

@@ -73,6 +73,8 @@ class Builder:
             children = resolved.children
             if len(children) > 0:
                 value = Factory.object(type.name)
+                md = value.__metadata__
+                md.__type__ = type
         setattr(data, type.name, value)
         if value is not None:
             data = value
