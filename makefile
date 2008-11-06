@@ -39,6 +39,7 @@ rpm: dist
 	rpmbuild -ba $(SPEC)
 	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
 	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
+	rpmlint -i dist/python-*.rpm
 
 release: rpm docs
 	scp dist/python*.tar.gz fedorahosted.org:suds

@@ -36,7 +36,7 @@ from suds.xsd.sxbasic import Import
 Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 
 
-#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
