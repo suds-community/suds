@@ -20,6 +20,7 @@ Provides classes for XML->object I{unmarshalling}.
 
 from logging import getLogger
 from suds import *
+from suds.bindings import *
 from suds.sudsobject import Factory, Object, merge
 from suds.sax import Namespace
 from suds.resolver import NodeResolver
@@ -388,7 +389,7 @@ class Typed(UMBase):
         if type is None:
             log.warn('attribute (%s) type, not-found', name)
         else:
-            value = self.__xlated(value, type)
+            value = self.translated(value, type)
         UMBase.append_attribute(self, name, value, content)
     
     def append_text(self, content):
@@ -399,9 +400,9 @@ class Typed(UMBase):
         """
         UMBase.append_text(self, content)
         resolved = content.type.resolve()
-        content.text = self.__xlated(content.text, content.type)
+        content.text = self.translated(content.text, content.type)
             
-    def __xlated(self, value, type):
+    def translated(self, value, type):
         """ translate using the schema type """
         if value is not None:
             resolved = type.resolve()
@@ -458,17 +459,14 @@ class AttrList:
             return None
 
     def skip(self, attr):
+        """
+        Get whether to skip (filter-out) the specified attribute.
+        @param attr: An attribute.
+        @type attr: I{Attribute}
+        @return: True if should be skipped.
+        @rtype: bool
+        """
         ns = attr.namespace()
-        return ( Namespace.xs(ns) or ns[1] == Namespace.xmlns[1] )
-
-
-class xlstr(unicode):
-    """ language aware string """
-    @classmethod
-    def string(cls, s, lang=None):
-        xls = xlstr(s)
-        xls.lang = lang
-        return xls
-    def __init__(self, s):
-        unicode.__init__(self, s)
-        self.lang = None
+        soapenc = 'http://schemas.xmlsoap.org/soap/encoding/'
+        skip = (Namespace.xmlns[1], soapenc)
+        return ( Namespace.xs(ns) or ns[1] in skip )

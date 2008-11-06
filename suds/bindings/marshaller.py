@@ -20,6 +20,7 @@ Provides classes for object->XML I{marshalling}.
 
 from logging import getLogger
 from suds import *
+from suds.bindings import *
 from suds.sudsobject import Factory, Object, Property, items
 from suds.resolver import GraphResolver
 from suds.sax import Namespace as NS
@@ -578,8 +579,8 @@ class Literal(MBase):
             else:
                 self.resolver.push(content.type)
         content.resolved = self.resolver.top(1)
-        content.value = self.__xlated(content.value, content.resolved)
-        if self.__skip(content):
+        content.value = self.translated(content.value, content.resolved)
+        if self.skip(content):
             log.debug('skipping (optional) content:\n%s', content)
             self.resolver.pop()
             return False
@@ -666,7 +667,7 @@ class Literal(MBase):
             ns = resolved.namespace()
             Typer.manual(node, name)
     
-    def __skip(self, content):
+    def skip(self, content):
         if content.type.optional():
             v = content.value
             if v is None:
@@ -675,7 +676,7 @@ class Literal(MBase):
                 return True
         return False
     
-    def __xlated(self, value, resolved):
+    def translated(self, value, resolved):
         """ translate using the schema type """
         if value is not None:
             return resolved.translate(value, False)
@@ -724,8 +725,10 @@ class Typer:
     types = {
         int : ('int', NS.xsdns),
         long : ('long', NS.xsdns),
+        float : ('float', NS.xsdns),
         str : ('string', NS.xsdns),
         unicode : ('string', NS.xsdns),
+        xlstr : ('string', NS.xsdns),
         bool : ('boolean', NS.xsdns),
      }
                 
@@ -744,7 +747,7 @@ class Typer:
         """
         if value is None:
             value = node.getText()
-        tm = cls.types.get(value.__class__, ('any', NS.xsdns))
+        tm = cls.types.get(value.__class__, ('string', NS.xsdns))
         cls.manual(node, *tm)
         return node
 
