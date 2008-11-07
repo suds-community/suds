@@ -48,6 +48,8 @@ class Client(object):
     @type factory: L{Factory}
     @ivar sd: The service definition
     @type sd: L{ServiceDefinition}
+    @ivar messages: The last sent/received messages.
+    @type messages: str[2]
     """
 
     def __init__(self, url, **kwargs):
@@ -64,11 +66,12 @@ class Client(object):
         @keyword opener: A urllib2 opener to be used to open urls.
         @type opener: A I{urllib2.Opener}
         """
-        client = SoapClient(url, kwargs)
-        self.wsdl = client.wsdl
-        self.service = Service(client)
-        self.factory = Factory(client.wsdl)
-        self.sd = ServiceDefinition(client.wsdl)
+        self.preferences = kwargs
+        self.wsdl = Definitions(url, self.preferences.get('opener'))
+        self.service = Service(self)
+        self.factory = Factory(self.wsdl)
+        self.sd = ServiceDefinition(self.wsdl)
+        self.messages = dict(tx=None, rx=None)
         
     def setport(self, name):
         """
@@ -79,25 +82,34 @@ class Client(object):
         @param name: A service port name.
         @type name: str|int
         """
+        key = 'port'
         if name is None:
-            self.service.__dport__ = None
+            self.preferences[key] = None
             return
+        service = self.wsdl.service
         if isinstance(name, basestring):
-            self.service.__dport__ = self.wsdl.service.port(name)
+            self.preferences[key] = service.port(name)
             return
         if isinstance(name, (int, long)):
-            self.service.__dport__ = self.wsdl.service.ports[name]
+            self.preferences[key] = service.ports[name]
             return
         
-    def setlocation(self, url, names=None):
+    def setlocation(self, url, methods=None):
         """
         Override the invocation location (url) for service method.
         @param url: A url location.
         @type url: A url.
-        @param names:  A list of method names.  None=ALL
-        @type names: [str,..]
+        @param methods:  A list of method names.  None=ALL
+        @type methods: [str,..]
         """
-        self.wsdl.service.setlocation(url, names)
+        key = 'location'
+        if methods is None:
+            self.preferences[key] = url
+            return
+        d = {}
+        for n in methods:
+            d[n] = url
+        self.preferences[key] = d
         
     def addprefix(self, prefix, uri):
         """
@@ -117,17 +129,34 @@ class Client(object):
             return
         if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
+
+    def setproxy(self, **kwargs):
+        """
+        Set a proxy for all service method invocations.
+        This is the same as the I{proxy} keyword but applies to all invocations.
+        @param kwargs: Mappings of protocols to urls.
+        @keyword http: The http protocol, value is url.
+        @keyword https: The https protocol, value is url.
+        """
+        self.preferences['proxy'] = kwargs
         
     def setheaders(self, headers):
         """
-        Set the soap headers for B{all} method calls.
-        This is the same as specifying I{soapheaders=headers} using the keyword.
-        @param headers: The soap header(s) values.  I{None} = clear headers.
-        @type headers: An object or (list|tuple) of objects. 
+        Set the http & soap headers for B{all} method calls.
+        This is the same as specifying I{headers} & I{soapheaders} keywords
+        depending on the argument type.  When I{headers} is a dict, it is used to
+        set the http headers.  Otherwise, it is used to set the soap headers.
+        @param headers: The soap header(s) values.  I{None} = clears all headers.
+        @type headers: (Object|list|tuple|dict). 
         """
         if headers is None:
-            headers = ()
-        self.service.__client__.soapheaders = headers
+            self.preferences['headers'] = None
+            self.preferences['soapheaders'] = None
+            return
+        if isinstance(headers, dict):
+            self.preferences['headers'] = headers
+        else:
+            self.preferences['soapheaders'] = headers
         
     def last_sent(self):
         """
@@ -135,7 +164,7 @@ class Client(object):
         @return: The last sent I{soap} message.
         @rtype: L{Document}
         """
-        return self.service.__client__.last_sent
+        return self.messages.get('tx')
     
     def last_received(self):
         """
@@ -143,7 +172,7 @@ class Client(object):
         @return: The last received I{soap} message.
         @rtype: L{Document}
         """
-        return self.service.__client__.last_received
+        return self.messages.get('rx')
         
     def items(self, sobject):
         """
@@ -187,154 +216,14 @@ class Client(object):
         return 'Suds - Web Service Client, %s %s\n\n%s'  % (ver, build, desc)
 
 
-class Service:
-    """ 
-    Service I{wrapper} object.
-    B{See:}  L{Method} for Service.I{method()} invocation API.
-    @ivar __client__: The soap client.
-    @type __client__: L{SoapClient}
-    @ivar __dport__: The default service port name.
-    @type __dport__: str
-    """
-    
-    def __init__(self, client):
-        """
-        @param client: A service client.
-        @type client: L{SoapClient}
-        """
-        self.__client__ = client
-        self.__dport__ = None
-    
-    def __getattr__(self, name):
-        """
-        Find and return a service method or port by name depending on how may
-        ports are defined for the service.  When only one port is defined (as in most
-        cases), it returns the method so users don't have to qualify methods by port.
-        @param name: A port/method name.
-        @type name: str
-        @return: Either a L{Port} or an L{Method}.
-        @rtype: L{Port}|L{Method}
-        @see: Client.setport()
-        """
-        builtin =  name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
-        service = self.__client__.wsdl.service
-        if self.__dport__ is None:
-            log.debug('lookup service-method using "%s"', name)
-            method = service.method(name)
-            if method is not None:
-                return Method(self.__client__, method)
-            log.debug('lookup service-port using "%s"', name)
-            port = service.port(name)
-            if port is not None:
-                return Port(self.__client__, port)
-        else:
-            port = self.__dport__
-            port = Port(self.__client__, port)
-            return getattr(port, name)
-        raise MethodNotFound(name)
-        
-    
-    def __str__(self):
-        return str(self.__client__)
-        
-    def __unicode__(self):
-        return unicode(self.__client__)
-    
-    
-class Port(object):
-    """ 
-    Service port I{wrapper} object.
-    B{See:}  L{Method} for Service.I{method()} invocation API.
-    @ivar __client__: The soap client.
-    @type __client__: L{SoapClient}
-    @ivar __port__: The service port.
-    @type __port__: I{service.Port}
-    """
-    
-    def __init__(self, client, port):
-        """
-        @param client: A service client.
-        @type client: L{SoapClient}
-        @param port: A service port.
-        @type port: I{service.Port}
-        """
-        self.__client__ = client
-        self.__port__ = port
-        
-    def __getattr__(self, name):
-        """
-        Find and return a service method by name.
-        @param name: A method name.
-        @type name: str
-        @return: a L{Method}.
-        @rtype: L{Method}.
-        """
-        builtin =  name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
-        service = self.__client__.wsdl.service
-        qname = ':'.join((self.__port__.name, name))
-        method = service.method(qname)
-        return Method(self.__client__, method)
-
-
-class Method(object):
-    
-    """
-    Method invocation wrapper
-    @ivar client: A soap client.
-    @type client: L{SoapClient}
-    @ivar name: The method name.
-    @type name: basestring
-    """ 
-    
-    def __init__(self, client, method):
-        """
-        @param client: A client object.
-        @type client: L{SoapClient}
-        @param method: The (wsdl) method.
-        @type method: I{method}
-        """
-        self.client = client
-        self.method = method
-        
-    def __call__(self, *args, **kwargs):
-        """
-        Call (invoke) the method.
-        @param args: A list of args for the method invoked.
-        @type args: list
-        @param kwargs: Keyword args to be processed by suds.
-        @type kwargs: dict
-        @keyword soapheaders: Optional soap headers to be included in the
-            soap message.
-        @type soapheaders: list( L{sudsobject.Object}|L{sudsobject.Property} )
-        @keyword inject: Inject the specified (msg|reply|fault) into the soap message stream.
-        @type inject: dict(B{msg}=soap-message|B{reply}=soap-reply|B{fault}=soap-fault)
-        @keyword location: Override the location (url) for the service.
-        @type location: str
-        """
-        result = None
-        try:
-            if SimClient.simulation(kwargs):
-                simulator = SimClient(self.client)
-                result = simulator.invoke(self.method, args, kwargs)
-            else:
-                result = self.client.invoke(self.method, args, kwargs)
-        except WebFault, e:
-            if self.client.arg.faults:
-                log.debug('raising (%s)', e)
-                raise e
-            else:
-                log.debug('fault (%s)', e)
-                result = (500, e)
-        return result
-
-    
 class Factory:
-    
-    """ A factory for instantiating types defined in the wsdl """
+    """
+    A factory for instantiating types defined in the wsdl
+    @ivar resolver: A schema type resolver.
+    @type resolver: L{PathResolver}
+    @ivar builder: A schema object builder.
+    @type builder: L{Builder}
+    """
     
     def __init__(self, wsdl):
         """
@@ -373,106 +262,243 @@ class Factory:
         return result
 
 
+class Service:
+    """ 
+    Service I{wrapper} object.
+    B{See:}  L{Method} for Service.I{method()} invocation API.
+    @ivar __client__: A suds client.
+    @type __client__: L{Client}
+    """
+    
+    def __init__(self, client):
+        """
+        @param client: A suds client.
+        @type client: L{Client}
+        """
+        self.__client__ = client
+        self.__service__ = client.wsdl.service
+    
+    def __getattr__(self, name):
+        """
+        Find and return a service method or port by name depending on how may
+        ports are defined for the service.  When only one port is defined (as in most
+        cases), it returns the method so users don't have to qualify methods by port.
+        @param name: A port/method name.
+        @type name: str
+        @return: Either a L{Port} or an L{Method}.
+        @rtype: L{Port}|L{Method}
+        @see: Client.setport()
+        """
+        builtin =  name.startswith('__') and name.endswith('__')
+        if builtin:
+            return self.__dict__[name]
+        # ports/methods
+        service = self.__service__
+        preferences = self.__client__.preferences
+        dport = preferences.get('port')
+        if dport is None:
+            log.debug('lookup service-method using "%s"', name)
+            method = service.method(name)
+            if method is not None:
+                return Method(self, method)
+            log.debug('lookup service-port using "%s"', name)
+            port = service.port(name)
+            if port is not None:
+                return Port(self, port)
+        else:
+            port = Port(self, dport)
+            return getattr(port, name)
+        raise MethodNotFound(name)
+    
+    def __str__(self):
+        return unicode(self)
+        
+    def __unicode__(self):
+        return unicode(self.__service__)
+    
+    
+class Port(object):
+    """ 
+    Service port I{wrapper} object.
+    B{See:}  L{Method} for Service.I{method()} invocation API.
+    @ivar __service__: The service.
+    @type __service__: L{Service}
+    @ivar __port__: The service port.
+    @type __port__: I{service.Port}
+    """
+    
+    def __init__(self, service, port):
+        """
+        @param service: The service.
+        @type service: L{Service}
+        @param port: A service port.
+        @type port: I{service.Port}
+        """
+        self.__service__ = service
+        self.__port__ = port
+        
+    def __getattr__(self, name):
+        """
+        Find and return a service method by name.
+        @param name: A method name.
+        @type name: str
+        @return: a L{Method}.
+        @rtype: L{Method}.
+        """
+        builtin =  name.startswith('__') and name.endswith('__')
+        if builtin:
+            return self.__dict__[name]
+        # methods
+        service = self.__service__.__service__
+        port = self.__port__
+        qname = ':'.join((port.name, name))
+        method = service.method(qname)
+        return Method(self.__service__, method)
+    
+    def __str__(self):
+        return unicode(self)
+        
+    def __unicode__(self):
+        return unicode(self.__port__)
+
+
+class Method(object):
+    """
+    Method invocation wrapper
+    @ivar service: The service.
+    @type service: L{Service}
+    @ivar name: The method name.
+    @type name: str
+    """ 
+    
+    def __init__(self, service, method):
+        """
+        @param service: The service.
+        @type service: L{Service}
+        @param method: The (wsdl) method.
+        @type method: I{method}
+        """
+        self.service = service
+        self.method = method
+        
+    def __call__(self, *args, **kwargs):
+        """
+        Call (invoke) the method.
+        @param args: A list of args for the method invoked.
+        @type args: list
+        @param kwargs: Keyword args to be processed by suds.
+        @type kwargs: dict
+        @keyword soapheaders: Optional soap headers to be included in the
+            soap message.
+        @type soapheaders: list( L{sudsobject.Object}|L{sudsobject.Property} )
+        @keyword inject: Inject the specified (msg|reply|fault) into the soap message stream.
+        @type inject: dict(B{msg}=soap-message|B{reply}=soap-reply|B{fault}=soap-fault)
+        @keyword location: Override the location (url) for the service.
+        @type location: str
+        @keyword headers: Extra HTTP headers
+        @type headers: dict
+        """
+        result = None
+        preferences = dict(self.service.__client__.preferences)
+        preferences.update(kwargs)
+        if SimClient.simulation(preferences):
+            client = SimClient(self, preferences)
+        else:
+            client = SoapClient(self, preferences)
+        faults = preferences.get('faults', True)
+        if not faults:
+            try:
+                return client.invoke(args)
+            except WebFault, e:
+                return (500, e)
+        else:
+            return client.invoke(args)
+        
+    def __str__(self):
+        return unicode(self)
+        
+    def __unicode__(self):
+        return unicode(self.method)
+
 
 class SoapClient:
-    
     """
     A lightweight soap based web client B{**not intended for external use}
-    @ivar arg: A object containing custom args.
-    @type arg: L{Object}
-    @ivar wsdl: A WSDL object.
-    @type wsdl: L{Definitions}
-    @ivar schema: A schema object.
-    @type schema: L{xsd.schema.Schema}
-    @ivar builder: A builder object used to build schema types.
-    @type builder: L{Builder}
+    @ivar service: The target method.
+    @type service: L{Service}
+    @ivar method: A target method.
+    @type method: L{Method}
+    @ivar preferences: A dictonary of preferences.
+    @type preferences: dict
     @ivar cookiejar: A cookie jar.
     @type cookiejar: libcookie.CookieJar
     """
 
-    def __init__(self, url, kwargs):
+    def __init__(self, method, preferences):
         """
-        @param url: The URL for a WSDL.
-        @type url: str
-        @keyword faults: Raise faults raised by server (default:True),
-                else return tuple from service method invocation as (http code, object).
-        @type faults: boolean
-        @keyword proxy: An http proxy to be specified on requests (default:{}).
-                The proxy is defined as {protocol:proxy,}
-        @type proxy: dict
-        @keyword opener: A urllib2 opener to be used to open urls.
-        @type opener: A I{urllib2.Opener}
+        @param method: A target method.
+        @type method: L{Method}
+        @param preferences: A dictonary of preferences.
+        @type preferences: dict
         """
-        self.arg = Object()
-        self.arg.faults = kwargs.get('faults', True)
-        self.arg.proxies = kwargs.get('proxy', {})
-        self.arg.opener = kwargs.get('opener', None)
-        self.soapheaders = kwargs.get('soapheaders', ())
-        self.wsdl = Definitions(url, self.arg.opener)
-        self.schema = self.wsdl.schema
-        self.builder = Builder(self.wsdl)
+        self.service = method.service
+        self.method = method.method
+        self.preferences = preferences
         self.cookiejar = CookieJar()
-        self.last_sent = None
-        self.last_received = None
         
-    def invoke(self, method, args, kwargs):
+    def invoke(self, args):
         """
         Send the required soap message to invoke the specified method
-        @param method: A method object to be invoked.
-        @type method: I{service.Method}
         @param args: Arguments
         @type args: [arg,...]
-        @param kwargs: Keyword Arguments
-        @type kwargs: I{dict}
         @return: The result of the method invocation.
-        @rtype: I{builtin} or I{subclass of} L{Object}
+        @rtype: I{builtin}|I{subclass of} L{Object}
         """
         timer = metrics.Timer()
         timer.start()
         result = None
-        binding = method.binding.input
-        binding.faults = self.arg.faults
-        msg = binding.get_message(method, args, self.soapheaders)
+        binding = self.method.binding.input
+        binding.faults = self.faults()
+        msg = binding.get_message(self.method, args, self.soapheaders())
         timer.stop()
-        metrics.log.debug("message for '%s' created: %s", method.qname, timer)
+        metrics.log.debug(
+                "message for '%s' created: %s",
+                self.method.qname, timer)
         timer.start()
-        result = self.send(method, msg, kwargs)
+        result = self.send(msg)
         timer.stop()
-        metrics.log.debug("method '%s' invoked: %s", method.qname, timer)
+        metrics.log.debug(
+                "method '%s' invoked: %s",
+                self.method.qname, timer)
         return result
     
-    def send(self, method, msg, kwargs):
+    def send(self, msg):
         """
         Send soap message.
-        @param method: The method being invoked.
-        @type method: I{service.Method}
         @param msg: A soap message to send.
         @type msg: basestring
-        @param kwargs: keyword args
-        @type kwargs: {}
         @return: The reply to the sent message.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         result = None
-        headers = self.headers(method)
-        location = method.location
-        location = kwargs.get('location', location)
-        binding = method.binding.input
+        location = self.location()
+        headers = self.headers()
+        binding = self.method.binding.input
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
-            self.last_sent = Document(msg)
+            self.last_sent(Document(msg))
             request = Request(location, str(msg), headers)
             self.cookiejar.add_cookie_header(request) 
-            self.set_proxies(location, request)
+            self.setproxies(request)
             fp = self.urlopen(request)
             self.cookiejar.extract_cookies(fp, request)
             reply = fp.read()
-            result = self.succeeded(binding, method, reply)
+            result = self.succeeded(binding, reply)
         except HTTPError, e:
             if e.code in (202,204):
                 result = None
             else:
-                log.error(self.last_sent)
+                log.error(self.last_sent())
                 result = self.failed(binding, e)
         return result
     
@@ -483,54 +509,50 @@ class SoapClient:
         @param request: An http request object.
         @type request: L{Request}
         """
-        if self.arg.opener is None:
+        if self.opener() is None:
             return urlopen(request)
         else:
-            return self.arg.opener.open(request)
+            return self.opener().open(request)
     
-    def set_proxies(self, location, request):
+    def setproxies(self, request):
         """
         Set the proxies for the request.
-        @param location: A URL location of the service method
-        @type location: str
         @param request: A soap request object to be sent.
         @type request: urllib2.Request
         """
+        location = self.location()
         protocol = urlparse.urlparse(location)[0]
-        proxy = self.arg.proxies.get(protocol, None)
+        proxy = self.proxy().get(protocol, None)
         if proxy is not None:
             log.debug('proxy %s used for %s', proxy, location)
             request.set_proxy(proxy, protocol)
     
-    def headers(self, method):
+    def headers(self):
         """
         Get http headers or the http/https request.
-        @param method: The method being invoked.
-        @type method: I{service.Method}
         @return: A dictionary of header/values.
         @rtype: dict
         """
-        action = method.soap.action
-        result = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
+        action = self.method.soap.action
+        stock = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
+        result = dict(stock, **self.httpheaders())
         log.debug('headers = %s', result)
         return result
     
-    def succeeded(self, binding, method, reply):
+    def succeeded(self, binding, reply):
         """
         Request succeeded, process the reply
         @param binding: The binding to be used to process the reply.
         @type binding: L{bindings.binding.Binding}
-        @param method: The service method that was invoked.
-        @type method: I{service.Method}
         @return: The method result.
         @rtype: I{builtin}, L{Object}
         @raise WebFault: On server.
         """
         log.debug('http succeeded:\n%s', reply)
         if len(reply) > 0:
-            r, p = binding.get_reply(method, reply)
-            self.last_received = r
-            if self.arg.faults:
+            r, p = binding.get_reply(self.method, reply)
+            self.last_received(r)
+            if self.faults():
                 return p
             else:
                 return (200, p)
@@ -551,81 +573,96 @@ class SoapClient:
         if status == 500:
             if len(reply) > 0:
                 r, p = binding.get_fault(reply)
-                self.last_received = r
+                self.last_received(r)
                 return (status, p)
             else:
                 return (status, None)
-        if self.arg.faults:
+        if self.faults():
             raise Exception((status, reason))
         else:
             return (status, None)
+        
+    def faults(self):
+        return self.preferences.get('faults', True)
+    
+    def proxy(self):
+        return self.preferences.get('proxy', {})
+    
+    def opener(self):
+        return self.preferences.get('opener', None)
+    
+    def httpheaders(self):
+        return self.preferences.get('headers', {})
+    
+    def soapheaders(self):
+        return self.preferences.get('soapheaders', ())
+    
+    def location(self):
+        return self.preferences.get('location', self.method.location)
+    
+    def last_sent(self, d=None):
+        key = 'tx'
+        messages = self.service.__client__.messages
+        if d is None:
+            return messages.get(key)
+        else:
+            messages[key] = d
+        
+    def last_received(self, d=None):
+        key = 'rx'
+        messages = self.service.__client__.messages
+        if d is None:
+            return messages.get(key)
+        else:
+            messages[key] = d
 
 
 class SimClient(SoapClient):
-    
     """
     Loopback client used for message/reply simulation.
     """
     
-    INJKEY = 'inject'
+    injkey = 'inject'
     
     @classmethod
-    def simulation(cls, kwargs):
+    def simulation(cls, preferences):
         """ get whether loopback has been specified in the I{kwargs}. """
-        return kwargs.has_key(SimClient.INJKEY)
-    
-    def __init__(self, super):
-        """
-        @param super: The SoapClient superclass instance.
-        @type super: L{SoapClient}
-        """
-        for item in super.__dict__.items():
-            k,v = item
-            if k.startswith('__'): continue
-            self.__dict__[k] = v
+        return preferences.has_key(SimClient.injkey)
         
-    def invoke(self, method, args, kwargs):
+    def invoke(self, args):
         """
         Send the required soap message to invoke the specified method
-        @param method: A method object to be invoked.
-        @type method: I{service.Method}
         @param args: Arguments
         @type args: [arg,...]
-        @param kwargs: Keyword Arguments
-        @type kwargs: I{dict}
         @return: The result of the method invocation.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
-        lb = kwargs[SimClient.INJKEY]
-        msg = lb.get('msg')
-        reply = lb.get('reply')
-        fault = lb.get('fault')
+        simulation = self.preferences[self.injkey]
+        msg = simulation.get('msg')
+        reply = simulation.get('reply')
+        fault = simulation.get('fault')
         if msg is None:
             if reply is not None:
-                return self.__reply(method, reply)
+                return self.__reply(reply)
             if fault is not None:
-                return self.__fault(method, fault)
+                return self.__fault(fault)
             raise Exception('(reply|fault) expected when msg=None')
         msg = Parser().parse(string=msg)
-        return self.send(method, msg, kwargs)
+        return self.send(msg)
     
-    def __reply(self, method, reply):
+    def __reply(self, reply):
         """ simulate the reply """
-        binding = method.binding.output
-        binding.faults = self.arg.faults
-        return self.succeeded(binding, method, reply)
+        binding = self.method.binding.output
+        binding.faults = self.faults()
+        return self.succeeded(binding, reply)
     
-    def __fault(self, method, reply):
+    def __fault(self, reply):
         """ simulate the (fault) reply """
-        binding = method.binding.output
-        binding.faults = self.arg.faults
-        if self.arg.faults:
+        binding = self.method.binding.output
+        binding.faults = self.faults()
+        if binding.faults:
             r, p = binding.get_fault(reply)
-            self.last_received = r
+            self.last_received(r)
             return (500, p)
         else:
             return (500, None)
-        
-
-
-
