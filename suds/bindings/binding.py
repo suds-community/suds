@@ -26,8 +26,10 @@ from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
 from suds.bindings.marshaller import Marshaller, Content
 from suds.bindings.unmarshaller import Unmarshaller
-from suds.xsd.query import TypeQuery, ElementQuery
 from suds.bindings.multiref import MultiRef
+from suds.xsd.query import TypeQuery, ElementQuery
+from suds.xsd.sxbasic import Element as SchemaElement
+
 
 log = getLogger(__name__)
 
@@ -383,6 +385,8 @@ class Binding:
             pt = query.execute(self.schema)
             if pt is None:
                 raise TypeNotFound(query.ref)
+            if p.type is not None:
+                pt = PartElement(pt)
             if input:
                 result.append((p.name, pt))
             else:
@@ -401,3 +405,29 @@ class Binding:
         for rt in self.part_types(method, input=False):
             result.append(rt)
         return result
+
+
+class PartElement(SchemaElement):
+    """
+    A part used to represent a message part when the part
+    references a schema type and thus assumes to be an element.
+    @ivar resolved: The part type.
+    @type resolved: L{suds.xsd.sxbase.SchemaObject}
+    """
+    
+    def __init__(self, resolved):
+        """
+        @param resolved: The part type.
+        @type resolved: L{suds.xsd.sxbase.SchemaObject}
+        """
+        root = Element('element', ns=Namespace.xsdns)
+        SchemaElement.__init__(self, resolved.schema, root)
+        self.resolved = resolved
+        self.form_qualified = False
+        
+    def resolve(self, nobuiltin=False):
+        if nobuiltin and self.resolved.builtin():
+            return self
+        else:
+            return self.resolved
+    
