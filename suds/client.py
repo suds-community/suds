@@ -213,7 +213,7 @@ class Client(object):
         ver = properties.get('version')
         build = properties.get('build', '')
         desc = unicode(self.sd)
-        return 'Suds - Web Service Client, %s %s\n\n%s'  % (ver, build, desc)
+        return 'Suds - version: %s build: %s\n\n%s'  % (ver, build, desc)
 
 
 class Factory:
