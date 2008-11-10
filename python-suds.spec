@@ -77,8 +77,9 @@ rm -rf $RPM_BUILD_ROOT
     setheaders()  - Same as keyword but works for all invocations.
     addprefix()   - Mapping of namespace prefixes.
     setlocation() - Override the location in the wsdl.
+    setproxy()    - Same as proxy keyword but for all invocations.
 - Add proper namespace prefix for soap headers.
-- Fixed Tickets: #5, #12, #34, #37, #40,#44, #45, #46, #48
+- Fixed Tickets: #5, #12, #34, #37, #40, #44, #45, #46, #48, #49, #50
 
 * Fri Nov 03 2008 jortel <jortel@redhat.com> - 0.3.1-5
 - Add LICENSE to %%doc.
