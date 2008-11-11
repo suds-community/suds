@@ -35,20 +35,32 @@ Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
 #logging.getLogger('suds').setLevel(logging.DEBUG)
 
+
 def start(url):
     global errors
     print '\n________________________________________________________________\n' 
     print 'Test @ ( %s ) %d' % (url, errors)
-    
+
 try:
-    url = 'http://jira.atlassian.com/rpc/soap/jirasoapservice-v2?wsdl'
+    url = 'http://mssoapinterop.org/asmx/simple.asmx?WSDL'
     start(url)
     client = Client(url)
     print client
-    token = client.service.login('soaptester', 'soaptester')
-    print 'token="%s"' % token
-    user = client.service.getUser(token, 'soaptester')
-    print 'user="%s"' % token
+    # string
+    input = "42"
+    result = client.service.echoString(input)
+    print 'echoString() =  %s' % result
+    assert result == input
+    # int
+    input = 42
+    result = client.service.echoInteger(input)
+    print 'echoInteger() = %s' % result
+    assert result == input
+    # float
+    input = 4.2
+    result = client.service.echoFloat(input)
+    print 'echoFloat() = %s' % result
+    assert result == input
 except WebFault, f:
     errors += 1
     print f
@@ -59,11 +71,14 @@ except Exception, e:
     tb.print_exc()
     
 try:
-    url = ' http://www.webservicex.net/WeatherForecast.asmx?WSDL '
+    url = 'http://jira.atlassian.com/rpc/soap/jirasoapservice-v2?wsdl'
     start(url)
     client = Client(url)
     print client
-    print client.service.GetWeatherByZipCode('27606')
+    token = client.service.login('soaptester', 'soaptester')
+    print 'token="%s"' % token
+    user = client.service.getUser(token, 'soaptester')
+    print 'user="%s"' % token
 except WebFault, f:
     errors += 1
     print f
@@ -173,21 +188,6 @@ except Exception, e:
     tb.print_exc()
 
 try:
-    url = 'http://www.services.coxnewsweb.com/COXnetUR/URService?WSDL'
-    start(url)
-    client = Client(url)
-    print client
-    bean = client.service.getUserBean('abc', '123', 'mypassword', 'myusername')
-except WebFault, f:
-    errors += 1
-    print f
-    print f.fault
-except Exception, e:
-    errors += 1
-    print e
-    tb.print_exc()
-
-try:
     url = 'http://arcweb.esri.com/services/v2/MapImage.wsdl'
     start(url)
     client = Client(url)
@@ -250,9 +250,6 @@ try:
     timer.stop()
     print 'str(client): %s' % timer
     print 'client:\n%s' % s
-    print 'Account_GetAll()'
-    a = client.service.Account_GetAll()
-    print a
 except WebFault, f:
     errors += 1
     print f
