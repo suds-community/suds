@@ -1200,4 +1200,4 @@ version 0.3.2 (11-7-08):
           * setlocation() - Override the location in the wsdl; same as keyword except for all calls.
           * setproxy() - same as proxy keyword but for all invocations.
        * Add proper namespace prefix for soap headers.
-       * Fixed Tickets: #5, #12, #34, #37, #40, #44, #45, #46, #48, #49, #50
+       * Fixed Tickets: #5, #12, #34, #37, #40, #44, #45, #46, #48, #49, #50, #51
