@@ -750,7 +750,11 @@ class Typer:
         """
         if value is None:
             value = node.getText()
-        tm = cls.types.get(value.__class__, ('string', NS.xsdns))
+        if isinstance(value, Object):
+            known = cls.known(value)
+            tm = (known.name, known.namespace())
+        else:
+            tm = cls.types.get(value.__class__, cls.types.get(str))
         cls.manual(node, *tm)
         return node
 
@@ -779,7 +783,7 @@ class Typer:
         return node
     
     @classmethod
-    def qname(self, ns, tval):
+    def qname(cls, ns, tval):
         """
         Create a I{qname} for I{tval} and the specified namespace.
         @param ns: The namespace of I{tval}.
@@ -791,6 +795,15 @@ class Typer:
         """
         try:
             return ':'.join((ns[0], tval))
+        except:
+            pass
+    
+    @classmethod
+    def known(cls, object):
+        try:
+            md = object.__metadata__
+            known = md.__type__
+            return known
         except:
             pass
 
