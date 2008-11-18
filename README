@@ -46,7 +46,7 @@ of objects and types defined in the WSDL.
 You will need to know the url for WSDL for each service used.  Simply create
 a client for that service as follows:
 
-  > from client import Client
+  > from suds.client import Client
   >
   > url = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
   >

@@ -78,7 +78,7 @@ try:
     token = client.service.login('soaptester', 'soaptester')
     print 'token="%s"' % token
     user = client.service.getUser(token, 'soaptester')
-    print 'user="%s"' % token
+    print 'user="%s"' % user
 except WebFault, f:
     errors += 1
     print f
