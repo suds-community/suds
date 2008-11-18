@@ -664,11 +664,15 @@ class Literal(MBase):
         @param content: The content for which proccessing has ended.
         @type content: L{Object}
         """
-        if not content.type.any() and  content.type.derived():
+        if content.type.any():
+            return
+        resolved = content.resolved
+        if resolved is None:
             resolved = content.type.resolve()
+        if resolved.derived():
             name = resolved.name
             ns = resolved.namespace()
-            Typer.manual(node, name)
+            Typer.manual(node, name, ns)
     
     def skip(self, content):
         if content.type.optional():
@@ -710,7 +714,7 @@ class Encoded(Literal):
         if content.type.any():
             Typer.auto(node, content.value)
             return
-        resolved = self.resolver.top(1)
+        resolved = content.resolved
         if resolved is None:
             resolved = content.type.resolve()
         name = resolved.name
@@ -759,7 +763,7 @@ class Typer:
         return node
 
     @classmethod
-    def manual(cls, node, tval, ns=None):
+    def manual(cls, node, tval, ns):
         """
         Set the node's xsi:type attribute based on either I{value}'s
         class or the class of the node's text.  Then adds the referenced
@@ -773,30 +777,33 @@ class Typer:
         @return: The specified node.
         @rtype: L{sax.element.Element}
         """
-        a = cls.qname(NS.xsins, 'type')
+        xta = ':'.join((NS.xsins[0], 'type'))
         node.addPrefix(NS.xsins[0], NS.xsins[1])
-        if ns is None:
-            node.set(a, tval)
+        if node.namespace()[1] != ns[1]:
+            ns = cls.genprefix(node, ns)
+            qname = ':'.join((ns[0], tval))
+            node.set(xta, qname)
+            node.addPrefix(ns[0], ns[1]) 
         else:
-            node.set(a, cls.qname(ns, tval))
-            node.addPrefix(ns[0], ns[1])
+            node.set(xta, tval)
         return node
     
     @classmethod
-    def qname(cls, ns, tval):
+    def genprefix(cls, node, ns):
         """
-        Create a I{qname} for I{tval} and the specified namespace.
-        @param ns: The namespace of I{tval}.
+        Generate a prefix.
+        @param node: An XML node on which the prefix will be used.
+        @type node: L{sax.element.Element}
+        @param ns: A namespace needing an unique prefix.
         @type ns: (prefix, uri)
-        @param tval: The name of the schema type.
-        @type tval: str
-        @return: The prefix:tval.
-        @rtype: str
+        @return: The I{ns} with a new prefix.
         """
-        try:
-            return ':'.join((ns[0], tval))
-        except:
-            pass
+        for n in range(1, 1024):
+            p = 'ns%d' % n
+            u = node.resolvePrefix(p, default=None)
+            if u is None or u == ns[1]:
+                return (p, ns[1])
+        raise Exception('auto prefix, exhausted')
     
     @classmethod
     def known(cls, object):
