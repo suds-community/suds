@@ -28,6 +28,6 @@ setup(
     author_email="jortel@redhat.com",
     maintainer="Jeff Ortel",
     maintainer_email="jortel@redhat.com",
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests']),
     url="https://fedorahosted.org/suds",
 )
