@@ -828,7 +828,7 @@ class Element:
 class PrefixNormalizer:
     """
     The prefix normalizer provides namespace prefix normalization.
-    @param ivar: A node to normalize.
+    @ivar node: A node to normalize.
     @type node: L{Element}
     @ivar branch: The nodes flattened branch.
     @type branch: [L{Element},..]
@@ -967,8 +967,8 @@ class PrefixNormalizer:
     def permit(self, ns):
         """
         Get whether the I{ns} is to be normalized.
-        @param n: A node.
-        @type n: L{Element}
+        @param ns: A namespace.
+        @type ns: (p,u)
         @return: True if to be included.
         @rtype: boolean
         """
@@ -977,8 +977,8 @@ class PrefixNormalizer:
     def skip(self, ns):
         """
         Get whether the I{ns} is to B{not} be normalized.
-        @param n: A node.
-        @type n: L{Element}
+        @param ns: A namespace.
+        @type ns: (p,u)
         @return: True if to be skipped.
         @rtype: boolean
         """
