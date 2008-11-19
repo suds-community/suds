@@ -47,16 +47,17 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{python_sitelib}/suds/bindings
 %dir %{python_sitelib}/suds/sax
 %dir %{python_sitelib}/suds/xsd
-%dir %{python_sitelib}/tests
 %{python_sitelib}/suds/*.py*
 %{python_sitelib}/suds/bindings/*.py*
 %{python_sitelib}/suds/sax/*.py*
 %{python_sitelib}/suds/xsd/*.py*
-%{python_sitelib}/tests/*.py*
 
 %doc README LICENSE
 
 %changelog
+* Wed Nov 19 2008 jortel <jortel@redhat.com> - 0.3.3-1
+- Add namespace prefix normalization in soap message.
+
 * Fri Nov 06 2008 jortel <jortel@redhat.com> - 0.3.2-1
 - Add SOAP MultiRef support
 - Add support for new schema tags:
