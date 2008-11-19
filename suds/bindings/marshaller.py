@@ -55,21 +55,15 @@ class Marshaller:
 class Content(Object):
     """
     Marshaller Content.
-    @ivar parent: The content parent.
-    @type parent: (L{Element}|L{Content})
     @ivar tag: The content tag.
     @type tag: str
     @ivar value: The content's value.
     @type value: I{any}
     @ivar type: The (optional) content schema type.
     @type type: L{xsd.sxbase.SchemaObject}
-    @ivar resolved: The content's I{resolved} type.
-    @type resolved: L{xsd.sxbase.SchemaObject}
     """
-    def __init__(self, parent=None, tag=None, value=None, type=None):
+    def __init__(self, tag=None, value=None, type=None):
         """
-        @param parent: The content parent.
-        @type parent: (L{Element}|L{Content})
         @param tag: The content tag.
         @type tag: str
         @param value: The content's value.
@@ -78,30 +72,9 @@ class Content(Object):
         @type type: L{xsd.sxbase.SchemaObject}
         """
         Object.__init__(self)
-        self.parent = parent
         self.tag = tag
         self.value = value
         self.type = type
-        self.resolved = None
-
-    def namespace(self):
-        """
-        Get the tag's namesapce by looking at the parent's resolved
-        schema type.  If the parent is an L{Element}, its namespace is used.
-        @return: The tag's namespace.
-        @rtype: (prefix, uri)
-        """
-        p = self.parent
-        if isinstance(p, Element):
-            return p.namespace()
-        if isinstance(p, Content):
-            pr = self.parent.resolved
-            if pr is not None:
-                return pr.namespace()
-            pt = self.parent.type
-            if pt is not None:
-                return pt.resolve().namespace()
-        return NS.default
 
 
 class M:
@@ -301,10 +274,7 @@ class PropertyAppender(Appender):
         child.setText(p.get())
         parent.append(child)
         for item in p.items():
-            cont = Content(
-                parent=content,
-                tag=item[0], 
-                value=item[1])
+            cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
 
             
@@ -330,10 +300,7 @@ class ObjectAppender(Appender):
         child = self.node(content)
         parent.append(child)
         for item in items(object):
-            cont = Content(
-                parent=content, 
-                tag=item[0], 
-                value=item[1])
+            cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
 
 
@@ -383,10 +350,7 @@ class ListAppender(Appender):
         if len(collection):
             self.suspend(content)
             for item in collection:
-                cont = Content(
-                    parent=content, 
-                    tag=content.tag, 
-                    value=item)
+                cont = Content(tag=content.tag, value=item)
                 Appender.append(self, parent, cont)
             self.resume(content)
 
@@ -581,8 +545,8 @@ class Literal(MBase):
                 self.resolver.push(item)
             else:
                 self.resolver.push(content.type)
-        content.resolved = self.resolver.top(1)
-        content.value = self.translated(content.value, content.resolved)
+        resolved = self.resolver.top(1)
+        content.value = self.translated(content.value, resolved)
         if self.skip(content):
             log.debug('skipping (optional) content:\n%s', content)
             self.resolver.pop()
@@ -633,7 +597,7 @@ class Literal(MBase):
         @return: A new node.
         @rtype: L{Element}
         """
-        ns = content.namespace()
+        ns = content.type.namespace()
         if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
@@ -666,7 +630,7 @@ class Literal(MBase):
         """
         if content.type.any():
             return
-        resolved = content.resolved
+        resolved = self.resolver.top(1)
         if resolved is None:
             resolved = content.type.resolve()
         if resolved.derived():
@@ -714,7 +678,7 @@ class Encoded(Literal):
         if content.type.any():
             Typer.auto(node, content.value)
             return
-        resolved = content.resolved
+        resolved = self.resolver.top(1)
         if resolved is None:
             resolved = content.type.resolve()
         name = resolved.name

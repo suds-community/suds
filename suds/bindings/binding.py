@@ -114,6 +114,7 @@ class Binding:
         content = self.bodycontent(method, args)
         body = self.body(content)
         env = self.envelope(header, body)
+        body.normalizePrefixes()
         env.promotePrefixes()
         return env
     
@@ -246,11 +247,7 @@ class Binding:
             for item in object:
                 tags.append(self.mkparam(method, pdef, item))
             return tags
-        content = Content(
-            parent=method.soap.input.body.root,
-            tag=pdef[0], 
-            value=object, 
-            type=pdef[1])
+        content = Content(tag=pdef[0], value=object, type=pdef[1])
         return marshaller.process(content)
     
     def mkheader(self, method, hdef, object):
@@ -275,11 +272,7 @@ class Binding:
             for item in object:
                 tags.append(self.mkheader(method, hdef, item))
             return tags
-        content = Content(
-            parent=method.soap.input.header.root,
-            tag=hdef[0], 
-            value=object, 
-            type=hdef[1])
+        content = Content(tag=hdef[0], value=object, type=hdef[1])
         return marshaller.process(content)
             
     def envelope(self, header, body):
@@ -368,11 +361,13 @@ class Binding:
         """
         result = []
         if input:
+            body = method.soap.input.body
             if header:
                 parts = method.soap.input.header.message.parts
             else:
                 parts = method.message.input.parts
         else:
+            body = method.soap.output.body
             if header:
                 parts = method.soap.output.header.message.parts
             else:
@@ -386,7 +381,7 @@ class Binding:
             if pt is None:
                 raise TypeNotFound(query.ref)
             if p.type is not None:
-                pt = PartElement(pt)
+                pt = PartElement(body.namespace, pt)
             if input:
                 result.append((p.name, pt))
             else:
@@ -415,19 +410,23 @@ class PartElement(SchemaElement):
     @type resolved: L{suds.xsd.sxbase.SchemaObject}
     """
     
-    def __init__(self, resolved):
+    def __init__(self, tns, resolved):
         """
         @param resolved: The part type.
         @type resolved: L{suds.xsd.sxbase.SchemaObject}
         """
         root = Element('element', ns=Namespace.xsdns)
         SchemaElement.__init__(self, resolved.schema, root)
-        self.resolved = resolved
+        self.__tns = tns
+        self.__resolved = resolved
         self.form_qualified = False
         
+    def namespace(self):
+        return self.__tns
+        
     def resolve(self, nobuiltin=False):
-        if nobuiltin and self.resolved.builtin():
+        if nobuiltin and self.__resolved.builtin():
             return self
         else:
-            return self.resolved
+            return self.__resolved
     

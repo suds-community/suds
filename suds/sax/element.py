@@ -22,6 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sax import *
 from suds.sax.attribute import Attribute
+from sets import Set
 
 log = getLogger(__name__)
 
@@ -593,6 +594,8 @@ class Element:
         mapping are pushed to its parent unless the parent has the
         prefix mapped to another URI or the parent has the prefix.
         This is propagated up the tree until the top is reached.
+        @return: self
+        @rtype: L{Element}
         """
         for c in self.children:
             c.promotePrefixes()
@@ -606,7 +609,20 @@ class Element:
                 continue
             if p != self.parent.prefix:
                 self.parent.nsprefixes[p] = u
-                del self.nsprefixes[p]       
+                del self.nsprefixes[p]
+        return self
+                
+    def normalizePrefixes(self):
+        """
+        Normalize the namespace prefixes.
+        This generates unique prefixes for all namespaces.  Then retrofits all
+        prefixes and prefix mappings.  Further, it will retrofix attribute values
+        that have values containing (:).
+        @return: self
+        @rtype: L{Element}
+        """
+        PrefixNormalizer.apply(self)
+        return self
 
     def isempty(self):
         """
@@ -739,6 +755,13 @@ class Element:
         else:
             byns = ( self.namespace()[1] == ns[1] )
         return ( byname and byns )
+    
+    def branch(self):
+        branch = []
+        for c in self.children:
+            branch.append(c)
+            branch += c.branch()
+        return branch
             
     def __childrenAtPath(self, parts):
         result = []
@@ -799,4 +822,168 @@ class Element:
     
     def __unicode__(self):
         return self.str()
+
+
+
+class PrefixNormalizer:
+    """
+    The prefix normalizer provides namespace prefix normalization.
+    @param ivar: A node to normalize.
+    @type node: L{Element}
+    @ivar branch: The nodes flattened branch.
+    @type branch: [L{Element},..]
+    @ivar namespaces: A unique list of namespaces (URI).
+    @type namespaces: [str,]
+    @ivar prefixes: A reverse dict of prefixes.
+    @type prefixes: {u, p}
+    """
     
+    @classmethod
+    def apply(cls, node):
+        """
+        Normalize the specified node.
+        @param node: A node to normalize.
+        @type node: L{Element}
+        @return: The normalized node.
+        @rtype: L{Element}
+        """
+        pn = PrefixNormalizer(node)
+        return pn.refit()
+    
+    def __init__(self, node):
+        """
+        @param node: A node to normalize.
+        @type node: L{Element}
+        """
+        self.node = node
+        self.branch = node.branch()
+        self.namespaces = self.getNamespaces()
+        self.prefixes = self.genPrefixes()
+        
+    def getNamespaces(self):
+        """
+        Get the I{unique} set of namespaces referenced in the branch.
+        @return: A set of namespaces.
+        @rtype: L{Set}
+        """
+        nss = Set()
+        for n in self.branch:
+            if self.permit(n.expns):
+                nss.add(n.expns)
+            nss = nss.union(self.pset(n))
+        return nss
+    
+    def pset(self, n):
+        """
+        Convert the nodes nsprefixes into a set.
+        @param n: A node.
+        @type n: L{Element}
+        @return: A set of namespaces.
+        @rtype: L{Set}
+        """
+        set = Set()
+        for ns in n.nsprefixes.items():
+            if self.permit(ns):
+                set.add(ns[1])
+        return set
+            
+    def genPrefixes(self):
+        """
+        Generate a I{reverse} mapping of unique prefixes for all namespaces.
+        @return: A referse dict of prefixes.
+        @rtype: {u, p}
+        """
+        prefixes = {}
+        n = 0
+        for u in self.namespaces:
+            p = 'ns%d' % n
+            prefixes[u] = p
+            n += 1
+        return prefixes
+    
+    def refit(self):
+        """
+        Refit (normalize) the prefixes in the node.
+        """
+        self.refitNodes()
+        self.refitMappings()
+    
+    def refitNodes(self):
+        """
+        Refit (normalize) all of the nodes in the branch.
+        """
+        for n in self.branch:
+            if n.prefix is not None:
+                ns = n.namespace()
+                if self.permit(ns):
+                    n.prefix = self.prefixes[ns[1]]
+            self.refitAttrs(n)
+                
+    def refitAttrs(self, n):
+        """
+        Refit (normalize) all of the attributes in the node.
+        @param n: A node.
+        @type n: L{Element}
+        """
+        for a in n.attributes:
+            self.refitAddr(a)
+    
+    def refitAddr(self, a):
+        """
+        Refit (normalize) the attribute.
+        @param a: An attribute.
+        @type a: L{Attribute}
+        """
+        if a.prefix is not None:
+            ns = a.namespace()
+            if self.permit(ns):
+                a.prefix = self.prefixes[ns[1]]
+        self.refitValue(a)
+    
+    def refitValue(self, a):
+        """
+        Refit (normalize) the attribute's value.
+        @param a: An attribute.
+        @type a: L{Attribute}
+        """
+        p,name = splitPrefix(a.getValue())
+        if p is None: return
+        ns = a.resolvePrefix(p)
+        if self.permit(ns):
+            u = ns[1]
+            p = self.prefixes[u]
+            a.setValue(':'.join((p, name)))
+            
+    def refitMappings(self):
+        """
+        Refit (normalize) all of the nsprefix mappings.
+        """
+        for n in self.branch:
+            n.nsprefixes = {}
+        n = self.node
+        for u, p in self.prefixes.items():
+            n.addPrefix(p, u)
+            
+    def permit(self, ns):
+        """
+        Get whether the I{ns} is to be normalized.
+        @param n: A node.
+        @type n: L{Element}
+        @return: True if to be included.
+        @rtype: boolean
+        """
+        return not self.skip(ns)
+            
+    def skip(self, ns):
+        """
+        Get whether the I{ns} is to B{not} be normalized.
+        @param n: A node.
+        @type n: L{Element}
+        @return: True if to be skipped.
+        @rtype: boolean
+        """
+        return ns is None or \
+            ( ns == Namespace.default ) or \
+            ( ns == Namespace.xsdns ) or \
+            ( ns == Namespace.xsins) or \
+            ( ns == Namespace.xmlns )
