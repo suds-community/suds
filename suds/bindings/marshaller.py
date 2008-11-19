@@ -27,6 +27,7 @@ from suds.sax import Namespace as NS
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.attribute import Attribute
+from suds.sudsobject import footprint
 
 log = getLogger(__name__)
 
@@ -297,6 +298,8 @@ class ObjectAppender(Appender):
         @type content: L{Object}
         """
         object = content.value
+        if content.type.optional() and footprint(object) == 0:
+            return
         child = self.node(content)
         parent.append(child)
         for item in items(object):
