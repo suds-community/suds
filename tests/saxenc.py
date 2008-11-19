@@ -34,3 +34,10 @@ assert str(b) == xml
 print 'A(text-decoded)=\n%s' % a.getText()
 print 'B(text-decoded)=\n%s' % b.getText()
 assert a.getText() == b.getText()
+print 'test pruning'
+j = Element('A')
+j.set('n', 1)
+j.append(Element('B'))
+print j
+j.prune()
+print j

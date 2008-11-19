@@ -320,8 +320,8 @@ class SchemaObject:
         """
         log.debug(Repr(self))
         filter = PromoteFilter()
-        self.append(pa, self.attributes)
-        self.append(pc, self.children, filter)
+        self.prepend(pa, self.attributes)
+        self.prepend(pc, self.children, filter)
             
     def dereference(self):
         """

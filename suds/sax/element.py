@@ -624,14 +624,23 @@ class Element:
         PrefixNormalizer.apply(self)
         return self
 
-    def isempty(self):
+    def isempty(self, content=True):
         """
         Get whether the element has no children.
+        @param content: Test content (children & text) only.
+        @type content: boolean
         @return: True when element has not children.
         @rtype: boolean
         """
-        return len(self.children) == 0 and \
-            self.text is None
+        noattrs = not len(self.attributes)
+        nochildren = not len(self.children)
+        notext = ( self.text is None )
+        nocontent = ( nochildren and notext )
+        if content:
+            return nocontent
+        else:
+            return ( nocontent and noattrs )
+            
             
     def isnil(self):
         """
@@ -757,11 +766,29 @@ class Element:
         return ( byname and byns )
     
     def branch(self):
+        """
+        Get a flattened representation of the branch.
+        @return: A flat list of nodes.
+        @rtype: [L{Element},..]
+        """
         branch = []
         for c in self.children:
             branch.append(c)
             branch += c.branch()
         return branch
+    
+    def prune(self):
+        """
+        Prune the branch of empty nodes.
+        """
+        pruned = []
+        for c in self.children:
+            c.prune()
+            if c.isempty(False):
+                pruned.append(c)
+        for p in pruned:
+            self.children.remove(p)
+                
             
     def __childrenAtPath(self, parts):
         result = []
