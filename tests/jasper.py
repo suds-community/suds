@@ -21,9 +21,11 @@ import logging
 import traceback as tb
 import urllib2
 import suds.metrics as metrics
+import traceback as tb
 from tests import *
 from suds import WebFault
 from suds.client import Client
+from suds.transport import HttpTransport
 
 errors = 0
 
@@ -47,10 +49,11 @@ def start(url):
 try:
     url = 'http://localhost:9090/jasperserver-pro/services/repository?wsdl'
     start(url)
-    client = Client(url, opener=opener())
+    t = HttpTransport()
+    t.urlopener = opener()
+    client = Client(url, transport=t)
     print client
     print client.service.list('')
-
 except WebFault, f:
     errors += 1
     print f
@@ -58,5 +61,6 @@ except WebFault, f:
 except Exception, e:
     errors += 1
     print e
+    tb.print_exc()
 
 print '\nFinished: errors = %d' % errors

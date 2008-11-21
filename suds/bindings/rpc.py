@@ -38,23 +38,27 @@ class RPC(Binding):
         """
         Binding.__init__(self, wsdl)
         
-    def bodycontent(self, method, args):
+    def bodycontent(self, method, args, kwargs):
         """
         Get the content for the soap I{body}.
         @param method: A service method.
         @type method: I{service.Method}
         @param args: method parameter values
         @type args: list
+        @param kwargs: Named (keyword) args for the method invoked.
+        @type kwargs: dict
         @return: The xml content for the <body/>
         @rtype: L{Element}
         """
         n = 0
         root = self.method(method)
         method.soap.input.body.root = root
-        pdefs = self.param_defs(method)
-        for arg in args:
-            if len(pdefs) == n: break
-            p = self.mkparam(method, pdefs[n], arg)
+        for pd in self.param_defs(method):
+            if n < len(args):
+                value = args[n]
+            else:
+                value = kwargs.get(pd[0])
+            p = self.mkparam(method, pd, value)
             if p is not None:
                 root.append(p)
             n += 1
@@ -83,3 +87,18 @@ class RPC(Binding):
         @rtype: [I{pdef},..]
         """
         return self.part_types(method)
+    
+
+class Encoded(RPC):
+    """
+    RPC/Encoded (section 5)  binding style.
+    """
+
+    def __init__(self, wsdl):
+        """
+        @param wsdl: A WSDL object.
+        @type wsdl: L{suds.wsdl.Definitions}
+        """
+        Binding.__init__(self, wsdl)
+        RPC.__init__(self, wsdl)
+        self.encoded = True
