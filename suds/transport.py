@@ -35,14 +35,32 @@ class TransportError(Exception):
         self.fp = fp
 
 class Request:
+    """
+    A transport request
+    @ivar url: The url for the request.
+    @type url: str
+    @ivar proxy: The url of the proxy to be used for the request.
+    @type proxy: str
+    @ivar headers: The http headers to be used for the request.
+    @type headers: dict
+    """
 
     def __init__(self, url, message=None):
+        """
+        @param url: The url for the request.
+        @type url: str
+        @param message: The (optional) message to be send in the request.
+        @type message: str
+        """
         self.url = url
         self.proxy = None
         self.headers = {}
         self.message = message
 
 class Transport:
+    """
+    The transport I{interface}.
+    """
     
     def open(self, request):
         """
