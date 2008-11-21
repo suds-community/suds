@@ -38,6 +38,10 @@ properties = dict(version='0.3.3', build="(beta) R395-20081119")
 class MethodNotFound(Exception):
     def __init__(self, name):
         Exception.__init__(self, "Method not found: '%s'" % name)
+        
+class PortNotFound(Exception):
+    def __init__(self, name):
+        Exception.__init__(self, "Port not found: '%s'" % name)
     
 class TypeNotFound(Exception):
     def __init__(self, name):

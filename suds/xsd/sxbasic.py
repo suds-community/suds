@@ -26,9 +26,10 @@ from suds.xsd.sxbase import *
 from suds.xsd.query import *
 from suds.sax import splitPrefix, Namespace
 from suds.sax.parser import Parser
+from suds.transport import TransportError
 from urlparse import urljoin
 from copy import copy, deepcopy
-from urllib2 import URLError, HTTPError
+
 
 log = getLogger(__name__)
 
@@ -853,9 +854,11 @@ class Import(SchemaObject):
             self.location = self.locations.get(self.ns[1])
         self.opened = False
         
-    def open(self):
+    def open(self, transport):
         """
         Open and import the refrenced schema.
+        @param transport: The transport to be used for web requests.
+        @type transport: L{transport.Transport}
         """
         if self.opened:
             return
@@ -866,19 +869,19 @@ class Import(SchemaObject):
             if self.location is None:
                 log.debug('imported schema (%s) not-found', self.ns[1])
             else:
-                result = self.download()
+                result = self.download(transport)
         log.debug('imported:\n%s', result)
         return result
 
-    def download(self):
+    def download(self, transport):
         url = self.location
         try:
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
-            root = Parser().parse(url=url).root()
+            root = Parser(transport).parse(url=url).root()
             root.set('url', url)
             return self.schema.instance(root, url)
-        except (URLError, HTTPError):
+        except TransportError:
             msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
             log.error('%s, %s', self.id, msg, exc_info=True)
             raise Exception(msg)

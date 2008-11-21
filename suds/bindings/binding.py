@@ -29,7 +29,7 @@ from suds.bindings.unmarshaller import Unmarshaller
 from suds.bindings.multiref import MultiRef
 from suds.xsd.query import TypeQuery, ElementQuery
 from suds.xsd.sxbasic import Element as SchemaElement
-
+from suds.options import Options
 
 log = getLogger(__name__)
 
@@ -47,9 +47,8 @@ class Binding:
     @type wsdl: L{suds.wsdl.Definitions}
     @ivar schema: The collective schema contained within the wsdl.
     @type schema: L{xsd.schema.Schema}
-    @ivar faults: The faults flag used to indicate whether a web fault should raise
-        an exception or that all results are returned in a tuple (http-code, result).
-    @type faults: boolean
+    @ivar options: A dictionary options.
+    @type options: L{Options}
     @ivar parser: A sax parser.
     @type parser: L{suds.sax.parser.Parser}
     @ivar unmarshaller: An unmarshaller used to generate an L{Object}
@@ -67,51 +66,35 @@ class Binding:
     replyfilter = (lambda s,r: r)
 
     def __init__(self, wsdl):
+        """
+        @param wsdl: A wsdl.
+        @type wsdl: L{wsdl.Definitions}
+        """
         self.wsdl = wsdl
         self.schema = wsdl.schema
-        self.faults = True
+        self.options = Options()
         self.parser = Parser()
         self.unmarshaller = Unmarshaller(self.schema)
         self.marshaller = Marshaller(self.schema)
         self.multiref = MultiRef()
         self.encoded = False
-        
-    def use_literal(self):
-        """
-        Set the input message encoding to I{literal} by setting the
-        L{self.encoded} flag = True.
-        @return: self
-        @rtype: L{Binding}
-        """
-        self.encoded = False
-        return self
-    
-    def use_encoded(self):
-        """
-        Set the input message encoding to I{encoded} by setting the 
-        L{self.encoded} flag = False.
-        @return: self
-        @rtype: L{Binding}
-        """
-        self.encoded = True
-        return self
 
-    def get_message(self, method, args, soapheaders):
+    def get_message(self, method, args, kwargs):
         """
         Get the soap message for the specified method, args and soapheaders.
         This is the entry point for creating the outbound soap message.
         @param method: The method being invoked.
         @type method: I{service.Method}
-        @param args: A I{list} of method arguments (parameters).
+        @param args: A list of args for the method invoked.
         @type args: list
-        @param soapheaders: A list of objects to be encoded as soap-headers.
-        @type soapheaders: list
+        @param kwargs: Named (keyword) args for the method invoked.
+        @type kwargs: dict
         @return: The soap message.
         @rtype: str
         """
-        content = self.headercontent(method, soapheaders)
+        content = self.headercontent(method)
         header = self.header(content)
-        content = self.bodycontent(method, args)
+        content = self.bodycontent(method, args, kwargs)
         body = self.body(content)
         env = self.envelope(header, body)
         body.normalizePrefixes()
@@ -206,7 +189,7 @@ class Binding:
     
     def get_fault(self, reply):
         """
-        Extract the fault from the specified soap reply.  If L{self.faults} is True, an
+        Extract the fault from the specified soap reply.  If I{faults} is True, an
         exception is raised.  Otherwise, the I{unmarshalled} fault L{Object} is
         returned.  This method is called when the server raises a I{web fault}.
         @param reply: A soap reply message.
@@ -221,7 +204,7 @@ class Binding:
         fault = soapbody.getChild('Fault')
         unmarshaller = self.unmarshaller.basic
         p = unmarshaller.process(fault)
-        if self.faults:
+        if self.options.faults:
             raise WebFault(p, faultroot)
         return (faultroot, p.detail)
     
@@ -304,18 +287,17 @@ class Binding:
         header.append(content)
         return header
     
-    def headercontent(self, method, headers):
+    def headercontent(self, method):
         """
         Get the content for the soap I{Header} node.
         @param method: A service method.
         @type method: I{service.Method}
-        @param headers: method parameter values
-        @type headers: list
         @return: The xml content for the <body/>
         @rtype: [L{Element},..]
         """
         n = 0
         content = []
+        headers = self.options.soapheaders
         if len(headers):
             if method.soap.input.header is None:
                 raise SoapHeadersNotPermitted(method.name)

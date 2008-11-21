@@ -53,6 +53,7 @@ class SchemaCollection:
         @type wsdl: L{suds.wsdl.Definitions}
         """
         self.wsdl = wsdl
+        self.options = wsdl.options
         self.children = []
         self.namespaces = {}
         
@@ -79,7 +80,7 @@ class SchemaCollection:
         for child in self.children:
             child.build()
         for child in self.children:
-            child.open_imports()
+            child.open_imports(self.options.transport)
         log.debug('loaded:\n%s', self)
         merged = self.merge()
         log.debug('MERGED:\n%s', merged)
@@ -256,17 +257,19 @@ class Schema:
         schema.merged = True
         return self
         
-    def open_imports(self):
+    def open_imports(self, transport=None):
         """
         Instruct all contained L{sxbasic.Import} children to import
         the schema's which they reference.  The contents of the
         imported schema are I{merged} in.
+        @param transport: The transport to be used for web requests.
+        @type transport: L{transport.Transport}
         """
         for imp in self.imports:
-            imported = imp.open()
+            imported = imp.open(transport)
             if imported is None:
                 continue
-            imported.open_imports()
+            imported.open_imports(transport)
             log.debug('imported:\n%s', imported)
             self.merge(imported)
         

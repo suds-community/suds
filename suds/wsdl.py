@@ -26,7 +26,7 @@ from suds.sax import splitPrefix
 from suds.sax.parser import Parser
 from suds.sax.element import Element
 from suds.bindings.document import Document
-from suds.bindings.rpc import RPC
+from suds.bindings.rpc import RPC, Encoded
 from suds.xsd import qualify, Namespace
 from suds.xsd.schema import Schema, SchemaCollection
 from suds.sudsobject import Object
@@ -134,6 +134,8 @@ class Definitions(WObject):
     by <wsdl:definitions/>
     @ivar id: The object id.
     @type id: str
+    @ivar options: An options dictionary.
+    @type options: L{options.Options}
     @ivar url: The URL used to load the object.
     @type url: str
     @ivar tns: The target namespace for the WSDL.
@@ -156,18 +158,19 @@ class Definitions(WObject):
     
     Tag = 'definitions'
 
-    def __init__(self, url, opener=None):
+    def __init__(self, url, options):
         """
         @param url: A URL to the WSDL.
         @type url: str
-        @param opener: A urllib2 opener (may be None).
-        @type opener: urllib2.Opener
+        @param options: An options dictionary.
+        @type options: L{options.Options}
         """
         log.debug('reading wsdl at: %s ...', url)
-        p = Parser(opener)
+        p = Parser(options.transport)
         root = p.parse(url=url).root()
         WObject.__init__(self, root)
         self.id = objid(self)
+        self.options = options
         self.url = url
         self.tns = self.mktns(root)
         self.types = []
@@ -184,7 +187,7 @@ class Definitions(WObject):
         pmd.excludes.append('children')
         pmd.excludes.append('wsdl')
         pmd.wrappers['schema'] = lambda x: repr(x)
-        self.open_imports(opener)
+        self.open_imports()
         self.resolve()
         self.build_schema()
         if self.service is not None:
@@ -225,11 +228,11 @@ class Definitions(WObject):
                 self.service = child
                 continue
                 
-    def open_imports(self, opener):
+    def open_imports(self):
         """ Import the I{imported} WSDLs. """
         for imp in self.imports:
             base = self.url
-            imp.load(self, opener)
+            imp.load(self)
                 
     def resolve(self):
         """ Tell all children to resolve themselves """
@@ -253,7 +256,7 @@ class Definitions(WObject):
         bindings = {
             'document/literal' : Document(self),
             'rpc/literal' : RPC(self),
-            'rpc/encoded' : RPC(self).use_encoded()
+            'rpc/encoded' : Encoded(self)
         }
         for p in self.service.ports:
             binding = p.binding
@@ -304,13 +307,13 @@ class Import(WObject):
         pmd = self.__metadata__.__print__
         pmd.wrappers['imported'] = ( lambda x: x.id )
         
-    def load(self, definitions, opener):
+    def load(self, definitions):
         """ Load the object by opening the URL """
         url = self.location
         log.debug('importing (%s)', url)
         if '://' not in url:
             url = urljoin(definitions.url, url)
-        d = Definitions(url, opener)
+        d = Definitions(url, definitions.options)
         if d.root.match(Definitions.Tag, wsdlns):
             self.import_definitions(definitions, d)
             return

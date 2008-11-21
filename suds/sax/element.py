@@ -22,7 +22,10 @@ from logging import getLogger
 from suds import *
 from suds.sax import *
 from suds.sax.attribute import Attribute
-from sets import Set
+import sys 
+if sys.version_info < (2, 4, 0): 
+    from sets import Set as set 
+    del sys 
 
 log = getLogger(__name__)
 
@@ -891,14 +894,14 @@ class PrefixNormalizer:
         """
         Get the I{unique} set of namespaces referenced in the branch.
         @return: A set of namespaces.
-        @rtype: L{Set}
+        @rtype: set
         """
-        nss = Set()
+        s = set()
         for n in self.branch:
             if self.permit(n.expns):
-                nss.add(n.expns)
-            nss = nss.union(self.pset(n))
-        return nss
+                s.add(n.expns)
+            s = s.union(self.pset(n))
+        return s
     
     def pset(self, n):
         """
@@ -906,13 +909,13 @@ class PrefixNormalizer:
         @param n: A node.
         @type n: L{Element}
         @return: A set of namespaces.
-        @rtype: L{Set}
+        @rtype: set
         """
-        set = Set()
+        s = set()
         for ns in n.nsprefixes.items():
             if self.permit(ns):
-                set.add(ns[1])
-        return set
+                s.add(ns[1])
+        return s
             
     def genPrefixes(self):
         """

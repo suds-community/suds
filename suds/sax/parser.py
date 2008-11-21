@@ -33,7 +33,7 @@ from suds.sax import *
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.attribute import Attribute
-from urllib2 import urlopen
+from suds.transport import HttpTransport, Request
 from xml.sax import parse, parseString, ContentHandler
 
 log = getLogger(__name__)
@@ -101,8 +101,11 @@ class Handler(ContentHandler):
 class Parser:
     """ simple parser """
     
-    def __init__(self, opener=None):
-        self.opener = opener
+    def __init__(self, transport=None):
+        if transport is None:
+            self.transport = HttpTransport()
+        else:
+            self.transport = transport
         
     def parse(self, file=None, url=None, string=None):
         """ parse a document """
@@ -115,7 +118,10 @@ class Parser:
             metrics.log.debug('sax (%s) duration: %s', file, timer)
             return handler.nodes[0]
         if url is not None:
-            parse(self.urlopen(url), handler)
+            request = Request(url)
+            transport = self.transport
+            fp = transport.open(request)
+            parse(fp, handler)
             timer.stop()
             metrics.log.debug('sax (%s) duration: %s', url, timer)
             return handler.nodes[0]
@@ -125,9 +131,3 @@ class Parser:
             metrics.log.debug('%s\nsax duration: %s', string, timer)
             return handler.nodes[0]
 
-    def urlopen(self, url):
-        """ open the specified url """
-        if self.opener is None:
-            return urlopen(url)
-        else:
-            return self.opener.open(url)

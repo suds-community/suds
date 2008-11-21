@@ -22,16 +22,19 @@ See I{README.txt}
 from logging import getLogger
 import suds.metrics as metrics
 from cookielib import CookieJar
-from urllib2 import Request, HTTPError, urlopen, urlparse
 from suds import *
+from suds.transport import HttpTransport, TransportError, Request
 from suds.servicedefinition import ServiceDefinition
 from suds import sudsobject
-from sudsobject import Factory as InstFactory, Object
+from sudsobject import Factory as InstFactory
+from sudsobject import Object
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import Definitions
 from suds.sax.document import Document
-from sax.parser import Parser
+from suds.sax.parser import Parser
+from suds.options import Options
+from urlparse import urlparse
 
 log = getLogger(__name__)
 
@@ -51,67 +54,66 @@ class Client(object):
     @ivar messages: The last sent/received messages.
     @type messages: str[2]
     """
+    @classmethod
+    def items(cls, sobject):
+        """
+        Extract the I{items} from a suds object much like the
+        items() method works on I{dict}.
+        @param sobject: A suds object
+        @type sobject: L{Object}
+        @return: A list of items contained in I{sobject}.
+        @rtype: [(key, value),...]
+        """
+        return sudsobject.items(sobject)
+    
+    @classmethod
+    def dict(cls, sobject):
+        """
+        Convert a sudsobject into a dictionary.
+        @param sobject: A suds object
+        @type sobject: L{Object}
+        @return: A python dictionary containing the
+            items contained in I{sobject}.
+        @rtype: dict
+        """
+        return sudsobject.asdict(sobject)
+    
+    @classmethod
+    def metadata(cls, sobject):
+        """
+        Extract the metadata from a suds object.
+        @param sobject: A suds object
+        @type sobject: L{Object}
+        @return: The object's metadata
+        @rtype: L{sudsobject.Metadata}
+        """
+        return sobject.__metadata__
 
     def __init__(self, url, **kwargs):
         """
         @param url: The URL for the WSDL.
         @type url: str
         @param kwargs: keyword arguments.
-        @keyword faults: Raise faults raised by server (default:True),
-                else return tuple from service method invocation as (http code, object).
-        @type faults: boolean
-        @keyword proxy: An http proxy to be specified on requests (default:{}).
-                The proxy is defined as {protocol:proxy,}
-        @type proxy: dict
-        @keyword opener: A urllib2 opener to be used to open urls.
-        @type opener: A I{urllib2.Opener}
+        @see: L{Options}
         """
-        self.preferences = kwargs
-        self.wsdl = Definitions(url, self.preferences.get('opener'))
+        options = Options(transport=HttpTransport())
+        options.set(**kwargs)
+        self.options = options
+        self.wsdl = Definitions(url, options)
         self.service = Service(self)
         self.factory = Factory(self.wsdl)
         self.sd = ServiceDefinition(self.wsdl)
         self.messages = dict(tx=None, rx=None)
         
-    def setport(self, name):
+    def set_options(self, **kwargs):
         """
-        Set the default service port name.  This should only be set when the service
-        defines multiple ports and you want to invoke method within a particular
-        port only without specifying a qualified name as: <port>.<method>.
-        The default port may be I{unset} by setting the value to None.
-        @param name: A service port name.
-        @type name: str|int
+        Set options.
+        @param kwargs: keyword arguments.
+        @see: L{Options}
         """
-        key = 'port'
-        if name is None:
-            self.preferences[key] = None
-            return
-        service = self.wsdl.service
-        if isinstance(name, basestring):
-            self.preferences[key] = service.port(name)
-            return
-        if isinstance(name, (int, long)):
-            self.preferences[key] = service.ports[name]
-            return
+        self.options.set(**kwargs)
         
-    def setlocation(self, url, methods=None):
-        """
-        Override the invocation location (url) for service method.
-        @param url: A url location.
-        @type url: A url.
-        @param methods:  A list of method names.  None=ALL
-        @type methods: [str,..]
-        """
-        key = 'location'
-        if methods is None:
-            self.preferences[key] = url
-            return
-        d = {}
-        for n in methods:
-            d[n] = url
-        self.preferences[key] = d
-        
-    def addprefix(self, prefix, uri):
+    def add_prefix(self, prefix, uri):
         """
         Add I{static} mapping of an XML namespace prefix to a namespace.
         This is useful for cases when a wsdl and referenced schemas make heavy
@@ -129,34 +131,6 @@ class Client(object):
             return
         if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
-
-    def setproxy(self, **kwargs):
-        """
-        Set a proxy for all service method invocations.
-        This is the same as the I{proxy} keyword but applies to all invocations.
-        @param kwargs: Mappings of protocols to urls.
-        @keyword http: The http protocol, value is url.
-        @keyword https: The https protocol, value is url.
-        """
-        self.preferences['proxy'] = kwargs
-        
-    def setheaders(self, headers):
-        """
-        Set the http & soap headers for B{all} method calls.
-        This is the same as specifying I{headers} & I{soapheaders} keywords
-        depending on the argument type.  When I{headers} is a dict, it is used to
-        set the http headers.  Otherwise, it is used to set the soap headers.
-        @param headers: The soap header(s) values.  I{None} = clears all headers.
-        @type headers: (Object|list|tuple|dict). 
-        """
-        if headers is None:
-            self.preferences['headers'] = None
-            self.preferences['soapheaders'] = None
-            return
-        if isinstance(headers, dict):
-            self.preferences['headers'] = headers
-        else:
-            self.preferences['soapheaders'] = headers
         
     def last_sent(self):
         """
@@ -173,38 +147,6 @@ class Client(object):
         @rtype: L{Document}
         """
         return self.messages.get('rx')
-        
-    def items(self, sobject):
-        """
-        Extract the I{items} from a suds object much like the
-        items() method works on I{dict}.
-        @param sobject: A suds object
-        @type sobject: L{Object}
-        @return: A list of items contained in I{sobject}.
-        @rtype: [(key, value),...]
-        """
-        return sudsobject.items(sobject)
-    
-    def dict(self, sobject):
-        """
-        Convert a sudsobject into a dictionary.
-        @param sobject: A suds object
-        @type sobject: L{Object}
-        @return: A python dictionary containing the
-            items contained in I{sobject}.
-        @rtype: dict
-        """
-        return sudsobject.asdict(sobject)
-    
-    def metadata(self, sobject):
-        """
-        Extract the metadata from a suds object.
-        @param sobject: A suds object
-        @type sobject: L{Object}
-        @return: The object's metadata
-        @rtype: L{sudsobject.Metadata}
-        """
-        return sobject.__metadata__
  
     def __str__(self):
         return unicode(self)
@@ -294,21 +236,23 @@ class Service:
             return self.__dict__[name]
         # ports/methods
         service = self.__service__
-        preferences = self.__client__.preferences
-        dport = preferences.get('port')
-        if dport is None:
-            log.debug('lookup service-method using "%s"', name)
+        options = self.__client__.options
+        if options.port is None:
             method = service.method(name)
-            if method is not None:
+            if method is None:
+                port = service.port(name)
+                if port is None:
+                    raise MethodNotFound(name)
+                else:
+                    return Port(self, port)
+            else:
                 return Method(self, method)
-            log.debug('lookup service-port using "%s"', name)
-            port = service.port(name)
-            if port is not None:
-                return Port(self, port)
         else:
-            port = Port(self, dport)
+            port = service.port(options.port)
+            if port is None:
+                raise PortNotFound(options.port)
+            port = Port(self, port)
             return getattr(port, name)
-        raise MethodNotFound(name)
     
     def __str__(self):
         return unicode(self)
@@ -386,33 +330,23 @@ class Method(object):
         Call (invoke) the method.
         @param args: A list of args for the method invoked.
         @type args: list
-        @param kwargs: Keyword args to be processed by suds.
+        @param kwargs: Named (keyword) args for the method invoked.
         @type kwargs: dict
-        @keyword soapheaders: Optional soap headers to be included in the
-            soap message.
-        @type soapheaders: list( L{sudsobject.Object}|L{sudsobject.Property} )
-        @keyword inject: Inject the specified (msg|reply|fault) into the soap message stream.
-        @type inject: dict(B{msg}=soap-message|B{reply}=soap-reply|B{fault}=soap-fault)
-        @keyword location: Override the location (url) for the service.
-        @type location: str
-        @keyword headers: Extra HTTP headers
-        @type headers: dict
+        @see: L{Options}
         """
         result = None
-        preferences = dict(self.service.__client__.preferences)
-        preferences.update(kwargs)
-        if SimClient.simulation(preferences):
-            client = SimClient(self, preferences)
+        options = self.service.__client__.options
+        if SimClient.simulation(kwargs):
+            client = SimClient(self, options)
         else:
-            client = SoapClient(self, preferences)
-        faults = preferences.get('faults', True)
-        if not faults:
+            client = SoapClient(self, options)
+        if not options.faults:
             try:
-                return client.invoke(args)
+                return client.invoke(args, kwargs)
             except WebFault, e:
                 return (500, e)
         else:
-            return client.invoke(args)
+            return client.invoke(args, kwargs)
         
     def __str__(self):
         return unicode(self)
@@ -428,29 +362,31 @@ class SoapClient:
     @type service: L{Service}
     @ivar method: A target method.
     @type method: L{Method}
-    @ivar preferences: A dictonary of preferences.
-    @type preferences: dict
+    @ivar options: A dictonary of options.
+    @type options: dict
     @ivar cookiejar: A cookie jar.
     @type cookiejar: libcookie.CookieJar
     """
 
-    def __init__(self, method, preferences):
+    def __init__(self, method, options):
         """
         @param method: A target method.
         @type method: L{Method}
-        @param preferences: A dictonary of preferences.
-        @type preferences: dict
+        @param options: A dictonary of options.
+        @type options: L{Options}
         """
         self.service = method.service
         self.method = method.method
-        self.preferences = preferences
+        self.options = options
         self.cookiejar = CookieJar()
         
-    def invoke(self, args):
+    def invoke(self, args, kwargs):
         """
         Send the required soap message to invoke the specified method
-        @param args: Arguments
-        @type args: [arg,...]
+        @param args: A list of args for the method invoked.
+        @type args: list
+        @param kwargs: Named (keyword) args for the method invoked.
+        @type kwargs: dict
         @return: The result of the method invocation.
         @rtype: I{builtin}|I{subclass of} L{Object}
         """
@@ -458,8 +394,8 @@ class SoapClient:
         timer.start()
         result = None
         binding = self.method.binding.input
-        binding.faults = self.faults()
-        msg = binding.get_message(self.method, args, self.soapheaders())
+        binding.options = self.options
+        msg = binding.get_message(self.method, args, kwargs)
         timer.stop()
         metrics.log.debug(
                 "message for '%s' created: %s",
@@ -482,50 +418,34 @@ class SoapClient:
         """
         result = None
         location = self.location()
-        headers = self.headers()
         binding = self.method.binding.input
+        transport = self.options.transport
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent(Document(msg))
-            request = Request(location, str(msg), headers)
-            self.cookiejar.add_cookie_header(request) 
-            self.setproxies(request)
-            fp = self.urlopen(request)
-            self.cookiejar.extract_cookies(fp, request)
-            reply = fp.read()
+            request = Request(location, msg)
+            request.proxy = self.getproxy()
+            request.headers = self.headers()
+            reply = transport.send(request)
             result = self.succeeded(binding, reply)
-        except HTTPError, e:
-            if e.code in (202,204):
+        except TransportError, e:
+            if e.httpcode in (202,204):
                 result = None
             else:
                 log.error(self.last_sent())
                 result = self.failed(binding, e)
         return result
     
-    def urlopen(self, request):
+    def getproxy(self):
         """
-        Open the url as specified by the request using either the default
-        urllib2 opener or the opener specified by the user.
-        @param request: An http request object.
-        @type request: L{Request}
-        """
-        if self.opener() is None:
-            return urlopen(request)
-        else:
-            return self.opener().open(request)
-    
-    def setproxies(self, request):
-        """
-        Set the proxies for the request.
-        @param request: A soap request object to be sent.
-        @type request: urllib2.Request
+        Get the proxy for the request.
+        @return: The proxy if one specified.
+        @rtype: str
         """
         location = self.location()
-        protocol = urlparse.urlparse(location)[0]
-        proxy = self.proxy().get(protocol, None)
-        if proxy is not None:
-            log.debug('proxy %s used for %s', proxy, location)
-            request.set_proxy(proxy, protocol)
+        protocol = urlparse(location)[0]
+        proxydict = self.options.proxy
+        return proxydict.get(protocol, None)
     
     def headers(self):
         """
@@ -535,7 +455,7 @@ class SoapClient:
         """
         action = self.method.soap.action
         stock = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
-        result = dict(stock, **self.httpheaders())
+        result = dict(stock, **self.options.headers)
         log.debug('headers = %s', result)
         return result
     
@@ -552,7 +472,7 @@ class SoapClient:
         if len(reply) > 0:
             r, p = binding.get_reply(self.method, reply)
             self.last_received(r)
-            if self.faults():
+            if self.options.faults:
                 return p
             else:
                 return (200, p)
@@ -565,9 +485,9 @@ class SoapClient:
         @param binding: The binding to be used to process the reply.
         @type binding: L{suds.bindings.binding.Binding}
         @param error: The http error message
-        @type error: urllib2.HTTPException
+        @type error: L{transport.TransportError}
         """
-        status, reason = (error.code, error.msg)
+        status, reason = (error.httpcode, error.message)
         reply = error.fp.read()
         log.debug('http failed:\n%s', reply)
         if status == 500:
@@ -577,28 +497,13 @@ class SoapClient:
                 return (status, p)
             else:
                 return (status, None)
-        if self.faults():
+        if self.options.faults:
             raise Exception((status, reason))
         else:
             return (status, None)
-        
-    def faults(self):
-        return self.preferences.get('faults', True)
-    
-    def proxy(self):
-        return self.preferences.get('proxy', {})
-    
-    def opener(self):
-        return self.preferences.get('opener', None)
-    
-    def httpheaders(self):
-        return self.preferences.get('headers', {})
-    
-    def soapheaders(self):
-        return self.preferences.get('soapheaders', ())
-    
+
     def location(self):
-        return self.preferences.get('location', self.method.location)
+        return self.options.get('location', self.method.location)
     
     def last_sent(self, d=None):
         key = 'tx'
@@ -622,22 +527,24 @@ class SimClient(SoapClient):
     Loopback client used for message/reply simulation.
     """
     
-    injkey = 'inject'
+    injkey = '__inject'
     
     @classmethod
-    def simulation(cls, preferences):
+    def simulation(cls, kwargs):
         """ get whether loopback has been specified in the I{kwargs}. """
-        return preferences.has_key(SimClient.injkey)
+        return kwargs.has_key(SimClient.injkey)
         
-    def invoke(self, args):
+    def invoke(self, args, kwargs):
         """
         Send the required soap message to invoke the specified method
-        @param args: Arguments
-        @type args: [arg,...]
+        @param args: A list of args for the method invoked.
+        @type args: list
+        @param kwargs: Named (keyword) args for the method invoked.
+        @type kwargs: dict
         @return: The result of the method invocation.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
-        simulation = self.preferences[self.injkey]
+        simulation = kwargs[self.injkey]
         msg = simulation.get('msg')
         reply = simulation.get('reply')
         fault = simulation.get('fault')
@@ -653,14 +560,14 @@ class SimClient(SoapClient):
     def __reply(self, reply):
         """ simulate the reply """
         binding = self.method.binding.output
-        binding.faults = self.faults()
+        binding.options = self.options
         return self.succeeded(binding, reply)
     
     def __fault(self, reply):
         """ simulate the (fault) reply """
         binding = self.method.binding.output
-        binding.faults = self.faults()
-        if binding.faults:
+        binding.options = self.options
+        if self.options.faults:
             r, p = binding.get_fault(reply)
             self.last_received(r)
             return (500, p)
