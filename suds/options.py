@@ -37,15 +37,12 @@ class Options(object):
                 - type: I{dict}
                     - I{str} B{http} - The I{http} protocol proxy URL.
                     - I{str} B{https} - The I{https} protocol proxy URL.
-        - B{soapheaders} - Optional soap headers to be included in the
-             soap message.
+        - B{soapheaders} - The soap headers to be included in the soap message.
                 - type: I{any}
-        - B{__inject} - Inject the specified (msg|reply|fault) into the 
-             soap message stream.
-                - type: I{dict} 
-                    - I{str} B{msg} - The outbound message to inject.
-                    - I{str} B{reply} - The inbound message (reply) to inject.
-                    - I{str} B{fault} - The inbound fault to inject.
+        - B{username} - The username used for http authentication.
+                - type: I{str}
+        - B{password} - The password used for http authentication.
+                - type: I{str}
     """
 
     __options__ = \
@@ -56,7 +53,9 @@ class Options(object):
         location=(basestring, None),
         proxy=(dict, {}), 
         headers=(dict, {}),
-        soapheaders=((), ())
+        soapheaders=((), ()),
+        username=(basestring, None),
+        password=(basestring, None),
     )
     
     def __init__(self, **kwargs):

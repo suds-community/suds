@@ -118,9 +118,7 @@ class Parser:
             metrics.log.debug('sax (%s) duration: %s', file, timer)
             return handler.nodes[0]
         if url is not None:
-            request = Request(url)
-            transport = self.transport
-            fp = transport.open(request)
+            fp = self.transport.open(Request(url))
             parse(fp, handler)
             timer.stop()
             metrics.log.debug('sax (%s) duration: %s', url, timer)

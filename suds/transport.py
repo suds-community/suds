@@ -41,6 +41,8 @@ class Request:
     @type url: str
     @ivar proxy: The url of the proxy to be used for the request.
     @type proxy: str
+    @ivar message: The message to be sent in a POST request.
+    @type message: str
     @ivar headers: The http headers to be used for the request.
     @type headers: dict
     """
@@ -53,7 +55,6 @@ class Request:
         @type message: str
         """
         self.url = url
-        self.proxy = None
         self.headers = {}
         self.message = message
 
@@ -61,6 +62,13 @@ class Transport:
     """
     The transport I{interface}.
     """
+    
+    def __init__(self, options):
+        """
+        @param options: A suds options object.
+        @type options: L{suds.options.Options}
+        """
+        self.options = options
     
     def open(self, request):
         """
@@ -95,6 +103,7 @@ class Transport:
 #
 
 import urllib2 as u2
+from urlparse import urlparse
 from cookielib import CookieJar
 
 class HttpTransport(Transport):
@@ -102,16 +111,17 @@ class HttpTransport(Transport):
     urllib2 transport implementation.
     """
     
-    def __init__(self):
+    def __init__(self, options, urlopener=None):
+        Transport.__init__(self, options)
+        self.urlopener = urlopener
         self.cookiejar = CookieJar()
-        self.urlopener = None
         
     def open(self, request):
         try:
             url = request.url
             log.debug('opening (%s)', url)
             u2request = u2.Request(url)
-            self.__setproxy(request, u2request)
+            self.__setproxy(url, u2request)
             return self.__open(u2request)
         except u2.HTTPError, e:
             raise TransportError(str(e), e.code, e.fp)
@@ -125,7 +135,7 @@ class HttpTransport(Transport):
         try:
             u2request = u2.Request(url, msg, headers)
             self.__addcookies(u2request)
-            self.__setproxy(request, u2request)
+            self.__setproxy(url, u2request)
             fp = self.__open(u2request)
             self.__getcookies(fp, u2request)
             result = fp.read()
@@ -148,8 +158,39 @@ class HttpTransport(Transport):
         else:
             return self.urlopener.open(u2request)
         
-    def __setproxy(self, request, u2request):
-        if request.proxy is None:
+    def __setproxy(self, url, u2request):
+        protocol = urlparse(url)[0]
+        proxy = self.options.proxy.get(protocol, None)
+        if proxy is None:
             return
         protocol = u2request.type
-        u2request.set_proxy(request.proxy, protocol)
+        u2request.set_proxy(proxy, protocol)
+        
+
+class AuthenticatedTransport(HttpTransport):
+    """
+    Provides basic http authentication.
+    @ivar pm: The password manager.
+    @ivar handler: The authentication handler.
+    """
+    
+    def __init__(self, options):
+        self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
+        self.handler = u2.HTTPBasicAuthHandler(self.pm)
+        opener = u2.build_opener(self.handler)
+        HttpTransport.__init__(self, options, opener)
+        
+    def open(self, request):
+        self.__addcredentials(request)
+        return  HttpTransport.open(self, request)
+
+    def send(self, request):
+        self.__addcredentials(request)
+        return HttpTransport.send(self, request)
+    
+    def __addcredentials(self, request):
+        user = self.options.username
+        pwd = self.options.password
+        if user is not None:
+            self.pm.add_password(None, request.url, user, pwd)
+            
