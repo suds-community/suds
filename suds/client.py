@@ -154,12 +154,11 @@ class Client(object):
         
     def __unicode__(self):
         s = ['\n']
-        s.append('Suds - web service client')
-        s.append('  project: https://fedorahosted.org/suds/')
+        s.append('Suds ( https://fedorahosted.org/suds/ )')
         s.append('  version: %s' % properties.get('version'))
         s.append('  build: %s' % properties.get('build', 'n/a'))
-        s.append('\n%s' % unicode(self.sd))
-        return '\n'.join(s)
+        s.append('\n\n%s' % unicode(self.sd))
+        return ''.join(s)
 
 
 class Factory:
