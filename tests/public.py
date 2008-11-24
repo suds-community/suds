@@ -48,7 +48,8 @@ try:
     print client
     # string
     input = "42"
-    result = client.service.echoString(input)
+    d = dict(inputString=input)
+    result = client.service.echoString(**d)
     print 'echoString() =  %s' % result
     assert result == input
     # int
