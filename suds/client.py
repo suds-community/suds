@@ -23,7 +23,7 @@ from logging import getLogger
 import suds.metrics as metrics
 from cookielib import CookieJar
 from suds import *
-from suds.transport import HttpTransport, TransportError, Request
+from suds.transport import AuthenticatedTransport, TransportError, Request
 from suds.servicedefinition import ServiceDefinition
 from suds import sudsobject
 from sudsobject import Factory as InstFactory
@@ -96,7 +96,8 @@ class Client(object):
         @param kwargs: keyword arguments.
         @see: L{Options}
         """
-        options = Options(transport=HttpTransport())
+        options = Options()
+        options.transport = AuthenticatedTransport(options)
         options.set(**kwargs)
         self.options = options
         self.wsdl = Definitions(url, options)
@@ -427,7 +428,6 @@ class SoapClient:
         try:
             self.last_sent(Document(msg))
             request = Request(location, msg)
-            request.proxy = self.getproxy()
             request.headers = self.headers()
             reply = transport.send(request)
             result = self.succeeded(binding, reply)
@@ -438,17 +438,6 @@ class SoapClient:
                 log.error(self.last_sent())
                 result = self.failed(binding, e)
         return result
-    
-    def getproxy(self):
-        """
-        Get the proxy for the request.
-        @return: The proxy if one specified.
-        @rtype: str
-        """
-        location = self.location()
-        protocol = urlparse(location)[0]
-        proxydict = self.options.proxy
-        return proxydict.get(protocol, None)
     
     def headers(self):
         """

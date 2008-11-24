@@ -25,22 +25,12 @@ import traceback as tb
 from tests import *
 from suds import WebFault
 from suds.client import Client
-from suds.transport import HttpTransport
 
 errors = 0
 
 setup_logging()
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
-
-def opener():
-    baseurl = 'http://localhost:9090/'
-    username = 'jasperadmin'
-    password = 'jasperadmin'
-    passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    passman.add_password(None, baseurl, username, password)
-    authhandler = urllib2.HTTPBasicAuthHandler(passman)
-    return urllib2.build_opener(authhandler)
 
 def start(url):
     print '\n________________________________________________________________\n' 
@@ -49,9 +39,7 @@ def start(url):
 try:
     url = 'http://localhost:9090/jasperserver-pro/services/repository?wsdl'
     start(url)
-    t = HttpTransport()
-    t.urlopener = opener()
-    client = Client(url, transport=t)
+    client = Client(url, username='jeff', password='ortel')
     print client
     print client.service.list('')
 except WebFault, f:
