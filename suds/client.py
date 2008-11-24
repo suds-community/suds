@@ -154,7 +154,7 @@ class Client(object):
         
     def __unicode__(self):
         s = ['\n']
-        s.append('Suds - Web Service Client')
+        s.append('Suds - web service client')
         s.append('  project: https://fedorahosted.org/suds/')
         s.append('  version: %s' % properties.get('version'))
         s.append('  build: %s' % properties.get('build', 'n/a'))
