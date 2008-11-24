@@ -172,7 +172,7 @@ class HttpTransport(Transport):
         u2request.set_proxy(proxy, protocol)
         
 
-class AuthenticatedTransport(HttpTransport):
+class HttpAuthenticated(HttpTransport):
     """
     Provides basic http authentication.
     @ivar pm: The password manager.
