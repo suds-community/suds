@@ -63,12 +63,17 @@ class Transport:
     The transport I{interface}.
     """
     
-    def __init__(self, options):
+    def __init__(self, options=None):
         """
         @param options: A suds options object.
         @type options: L{suds.options.Options}
         """
-        self.options = options
+        if options is None:
+            from suds.options import Options
+            self.options = Options()
+            del Options
+        else:
+            self.options = options
     
     def open(self, request):
         """
@@ -111,10 +116,10 @@ class HttpTransport(Transport):
     urllib2 transport implementation.
     """
     
-    def __init__(self, options, urlopener=None):
+    def __init__(self, options=None):
         Transport.__init__(self, options)
-        self.urlopener = urlopener
         self.cookiejar = CookieJar()
+        self.urlopener = None
         
     def open(self, request):
         try:
@@ -175,10 +180,10 @@ class AuthenticatedTransport(HttpTransport):
     """
     
     def __init__(self, options):
+        HttpTransport.__init__(self, options)
         self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
         self.handler = u2.HTTPBasicAuthHandler(self.pm)
-        opener = u2.build_opener(self.handler)
-        HttpTransport.__init__(self, options, opener)
+        self.urlopener = u2.build_opener(self.handler)
         
     def open(self, request):
         self.__addcredentials(request)
