@@ -23,7 +23,7 @@ from logging import getLogger
 import suds.metrics as metrics
 from cookielib import CookieJar
 from suds import *
-from suds.transport import AuthenticatedTransport, TransportError, Request
+from suds.transport import HttpAuthenticated, TransportError, Request
 from suds.servicedefinition import ServiceDefinition
 from suds import sudsobject
 from sudsobject import Factory as InstFactory
@@ -97,7 +97,7 @@ class Client(object):
         @see: L{Options}
         """
         options = Options()
-        options.transport = AuthenticatedTransport(options)
+        options.transport = HttpAuthenticated(options)
         options.set(**kwargs)
         self.options = options
         self.wsdl = Definitions(url, options)
