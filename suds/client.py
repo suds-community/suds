@@ -236,7 +236,7 @@ class Service:
     
     def __init__(self, client):
         """
-        @ivar client: A client object.
+        @param client: A client object.
         @type client: L{Client}
         """
         self.client = client
@@ -337,9 +337,9 @@ class Method:
 
     def __init__(self, client, method):
         """
-        @ivar client: A client object.
+        @param client: A client object.
         @type client: L{Client}
-        @ivar method: A I{raw} method.
+        @param method: A I{raw} method.
         @type I{raw} Method.
         """
         self.client = client
@@ -393,10 +393,10 @@ class SoapClient:
 
     def __init__(self, client, method):
         """
+        @param client: A suds client.
+        @type client: L{Client}
         @param method: A target method.
         @type method: L{Method}
-        @param options: A dictonary of options.
-        @type options: L{Options}
         """
         self.client = client
         self.method = method
