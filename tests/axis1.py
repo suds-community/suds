@@ -30,6 +30,8 @@ from suds.client import Client
 
 errors = 0
 
+credentials = dict(username='jortel', password='abc123')
+
 setup_logging()
 
 from suds.xsd.sxbasic import Import
@@ -45,7 +47,7 @@ def start(url):
 
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
-    client = Client(url)
+    client = Client(url, **credentials)
     print client
     #
     # create a name object using the wsdl
@@ -208,7 +210,7 @@ except Exception, e:
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
-    client = Client(url, faults=False)
+    client = Client(url, faults=False, **credentials)
     print 'testExceptions()'
     result = client.service.throwException()
     print '\nreply( %s )\n' % str(result)
