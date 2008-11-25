@@ -101,7 +101,7 @@ class Client(object):
         options.set(**kwargs)
         self.options = options
         self.wsdl = Definitions(url, options)
-        self.service = Service(self)
+        self.service = Wrapper(Service(self))
         self.factory = Factory(self.wsdl)
         self.sd = ServiceDefinition(self.wsdl)
         self.messages = dict(tx=None, rx=None)
@@ -206,144 +206,161 @@ class Factory:
         metrics.log.debug('%s created: %s', name, timer)
         return result
 
+   
+class Wrapper:
+    """
+    Wrapper, translates to resolve() and call().
+    """
+    
+    def __init__(self, wrapped):
+        self.__wrapped__ = wrapped
+
+    def __getattr__(self, name):
+        builtin =  name.startswith('__') and name.endswith('__')
+        if builtin:
+            return self.__dict__[name]
+        else:
+            return self.__wrapped__.resolve(name)
+        
+    def __call__(self, *args, **kwargs):
+        target = self.__wrapped__
+        return target.call(*args, **kwargs)
+        
 
 class Service:
-    """ 
-    Service I{wrapper} object.
-    B{See:}  L{Method} for Service.I{method()} invocation API.
-    @ivar __client__: A suds client.
-    @type __client__: L{Client}
+    """
+    The I{service} (namespace) object.
+    @ivar client: A client object.
+    @type client: L{Client}
     """
     
     def __init__(self, client):
         """
-        @param client: A suds client.
+        @ivar client: A client object.
         @type client: L{Client}
         """
-        self.__client__ = client
-        self.__service__ = client.wsdl.service
-    
-    def __getattr__(self, name):
+        self.client = client
+        
+    def resolve(self, name):
         """
-        Find and return a service method or port by name depending on how may
-        ports are defined for the service.  When only one port is defined (as in most
-        cases), it returns the method so users don't have to qualify methods by port.
+        Resolve I{name} to a service port.
         @param name: A port/method name.
         @type name: str
-        @return: Either a L{Port} or an L{Method}.
-        @rtype: L{Port}|L{Method}
-        @see: Client.setport()
+        @return: The I{wrapped} L{Port}
         """
-        builtin =  name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
-        # ports/methods
-        service = self.__service__
-        options = self.__client__.options
-        if options.port is None:
-            method = service.method(name)
-            if method is None:
-                port = service.port(name)
-                if port is None:
-                    raise MethodNotFound(name)
-                else:
-                    return Port(self, port)
-            else:
-                return Method(self, method)
-        else:
-            port = service.port(options.port)
+        service = self.client.wsdl.service
+        port = self.dport(service)
+        if port is None:
+            port = service.port(name)
+        return Wrapper(Port(self.client, (name, port)))
+    
+    def dport(self, service):
+        """
+        The I{default} port as defined by L{Options}.
+        @param service: A wsdl service object.
+        @type service : L{wsdl.Service}
+        @return: The I{raw} L{wsdl.Port}
+        """
+        name = self.client.options.port
+        if name is not None:
+            port = service.port(name)
             if port is None:
-                raise PortNotFound(options.port)
-            port = Port(self, port)
-            return getattr(port, name)
-    
-    def __str__(self):
-        return unicode(self)
+                raise PortNotFound(name)
+        else:
+            port = None
+        return port
+
         
-    def __unicode__(self):
-        return unicode(self.__service__)
-    
-    
-class Port(object):
-    """ 
-    Service port I{wrapper} object.
-    B{See:}  L{Method} for Service.I{method()} invocation API.
-    @ivar __service__: The service.
-    @type __service__: L{Service}
-    @ivar __port__: The service port.
-    @type __port__: I{service.Port}
+class Port:
+    """
+    The I{port} (namespace) object.
+    @ivar client: A client object.
+    @type client: L{Client}
+    @ivar port: A port tuple (name, L{wsdl.Port})
+    @type port: tuple
     """
     
-    def __init__(self, service, port):
+    def __init__(self, client, port):
         """
-        @param service: The service.
-        @type service: L{Service}
-        @param port: A service port.
-        @type port: I{service.Port}
+        @param client: A client object.
+        @type client: L{Client}
+        @param port: A port tuple (name, L{wsdl.Port})
+        @type port: tuple
         """
-        self.__service__ = service
-        self.__port__ = port
+        self.client = client
+        self.port = port
         
-    def __getattr__(self, name):
+    def resolve(self, name):
         """
-        Find and return a service method by name.
+        Resolve I{name} to a service method.
         @param name: A method name.
         @type name: str
-        @return: a L{Method}.
-        @rtype: L{Method}.
+        @return: The I{wrapped} L{Method}
         """
-        builtin =  name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
-        # methods
-        service = self.__service__.__service__
-        port = self.__port__
-        qname = ':'.join((port.name, name))
-        method = service.method(qname)
-        return Method(self.__service__, method)
+        finder = self.finder()
+        method = finder.method(name)
+        if method is None:
+            raise MethodNotFound(name)
+        return Wrapper(Method(self.client, method))
     
-    def __str__(self):
-        return unicode(self)
-        
-    def __unicode__(self):
-        return unicode(self.__port__)
+    def finder(self):
+        """
+        The method name I{finder}.
+        @return: A method name resolver.
+        @rtype: (L{wsdl.Port}|L{wsdl.Service})
+        """
+        if self.port[1] is None:
+            return self.client.wsdl.service
+        else:
+            return self.port[1]
+
+    def call(self, *args, **kwargs):
+        """
+        When called, this means that this port was returned by the
+        Service.resolve() but the user intended to call a method.
+        The name is used to lookup a method and forwards the invocation
+        to the method.
+        """
+        name = self.port[0]
+        method = self.resolve(name)
+        return method(*args, **kwargs)
 
 
-class Method(object):
+class Method:
     """
-    Method invocation wrapper
-    @ivar service: The service.
-    @type service: L{Service}
-    @ivar name: The method name.
-    @type name: str
-    """ 
-    
-    def __init__(self, service, method):
+    The I{method} (namespace) object.
+    @ivar client: A client object.
+    @type client: L{Client}
+    @ivar method: A I{wsdl} method.
+    @type I{wsdl} Method.
+    """
+
+    def __init__(self, client, method):
         """
-        @param service: The service.
-        @type service: L{Service}
-        @param method: The (wsdl) method.
-        @type method: I{method}
+        @ivar client: A client object.
+        @type client: L{Client}
+        @ivar method: A I{raw} method.
+        @type I{raw} Method.
         """
-        self.service = service
+        self.client = client
         self.method = method
         
-    def __call__(self, *args, **kwargs):
+    def resolve(self, name):
         """
-        Call (invoke) the method.
-        @param args: A list of args for the method invoked.
-        @type args: list
-        @param kwargs: Named (keyword) args for the method invoked.
-        @type kwargs: dict
-        @see: L{Options}
+        Error, not permitted.
+        @param name: A method attribute to be resolved.
+        @type name: str.
+        @raise AttributeError: Always.
         """
-        result = None
-        options = self.service.__client__.options
-        if SimClient.simulation(kwargs):
-            client = SimClient(self, options)
-        else:
-            client = SoapClient(self, options)
-        if not options.faults:
+        raise AttributeError(name)
+    
+    def call(self, *args, **kwargs):
+        """
+        Method Invocation.
+        """
+        clientclass = self.clientclass(kwargs)
+        client = clientclass(self.client, self.method)
+        if not self.faults():
             try:
                 return client.invoke(args, kwargs)
             except WebFault, e:
@@ -351,11 +368,14 @@ class Method(object):
         else:
             return client.invoke(args, kwargs)
         
-    def __str__(self):
-        return unicode(self)
+    def faults(self):
+        return self.client.options.faults
         
-    def __unicode__(self):
-        return unicode(self.method)
+    def clientclass(self, kwargs):
+        if SimClient.simulation(kwargs):
+            return SimClient
+        else:
+            return SoapClient
 
 
 class SoapClient:
@@ -371,16 +391,16 @@ class SoapClient:
     @type cookiejar: libcookie.CookieJar
     """
 
-    def __init__(self, method, options):
+    def __init__(self, client, method):
         """
         @param method: A target method.
         @type method: L{Method}
         @param options: A dictonary of options.
         @type options: L{Options}
         """
-        self.service = method.service
-        self.method = method.method
-        self.options = options
+        self.client = client
+        self.method = method
+        self.options = client.options
         self.cookiejar = CookieJar()
         
     def invoke(self, args, kwargs):
@@ -468,7 +488,10 @@ class SoapClient:
             else:
                 return (200, p)
         else:
-            return (200, None)
+            if self.options.faults:
+                return None
+            else:
+                return (200, None)
         
     def failed(self, binding, error):
         """
@@ -498,7 +521,7 @@ class SoapClient:
     
     def last_sent(self, d=None):
         key = 'tx'
-        messages = self.service.__client__.messages
+        messages = self.client.messages
         if d is None:
             return messages.get(key)
         else:
@@ -506,7 +529,7 @@ class SoapClient:
         
     def last_received(self, d=None):
         key = 'rx'
-        messages = self.service.__client__.messages
+        messages = self.client.messages
         if d is None:
             return messages.get(key)
         else:

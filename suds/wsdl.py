@@ -431,8 +431,8 @@ class Message(NamedObject):
             
     def __gt__(self, other):
         return isinstance(other, (Import, Types))
-
-
+    
+    
 class PortType(NamedObject):
     """
     Represents <portType/>.
@@ -669,6 +669,44 @@ class Binding(NamedObject):
         return ( not isinstance(other, Service) )
 
 
+class Port(NamedObject):
+    """
+    Represents a service port.
+    @ivar service: A service.
+    @type service: L{Service}
+    @ivar binding: A binding name.
+    @type binding: str
+    @ivar location: The service location (url).
+    @type location: str
+    """
+    
+    def __init__(self, root, definitions, service):
+        """
+        @param root: An XML root element.
+        @type root: L{Element}
+        @param definitions: A definitions object.
+        @type definitions: L{Definitions}
+        @param service: A service object.
+        @type service: L{Service}
+        """
+        NamedObject.__init__(self, root, definitions)
+        self.__service = service
+        self.binding = root.get('binding')
+        address = root.getChild('address')
+        self.location = address.get('location').encode('utf-8')
+        
+    def method(self, name):
+        """
+        Get a method defined in this portType by name.
+        @param name: A method name.
+        @type name: str
+        @return: The requested method object.
+        @rtype: I{Method}
+        """
+        qname = ':'.join((self.name, name))
+        return self.__service.method(qname)
+        
+
 class Service(NamedObject):
     """
     Represents <service/>.
@@ -689,11 +727,7 @@ class Service(NamedObject):
         self.ports = []
         self.methods = {}
         for p in root.getChildren('port'):
-            port = SFactory.object('Port')
-            port.name = p.get('name')
-            port.binding = p.get('binding')
-            address = p.getChild('address')
-            port.location = address.get('location').encode('utf-8')
+            port = Port(p, definitions, self)
             self.ports.append(port)
             
     def port(self, name):
@@ -702,7 +736,7 @@ class Service(NamedObject):
         @param name: A port name.
         @type name: str
         @return: The port object.
-        @rtype: I{Port} 
+        @rtype: L{Port} 
         """
         for p in self.ports:
             if p.name == name:
@@ -711,7 +745,7 @@ class Service(NamedObject):
     
     def method(self, name):
         """
-        Get a method defined an one of the portTypes by name.
+        Get a method defined in one of the portTypes by name.
         @param name: A method name.
         @type name: str
         @return: The requested method object.
