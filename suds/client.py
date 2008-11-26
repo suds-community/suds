@@ -290,18 +290,47 @@ class Port:
         self.client = client
         self.port = port
         
-    def resolve(self, name):
+    def resolve(self, name, strict=True):
         """
         Resolve I{name} to a service method.
         @param name: A method name.
         @type name: str
+        @param strict: Make sure this is a real port.
+        @type strict: bool
         @return: The I{wrapped} L{Method}
         """
+        if strict and self.anyport():
+            raise PortNotFound(self.name())
         finder = self.finder()
         method = finder.method(name)
         if method is None:
             raise MethodNotFound(name)
         return Wrapper(Method(self.client, method))
+    
+    def name(self):
+        """
+        The port name.
+        @return: The port name.
+        @rtype: str
+        """
+        return self.port[0]
+    
+    def realport(self):
+        """
+        The I{real} port.
+        @return: The contained port object.
+        @rtype: L{wsdl.Port}
+        """
+        return self.port[1]
+    
+    def anyport(self):
+        """
+        Get whether this port references a real port or just a
+        placeholder for I{any} port.
+        @return: True if real port reference is None.
+        @rtype: bool
+        """
+        return ( self.realport() is None )
     
     def finder(self):
         """
@@ -309,10 +338,10 @@ class Port:
         @return: A method name resolver.
         @rtype: (L{wsdl.Port}|L{wsdl.Service})
         """
-        if self.port[1] is None:
+        if self.anyport():
             return self.client.wsdl.service
         else:
-            return self.port[1]
+            return self.realport()
 
     def call(self, *args, **kwargs):
         """
@@ -321,8 +350,7 @@ class Port:
         The name is used to lookup a method and forwards the invocation
         to the method.
         """
-        name = self.port[0]
-        method = self.resolve(name)
+        method = self.resolve(self.name(), strict=False)
         return method(*args, **kwargs)
 
 
