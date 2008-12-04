@@ -105,6 +105,21 @@ except Exception, e:
     tb.print_exc()
     
 try:
+    url = 'http://lyricwiki.org/server.php?wsdl'
+    start(url)
+    client = Client(url)
+    print client
+    print client.service.getArtist("U2")
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    tb.print_exc()
+    
+try:
     url = 'http://www.zenfolio.com/zf/api/zfapi.asmx?wsdl'
     start(url)
     client = Client(url)
