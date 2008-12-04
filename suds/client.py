@@ -154,9 +154,11 @@ class Client(object):
         
     def __unicode__(self):
         s = ['\n']
+        version = properties.get('version')
+        build = properties.get('build').split()
         s.append('Suds ( https://fedorahosted.org/suds/ )')
-        s.append('  version: %s' % properties.get('version'))
-        s.append('  build: %s' % properties.get('build', 'n/a'))
+        s.append('  version: %s' % version)
+        s.append(' %s  build: %s' % (build[0], build[1]))
         s.append('\n\n%s' % unicode(self.sd))
         return ''.join(s)
 
