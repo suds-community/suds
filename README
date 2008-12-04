@@ -21,7 +21,7 @@ version 0.3.3 (11-31-08):
     - Baisc http authentication in default transport
   * Add namespace prefix normalization in soap message.
   * Better soap message pruning of empty nodes.
-  * Fixed Tickets: #51,#52,#53,#54,#55,#56,#57
+  * Fixed Tickets: #51 - #60
 
   
 version 0.3.2 (11-7-08):
