@@ -63,7 +63,7 @@ rm -rf $RPM_BUILD_ROOT
     Baisc http authentication in default transport
 - Add namespace prefix normalization in soap message.
 - Better soap message pruning of empty nodes.
-- Fixed Tickets: #51,#52,#53,#54,#55,#56,#57 
+- Fixed Tickets: #51 - #60. 
 
 * Fri Nov 06 2008 jortel <jortel@redhat.com> - 0.3.2-1
 - Add SOAP MultiRef support
