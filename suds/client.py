@@ -531,7 +531,7 @@ class SoapClient:
         @param error: The http error message
         @type error: L{transport.TransportError}
         """
-        status, reason = (error.httpcode, error.message)
+        status, reason = (error.httpcode, tostr(error))
         reply = error.fp.read()
         log.debug('http failed:\n%s', reply)
         if status == 500:
