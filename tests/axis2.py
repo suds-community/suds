@@ -21,7 +21,7 @@ import logging
 import traceback as tb
 import suds.metrics as metrics
 from tests import *
-from suds import WebFault
+from suds import *
 from suds.client import Client
 from datetime import datetime
 
@@ -208,7 +208,7 @@ except Exception, e:
 #
 try:
     print 'throwException() faults=False'
-    client.service.__client__.faults=False
+    client.set_options(faults=False)
     result = client.service.throwException()
     print '\nreply( %s )\n' % tostr(result)
 except Exception, e:
