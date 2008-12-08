@@ -3,7 +3,7 @@
 Summary: A python SOAP client
 Name:  python-suds
 Version: 0.3.4
-Release: 2%{?dist}
+Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
 Group: Development/Libraries
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Mon Dec 08 2008 jortel <jortel@redhat.com> - 0.3.4-1
+- 0.3.4
+
 * Wed Dec 04 2008 jortel <jortel@redhat.com> - 0.3.3-2
 - Rebuild for Python 2.6
 
