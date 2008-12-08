@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.3
+Version: 0.3.4
 Release: 2%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+

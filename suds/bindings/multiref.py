@@ -59,15 +59,19 @@ class MultiRef:
         the contents of the referenced nodes and remove the I{href} attribute.
         @param node: A node to update.
         @type node: L{Element}
+        @return: The updated node
+        @rtype: L{Element}
         """
         self.replace_references(node)
         for c in node.children:
             self.update(c)
+        return node
             
     def replace_references(self, node):
         """
         Replacing the I{multiref} references with the contents of the 
-        referenced nodes and remove the I{href} attribute.
+        referenced nodes and remove the I{href} attribute.  Warning:  since
+        the I{ref} is not cloned, 
         @param node: A node to update.
         @type node: L{Element}
         """
@@ -80,6 +84,7 @@ class MultiRef:
             log.error('multiRef: %s, not-resolved', id)
             return
         node.append(ref.children)
+        node.setText(ref.getText())
         node.remove(href)
             
     def build_catalog(self, body):
