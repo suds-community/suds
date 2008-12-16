@@ -1005,3 +1005,9 @@ class Any(Promotable):
         """
         return True
 
+
+#######################################################
+# Static Import Bindings :-(
+#######################################################
+Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
+
