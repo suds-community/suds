@@ -28,6 +28,8 @@ class Options(object):
                 - type: I{bool}
         - B{port} - The default service port.  (not tcp port).
                 - type: I{str}
+        - B{location} - This overrides the service port address I{URL} defined in the WSDL.
+                - type: I{str}
         - B{proxy} - An http proxy to be specified on requests (default:None).
              The proxy is defined as {protocol:proxy,}
                 - type: I{dict}
