@@ -593,14 +593,16 @@ class Element(Promotable):
         @type root: L{sax.element.Element}
         """
         Promotable.__init__(self, schema, root)
+        self.min = root.get('minOccurs', default='1')
+        self.max = root.get('maxOccurs', default='1')
         a = root.get('form')
         if a is not None:
             self.form_qualified = ( a == 'qualified' )
         a = self.root.get('nillable')
         if a is not None:
             self.nillable = ( a in ('1', 'true') )
-        self.min = root.get('minOccurs', default='1')
-        self.max = root.get('maxOccurs', default='1')
+        if self.type is None and self.root.isempty():
+            self.type = self.anytype()
         
     def childtags(self):
         """
@@ -745,6 +747,15 @@ class Element(Promotable):
             return False
         else:
             return self.container.optional()
+        
+    def anytype(self):
+        """ create an xsd:anyType reference """
+        p,u = Namespace.xsdns
+        mp = self.root.findPrefix(u)
+        if mp is None:
+            mp = p
+            self.root.addPrefix(p, u)
+        return ':'.join((mp, 'anyType'))
 
 
 class Extension(SchemaObject):
