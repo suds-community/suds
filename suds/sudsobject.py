@@ -201,9 +201,9 @@ class Printer:
     Pretty printing of a Object object.
     """
     
-    def __init__(self):
-        self.indent = (lambda n :  '%*s'%(n*3,' '))
-    
+    @classmethod
+    def indent(cls, n): return '%*s'%(n*3,' ')
+
     def tostr(self, object, indent=-2):
         """ get s string representation of object """
         history = []
