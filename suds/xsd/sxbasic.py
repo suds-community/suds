@@ -1020,4 +1020,4 @@ class Any(Promotable):
 # Static Import Bindings :-(
 #######################################################
 Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
-
+Import.bind('http://www.w3.org/XML/1998/namespace', 'http://www.w3.org/2001/xml.xsd')
