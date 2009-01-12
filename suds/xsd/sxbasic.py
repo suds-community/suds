@@ -865,11 +865,9 @@ class Import(SchemaObject):
             self.location = self.locations.get(self.ns[1])
         self.opened = False
         
-    def open(self, transport):
+    def open(self):
         """
         Open and import the refrenced schema.
-        @param transport: The transport to be used for web requests.
-        @type transport: L{transport.Transport}
         """
         if self.opened:
             return
@@ -880,15 +878,16 @@ class Import(SchemaObject):
             if self.location is None:
                 log.debug('imported schema (%s) not-found', self.ns[1])
             else:
-                result = self.download(transport)
+                result = self.download()
         log.debug('imported:\n%s', result)
         return result
 
-    def download(self, transport):
+    def download(self):
         url = self.location
         try:
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
+            transport = self.schema.options.transport
             root = Parser(transport).parse(url=url).root()
             root.set('url', url)
             return self.schema.instance(root, url)
