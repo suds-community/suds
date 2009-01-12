@@ -64,7 +64,7 @@ class SchemaCollection:
         @type schema: (L{suds.wsdl.Definitions},L{sax.element.Element})
         """
         root, wsdl = schema
-        child = Schema(root, wsdl.url, self)
+        child = Schema(root, wsdl.url, self.options, container=self)
         self.children.append(child)
         self.namespaces[child.tns[1]] = child
         
@@ -80,7 +80,7 @@ class SchemaCollection:
         for child in self.children:
             child.build()
         for child in self.children:
-            child.open_imports(self.options.transport)
+            child.open_imports()
         log.debug('loaded:\n%s', self)
         merged = self.merge()
         log.debug('MERGED:\n%s', merged)
@@ -136,6 +136,8 @@ class Schema:
     @type root: L{sax.element.Element}
     @ivar baseurl: The I{base} URL for this schema.
     @type baseurl: str
+    @ivar options: An options dictionary.
+    @type options: L{options.Options}
     @ivar container: A schema collection containing this schema.
     @type container: L{SchemaCollection}
     @ivar types: A schema types cache.
@@ -155,12 +157,14 @@ class Schema:
     
     Tag = 'schema'
     
-    def __init__(self, root, baseurl, container=None):
+    def __init__(self, root, baseurl, options, container=None):
         """
         @param root: The xml root.
         @type root: L{sax.element.Element}
         @param baseurl: The base url used for importing.
         @type baseurl: basestring
+        @param options: An options dictionary.
+        @type options: L{options.Options}
         @param container: An optional container.
         @type container: L{SchemaCollection}
         """
@@ -168,6 +172,7 @@ class Schema:
         self.id = objid(self)
         self.tns = self.mktns()
         self.baseurl = baseurl
+        self.options = options
         self.container = container
         self.children = []
         self.types = {}
@@ -257,19 +262,17 @@ class Schema:
         schema.merged = True
         return self
         
-    def open_imports(self, transport=None):
+    def open_imports(self):
         """
         Instruct all contained L{sxbasic.Import} children to import
         the schema's which they reference.  The contents of the
         imported schema are I{merged} in.
-        @param transport: The transport to be used for web requests.
-        @type transport: L{transport.Transport}
         """
         for imp in self.imports:
-            imported = imp.open(transport)
+            imported = imp.open()
             if imported is None:
                 continue
-            imported.open_imports(transport)
+            imported.open_imports()
             log.debug('imported:\n%s', imported)
             self.merge(imported)
         
@@ -339,19 +342,19 @@ class Schema:
         except:
             return False
         
-    def instance(self, root, url):
+    def instance(self, root, baseurl):
         """
         Create and return an new schema object using the
         specified I{root} and I{url}.
         @param root: A schema root node.
         @type root: L{sax.element.Element}
-        @param url: A base URL.
-        @type url: str
+        @param baseurl: A base URL.
+        @type baseurl: str
         @return: The newly created schema object.
         @rtype: L{Schema}
         @note: This is only used by Import children.
         """
-        return Schema(root, url)
+        return Schema(root, baseurl, self.options)
 
     def str(self, indent=0):
         tab = '%*s'%(indent*3, '')
