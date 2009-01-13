@@ -215,6 +215,8 @@ class Schema:
             - Build the graph.
             - Collate the children.
         """
+        if len(self.children):
+            return
         attributes, self.children = BasicFactory.build(self.root, self)
         collated = BasicFactory.collate(attributes)
         self.attributes = collated[2]

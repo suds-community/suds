@@ -365,7 +365,10 @@ class Binding:
             if p.type is not None:
                 pt = PartElement(p.name, body.namespace, pt)
             if input:
-                result.append((p.name, pt))
+                if pt.name is None:
+                    result.append((p.name, pt))
+                else:
+                    result.append((pt.name, pt))
             else:
                 result.append(pt)
         return result
