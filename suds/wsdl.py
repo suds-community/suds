@@ -242,13 +242,15 @@ class Definitions(WObject):
     def build_schema(self):
         """ Process L{Types} objects and create the schema collection """
         container = SchemaCollection(self)
-        for t in self.types:
-            for s in t.schemas():
-                entry = (s, self)
+        for s in [t.schema() for t in self.types if t.imported()]:
+            container.children.append(s)
+        for t in [t for t in self.types if t.local()]:
+            for r in t.contents():
+                entry = (r, self)
                 container.add(entry)
         if not len(container): # empty
-            s = Element.buildPath(self.root, 'types/schema')
-            entry = (s, self)
+            r = Element.buildPath(self.root, 'types/schema')
+            entry = (r, self)
             container.add(entry)
         self.schema = container.load()
                 
@@ -366,8 +368,17 @@ class Types(WObject):
         WObject.__init__(self, root, definitions)
         self.definitions = definitions
         
-    def schemas(self):
+    def contents(self):
         return self.root.getChildren('schema', Namespace.xsdns)
+    
+    def schema(self):
+        return self.definitions.schema
+    
+    def local(self):
+        return ( self.definitions.schema is None )
+    
+    def imported(self):
+        return ( not self.local() )
         
     def __gt__(self, other):
         return isinstance(other, Import)
