@@ -53,7 +53,7 @@ class Builder:
         md.__type__ = type
         history = []
         self.add_attributes(data, type)
-        for c in [c for c in type if not c.isattr()]:
+        for c in type.children():
             if self.skip_child(c):
                 continue
             self.process(data, c, history)
