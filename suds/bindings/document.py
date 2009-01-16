@@ -105,7 +105,7 @@ class Document(Binding):
         result = []
         for p in pts:
             resolved = p[1].resolve()
-            for c in resolved.children:
+            for c in resolved:
                 result.append((c.name, c))
         return result
     
@@ -120,7 +120,7 @@ class Document(Binding):
         result = []
         for pt in self.part_types(method, input=False):
             pt = pt.resolve(nobuiltin=True)
-            for rt in pt.children:
+            for rt in pt:
                 result.append(rt)
             break
         return result

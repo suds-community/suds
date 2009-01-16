@@ -218,7 +218,10 @@ class ServiceDefinition:
                     sig.append(p[0])
                     sig.append(', ')
                 sig.append(')')
-                s.append(''.join(sig))
+                try:
+                    s.append(''.join(sig))
+                except:
+                    pass
             s.append(indent(3))
             s.append('Types (%d):' % len(self.types))
             for t in self.types:

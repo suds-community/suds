@@ -53,7 +53,7 @@ class Builder:
         md.__type__ = type
         history = []
         self.add_attributes(data, type)
-        for c in type.children:
+        for c in [c for c in type if not c.isattr()]:
             if self.skip_child(c):
                 continue
             self.process(data, c, history)
@@ -63,6 +63,8 @@ class Builder:
         """ process the specified type then process its children """
         if type in history:
             return
+        if type.enum():
+            return
         history.append(type)
         resolved = type.resolve()
         self.add_attributes(data, type)
@@ -70,8 +72,7 @@ class Builder:
         if type.unbounded():
             value = []
         else:
-            children = resolved.children
-            if len(children) > 0:
+            if len(resolved) > 0:
                 value = Factory.object(type.name)
                 md = value.__metadata__
                 md.__type__ = type
@@ -79,14 +80,14 @@ class Builder:
         if value is not None:
             data = value
         if not isinstance(data, list):
-            for c in resolved.children:
+            for c in resolved.children():
                 if self.skip_child(c):
                     continue
                 self.process(data, c, history)
 
     def add_attributes(self, data, type):
         """ add required attributes """
-        for a in type.attributes:
+        for a in type.attributes():
             name = '_%s' % a.name
             value = a.get_default()
             setattr(data, name, value)

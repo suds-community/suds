@@ -23,7 +23,6 @@ from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.sax.element import Element
-from copy import copy, deepcopy
 
 log = getLogger(__name__)
 
@@ -42,17 +41,15 @@ class SchemaObject:
     @ivar nillable: A flag that inidcates that @nillable
         has a value of I{true}.
     @type nillable: boolean
-    @ivar children: A list of child xsd I{(non-attribute)} nodes
-    @type children: [L{SchemaObject},...]
-    @ivar attributes: A list of child xsd I{(attribute)} nodes
-    @type attributes: [L{SchemaObject},...]
+    @ivar rawchildren: A list raw of all children.
+    @type rawchildren: [L{SchemaObject},...]
     @ivar container: The <sequence/>,<all/> or <choice/> 
         containing this object.
     @type container: L{SchemaObject}
     """
 
     @classmethod
-    def prepend(cls, d, s, filter=None):
+    def prepend(cls, d, s, filter=Filter()):
         """
         Prepend schema object's from B{s}ource list to 
         the B{d}estination list while applying the filter.
@@ -61,18 +58,16 @@ class SchemaObject:
         @param s: The source list.
         @type s: list
         @param filter: A filter that allows items to be prepended.
-        @type filter: L{ListFilter}
+        @type filter: L{Filter}
         """
-        if filter is None:
-            filter = ListFilter()
         i = 0
         for x in s:
-            if filter.permit(x):
+            if x in filter:
                 d.insert(i, x)
                 i += 1
     
     @classmethod
-    def append(cls, d, s, filter=None):
+    def append(cls, d, s, filter=Filter()):
         """
         Append schema object's from B{s}ource list to 
         the B{d}estination list while applying the filter.
@@ -81,12 +76,10 @@ class SchemaObject:
         @param s: The source list.
         @type s: list
         @param filter: A filter that allows items to be appended.
-        @type filter: L{ListFilter}
+        @type filter: L{Filter}
         """
-        if filter is None:
-            filter = ListFilter()
         for item in s:
-            if filter.permit(item):
+            if item in filter:
                 d.append(item)
 
     def __init__(self, schema, root):
@@ -102,16 +95,61 @@ class SchemaObject:
         self.name = root.get('name')
         self.qname = (self.name, schema.tns[1])
         self.type = root.get('type')
-        self.ref = [root.get('ref'), False]
-        self.ref[1] = ( self.ref[0] is not None )
+        self.ref = root.get('ref')
         self.form_qualified = schema.form_qualified
         self.nillable = False
         self.inherited = False
-        self.children = []
-        self.attributes = []
+        self.rawchildren = []
         self.container = None
         self.cache = {}
-        self.flattened = False
+        
+    def attributes(self, filter=Filter()):
+        """
+        Get only the attribute content.
+        @param filter: A filter to constrain the result.
+        @type filter: L{Filter}
+        @return: A list attributes
+        @rtype: list
+        """
+        for c in self:
+            if c.isattr() and c in filter:
+                yield c
+                
+    def children(self, filter=Filter()):
+        """
+        Get only the I{direct} or non-attribute content.
+        @param filter: A filter to constrain the result.
+        @type filter: L{Filter}
+        @return: A list attributes
+        @rtype: list
+        """
+        for c in self:
+            if not c.isattr() and c in filter:
+                yield c
+                
+    def get_attribute(self, name):
+        """
+        Get (find) a I{non-attribute} attribute by name.
+        @param name: A attribute name.
+        @type name: str
+        @return: The requested child.
+        @rtype: L{SchemaObject}
+        """
+        for child in self:
+            if child.isattr() and child.name == name:
+                return child
+                
+    def get_child(self, name):
+        """
+        Get (find) a I{non-attribute} child by name.
+        @param name: A child name.
+        @type name: str
+        @return: The requested child.
+        @rtype: L{SchemaObject}
+        """
+        for child in self.children():
+            if child.any() or child.name == name:
+                return child
 
     def namespace(self):
         """
@@ -149,32 +187,6 @@ class SchemaObject:
         @rtype: L{SchemaObject}
         """
         return self.cache.get(nobuiltin, self)
-    
-    def get_child(self, name):
-        """
-        Get (find) a I{non-attribute} child by name.
-        @param name: A child name.
-        @type name: str
-        @return: The requested child.
-        @rtype: L{SchemaObject}
-        """
-        for child in self.children:
-            if child.any() or child.name == name:
-                return child
-        return None
-    
-    def get_attribute(self, name):
-        """
-        Get (find) a I{non-attribute} attribute by name.
-        @param name: A attribute name.
-        @type name: str
-        @return: The requested child.
-        @rtype: L{SchemaObject}
-        """
-        for child in self.attributes:
-            if child.name == name:
-                return child
-        return None
     
     def sequence(self):
         """
@@ -264,7 +276,7 @@ class SchemaObject:
             classes = (self.__class__,)
         if self.qname == qref and self.__class__ in classes:
             return self
-        for c in self.children:
+        for c in self.rawchildren:
             p = c.find(qref, classes)
             if p is not None:
                 return p
@@ -286,58 +298,17 @@ class SchemaObject:
         """
         return ()
     
-    def flatten(self, parent=None):
+    def dependencies(self):
         """
-        Walk the tree and invoke promote() on each node.  This gives each
-        node the opportunity to flatten the tree as needed to remote
-        uninteresting nodes.  Nodes that don't directly contribute to the
-        structure of the data are omitted.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        pa, pc = [],[]
-        if not self.flattened:
-            self.flattened = True
-            log.debug(Repr(self))
-            for c in self.children:
-                a, c = c.flatten(self)
-                pa += a
-                pc += c
-            if parent is None:
-                self.attributes += pa
-                self.children = pc
-            else:
-                self.promote(pa, pc)
-        return (pa, pc)
+        return (None, [])
             
-    def promote(self, pa, pc):
+    def merge(self, other):
         """
-        Promote children during the flattening proess.  The object's
-        attributes and children are added to the B{p}romoted B{a}ttributes
-        and B{p}romoted B{c}hildren lists as they see fit.
-        @param pa: List of attributes to promote.
-        @type pa: [L{SchemaObject}]
-        @param pc: List of children to promote.
-        @type pc: [L{SchemaObject}]
-        """
-        log.debug(Repr(self))
-        filter = PromoteFilter()
-        self.prepend(pa, self.attributes)
-        self.prepend(pc, self.children, filter)
-            
-    def dereference(self):
-        """
-        Walk the tree and invoke mutate() on each node.  This gives each
-        node the opportunity to resolve references to other types
-        and mutate as needed.
-        """
-        if not self.ref[1]: return
-        log.debug(Repr(self))
-        self.ref[1] = False
-        self.mutate()
-            
-    def mutate(self):
-        """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Merge another object as needed.
         """
         pass
 
@@ -346,25 +317,35 @@ class SchemaObject:
         Mark this branch in the tree as inherited = true.
         """
         self.inherited = True
-        for c in self.children:
+        for c in self:
             c.mark_inherited()
             
-    def contents(self, collection):
+    def content(self, collection=None, filter=Filter(), history=None):
         """
         Get a I{flattened} list of this nodes contents.
         @param collection: A list to fill.
         @type collection: list
+        @param filter: A filter used to constrain the result.
+        @type filter: L{Filter}
+        @param history: The history list used to prevent cyclic dependency.
+        @type history: list
         @return: The filled list.
         @rtype: list
         """
-        collection.append(self)
-        for a in self.attributes:
-            collection.append(a)
-        for c in self.children:
-            c.contents(collection)
+        if collection is None:
+            collection = []
+        if history is None:
+            history = []
+        if self in history:
+            return collection
+        history.append(self)
+        if self in filter:
+            collection.append(self)
+        for c in self.rawchildren:
+            c.content(collection, filter, history[:])
         return collection
     
-    def str(self, indent=0):
+    def str(self, indent=0, history=None):
         """
         Get a string representation of this object.
         @param indent: The indent.
@@ -372,6 +353,11 @@ class SchemaObject:
         @return: A string.
         @rtype: str
         """
+        if history is None: 
+            history = []
+        if self in history:
+            return '%s ...' % Repr(self)
+        history.append(self)
         tab = '%*s'%(indent*3, '')
         result  = []
         result.append('%s<%s' % (tab, self.id))
@@ -384,13 +370,11 @@ class SchemaObject:
             result.append(' %s="%s"' % (n, v))
         if len(self):
             result.append('>')
-            for c in self.attributes:
+            for c in self.rawchildren:
                 result.append('\n')
-                result.append(c.str(indent+1))
-                result.append('@')
-            for c in self.children:
-                result.append('\n')
-                result.append(c.str(indent+1))
+                result.append(c.str(indent+1, history[:]))
+                if c.isattr():
+                    result.append('@')
             result.append('\n%s' % tab)
             result.append('</%s>' % self.__class__.__name__)
         else:
@@ -426,18 +410,112 @@ class SchemaObject:
         return myrep.encode('utf-8')
     
     def __len__(self):
-        return len(self.children)+len(self.attributes)
+        n = 0
+        for x in self: n += 1
+        return n
+    
+    def __iter__(self):
+        return Iter(self)
     
     def __getitem__(self, index):
-        return self.children[index]
+        i = 0
+        for c in self:
+            if i == index:
+                return c
 
-    def __deepcopy__(self, memo={}):
-        clone = copy(self)
-        clone.attributes = deepcopy(self.attributes)
-        clone.children = deepcopy(self.children)
-        return clone
     
+class Iter:
+    """
+    The content iterator - used to iterate the L{Content} children.  The iterator
+    provides a I{view} of the children that is free of container elements
+    such as <sequence/> and <choice/>.
+    @ivar stack: A stack used to control nesting.
+    @type stack: list
+    """
     
+    class Frame:
+        """ A content iterator frame. """
+        
+        def __init__(self, sx):
+            """
+            @param sx: A schema object.
+            @type sx: L{SchemaObject}
+            """
+            self.items = sx.rawchildren
+            self.index = 0
+            
+        def next(self):
+            """
+            Get the I{next} item in the frame's collection.
+            @return: The next item or None
+            @rtype: L{SchemaObject}
+            """
+            if self.index < len(self.items):
+                result = self.items[self.index]
+                self.index += 1
+                return result
+    
+    def __init__(self, sx):
+        """
+        @param sx: A schema object.
+        @type sx: L{SchemaObject}
+        """
+        self.stack = []
+        self.push(sx)
+        
+    def push(self, sx):
+        """
+        Create a frame and push the specified object.
+        @param sx: A schema object to push.
+        @type sx: L{SchemaObject}
+        """
+        self.stack.append(Iter.Frame(sx))
+        
+    def pop(self):
+        """
+        Pop the I{top} frame.
+        @return: The popped frame.
+        @rtype: L{Frame}
+        @raise StopIteration: when stack is empty.
+        """
+        if len(self.stack):
+            return self.stack.pop()
+        else:
+            raise StopIteration()
+        
+    def top(self):
+        """
+        Get the I{top} frame.
+        @return: The top frame.
+        @rtype: L{Frame}
+        @raise StopIteration: when stack is empty.
+        """
+        if len(self.stack):
+            return self.stack[-1]
+        else:
+            raise StopIteration()
+    
+    def next(self):
+        """
+        Get the next item.
+        @return: The next item being iterated.
+        @rtype: L{SchemaObject}
+        """
+        frame = self.top()
+        while True:
+            result = frame.next()
+            if result is None:
+                self.pop()
+                return self.next()
+            if isinstance(result, Content):
+                return result
+            self.push(result)
+            return self.next()
+    
+    def __iter__(self):
+        return self
+
+
 class XBuiltin(SchemaObject):
     """
     Represents an (xsd) schema <xs:*/> node
@@ -463,32 +541,9 @@ class XBuiltin(SchemaObject):
         return self
 
 
-class Promotable(SchemaObject):
+class Content(SchemaObject):
     """
-    Represents I{promotable} schema objects.  They are objects that
-    should be promoted during the flattening process.
+    This class represents those schema objects that represent
+    real XML document content.
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{Element}
-        """
-        SchemaObject.__init__(self, schema, root)
-
-
-class ListFilter:
-    def permit(self, x):
-        return True        
-
-class PromoteFilter(ListFilter):
-    def permit(self, x):
-        return isinstance(x, Promotable)
-    
-class UniqueFilter(ListFilter):
-    def __init__(self, d):
-        self.ids = [m.id for m in d]
-    def permit(self, x):
-        return ( x.id not in self.ids )
+    pass
