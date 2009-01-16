@@ -60,14 +60,21 @@ class SchemaCollection:
         
     def add(self, schema):
         """
-        Add a schema node to the collection.
+        Add a schema node to the collection.  Schema(s) within the same target
+        namespace are consolidated.
         @param schema: A <schema/> entry.
         @type schema: (L{suds.wsdl.Definitions},L{sax.element.Element})
         """
         root, wsdl = schema
         child = Schema(root, wsdl.url, self.options, container=self)
-        self.children.append(child)
-        self.namespaces[child.tns[1]] = child
+        key = child.tns[1]
+        existing = self.namespaces.get(key)
+        if existing is None:
+            self.children.append(child)
+            self.namespaces[key] = child
+        else:
+            existing.root.children += root.children
+            existing.root.nsprefixes.update(root.nsprefixes)
         
     def load(self):
         """
