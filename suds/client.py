@@ -200,9 +200,9 @@ class Factory:
         else:
             try:
                 result = self.builder.build(type)
-            except:
+            except Exception, e:
                 log.error("create '%s' failed", name, exc_info=True)
-                raise BuildError("create '%s' failed" % name)
+                raise BuildError(name, e)
         timer.stop()
         metrics.log.debug('%s created: %s', name, timer)
         return result
