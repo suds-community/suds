@@ -29,7 +29,7 @@ import socket
 # Project properties
 #
 
-properties = dict(version='0.3.4', build="(beta) R428-20090116")
+properties = dict(version='0.3.4', build="(beta) R430-20090116")
 
 #
 # Exceptions
@@ -52,11 +52,12 @@ class BuildError(Exception):
         """
         An error occured while building a instance of (%s).  As a result
         the object you requested could not be constructed.  It is recommended
-        that you construct the type manually uisng a Suds object.
-        Please notify the project mantainer of this error.
+        that you construct the type manually using a Suds object.
+        Please open a ticket with a description of this error.
+        Reason: %s
         """
-    def __init__(self, name):
-        Exception.__init__(self, BuildError.msg % name)
+    def __init__(self, name, exception):
+        Exception.__init__(self, BuildError.msg % (name, exception))
         
 class SoapHeadersNotPermitted(Exception):
     msg = \
