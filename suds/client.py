@@ -195,9 +195,8 @@ class Factory:
             raise TypeNotFound(name)
         if type.enum():
             result = InstFactory.object(name)
-            for e in type.children:
-                enum = e.name
-                setattr(result, enum, enum)
+            for e in type.children():
+                setattr(result, e.name, e.name)
         else:
             try:
                 result = self.builder.build(type)

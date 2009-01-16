@@ -30,6 +30,7 @@ from suds.xsd.sxbuiltin import *
 from suds.xsd.sxbasic import Factory as BasicFactory
 from suds.xsd.sxbuiltin import Factory as BuiltinFactory
 from suds.xsd.sxbase import SchemaObject
+from suds.xsd.deplist import DepList
 from suds.sax import splitPrefix, Namespace
 
 log = getLogger(__name__)
@@ -72,7 +73,6 @@ class SchemaCollection:
         """
         Load the schema objects for the root nodes.
             - de-references schemas
-            - flatten schemas
             - merge schemas
         @return: The merged schema.
         @rtype: L{Schema}
@@ -86,8 +86,6 @@ class SchemaCollection:
         log.debug('MERGED:\n%s', merged)
         merged.dereference()
         log.debug('MERGED: dereferenced:\n%s', merged)
-        merged.flatten()
-        log.debug('MERGED: dereferenced & flattened\n%s', merged)
         return merged
         
     def locate(self, ns):
@@ -193,8 +191,6 @@ class Schema:
             log.debug('built:\n%s', self)
             self.dereference()
             log.debug('dereferenced:\n%s', self)
-            self.flatten()
-            log.debug('dereferenced & flattened:\n%s', self)
                 
     def mktns(self):
         """
@@ -217,11 +213,10 @@ class Schema:
         """
         if len(self.children):
             return
-        attributes, self.children = BasicFactory.build(self.root, self)
-        collated = BasicFactory.collate(attributes)
-        self.attributes = collated[2]
+        self.children = BasicFactory.build(self.root, self)
         collated = BasicFactory.collate(self.children)
         self.children = collated[0]
+        self.attributes = collated[2]
         self.imports = collated[1]
         self.elements = collated[3]
         self.types = collated[4]
@@ -298,17 +293,21 @@ class Schema:
         Instruct all children to perform dereferencing.
         """
         all = []
+        indexes = {}
         for child in self.children:
-            child.contents(all)
-        for child in all:
-            child.dereference()
-        
-    def flatten(self):
-        """
-        Instruct all children to I{flatten}.
-        """
-        for child in self.children:
-            child.flatten()
+            child.content(all)
+        deplist = DepList()
+        for x in all:
+            midx, deps = x.dependencies()
+            item = (x, tuple(deps))
+            deplist.add(item)
+            indexes[x] = midx
+        for x, deps in deplist.sort():
+            midx = indexes.get(x)
+            if midx is None: continue
+            d = deps[midx]
+            log.debug('merging %s <== %s', Repr(x), Repr(d))
+            x.merge(d)
 
     def custom(self, ref, context=None):
         """

@@ -28,7 +28,6 @@ from suds.sax import splitPrefix, Namespace
 from suds.sax.parser import Parser
 from suds.transport import TransportError
 from urlparse import urljoin
-from copy import copy, deepcopy
 
 
 log = getLogger(__name__)
@@ -89,21 +88,16 @@ class Factory:
         @return: A schema object graph.
         @rtype: L{sxbase.SchemaObject}
         """
-        attributes = []
         children = []
         for node in root.getChildren(ns=Namespace.xsdns):
             if '*' in filter or node.name in filter:
                 child = cls.create(node, schema)
                 if child is None:
                     continue
-                if child.isattr():
-                    attributes.append(child)
-                else:
-                    children.append(child)
-                a, c = cls.build(node, schema, child.childtags())
-                child.attributes = a
-                child.children = c
-        return (attributes, children)
+                children.append(child)
+                c = cls.build(node, schema, child.childtags())
+                child.rawchildren = c
+        return children
     
     @classmethod
     def collate(cls, children):
@@ -170,7 +164,7 @@ class Complex(SchemaObject):
             return self.__derived
         except:
             self.__derived = False
-            for c in self.children:
+            for c in self:
                 if c.inherited:
                     self.__derived = True
                     break
@@ -246,19 +240,28 @@ class Group(SchemaObject):
         else:
             return self.container.optional()
         
-    def mutate(self):
+    def dependencies(self):
         """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        defns = self.default_namespace()
-        qref = qualify(self.ref[0], self.root, defns)
-        query = GroupQuery(qref)
-        g = query.execute(self.schema)
-        if g is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        self.merge(deepcopy(g))
+        deps = []
+        midx = None
+        if self.ref is not None:     
+            defns = self.default_namespace()
+            qref = qualify(self.ref, self.root, defns)
+            query = GroupQuery(qref)
+            g = query.execute(self.schema)
+            if g is None:
+                log.debug(self.schema)
+                raise TypeNotFound(qref)
+            deps.append(g)
+            midx = 0
+        for c in self.content([], Filter(False, self)):
+            if c.ref is not None:
+                deps.append(c)
+        return (midx, deps)
     
     def merge(self, g):
         """
@@ -266,10 +269,9 @@ class Group(SchemaObject):
         @param g: A resoleve reference.
         @type g: L{Group}
         """
-        g.dereference()
         self.name = g.name
         self.qname = g.qname
-        self.children = g.children
+        self.rawchildren = g.rawchildren
 
     def description(self):
         """
@@ -306,19 +308,28 @@ class AttributeGroup(SchemaObject):
         """
         return ('attribute', 'attributeGroup')
 
-    def mutate(self):
+    def dependencies(self):
         """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        defns = self.default_namespace()
-        qref = qualify(self.ref[0], self.root, defns)
-        query = AttrGroupQuery(qref)
-        ag = query.execute(self.schema)
-        if ag is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        self.merge(deepcopy(ag))
+        deps = []
+        midx = None
+        if self.ref is not None:
+            defns = self.default_namespace()
+            qref = qualify(self.ref, self.root, defns)
+            query = AttrGroupQuery(qref)
+            ag = query.execute(self.schema)
+            if ag is None:
+                log.debug(self.schema)
+                raise TypeNotFound(qref)
+            deps.append(ag)
+            midx = 0
+        for c in self.content([], Filter(False, self)):
+            if c.ref is not None:
+                deps.append(c)
+        return (midx, deps)
     
     def merge(self, ag):
         """
@@ -326,11 +337,9 @@ class AttributeGroup(SchemaObject):
         @param ag: A resoleve reference.
         @type ag: L{AttributeGroup}
         """
-        ag.dereference()
         self.name = ag.name
         self.qname = ag.qname
-        self.attributes = ag.attributes
-        self.children = ag.children
+        self.rawchildren = ag.rawchildren
 
     def description(self):
         """
@@ -360,7 +369,7 @@ class Simple(SchemaObject):
         @return: True if any, else False
         @rtype: boolean
         """
-        for c in self.children:
+        for c in self:
             if isinstance(c, Enumeration):
                 return True
         return False
@@ -387,9 +396,7 @@ class Restriction(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        base = root.get('base')
-        self.ref = [base, True]
-        self.ref[1] = ( base is not None )
+        self.ref = root.get('base')
 
     def childtags(self):
         """
@@ -399,21 +406,29 @@ class Restriction(SchemaObject):
         """
         return ('enumeration', 'attribute', 'attributeGroup')
     
-    def mutate(self):
+    def dependencies(self):
         """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        log.debug(Repr(self))
-        defns = self.default_namespace()
-        qref = qualify(self.ref[0], self.root, defns)
-        query = TypeQuery(qref)
-        super = query.execute(self.schema)
-        if super is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        if not super.builtin():
-            self.merge(deepcopy(super))
+        deps = []
+        midx = None
+        if self.ref is not None:
+            defns = self.default_namespace()
+            qref = qualify(self.ref, self.root, defns)
+            query = TypeQuery(qref)
+            super = query.execute(self.schema)
+            if super is None:
+                log.debug(self.schema)
+                raise TypeNotFound(qref)
+            if not super.builtin():
+                deps.append(super)
+                midx = 0
+        for c in self.content([], Filter(False, self)):
+            if c.ref is not None:
+                deps.append(c)
+        return (midx, deps)
 
     def merge(self, b):
         """
@@ -421,13 +436,10 @@ class Restriction(SchemaObject):
         @param b: A resolved base object.
         @type b: L{SchemaObject}
         """
-        b.dereference()
-        filter = UniqueFilter(self.attributes)
-        self.prepend(self.attributes, b.attributes, filter)
-        filter = UniqueFilter(self.children)
-        for c in b.children:
+        filter = Filter(False, self.rawchildren)
+        for c in b.rawchildren:
             c.mark_inherited()
-        self.prepend(self.children, b.children, filter)
+        self.prepend(self.rawchildren, b.rawchildren, filter)
         
     def description(self):
         """
@@ -464,20 +476,6 @@ class Collection(SchemaObject):
         @rtype: [str,...]
         """
         return ('element', 'sequence', 'all', 'choice', 'any', 'group')
-
-    def promote(self, pa, pc):
-        """
-        Promote children during the flattening proess.  The object's
-        attributes and children are added to the B{p}romoted B{a}ttributes
-        and B{p}romoted B{c}hildren lists as they see fit.
-        @param pa: List of attributes to promote.
-        @type pa: [L{SchemaObject}]
-        @param pc: List of children to promote.
-        @type pc: [L{SchemaObject}]
-        """
-        for c in self.children:
-            c.container = self
-        SchemaObject.promote(self, pa, pc)
     
     def unbounded(self):
         """
@@ -564,7 +562,7 @@ class SimpleContent(SchemaObject):
         return ('extension', 'restriction')
 
 
-class Enumeration(Promotable):
+class Enumeration(Content):
     """
     Represents an (xsd) schema <xs:enumeration/> node
     """
@@ -576,11 +574,19 @@ class Enumeration(Promotable):
         @param root: The xml root node.
         @type root: L{sax.element.Element}
         """
-        Promotable.__init__(self, schema, root)
+        Content.__init__(self, schema, root)
         self.name = root.get('value')
+        
+    def enum(self):
+        """
+        Get whether this is an enumeration.
+        @return: True
+        @rtype: boolean
+        """
+        return True
 
     
-class Element(Promotable):
+class Element(Content):
     """
     Represents an (xsd) schema <xs:element/> node.
     """
@@ -592,7 +598,7 @@ class Element(Promotable):
         @param root: The xml root node.
         @type root: L{sax.element.Element}
         """
-        Promotable.__init__(self, schema, root)
+        Content.__init__(self, schema, root)
         self.min = root.get('minOccurs', default='1')
         self.max = root.get('maxOccurs', default='1')
         a = root.get('form')
@@ -682,19 +688,28 @@ class Element(Promotable):
             result = resolved.resolve(nobuiltin)
         return result
     
-    def mutate(self):
+    def dependencies(self):
         """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        defns = self.default_namespace()
-        qref = qualify(self.ref[0], self.root, defns)
-        query = ElementQuery(qref)
-        e = query.execute(self.schema)
-        if e is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        self.merge(deepcopy(e))
+        deps = []
+        midx = None
+        if self.ref is not None:
+            defns = self.default_namespace()
+            qref = qualify(self.ref, self.root, defns)
+            query = ElementQuery(qref)
+            e = query.execute(self.schema)
+            if e is None:
+                log.debug(self.schema)
+                raise TypeNotFound(qref)
+            deps.append(e)
+            midx = 0
+        for c in self.content([], Filter(False, self)):
+            if c.ref is not None:
+                deps.append(c)
+        return (midx, deps)
     
     def merge(self, e):
         """
@@ -702,29 +717,11 @@ class Element(Promotable):
         @param e: A resoleve reference.
         @type e: L{Element}
         """
-        e.dereference()
         self.name = e.name
         self.qname = e.qname
         self.type = e.type
-        self.attributes = e.attributes
-        self.children = e.children
-        
-    def promote(self, pa, pc):
-        """
-        Promote children during the flattening proess.  The object's
-        attributes and children are added to the B{p}romoted B{a}ttributes
-        and B{p}romoted B{c}hildren lists as they see fit.
-        @param pa: List of attributes to promote.
-        @type pa: [L{SchemaObject}]
-        @param pc: List of children to promote.
-        @type pc: [L{SchemaObject}]
-        """
-        if len(self):
-            log.debug(Repr(self))
-            self.attributes += pa
-            self.children = copy(pc)
-            del pa[:]
-            del pc[:]
+        self.rawchildren = e.rawchildren
+
 
     def description(self):
         """
@@ -732,7 +729,7 @@ class Element(Promotable):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('name', 'type', 'inherited')
+        return ('name', 'ref', 'type', 'inherited')
     
     def container_unbounded(self):
         """ get whether container is unbounded """
@@ -771,9 +768,7 @@ class Extension(SchemaObject):
         @type root: L{sax.element.Element}
         """
         SchemaObject.__init__(self, schema, root)
-        base = root.get('base')
-        self.ref = [base, True]
-        self.ref[1] = ( base is not None )
+        self.ref = root.get('base')
         
     def childtags(self):
         """
@@ -783,20 +778,29 @@ class Extension(SchemaObject):
         """
         return ('attribute', 'attributeGroup', 'sequence', 'all', 'choice', 'group')
         
-    def mutate(self):
+    def dependencies(self):
         """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        log.debug(Repr(self))
-        defns = self.default_namespace()
-        qref = qualify(self.ref[0], self.root, defns)
-        query = TypeQuery(qref)
-        super = query.execute(self.schema)
-        if super is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        self.merge(deepcopy(super))
+        deps = []
+        midx = None
+        if self.ref is not None:
+            defns = self.default_namespace()
+            qref = qualify(self.ref, self.root, defns)
+            query = TypeQuery(qref)
+            super = query.execute(self.schema)
+            if super is None:
+                log.debug(self.schema)
+                raise TypeNotFound(qref)
+            if not super.builtin():
+                deps.append(super)
+                midx = 0
+        for c in self.content([], Filter(False, self)):
+            if c.ref is not None:
+                deps.append(c)
+        return (midx, deps)
 
     def merge(self, b):
         """
@@ -804,13 +808,10 @@ class Extension(SchemaObject):
         @param b: A resolved base object.
         @type b: L{SchemaObject}
         """
-        b.dereference()
-        filter = UniqueFilter(self.attributes)
-        self.prepend(self.attributes, b.attributes, filter)
-        filter = UniqueFilter(self.children)
-        for c in b.children:
+        filter = Filter(False, self.rawchildren)
+        for c in b.rawchildren:
             c.mark_inherited()
-        self.prepend(self.children, b.children, filter)
+        self.prepend(self.rawchildren, b.rawchildren, filter)
 
     def description(self):
         """
@@ -909,7 +910,7 @@ class Include(Import):
     pass
 
    
-class Attribute(Promotable):
+class Attribute(Content):
     """
     Represents an (xsd) <attribute/> node
     """
@@ -921,7 +922,7 @@ class Attribute(Promotable):
         @param root: The xml root node.
         @type root: L{sax.element.Element}
         """
-        Promotable.__init__(self, schema, root)
+        Content.__init__(self, schema, root)
         self.use = root.get('use', default='')
         
     def isattr(self):
@@ -948,19 +949,28 @@ class Attribute(Promotable):
         """
         return ( self.use != 'required' )
 
-    def mutate(self):
+    def dependencies(self):
         """
-        Mutate into a I{true} type as defined by a reference to
-        another object.
+        Get a list of dependancies for dereferencing.
+        @return: A merge dependancy index and a list of dependancies.
+        @rtype: (int, [L{SchemaObject},...])
         """
-        defns = self.default_namespace()
-        qref = qualify(self.ref[0], self.root, defns)
-        query = AttrQuery(qref)
-        a = query.execute(self.schema)
-        if a is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        self.merge(deepcopy(a))
+        deps = []
+        midx = None
+        if self.ref is not None:
+            defns = self.default_namespace()
+            qref = qualify(self.ref, self.root, defns)
+            query = AttrQuery(qref)
+            a = query.execute(self.schema)
+            if a is None:
+                log.debug(self.schema)
+                raise TypeNotFound(qref)
+            deps.append(a)
+            midx = 0
+        for c in self.content([], Filter(False, self)):
+            if c.ref is not None:
+                deps.append(c)
+        return (midx, deps)
         
     def merge(self, a):
         """
@@ -968,7 +978,6 @@ class Attribute(Promotable):
         @param a: A resoleve reference.
         @type a: L{Attribute}
         """
-        a.dereference()
         self.name = a.name
         self.qname = a.qname
         self.type = a.type
@@ -982,7 +991,7 @@ class Attribute(Promotable):
         return ('name', 'ref', 'type')
 
 
-class Any(Promotable):
+class Any(Content):
     """
     Represents an (xsd) <any/> node
     """
@@ -1014,6 +1023,7 @@ class Any(Promotable):
         @rtype: boolean
         """
         return True
+    
 
 
 #######################################################
