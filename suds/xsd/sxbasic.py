@@ -258,9 +258,6 @@ class Group(SchemaObject):
                 raise TypeNotFound(qref)
             deps.append(g)
             midx = 0
-        for c in self.content([], Filter(False, self)):
-            if c.ref is not None:
-                deps.append(c)
         return (midx, deps)
     
     def merge(self, g):
@@ -326,9 +323,6 @@ class AttributeGroup(SchemaObject):
                 raise TypeNotFound(qref)
             deps.append(ag)
             midx = 0
-        for c in self.content([], Filter(False, self)):
-            if c.ref is not None:
-                deps.append(c)
         return (midx, deps)
     
     def merge(self, ag):
@@ -425,9 +419,6 @@ class Restriction(SchemaObject):
             if not super.builtin():
                 deps.append(super)
                 midx = 0
-        for c in self.content([], Filter(False, self)):
-            if c.ref is not None:
-                deps.append(c)
         return (midx, deps)
 
     def merge(self, b):
@@ -706,9 +697,6 @@ class Element(Content):
                 raise TypeNotFound(qref)
             deps.append(e)
             midx = 0
-        for c in self.content([], Filter(False, self)):
-            if c.ref is not None:
-                deps.append(c)
         return (midx, deps)
     
     def merge(self, e):
@@ -797,9 +785,6 @@ class Extension(SchemaObject):
             if not super.builtin():
                 deps.append(super)
                 midx = 0
-        for c in self.content([], Filter(False, self)):
-            if c.ref is not None:
-                deps.append(c)
         return (midx, deps)
 
     def merge(self, b):
@@ -967,9 +952,6 @@ class Attribute(Content):
                 raise TypeNotFound(qref)
             deps.append(a)
             midx = 0
-        for c in self.content([], Filter(False, self)):
-            if c.ref is not None:
-                deps.append(c)
         return (midx, deps)
         
     def merge(self, a):

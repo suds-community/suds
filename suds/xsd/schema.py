@@ -153,8 +153,6 @@ class Schema:
     @type children: [L{SchemaObject},...]
     @ivar imports: A list of import objects.
     @type imports: [L{SchemaObject},...]
-    @ivar merged: A flag indicating this schema has been merged.
-    @type merged: bool
     @ivar form_qualified: The flag indicating:
         (@elementFormDefault).
     @type form_qualified: bool
@@ -186,7 +184,6 @@ class Schema:
         self.attributes = {}
         self.groups = {}
         self.agrps = {}
-        self.merged = False
         form = self.root.get('elementFormDefault')
         if form is None:
             self.form_qualified = False
@@ -218,8 +215,6 @@ class Schema:
             - Build the graph.
             - Collate the children.
         """
-        if len(self.children):
-            return
         self.children = BasicFactory.build(self.root, self)
         collated = BasicFactory.collate(self.children)
         self.children = collated[0]
@@ -242,27 +237,22 @@ class Schema:
             if item[0] in self.attributes:
                 continue
             self.attributes[item[0]] = item[1]
-            self.children.append(item[1])
         for item in schema.elements.items():
             if item[0] in self.elements:
                 continue
             self.elements[item[0]] = item[1]
-            self.children.append(item[1])
         for item in schema.types.items():
             if item[0] in self.types:
                 continue
             self.types[item[0]] = item[1]
-            self.children.append(item[1])
         for item in schema.groups.items():
             if item[0] in self.groups:
                 continue
             self.groups[item[0]] = item[1]
-            self.children.append(item[1])
         for item in schema.agrps.items():
             if item[0] in self.agrps:
                 continue
             self.agrps[item[0]] = item[1]
-            self.children.append(item[1])
         schema.merged = True
         return self
         
@@ -279,21 +269,6 @@ class Schema:
             imported.open_imports()
             log.debug('imported:\n%s', imported)
             self.merge(imported)
-        
-    def locate(self, ns):
-        """
-        Find a schema by namespace.  Only the URI portion of
-        the namespace is compared to each schema's I{targetNamespace}.
-        The request is passed to the container.
-        @param ns: A namespace.
-        @type ns: (prefix,URI)
-        @return: The schema matching the namesapce, else None.
-        @rtype: L{Schema}
-        """
-        if self.container is not None:
-            return self.container.locate(ns)
-        else:
-            return None
             
     def dereference(self):
         """
@@ -315,6 +290,21 @@ class Schema:
             d = deps[midx]
             log.debug('merging %s <== %s', Repr(x), Repr(d))
             x.merge(d)
+        
+    def locate(self, ns):
+        """
+        Find a schema by namespace.  Only the URI portion of
+        the namespace is compared to each schema's I{targetNamespace}.
+        The request is passed to the container.
+        @param ns: A namespace.
+        @type ns: (prefix,URI)
+        @return: The schema matching the namesapce, else None.
+        @rtype: L{Schema}
+        """
+        if self.container is not None:
+            return self.container.locate(ns)
+        else:
+            return None
 
     def custom(self, ref, context=None):
         """
