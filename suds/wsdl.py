@@ -242,8 +242,6 @@ class Definitions(WObject):
     def build_schema(self):
         """ Process L{Types} objects and create the schema collection """
         container = SchemaCollection(self)
-        for s in [t.schema() for t in self.types if t.imported()]:
-            container.children.append(s)
         for t in [t for t in self.types if t.local()]:
             for r in t.contents():
                 entry = (r, self)
@@ -253,6 +251,9 @@ class Definitions(WObject):
             entry = (r, self)
             container.add(entry)
         self.schema = container.load()
+        for s in [t.schema() for t in self.types if t.imported()]:
+            self.schema.merge(s)
+        return self.schema
                 
     def add_methods(self):
         bindings = {
