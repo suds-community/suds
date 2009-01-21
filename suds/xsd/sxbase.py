@@ -111,9 +111,11 @@ class SchemaObject:
         @return: A list attributes
         @rtype: list
         """
+        result = []
         for c in self:
             if c.isattr() and c in filter:
-                yield c
+                result.append(c)
+        return result
                 
     def children(self, filter=Filter()):
         """
@@ -123,9 +125,11 @@ class SchemaObject:
         @return: A list attributes
         @rtype: list
         """
+        result = []
         for c in self:
             if not c.isattr() and c in filter:
-                yield c
+                result.append(c)
+        return result
                 
     def get_attribute(self, name):
         """
