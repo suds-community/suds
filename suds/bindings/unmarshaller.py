@@ -23,7 +23,7 @@ from suds import *
 from suds.bindings import *
 from suds.sudsobject import Factory, Object, merge
 from suds.sax import Namespace
-from suds.resolver import NodeResolver
+from suds.resolver import NodeResolver, Frame
 
 log = getLogger(__name__)
 
@@ -323,13 +323,14 @@ class Typed(UMBase):
                 raise TypeNotFound(content.node.qname())
             content.type = found
         else:
-            self.resolver.push(content.type)
+            frame = Frame(content.type)
+            self.resolver.push(frame)
         cls_name = content.type.name
         if cls_name is None:
             cls_name = content.node.name
         content.data = Factory.object(cls_name)
         md = content.data.__metadata__
-        md.__type__ = content.type
+        md.sxtype = content.type
         
     def end(self, content):
         """
@@ -351,7 +352,7 @@ class Typed(UMBase):
         try:
             if isinstance(data, Object):
                 md = data.__metadata__
-                type = md.__type__
+                type = md.sxtype
                 return type.unbounded()
         except:
             log.error('metadata error:\n%s', data, exc_info=True)
@@ -368,7 +369,7 @@ class Typed(UMBase):
         try:
             if isinstance(data, Object):
                 md = data.__metadata__
-                type = md.__type__
+                type = md.sxtype
                 resolved = type.resolve()
                 return ( type.nillable or (resolved.builtin() and resolved.nillable ) )
         except:

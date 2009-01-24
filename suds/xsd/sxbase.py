@@ -43,9 +43,6 @@ class SchemaObject:
     @type nillable: boolean
     @ivar rawchildren: A list raw of all children.
     @type rawchildren: [L{SchemaObject},...]
-    @ivar container: The <sequence/>,<all/> or <choice/> 
-        containing this object.
-    @type container: L{SchemaObject}
     """
 
     @classmethod
@@ -98,9 +95,7 @@ class SchemaObject:
         self.ref = root.get('ref')
         self.form_qualified = schema.form_qualified
         self.nillable = False
-        self.inherited = False
         self.rawchildren = []
-        self.container = None
         self.cache = {}
         
     def attributes(self, filter=Filter()):
@@ -108,13 +103,13 @@ class SchemaObject:
         Get only the attribute content.
         @param filter: A filter to constrain the result.
         @type filter: L{Filter}
-        @return: A list attributes
-        @rtype: list
+        @return: A list of tuples (attr, ancestry)
+        @rtype: [(L{SchemaObject}, [L{SchemaObject},..]),..]
         """
         result = []
-        for c in self:
-            if c.isattr() and c in filter:
-                result.append(c)
+        for child, ancestry in self:
+            if child.isattr() and child in filter:
+                result.append((child, ancestry))
         return result
                 
     def children(self, filter=Filter()):
@@ -122,13 +117,13 @@ class SchemaObject:
         Get only the I{direct} or non-attribute content.
         @param filter: A filter to constrain the result.
         @type filter: L{Filter}
-        @return: A list attributes
-        @rtype: list
+        @return: A list tuples: (child, ancestry)
+        @rtype: [(L{SchemaObject}, [L{SchemaObject},..]),..]
         """
         result = []
-        for c in self:
-            if not c.isattr() and c in filter:
-                result.append(c)
+        for child, ancestry in self:
+            if not child.isattr() and child in filter:
+                result.append((child, ancestry))
         return result
                 
     def get_attribute(self, name):
@@ -136,24 +131,26 @@ class SchemaObject:
         Get (find) a I{non-attribute} attribute by name.
         @param name: A attribute name.
         @type name: str
-        @return: The requested child.
-        @rtype: L{SchemaObject}
+        @return: A tuple: the requested (attribute, ancestry).
+        @rtype: (L{SchemaObject}, [L{SchemaObject},..])
         """
-        for child in self:
-            if child.isattr() and child.name == name:
-                return child
+        for child, ancestry in self.attributes():
+            if child.name == name:
+                return (child, ancestry)
+        return (None, [])
                 
     def get_child(self, name):
         """
         Get (find) a I{non-attribute} child by name.
         @param name: A child name.
         @type name: str
-        @return: The requested child.
-        @rtype: L{SchemaObject}
+        @return: A tuple: the requested (child, ancestry).
+        @rtype: (L{SchemaObject}, [L{SchemaObject},..])
         """
-        for child in self.children():
+        for child, ancestry in self.children():
             if child.any() or child.name == name:
-                return child
+                return (child, ancestry)
+        return (None, [])
 
     def namespace(self):
         """
@@ -210,7 +207,7 @@ class SchemaObject:
     
     def choice(self):
         """
-        Get whether this is an <xs:choice/>
+        Get whether this is n <xs:choice/>
         @return: True if any, else False
         @rtype: boolean
         """
@@ -240,14 +237,6 @@ class SchemaObject:
         """
         return False
     
-    def containedbychoice(self):
-        """
-        Get whether this type is contained by a <choice/>.
-        @return: True if contained by choice.
-        @rtype: boolean
-        """
-        return False
-    
     def isattr(self):
         """
         Get whether the object is a schema I{attribute} definition.
@@ -256,11 +245,10 @@ class SchemaObject:
         """
         return False
     
-    def derived(self):
+    def extension(self):
         """
-        Get whether the object is derived in the it is an extension
-        of another type.
-        @return: True if derived, else False.
+        Get whether the object is an extension/restriction
+        @return: True if an extension/restriction, else False.
         @rtype: boolean
         """
         return False
@@ -315,14 +303,6 @@ class SchemaObject:
         Merge another object as needed.
         """
         pass
-
-    def mark_inherited(self):
-        """
-        Mark this branch in the tree as inherited = true.
-        """
-        self.inherited = True
-        for c in self:
-            c.mark_inherited()
             
     def content(self, collection=None, filter=Filter(), history=None):
         """
@@ -427,7 +407,7 @@ class SchemaObject:
             if i == index:
                 return c
 
-    
+
 class Iter:
     """
     The content iterator - used to iterate the L{Content} children.  The iterator
@@ -445,6 +425,7 @@ class Iter:
             @param sx: A schema object.
             @type sx: L{SchemaObject}
             """
+            self.sx = sx
             self.items = sx.rawchildren
             self.index = 0
             
@@ -502,8 +483,9 @@ class Iter:
     def next(self):
         """
         Get the next item.
-        @return: The next item being iterated.
-        @rtype: L{SchemaObject}
+        @return: A tuple: the next (child, ancestry).
+        @rtype: (L{SchemaObject}, [L{SchemaObject},..])
+        @raise StopIteration: A the end.
         """
         frame = self.top()
         while True:
@@ -512,7 +494,8 @@ class Iter:
                 self.pop()
                 return self.next()
             if isinstance(result, Content):
-                return result
+                ancestry = [f.sx for f in self.stack]
+                return (result, ancestry)
             self.push(result)
             return self.next()
     

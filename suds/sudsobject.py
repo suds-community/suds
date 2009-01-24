@@ -36,8 +36,8 @@ def items(sobject):
     @return: A list of items contained in I{sobject}.
     @rtype: [(key, value),...]
     """
-    for k in sobject:
-        yield (k, sobject[k])
+    for item in sobject:
+        yield item
 
 
 def asdict(sobject):
@@ -59,7 +59,7 @@ def merge(a, b):
     @param b: A I{destination} object
     @type b: L{Object}
     """
-    for item in items(a):
+    for item in a:
         setattr(b, item[0], item[1])
         b.__metadata__ = b.__metadata__
     return b
@@ -153,7 +153,7 @@ class Object:
         setattr(self, name, value)
         
     def __iter__(self):
-        return iter(self.__keylist__)
+        return Iter(self)
 
     def __len__(self):
         return len(self.__keylist__)
@@ -169,6 +169,41 @@ class Object:
     
     def __unicode__(self):
         return self.__printer__.tostr(self)
+
+
+class Iter:
+
+    def __init__(self, sobject):
+        self.sobject = sobject
+        self.keylist = self.__keylist(sobject)
+        self.index = 0
+
+    def next(self):
+        keylist = self.keylist
+        nkeys = len(self.keylist)
+        while self.index < nkeys:
+            k = keylist[self.index]
+            self.index += 1
+            if hasattr(self.sobject, k):
+                v = getattr(self.sobject, k)
+                return (k, v)
+        raise StopIteration()
+    
+    def __keylist(self, sobject):
+        keylist = sobject.__keylist__
+        try:
+            keyset = set(keylist)
+            ordering = sobject.__metadata__.ordering
+            ordered = set(ordering)
+            if not ordered.issuperset(keyset):
+                log.error('%s must be superset of %s, ordering ignored', keylist, ordering)
+                raise KeyError()
+            return ordering
+        except:
+            return keylist
+        
+    def __iter__(self):
+        return self
     
     
 class Metadata(Object):
@@ -184,7 +219,7 @@ class Property(Object):
         self.value = value
         
     def items(self):
-        for item in items(self):
+        for item in self:
             if item[0] != 'value':
                 yield item
         
@@ -268,7 +303,7 @@ class Printer:
             s.append(cls.__name__)
             s.append(')')
         s.append('{')
-        for item in items(d):
+        for item in d:
             if self.exclude(d, item):
                 continue
             item = self.unwrap(d, item)

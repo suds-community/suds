@@ -50,13 +50,14 @@ class Builder:
         else:
             data = Factory.property(cls)
         md = data.__metadata__
-        md.__type__ = type
+        md.sxtype = type
+        md.ordering = self.ordering(type)
         history = []
         self.add_attributes(data, type)
-        for c in type.children():
-            if self.skip_child(c):
+        for child, ancestry in type.children():
+            if self.skip_child(child, ancestry):
                 continue
-            self.process(data, c, history)
+            self.process(data, child, history[:])
         return data
             
     def process(self, data, type, history):
@@ -75,26 +76,41 @@ class Builder:
             if len(resolved) > 0:
                 value = Factory.object(type.name)
                 md = value.__metadata__
-                md.__type__ = type
+                md.sxtype = type
+                md.ordering = self.ordering(type)
         setattr(data, type.name, value)
         if value is not None:
             data = value
         if not isinstance(data, list):
-            for c in resolved.children():
-                if self.skip_child(c):
+            for child, ancestry in resolved.children():
+                if self.skip_child(child, ancestry):
                     continue
-                self.process(data, c, history)
+                self.process(data, child, history[:])
 
     def add_attributes(self, data, type):
         """ add required attributes """
-        for a in type.attributes():
-            name = '_%s' % a.name
-            value = a.get_default()
+        for attr, ancestry in type.attributes():
+            name = '_%s' % attr.name
+            value = attr.get_default()
             setattr(data, name, value)
                 
-    def skip_child(self, c):
+    def skip_child(self, child, ancestry):
         """ get whether or not to skip the specified child """
-        if c.any(): return True
-        if c.container is not None:
-            return c.container.choice()
+        if child.any(): return True
+        for x in ancestry:
+            if x.choice():
+                return True
         return False
+    
+    def ordering(self, type):
+        """ get the ordering """
+        result = []
+        for child, ancestry in type.resolve():
+            name = child.name
+            if child.name is None:
+                continue
+            if child.isattr():
+                name = '_%s' % child.name
+            result.append(name)
+        return result
+            

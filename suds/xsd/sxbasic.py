@@ -152,23 +152,6 @@ class Complex(SchemaObject):
             'simpleContent', 
             'any', 
             'group')
-    
-    def derived(self):
-        """
-        Get whether the object is derived in the it is an extension
-        of another type.
-        @return: True if derived, else False.
-        @rtype: boolean
-        """
-        try:
-            return self.__derived
-        except:
-            self.__derived = False
-            for c in self:
-                if c.inherited:
-                    self.__derived = True
-                    break
-        return self.__derived
 
     def description(self):
         """
@@ -211,8 +194,6 @@ class Group(SchemaObject):
         @return: True if unbounded, else False.
         @rtype: boolean
         """
-        if self.container_unbounded():
-            return True
         if self.max.isdigit():
             return (int(self.max) > 1)
         else:
@@ -224,21 +205,7 @@ class Group(SchemaObject):
         @return: True if optional, else False
         @rtype: boolean
         """
-        return ( self.container_optional() or self.min == '0' )
-    
-    def container_unbounded(self):
-        """ get whether container is unbounded """
-        if self.container is None:
-            return False
-        else:
-            return self.container.unbounded()
-        
-    def container_optional(self):
-        """ get whether container is optional """
-        if self.container is None:
-            return False
-        else:
-            return self.container.optional()
+        return ( self.min == '0' )
         
     def dependencies(self):
         """
@@ -363,8 +330,8 @@ class Simple(SchemaObject):
         @return: True if any, else False
         @rtype: boolean
         """
-        for c in self:
-            if isinstance(c, Enumeration):
+        for child, ancestry in self.children():
+            if isinstance(child, Enumeration):
                 return True
         return False
 
@@ -428,9 +395,15 @@ class Restriction(SchemaObject):
         @type b: L{SchemaObject}
         """
         filter = Filter(False, self.rawchildren)
-        for c in b.rawchildren:
-            c.mark_inherited()
         self.prepend(self.rawchildren, b.rawchildren, filter)
+        
+    def extension(self):
+        """
+        Get whether the object is an extension/restriction
+        @return: True if an extension/restriction, else False.
+        @rtype: boolean
+        """
+        return ( self.ref is not None )
         
     def description(self):
         """
@@ -615,8 +588,6 @@ class Element(Content):
         @return: True if unbounded, else False.
         @rtype: boolean
         """
-        if self.container_unbounded():
-            return True
         if self.max.isdigit():
             return (int(self.max) > 1)
         else:
@@ -628,24 +599,7 @@ class Element(Content):
         @return: True if optional, else False
         @rtype: boolean
         """
-        return ( self.container_optional() or self.min == '0' )
-            
-    def derived(self):
-        """
-        Get whether the object is derived in the it is an extension
-        of another type.
-        @return: True if derived, else False.
-        @rtype: boolean
-        """
-        try:
-            return self.__derived
-        except:
-            resolved = self.resolve()
-            if resolved is self:
-                self.__derived = False
-            else:
-                self.__derived = resolved.derived()
-        return self.__derived
+        return ( self.min == '0' )
     
     def resolve(self, nobuiltin=False):
         """
@@ -717,21 +671,7 @@ class Element(Content):
         @return:  A dictionary of relavent attributes.
         @rtype: [str,...]
         """
-        return ('name', 'ref', 'type', 'inherited')
-    
-    def container_unbounded(self):
-        """ get whether container is unbounded """
-        if self.container is None:
-            return False
-        else:
-            return self.container.unbounded()
-        
-    def container_optional(self):
-        """ get whether container is optional """
-        if self.container is None:
-            return False
-        else:
-            return self.container.optional()
+        return ('name', 'ref', 'type')
         
     def anytype(self):
         """ create an xsd:anyType reference """
@@ -794,9 +734,15 @@ class Extension(SchemaObject):
         @type b: L{SchemaObject}
         """
         filter = Filter(False, self.rawchildren)
-        for c in b.rawchildren:
-            c.mark_inherited()
         self.prepend(self.rawchildren, b.rawchildren, filter)
+        
+    def extension(self):
+        """
+        Get whether the object is an extension/restriction
+        @return: True if an extension/restriction, else False.
+        @rtype: boolean
+        """
+        return ( self.ref is not None )
 
     def description(self):
         """
@@ -977,16 +923,27 @@ class Any(Content):
     """
     Represents an (xsd) <any/> node
     """
-        
+    
+    def __init__(self, schema, root):
+        """
+        @param schema: The containing schema.
+        @type schema: L{schema.Schema}
+        @param root: The xml root node.
+        @type root: L{sax.element.Element}
+        """
+        Content.__init__(self, schema, root)
+        self.min = root.get('minOccurs', default='0')
+        self.max = root.get('maxOccurs', default='1')
+
     def get_child(self, name):
         """
         Get (find) a I{non-attribute} child by name and namespace.
         @param name: A child name.
         @type name: basestring
-        @return: The requested child.
-        @rtype: L{SchemaObject}
+        @return: The requested (child, ancestry).
+        @rtype: (L{SchemaObject}, [L{SchemaObject},..])
         """
-        return self
+        return (self, [])
     
     def get_attribute(self, name):
         """
@@ -1005,6 +962,25 @@ class Any(Content):
         @rtype: boolean
         """
         return True
+    
+    def unbounded(self):
+        """
+        Get whether this node is unbounded I{(a collection)}.
+        @return: True if unbounded, else False.
+        @rtype: boolean
+        """
+        if self.max.isdigit():
+            return (int(self.max) > 1)
+        else:
+            return ( self.max == 'unbounded' )
+        
+    def optional(self):
+        """
+        Get whether this type is optional.
+        @return: True if optional, else False
+        @rtype: boolean
+        """
+        return ( self.min == '0' )
     
 
 

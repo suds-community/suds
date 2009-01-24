@@ -88,11 +88,11 @@ class SchemaCollection:
             child.build()
         for child in self.children:
             child.open_imports()
+        for child in self.children:
+            child.dereference()
         log.debug('loaded:\n%s', self)
         merged = self.merge()
         log.debug('MERGED:\n%s', merged)
-        merged.dereference()
-        log.debug('MERGED: dereferenced:\n%s', merged)
         return merged
         
     def locate(self, ns):
@@ -149,8 +149,10 @@ class Schema:
     @type types: {name:L{SchemaObject}}
     @ivar groups: A schema groups cache.
     @type groups: {name:L{SchemaObject}}
-    @ivar children: A list of top level children.
+    @ivar children: A list of direct top level children.
     @type children: [L{SchemaObject},...]
+    @ivar all: A list of all (includes imported) top level children.
+    @type all: [L{SchemaObject},...]
     @ivar imports: A list of import objects.
     @type imports: [L{SchemaObject},...]
     @ivar form_qualified: The flag indicating:
@@ -178,6 +180,7 @@ class Schema:
         self.options = options
         self.container = container
         self.children = []
+        self.all = []
         self.types = {}
         self.imports = []
         self.elements = {}
@@ -236,22 +239,27 @@ class Schema:
         for item in schema.attributes.items():
             if item[0] in self.attributes:
                 continue
+            self.all.append(item[1])
             self.attributes[item[0]] = item[1]
         for item in schema.elements.items():
             if item[0] in self.elements:
                 continue
+            self.all.append(item[1])
             self.elements[item[0]] = item[1]
         for item in schema.types.items():
             if item[0] in self.types:
                 continue
+            self.all.append(item[1])
             self.types[item[0]] = item[1]
         for item in schema.groups.items():
             if item[0] in self.groups:
                 continue
+            self.all.append(item[1])
             self.groups[item[0]] = item[1]
         for item in schema.agrps.items():
             if item[0] in self.agrps:
                 continue
+            self.all.append(item[1])
             self.agrps[item[0]] = item[1]
         schema.merged = True
         return self
@@ -288,7 +296,7 @@ class Schema:
             midx = indexes.get(x)
             if midx is None: continue
             d = deps[midx]
-            log.debug('merging %s <== %s', Repr(x), Repr(d))
+            log.debug('(%s) merging %s <== %s', self.tns[1], Repr(x), Repr(d))
             x.merge(d)
         
     def locate(self, ns):
