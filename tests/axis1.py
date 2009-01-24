@@ -47,6 +47,7 @@ def start(url):
 
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
+    start(url)
     client = Client(url, **credentials)
     print client
     #
