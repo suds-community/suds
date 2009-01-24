@@ -22,7 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.bindings import *
 from suds.sudsobject import Factory, Object, Property, items
-from suds.resolver import GraphResolver
+from suds.resolver import GraphResolver, Frame
 from suds.sax import Namespace as NS
 from suds.sax.document import Document
 from suds.sax.element import Element
@@ -298,13 +298,23 @@ class ObjectAppender(Appender):
         @type content: L{Object}
         """
         object = content.value
-        if content.type.optional() and footprint(object) == 0:
+        if self.optional(content) and footprint(object) == 0:
             return
         child = self.node(content)
         parent.append(child)
         for item in items(object):
             cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
+            
+    def optional(self, content):
+        if content.type.optional():
+            return True
+        resolver = self.marshaller.resolver
+        ancestry = resolver.top().ancestry
+        for a in ancestry:
+            if a.optional():
+                return True
+        return False
 
 
 class ElementAppender(Appender):
@@ -539,16 +549,15 @@ class Literal(MBase):
             if content.type is None:
                 raise TypeNotFound(content.tag)
         else:
+            known = None
             if isinstance(content.value, Object):
                 known = self.resolver.known(content.value)
                 if known is None:
                     log.debug('object has no type information', content.value)
                     known = content.type
-                item = (content.type, known)
-                self.resolver.push(item)
-            else:
-                self.resolver.push(content.type)
-        resolved = self.resolver.top(1)
+            frame = Frame(content.type, resolved=known)
+            self.resolver.push(frame)
+        resolved = self.resolver.top().resolved
         content.value = self.translated(content.value, resolved)
         if self.skip(content):
             log.debug('skipping (optional) content:\n%s', content)
@@ -572,7 +581,8 @@ class Literal(MBase):
         @param content: The content for which proccessing has been resumed.
         @type content: L{Object}
         """
-        self.resolver.push(content.type)
+        frame = Frame(content.type)
+        self.resolver.push(frame)
         
     def end(self, content):
         """
@@ -582,7 +592,7 @@ class Literal(MBase):
         @type content: L{Object}
         """
         log.debug('ending content:\n%s', content)
-        current = self.resolver.top(0)
+        current = self.resolver.top().type
         if current == content.type:
             self.resolver.pop()
         else:
@@ -633,20 +643,39 @@ class Literal(MBase):
         """
         if content.type.any():
             return
-        resolved = self.resolver.top(1)
+        resolved = self.resolver.top().resolved
         if resolved is None:
             resolved = content.type.resolve()
-        if resolved.derived():
+        if self.derived():
             name = resolved.name
             ns = resolved.namespace()
             Typer.manual(node, name, ns)
     
     def skip(self, content):
-        if content.type.optional():
+        """ skip this content """
+        if self.optional(content):
             v = content.value
             if v is None:
                 return True
             if isinstance(v, (list,tuple)) and len(v) == 0:
+                return True
+        return False
+    
+    def derived(self):
+        """ this content is optional """
+        ancestry = self.resolver.top().ancestry
+        for a in ancestry:
+            if a.optional():
+                return True
+        return False
+    
+    def optional(self, content):
+        """ this content is optional """
+        if content.type.optional():
+            return True
+        ancestry = self.resolver.top().ancestry
+        for a in ancestry:
+            if a.optional():
                 return True
         return False
     
@@ -681,7 +710,7 @@ class Encoded(Literal):
         if content.type.any():
             Typer.auto(node, content.value)
             return
-        resolved = self.resolver.top(1)
+        resolved = self.resolver.top().resolved
         if resolved is None:
             resolved = content.type.resolve()
         name = resolved.name
@@ -776,7 +805,7 @@ class Typer:
     def known(cls, object):
         try:
             md = object.__metadata__
-            known = md.__type__
+            known = md.sxtype
             return known
         except:
             pass

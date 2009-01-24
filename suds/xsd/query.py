@@ -209,7 +209,7 @@ class AttrQuery(Query):
     def __deepsearch(self, schema):
         from suds.xsd.sxbasic import Attribute
         result = None
-        for e in schema.children:
+        for e in schema.all:
             result = e.find(self.ref, (Attribute,))
             if self.filter(result):
                 result = None
@@ -277,7 +277,7 @@ class ElementQuery(Query):
     def __deepsearch(self, schema):
         from suds.xsd.sxbasic import Element
         result = None
-        for e in schema.children:
+        for e in schema.all:
             result = e.find(self.ref, (Element,))
             if self.filter(result):
                 result = None

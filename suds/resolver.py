@@ -125,7 +125,7 @@ class PathResolver(Resolver):
         for part in parts[1:-1]:
             name = splitPrefix(part)[1]
             log.debug('searching parent (%s) for (%s)', Repr(result), name)
-            result = result.get_child(name)
+            result, ancestry = result.get_child(name)
             if result is None:
                 log.error('(%s) not-found', name)
                 raise PathResolver.BadPath(name)
@@ -146,9 +146,9 @@ class PathResolver(Resolver):
         """
         name = splitPrefix(parts[-1])[1]
         if name.startswith('@'):
-            result = parent.get_attribute(name[1:])
+            result, path = parent.get_attribute(name[1:])
         else:
-            result = parent.get_child(name)
+            result, ancestry = parent.get_child(name)
         if result is None:
             raise PathResolver.BadPath(name)
         return result
@@ -191,7 +191,6 @@ class PathResolver(Resolver):
         return parts
     
     class BadPath(Exception): pass
-        
 
 
 class TreeResolver(Resolver):
@@ -212,15 +211,11 @@ class TreeResolver(Resolver):
         Resolver.__init__(self, schema)
         self.stack = Stack()
         
-    def reset(self, primer=()):
+    def reset(self):
         """
         Reset the resolver's state.
-        @param primer: Items used to initialize the stack.
-        @type primer: [L{xsd.sxbase.SchemaObject},...]
         """
         self.stack = Stack()
-        for item in primer:
-            self.push(item)
             
     def findattr(self, name, resolved=True):
         """
@@ -234,51 +229,46 @@ class TreeResolver(Resolver):
         @rtype: L{xsd.sxbase.SchemaObject}
         """
         attr = '@%s'%name
-        parent = self.top(1)
-        result = self.__find(attr, parent)
+        parent = self.top().resolved
+        result, ancestry = self.__find(attr, parent)
         if result is None:
             return result
         if resolved:
             result = result.resolve()
         return result
             
-    def push(self, item):
+    def push(self, x):
         """
-        Push a type I{item} onto the stack where I{item} is a tuple
-        as (I{type},I{resolved}).
-        @param item: An item to push.
-        @type item: L{xsd.sxbase.SchemaObject}
-        @return: The pushed item.
-        @rtype: (I{type},I{resolved})
+        Push an I{object} onto the stack.
+        @param x: An object to push.
+        @type x: L{Frame}
+        @return: The pushed frame.
+        @rtype: L{Frame}
         """
-        if isinstance(item, tuple):
-            item = (item[0], item[1].resolve())
+        if isinstance(x, Frame):
+            frame = x
         else:
-            item = (item, item.resolve())
-        self.stack.append(item)
-        log.debug('push: (%s)\n%s', Repr(item), Repr(self.stack))
-        return item
+            frame = Frame(x)
+        self.stack.append(frame)
+        log.debug('push: (%s)\n%s', Repr(frame), Repr(self.stack))
+        return frame
     
-    def top(self, index=1):
+    def top(self):
         """
-        Get the I{item} at the top of the stack where I{item} is a tuple
-        as (I{type},I{resolved}).
-        @param index: The index (0|1) into the tuple.  {0=type, 1=resolved}.
-        @type index: int
-        @return: The top I{item}, else None.
-        @rtype: I{type}
+        Get the I{frame} at the top of the stack.
+        @return: The top I{frame}, else None.
+        @rtype: L{Frame}
         """
         if len(self.stack):
-            return self.stack[-1][index]
+            return self.stack[-1]
         else:
-            return None
+            return Frame.Empty()
         
     def pop(self):
         """
-        Pop the I{item} at the top of the stack where I{item} is a tuple
-        as (I{type},I{resolved}).
-        @return: The popped I{item}, else None.
-        @rtype: (I{type},I{resolved})
+        Pop the frame at the top of the stack.
+        @return: The popped frame, else None.
+        @rtype: L{Frame}
         """
         if len(self.stack):      
             popped = self.stack.pop()
@@ -300,17 +290,18 @@ class TreeResolver(Resolver):
                 qref = qualify(name, wsdl.root, wsdl.tns)
             query = BlindQuery(qref)
             result = query.execute(schema)
+            ancestry = []
         else:
             log.debug('searching parent (%s) for (%s)', Repr(parent), name)
             if name.startswith('@'):
-                result = parent.get_attribute(name[1:])
+                result, ancestry = parent.get_attribute(name[1:])
             else:
-                result = parent.get_child(name)
+                result, ancestry = parent.get_child(name)
         if result is None:
             log.error('(%s) not-found', name)
         else:
             log.debug('(%s) found as (%s)', name, Repr(result))
-        return result
+        return (result, ancestry)
     
     def __wsdl(self):
         container = self.schema.container
@@ -318,7 +309,6 @@ class TreeResolver(Resolver):
             return None
         else:
             return container.wsdl
-
 
 
 class NodeResolver(TreeResolver):
@@ -350,18 +340,19 @@ class NodeResolver(TreeResolver):
         @rtype: L{xsd.sxbase.SchemaObject}
         """
         name = node.name
-        parent = self.top(1)
-        result = self._TreeResolver__find(name, parent)
+        parent = self.top().resolved
+        result, ancestry = self._TreeResolver__find(name, parent)
         if result is None and parent is None:
             name = node.get('type', Namespace.xsins)
             if name is not None:
-                result = self._TreeResolver__find(name, None)
+                result, ancestry = self._TreeResolver__find(name, None)
         if result is None:
             return result
         if push:
-            pushed = self.push(result)
+            frame = Frame(result, ancestry=ancestry)
+            pushed = self.push(frame)
         if resolved:
-            result = pushed[1]
+            result = result.resolve()
         return result
 
 class GraphResolver(TreeResolver):
@@ -395,28 +386,58 @@ class GraphResolver(TreeResolver):
         @rtype: L{xsd.sxbase.SchemaObject}
         """
         known = None
-        parent = self.top(1)
-        result = self._TreeResolver__find(name, parent)
+        parent = self.top().resolved
+        result, ancestry = self._TreeResolver__find(name, parent)
         if result is None:
             return None
         if isinstance(object, Object):
             known = self.known(object)
         if push:
-            if known is None:
-                pushed = self.push(result)
-            else:
-                pushed = self.push((result, known))
+            frame = Frame(result, resolved=known, ancestry=ancestry)
+            pushed = self.push(frame)
         if resolved:
-            result = pushed[1]
+            if known is None:
+                result = result.resolve()
+            else:
+                result = known
         return result
     
     def known(self, object):
+        """
+        Get the I{known} type of an object.
+        @param object: A suds object.
+        @type object: L{Object}
+        @return: The sxtype contained in the object metadata.
+        @rtype: L{xsd.sxbase.SchemaObject}
+        """
         try:
             md = object.__metadata__
-            known = md.__type__
+            known = md.sxtype
             return known
         except:
             pass
+
+       
+class Frame:
+    def __init__(self, type, resolved=None, ancestry=()):
+        self.type = type
+        if resolved is None:
+            resolved = type.resolve()
+        self.resolved = resolved.resolve()
+        self.ancestry = ancestry
+
+    def __str__(self):
+        return '%s\n%s\n%s' % \
+            (Repr(self.type),
+            Repr(self.resolved),
+            [Repr(t) for t in self.ancestry])
+            
+    class Empty:
+        def __getattr__(self, name):
+            if name == 'ancestry':
+                return ()
+            else:
+                return None
 
 
 class Stack(list):

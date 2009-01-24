@@ -96,9 +96,10 @@ class XAny(XBuiltin):
         @param name: A child name.
         @type name: basestring
         @return: The requested child.
-        @rtype: L{XBuiltin}
+        @rtype: (L{XBuiltin}, [L{XBuiltin},..])
         """
-        return XAny(self.schema, name)
+        child = XAny(self.schema, name)
+        return (child, [])
     
     def any(self):
         """

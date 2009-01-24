@@ -105,8 +105,8 @@ class Document(Binding):
         result = []
         for p in pts:
             resolved = p[1].resolve()
-            for c in resolved:
-                result.append((c.name, c))
+            for child, ancestry in resolved:
+                result.append((child.name, child))
         return result
     
     def returned_types(self, method):
@@ -120,7 +120,7 @@ class Document(Binding):
         result = []
         for pt in self.part_types(method, input=False):
             pt = pt.resolve(nobuiltin=True)
-            for rt in pt:
-                result.append(rt)
+            for child, ancestry in pt:
+                result.append(child)
             break
         return result
