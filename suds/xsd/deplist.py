@@ -36,8 +36,8 @@ class DepList:
     @type stack: list
     @ivar pushed: A set of items pushed.  This is an effecient way to keep
         track of the items we've pushed.
-    @type stack: list
-    @ivar sorted The sorted list of items.
+    @type pushed: list
+    @ivar sorted: The sorted list of items.
     @type sorted: list
     """
 
