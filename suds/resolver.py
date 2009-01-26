@@ -24,7 +24,7 @@ from logging import getLogger
 from suds import *
 from suds.sax import splitPrefix, Namespace
 from suds.sudsobject import Object
-from suds.xsd.query import BlindQuery, qualify
+from suds.xsd.query import BlindQuery, TypeQuery, qualify
 
 log = getLogger(__name__)
 
@@ -217,26 +217,6 @@ class TreeResolver(Resolver):
         """
         self.stack = Stack()
             
-    def findattr(self, name, resolved=True):
-        """
-        Find an attribute type definition.
-        @param name: An attribute name.
-        @type name: basestring
-        @param resolved: A flag indicating that the fully resolved type should be
-            returned.
-        @type resolved: boolean
-        @return: The found schema I{type}
-        @rtype: L{xsd.sxbase.SchemaObject}
-        """
-        attr = '@%s'%name
-        parent = self.top().resolved
-        result, ancestry = self.__find(attr, parent)
-        if result is None:
-            return result
-        if resolved:
-            result = result.resolve()
-        return result
-            
     def push(self, x):
         """
         Push an I{object} onto the stack.
@@ -277,38 +257,14 @@ class TreeResolver(Resolver):
         else:
             log.debug('stack empty, not-popped')
         return None
-
-    def __find(self, name, parent):
-        """ find the type for name and optional parent """
-        if parent is None:
-            log.debug('searching schema for (%s)', name)
-            schema = self.schema
-            wsdl = self.__wsdl()
-            if wsdl is None:
-                qref = qualify(name, schema.root, schema.tns)
-            else:
-                qref = qualify(name, wsdl.root, wsdl.tns)
-            query = BlindQuery(qref)
-            result = query.execute(schema)
-            ancestry = []
-        else:
-            log.debug('searching parent (%s) for (%s)', Repr(parent), name)
-            if name.startswith('@'):
-                result, ancestry = parent.get_attribute(name[1:])
-            else:
-                result, ancestry = parent.get_child(name)
-        if result is None:
-            log.error('(%s) not-found', name)
-        else:
-            log.debug('(%s) found as (%s)', name, Repr(result))
-        return (result, ancestry)
     
-    def __wsdl(self):
-        container = self.schema.container
-        if container is None:
-            return None
+    def getchild(self, name, parent):
+        """ get a child by name """
+        log.debug('searching parent (%s) for (%s)', Repr(parent), name)
+        if name.startswith('@'):
+            return parent.get_attribute(name[1:])
         else:
-            return container.wsdl
+            return parent.get_child(name)
 
 
 class NodeResolver(TreeResolver):
@@ -341,19 +297,60 @@ class NodeResolver(TreeResolver):
         """
         name = node.name
         parent = self.top().resolved
-        result, ancestry = self._TreeResolver__find(name, parent)
-        if result is None and parent is None:
-            name = node.get('type', Namespace.xsins)
-            if name is not None:
-                result, ancestry = self._TreeResolver__find(name, None)
+        if parent is None:
+            result, ancestry = self.query(name, node)
+        else:
+            result, ancestry = self.getchild(name, parent)
+        known = self.known(node)
         if result is None:
             return result
         if push:
-            frame = Frame(result, ancestry=ancestry)
+            frame = Frame(result, resolved=known, ancestry=ancestry)
             pushed = self.push(frame)
         if resolved:
             result = result.resolve()
         return result
+    
+    def findattr(self, name, resolved=True):
+        """
+        Find an attribute type definition.
+        @param name: An attribute name.
+        @type name: basestring
+        @param resolved: A flag indicating that the fully resolved type should be
+            returned.
+        @type resolved: boolean
+        @return: The found schema I{type}
+        @rtype: L{xsd.sxbase.SchemaObject}
+        """
+        name = '@%s'%name
+        parent = self.top().resolved
+        if parent is None:
+            result, ancestry = self.query(name, node)
+        else:
+            result, ancestry = self.getchild(name, parent)
+        if result is None:
+            return result
+        if resolved:
+            result = result.resolve()
+        return result
+    
+    def query(self, name, node):
+        """ blindly query the schema by name """
+        log.debug('searching schema for (%s)', name)
+        qref = qualify(name, node, node.namespace())
+        query = BlindQuery(qref)
+        result = query.execute(self.schema)
+        return (result, [])
+    
+    def known(self, node):
+        """ resolve type referenced by @xsi:type """
+        ref = node.get('type', Namespace.xsins)
+        if ref is None:
+            return None
+        qref = qualify(ref, node, node.namespace())
+        query = BlindQuery(qref)
+        return query.execute(self.schema)
+        
 
 class GraphResolver(TreeResolver):
     """
@@ -387,7 +384,10 @@ class GraphResolver(TreeResolver):
         """
         known = None
         parent = self.top().resolved
-        result, ancestry = self._TreeResolver__find(name, parent)
+        if parent is None:
+            result, ancestry = self.query(name)
+        else:
+            result, ancestry = self.getchild(name, parent)
         if result is None:
             return None
         if isinstance(object, Object):
@@ -402,14 +402,29 @@ class GraphResolver(TreeResolver):
                 result = known
         return result
     
+    def query(self, name):
+        """ blindly query the schema by name """
+        log.debug('searching schema for (%s)', name)
+        schema = self.schema
+        wsdl = self.wsdl()
+        if wsdl is None:
+            qref = qualify(name, schema.root, schema.tns)
+        else:
+            qref = qualify(name, wsdl.root, wsdl.tns)
+        query = BlindQuery(qref)
+        result = query.execute(schema)
+        return (result, [])
+    
+    def wsdl(self):
+        """ get the wsdl """
+        container = self.schema.container
+        if container is None:
+            return None
+        else:
+            return container.wsdl
+    
     def known(self, object):
-        """
-        Get the I{known} type of an object.
-        @param object: A suds object.
-        @type object: L{Object}
-        @return: The sxtype contained in the object metadata.
-        @rtype: L{xsd.sxbase.SchemaObject}
-        """
+        """ get the type specified in the object's metadata """
         try:
             md = object.__metadata__
             known = md.sxtype
