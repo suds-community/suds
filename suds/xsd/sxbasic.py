@@ -943,7 +943,12 @@ class Any(Content):
         @return: The requested (child, ancestry).
         @rtype: (L{SchemaObject}, [L{SchemaObject},..])
         """
-        return (self, [])
+        root = self.root.clone()
+        root.set('minOccurs', '0')
+        root.set('maxOccurs', '1')
+        root.set('note', 'synthesized (any) child')
+        child = Any(self.schema, root)
+        return (child, [])
     
     def get_attribute(self, name):
         """
