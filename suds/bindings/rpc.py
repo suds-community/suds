@@ -86,7 +86,7 @@ class RPC(Binding):
         @return: A collection of parameter definitions
         @rtype: [I{pdef},..]
         """
-        return self.part_types(method)
+        return self.bodypart_types(method)
     
 
 class Encoded(RPC):

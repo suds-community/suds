@@ -481,13 +481,13 @@ class PortType(NamedObject):
         @type definitions: L{Definitions}
         """
         for op in self.operations.values():
-            qref = qualify(op.input, self.root, wsdlns)
+            qref = qualify(op.input, self.root, definitions.tns)
             msg = definitions.messages.get(qref)
             if msg is None:
                 raise Exception("msg '%s', not-found" % op.input)
             else:
                 op.input = msg
-            qref = qualify(op.output, self.root, wsdlns)
+            qref = qualify(op.output, self.root, definitions.tns)
             msg = definitions.messages.get(qref)
             if msg is None:
                 raise Exception("msg '%s', not-found" % op.output)
@@ -558,25 +558,25 @@ class Binding(NamedObject):
             soap.style = sr.get('style', default=self.soap.style)
             soap.input = SFactory.object('Input')
             soap.input.body = SFactory.object('Body')
-            soap.input.header = None
+            soap.input.headers = []
             soap.output = SFactory.object('Output')
             soap.output.body = SFactory.object('Body')
-            soap.output.header = None
+            soap.output.headers = []
             op.soap = soap
             input = c.getChild('input')
             if input is None:
                 input = Element('input', ns=wsdlns)
             body = input.getChild('body')
             self.body(definitions, soap.input.body, body)
-            header = input.getChild('header')
-            self.header(definitions, soap.input, header)
+            for header in input.getChildren('header'):
+                self.header(definitions, soap.input, header)
             output = c.getChild('output')
             if output is None:
                 output = Element('output', ns=wsdlns)
             body = output.getChild('body')
             self.body(definitions, soap.output.body, output)
-            header = output.getChild('header')
-            self.header(definitions, soap.output, header)
+            for header in output.getChildren('header'):
+                self.header(definitions, soap.output, header)
             self.operations[op.name] = op
             
     def body(self, definitions, body, root):
@@ -598,7 +598,7 @@ class Binding(NamedObject):
         if root is None:
             return
         header = SFactory.object('Header')
-        parent.header = header
+        parent.headers.append(header)
         header.use = root.get('use', default='literal')
         ns = root.get('namespace')
         if ns is None:
@@ -628,7 +628,7 @@ class Binding(NamedObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        ref = qualify(self.type, self.root, wsdlns)
+        ref = qualify(self.type, self.root, definitions.tns)
         port_type = definitions.port_types.get(ref)
         if port_type is None:
             raise Exception("portType '%s', not-found" % self.type)
@@ -643,17 +643,13 @@ class Binding(NamedObject):
         """
         for op in self.operations.values():
             soap = op.soap
-            for header in (soap.input.header, soap.output.header):
-                if header is None:
-                    continue
+            headers = soap.input.headers + soap.output.headers
+            for header in headers:
                 mn = header.message
-                ref = qualify(mn, self.root, wsdlns)
+                ref = qualify(mn, self.root, definitions.tns)
                 message = definitions.messages.get(ref)
                 if message is None:
                     raise Exception("message'%s', not-found" % mn)
-                if header.part is None:
-                    header.message = message
-                    continue
                 header.message = SFactory.object('Message')
                 header.message.name = message.name
                 header.message.qname = message.qname
@@ -786,7 +782,7 @@ class Service(NamedObject):
         """
         filtered = []
         for p in self.ports:
-            ref = qualify(p.binding, self.root, wsdlns)
+            ref = qualify(p.binding, self.root, definitions.tns)
             binding = definitions.bindings.get(ref)
             if binding is None:
                 raise Exception("binding '%s', not-found" % p.binding)
