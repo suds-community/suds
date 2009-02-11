@@ -92,6 +92,7 @@ class Binding:
         @return: The soap message.
         @rtype: str
         """
+
         content = self.headercontent(method)
         header = self.header(content)
         content = self.bodycontent(method, args, kwargs)
@@ -298,22 +299,28 @@ class Binding:
         n = 0
         content = []
         headers = self.options.soapheaders
-        if len(headers):
-            if method.soap.input.header is None:
-                raise SoapHeadersNotPermitted(method.name)
-            if not isinstance(headers, (tuple,list)):
-                headers = (headers,)
-            method.soap.input.header.root = \
-                Element('ghost', ns=method.soap.input.header.namespace)
-            pts = self.part_types(method, header=True)
+        if len(headers) == 0:
+            return content
+        if not isinstance(headers, (tuple,list,dict)):
+            headers = (headers,)
+        pts = self.headpart_types(method)
+        if isinstance(headers, (tuple,list)):
             for header in headers:
                 if len(pts) == n: break
-                p = self.mkheader(method, pts[n], header)
-                if p is not None:
-                    ns = pts[n][1].namespace()
-                    p.setPrefix(ns[0], ns[1])
-                    content.append(p)
+                h = self.mkheader(method, pts[n], header)
+                content.append(h)
                 n += 1
+        else:
+            hpt = None
+            for key in headers:
+                for pt in pts:
+                    if pt[0] == key:
+                        hpt = pt
+                        break
+                if hpt is None:
+                    raise Exception('header part %s, not found' % key)
+                h = self.mkheader(method, hpt, headers[key])
+                content.append(h)
         return content
     
     def body(self, content):
@@ -328,7 +335,7 @@ class Binding:
         body.append(content)
         return body
     
-    def part_types(self, method, input=True, header=False):
+    def bodypart_types(self, method, input=True):
         """
         Get a list of I{parameter definitions} (pdef) defined for the specified method.
         Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
@@ -336,24 +343,16 @@ class Binding:
         @type method: I{service.Method}
         @param input: Defines input/output message.
         @type input: boolean
-        @param header: Defines if parts are for soapheader.
-        @type header: boolean
         @return:  A list of parameter definitions
         @rtype: [I{pdef},]
         """
         result = []
         if input:
             body = method.soap.input.body
-            if header:
-                parts = method.soap.input.header.message.parts
-            else:
-                parts = method.message.input.parts
+            parts = method.message.input.parts
         else:
             body = method.soap.output.body
-            if header:
-                parts = method.soap.output.header.message.parts
-            else:
-                parts = method.message.output.parts
+            parts = method.message.output.parts
         for p in parts:
             if p.element is not None:
                 query = ElementQuery(p.element)
@@ -373,6 +372,42 @@ class Binding:
                 result.append(pt)
         return result
     
+    def headpart_types(self, method, input=True):
+        """
+        Get a list of I{parameter definitions} (pdef) defined for the specified method.
+        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
+        @param method: A service method.
+        @type method: I{service.Method}
+        @param input: Defines input/output message.
+        @type input: boolean
+        @return:  A list of parameter definitions
+        @rtype: [I{pdef},]
+        """
+        result = []
+        if input:
+            headers = method.soap.input.headers
+        else:
+            headers = method.soap.output.headers
+        for header in headers:
+            for p in header.message.parts:
+                if p.element is not None:
+                    query = ElementQuery(p.element)
+                else:
+                    query = TypeQuery(p.type)
+                pt = query.execute(self.schema)
+                if pt is None:
+                    raise TypeNotFound(query.ref)
+                if p.type is not None:
+                    pt = PartElement(p.name, header.namespace, pt)
+                if input:
+                    if pt.name is None:
+                        result.append((p.name, pt))
+                    else:
+                        result.append((pt.name, pt))
+                else:
+                    result.append(pt)
+        return result
+    
     def returned_types(self, method):
         """
         Get the L{xsd.sxbase.SchemaObject} returned by the I{method}.
@@ -382,7 +417,7 @@ class Binding:
         @rtype: [I{rtype},..]
         """
         result = []
-        for rt in self.part_types(method, input=False):
+        for rt in self.bodypart_types(method, input=False):
             result.append(rt)
         return result
 

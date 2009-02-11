@@ -58,7 +58,7 @@ class Document(Binding):
         @rtype: [L{Element},..]
         """
         n = 0
-        pts = self.part_types(method)
+        pts = self.bodypart_types(method)
         if not len(pts):
             return ()
         root = self.document(pts)
@@ -99,7 +99,7 @@ class Document(Binding):
         @return: A collection of parameter definitions
         @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
         """
-        pts = self.part_types(method)
+        pts = self.bodypart_types(method)
         if len(pts) > 1:
             return pts
         result = []
@@ -118,7 +118,7 @@ class Document(Binding):
         @rtype: [L{xsd.sxbase.SchemaObject}]
         """
         result = []
-        for pt in self.part_types(method, input=False):
+        for pt in self.bodypart_types(method, input=False):
             pt = pt.resolve(nobuiltin=True)
             for child, ancestry in pt:
                 result.append(child)
