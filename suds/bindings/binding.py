@@ -311,15 +311,11 @@ class Binding:
                 content.append(h)
                 n += 1
         else:
-            hpt = None
-            for key in headers:
-                for pt in pts:
-                    if pt[0] == key:
-                        hpt = pt
-                        break
-                if hpt is None:
-                    raise Exception('header part %s, not found' % key)
-                h = self.mkheader(method, hpt, headers[key])
+            for pt in pts:
+                header = headers.get(pt[0])
+                if header is None:
+                    continue
+                h = self.mkheader(method, pt, header)
                 content.append(h)
         return content
     
