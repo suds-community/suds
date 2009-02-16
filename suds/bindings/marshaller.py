@@ -646,7 +646,7 @@ class Literal(MBase):
         resolved = self.resolver.top().resolved
         if resolved is None:
             resolved = content.type.resolve()
-        if self.derived():
+        if resolved.extension():
             name = resolved.name
             ns = resolved.namespace()
             Typer.manual(node, name, ns)
@@ -658,14 +658,6 @@ class Literal(MBase):
             if v is None:
                 return True
             if isinstance(v, (list,tuple)) and len(v) == 0:
-                return True
-        return False
-    
-    def derived(self):
-        """ this content is optional """
-        ancestry = self.resolver.top().ancestry
-        for a in ancestry:
-            if a.optional():
                 return True
         return False
     
