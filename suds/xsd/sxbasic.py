@@ -160,6 +160,17 @@ class Complex(SchemaObject):
         @rtype: [str,...]
         """
         return ('name',)
+    
+    def extension(self):
+        """
+        Get whether the object contains an extension/restriction
+        @return: True if a restriction, else False.
+        @rtype: boolean
+        """
+        for c in self.rawchildren:
+            if c.extension():
+                return True
+        return False
 
 
 class Group(SchemaObject):
@@ -342,6 +353,17 @@ class Simple(SchemaObject):
         @rtype: [str,...]
         """
         return ('name',)
+    
+    def extension(self):
+        """
+        Get whether the object contains a restriction
+        @return: True if a restriction, else False.
+        @rtype: boolean
+        """
+        for c in self.rawchildren:
+            if c.extension():
+                return True
+        return False
 
    
 class Restriction(SchemaObject):
@@ -510,6 +532,17 @@ class ComplexContent(SchemaObject):
         @rtype: [str,...]
         """
         return ('attribute', 'attributeGroup', 'extension', 'restriction')
+    
+    def extension(self):
+        """
+        Get whether the object contains an extension/restriction
+        @return: True if a restriction, else False.
+        @rtype: boolean
+        """
+        for c in self.rawchildren:
+            if c.extension():
+                return True
+        return False
 
 
 class SimpleContent(SchemaObject):
@@ -524,6 +557,17 @@ class SimpleContent(SchemaObject):
         @rtype: [str,...]
         """
         return ('extension', 'restriction')
+    
+    def extension(self):
+        """
+        Get whether the object contains a restriction
+        @return: True if a restriction, else False.
+        @rtype: boolean
+        """
+        for c in self.rawchildren:
+            if c.extension():
+                return True
+        return False
 
 
 class Enumeration(Content):
@@ -581,6 +625,17 @@ class Element(Content):
         @rtype: [str,...]
         """
         return ('attribute', 'simpleType', 'complexType', 'any',)
+    
+    def extension(self):
+        """
+        Get whether the object contains a restriction
+        @return: True if a restriction, else False.
+        @rtype: boolean
+        """
+        for c in self.rawchildren:
+            if c.extension():
+                return True
+        return False
     
     def unbounded(self):
         """
