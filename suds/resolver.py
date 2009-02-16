@@ -258,6 +258,14 @@ class TreeResolver(Resolver):
             log.debug('stack empty, not-popped')
         return None
     
+    def depth(self):
+        """
+        Get the current stack depth.
+        @return: The current stack depth.
+        @rtype: int
+        """
+        return len(self.stack)
+    
     def getchild(self, name, parent):
         """ get a child by name """
         log.debug('searching parent (%s) for (%s)', Repr(parent), name)
