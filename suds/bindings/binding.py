@@ -358,7 +358,7 @@ class Binding:
             if pt is None:
                 raise TypeNotFound(query.ref)
             if p.type is not None:
-                pt = PartElement(p.name, body.namespace, pt)
+                pt = PartElement(p.name, pt)
             if input:
                 if pt.name is None:
                     result.append((p.name, pt))
@@ -394,7 +394,7 @@ class Binding:
                 if pt is None:
                     raise TypeNotFound(query.ref)
                 if p.type is not None:
-                    pt = PartElement(p.name, header.namespace, pt)
+                    pt = PartElement(p.name, pt)
                 if input:
                     if pt.name is None:
                         result.append((p.name, pt))
@@ -426,24 +426,21 @@ class PartElement(SchemaElement):
     @type resolved: L{suds.xsd.sxbase.SchemaObject}
     """
     
-    def __init__(self, name, tns, resolved):
+    def __init__(self, name, resolved):
         """
         @param name: The part name.
         @type name: str
-        @param tns: The target namespace of the part.
-        @type tns: (prefix, uri)
         @param resolved: The part type.
         @type resolved: L{suds.xsd.sxbase.SchemaObject}
         """
         root = Element('element', ns=Namespace.xsdns)
         SchemaElement.__init__(self, resolved.schema, root)
-        self.__tns = tns
         self.__resolved = resolved
         self.name = name
         self.form_qualified = False
         
     def namespace(self):
-        return self.__tns
+        return Namespace.default
         
     def resolve(self, nobuiltin=False):
         if nobuiltin and self.__resolved.builtin():
