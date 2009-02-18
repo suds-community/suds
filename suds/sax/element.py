@@ -543,13 +543,15 @@ class Element:
             del self.nsprefixes[prefix]
         return self
     
-    def findPrefix(self, uri):
+    def findPrefix(self, uri, default=None):
         """
         Find the first prefix that has been mapped to a namespace URI.
         The local mapping is searched, then it walks up the tree until
         it reaches the top or finds a match.
         @param uri: A namespace URI.
         @type uri: basestring
+        @param default: A default prefix when not found.
+        @type default: basestring
         @return: A mapped prefix.
         @rtype: basestring
         """
@@ -562,9 +564,9 @@ class Element:
                 prefix = item[0]
                 return prefix      
         if self.parent is not None:
-            return self.parent.findPrefix(uri)
+            return self.parent.findPrefix(uri, default)
         else:
-            return None
+            return default
 
     def findPrefixes(self, uri, match='eq'):
         """
@@ -729,24 +731,24 @@ class Element:
         @return: A separated list of declarations.
         @rtype: basestring
         """
-        result = ''
-        myns = self.namespace()
+        s = []
+        myns = (None, self.expns)
         if self.parent is None:
             pns = Namespace.default
         else:
-            pns = self.parent.namespace()
+            pns = (None, self.parent.expns)
         if myns[1] != pns[1]:
             if self.expns is not None:
-                decl = ' xmlns="%s"' % self.expns
-                result += decl
+                d = ' xmlns="%s"' % self.expns
+                s.append(d)
         for item in self.nsprefixes.items():
             (p,u) = item
             if self.parent is not None:
                 ns = self.parent.resolvePrefix(p)
                 if ns[1] == u: continue
-            decl = ' xmlns:%s="%s"' % (p, u)
-            result += decl
-        return result
+            d = ' xmlns:%s="%s"' % (p, u)
+            s.append(d)
+        return ''.join(s)
     
     def match(self, name=None, ns=None):
         """

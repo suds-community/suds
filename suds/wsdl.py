@@ -590,7 +590,7 @@ class Binding(NamedObject):
         if ns is None:
             body.namespace = definitions.tns
         else:
-            prefix = root.findPrefix(ns)
+            prefix = root.findPrefix(ns, 'b0')
             body.namespace = (prefix, ns)
             
     def header(self, definitions, parent, root):
@@ -604,7 +604,7 @@ class Binding(NamedObject):
         if ns is None:
             header.namespace = definitions.tns
         else:
-            prefix = root.findPrefix(ns)
+            prefix = root.findPrefix(ns, 'h0')
             header.namespace = (prefix, ns)
         msg = root.get('message')
         if msg is not None:

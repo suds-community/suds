@@ -615,7 +615,7 @@ class Literal(MBase):
             node = Element(content.tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
         else:
-            node = Element(content.tag, ns=(None, ns[1]))
+            node = Element(content.tag)
         self.encode(node, content)
         log.debug('created - node:\n%s', node)
         return node
@@ -648,7 +648,10 @@ class Literal(MBase):
             resolved = content.type.resolve()
         if resolved.extension():
             name = resolved.name
-            ns = resolved.namespace()
+            if resolved.form_qualified:
+                ns = resolved.namespace()
+            else:
+                ns = None
             Typer.manual(node, name, ns)
     
     def skip(self, content):
@@ -751,7 +754,7 @@ class Typer:
         return node
 
     @classmethod
-    def manual(cls, node, tval, ns):
+    def manual(cls, node, tval, ns=None):
         """
         Set the node's xsi:type attribute based on either I{value}'s
         class or the class of the node's text.  Then adds the referenced
@@ -767,13 +770,13 @@ class Typer:
         """
         xta = ':'.join((NS.xsins[0], 'type'))
         node.addPrefix(NS.xsins[0], NS.xsins[1])
-        if node.namespace()[1] != ns[1]:
+        if ns is None:
+            node.set(xta, tval)
+        else:
             ns = cls.genprefix(node, ns)
             qname = ':'.join((ns[0], tval))
             node.set(xta, qname)
             node.addPrefix(ns[0], ns[1]) 
-        else:
-            node.set(xta, tval)
         return node
     
     @classmethod

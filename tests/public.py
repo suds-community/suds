@@ -28,9 +28,6 @@ errors = 0
 
 setup_logging()
 
-from suds.xsd.sxbasic import Import
-Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
-
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
 #logging.getLogger('suds').setLevel(logging.DEBUG)
@@ -208,9 +205,9 @@ try:
     start(url)
     client = Client(url)
     print client
-    env = client.factory.create('ns3:Envelope')
+    env = client.factory.create('ns2:Envelope')
     print env
-    options = client.factory.create('ns5:MapImageOptions')
+    options = client.factory.create('ns4:MapImageOptions')
     print options
 except WebFault, f:
     errors += 1
