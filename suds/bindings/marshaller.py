@@ -396,13 +396,8 @@ class MBase:
         if isinstance(content.value, Property):
             root = self.node(content)
             self.append(document, content)
-        elif content.value is None or \
-            isinstance(content.value, Object):
-                self.append(document, content)
         else:
-            root = self.node(content)
-            document.append(root)
-            root.setText(tostr(content.value))
+            self.append(document, content)
         return document.root()
     
     def append(self, parent, content):
