@@ -22,7 +22,8 @@ from logging import getLogger
 from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
-from datetime import datetime as dt
+from datetime import datetime
+import md5
 
 
 dsns = \
@@ -93,6 +94,14 @@ class UsernameToken(Token):
     @ivar created: The token created.
     @type created: L{datetime}
     """
+    
+    @classmethod
+    def now(cls):
+        return datetime.now()
+    
+    @classmethod
+    def sysdate(cls):
+        return cls.now().isoformat()
 
     def __init__(self, username=None, password=None):
         """
@@ -106,6 +115,38 @@ class UsernameToken(Token):
         self.password = password
         self.nonce = None
         self.created = None
+        
+    def setnonce(self, text=None):
+        """
+        Set I{nonce} which is arbitraty set of bytes to prevent
+        reply attacks.
+        @param text: The nonce text value.
+            Generated when I{None}.
+        @type text: str
+        """
+        if text is None:
+            s = []
+            s.append(self.username)
+            s.append(self.password)
+            s.append(self.sysdate())
+            m = md5.new()
+            m.update(':'.join(s))
+            self.nonce = m.hexdigest()
+        else:
+            self.nonce = text
+        
+    def setcreated(self, dt=None):
+        """
+        Set I{created}.
+        @param dt: The created date & time.
+            Set as datetime.now() when I{None}.
+        @type dt: L{datetime}
+        """
+        if dt is None:
+            self.created = self.now()
+        else:
+            self.created = dt
+        
         
     def xml(self):
         """
