@@ -42,6 +42,29 @@ class Resolver:
         @type schema: L{xsd.schema.Schema}
         """
         self.schema = schema
+        
+    def find(self, name, resolved=True):
+        """
+        Get the definition object for the schema object by name.
+        @param name: The name of a schema object.
+        @type name: basestring
+        @param resolved: A flag indicating that the fully resolved type
+            should be returned.
+        @type resolved: boolean
+        @return: The found schema I{type}
+        @rtype: L{xsd.sxbase.SchemaObject}
+        """
+        log.debug('searching schema for (%s)', name)
+        qref = qualify(name, self.schema.root, self.schema.tns)
+        query = BlindQuery(qref)
+        result = query.execute(self.schema)
+        if result is None:
+            log.error('(%s) not-found', name)
+            return None
+        log.debug('found (%s) as (%s)', name, Repr(result))
+        if resolved:
+            result = result.resolve()
+        return result
 
 
 class PathResolver(Resolver):
