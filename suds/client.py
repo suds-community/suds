@@ -226,6 +226,12 @@ class Wrapper:
     def __call__(self, *args, **kwargs):
         target = self.__wrapped__
         return target.call(*args, **kwargs)
+    
+    def __str__(self):
+        return str(self.__wrapped__)
+    
+    def __unicode__(self):
+        return unicode(self.__wrapped__) 
         
 
 class Service:
@@ -270,6 +276,12 @@ class Service:
         else:
             port = None
         return port
+    
+    def __str__(self):
+        return unicode(self)
+    
+    def __unicode__(self):
+        return unicode(self.client.sd) 
 
         
 class Port:
