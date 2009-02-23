@@ -21,7 +21,6 @@ The I{builder} module provides an wsdl/xsd defined types factory
 from logging import getLogger
 from suds import *
 from suds.sudsobject import Factory
-from suds.resolver import PathResolver
 
 log = getLogger(__name__)
 
@@ -29,12 +28,12 @@ log = getLogger(__name__)
 class Builder:
     """ Builder used to construct an object for types defined in the schema """
     
-    def __init__(self, wsdl):
+    def __init__(self, resolver):
         """
-        @param wsdl: A schema object.
-        @type wsdl: L{wsdl.Definitions}
+        @param resolver: A schema object name resolver.
+        @type resolver: L{resolver.Resolver}
         """
-        self.resolver = PathResolver(wsdl)
+        self.resolver = resolver
         
     def build(self, name):
         """ build a an object for the specified typename as defined in the schema """
