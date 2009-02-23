@@ -22,6 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
+from datetime import datetime as dt
 
 
 dsns = \
@@ -29,10 +30,10 @@ dsns = \
      'http://www.w3.org/2000/09/xmldsig#')
 wssens = \
     ('wsse', 
-     'http://www.docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd')
+     'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd')
 wsuns = \
     ('wsu',
-     'http://www.docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd')
+     'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd')
 wsencns = \
     ('wsenc',
      'http://www.w3.org/2001/04/xmlenc#')
@@ -87,6 +88,10 @@ class UsernameToken(Token):
     @type username: str
     @ivar password: A password.
     @type password: str
+    @ivar nonce: A set of bytes to prevent reply attacks.
+    @type nonce: str
+    @ivar created: The token created.
+    @type created: L{datetime}
     """
 
     def __init__(self, username=None, password=None):
@@ -99,6 +104,8 @@ class UsernameToken(Token):
         Token.__init__(self)
         self.username = username
         self.password = password
+        self.nonce = None
+        self.created = None
         
     def xml(self):
         """
@@ -113,4 +120,12 @@ class UsernameToken(Token):
         p = Element('Password', ns=wssens)
         p.setText(self.password)
         root.append(p)
+        if self.nonce is not None:
+            n = Element('Nonce', ns=wssens)
+            n.setText(self.nonce)
+            root.append(n)
+        if self.created is not None:
+            n = Element('Created', ns=wsuns)
+            n.setText(self.created.isoformat())
+            root.append(n)
         return root
