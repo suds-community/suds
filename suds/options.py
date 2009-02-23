@@ -19,6 +19,7 @@ Options classes.
 """
 
 from suds.transport import Transport
+from suds.wsse import Security
 
 class Options(object):
     """
@@ -45,6 +46,8 @@ class Options(object):
                 - type: I{str}
         - B{password} - The password used for http authentication.
                 - type: I{str}
+        - B{wsse} - The web services I{security} provider object.
+                - type: L{Security}
     """
 
     __options__ = \
@@ -58,6 +61,7 @@ class Options(object):
         soapheaders=((), ()),
         username=(basestring, None),
         password=(basestring, None),
+        wsse=(Security, None),
     )
     
     def __init__(self, **kwargs):

@@ -298,6 +298,9 @@ class Binding:
         """
         n = 0
         content = []
+        wsse = self.options.wsse
+        if wsse is not None:
+            content.append(wsse.xml())
         headers = self.options.soapheaders
         if len(headers) == 0:
             return content
@@ -306,6 +309,9 @@ class Binding:
         pts = self.headpart_types(method)
         if isinstance(headers, (tuple,list)):
             for header in headers:
+                if isinstance(header, Element):
+                    content.append(header)
+                    continue
                 if len(pts) == n: break
                 h = self.mkheader(method, pts[n], header)
                 content.append(h)
