@@ -178,7 +178,7 @@ class Factory:
         @type wsdl: L{wsdl.Definitions}
         """
         self.resolver = PathResolver(wsdl)
-        self.builder = Builder(wsdl)
+        self.builder = Builder(self.resolver)
     
     def create(self, name):
         """
