@@ -56,7 +56,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Mon Dec 08 2008 jortel <jortel@redhat.com> - 0.3.4-1
-- 0.3.4
+- Static (automatic) Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
+- Basic ws-security with {{{UsernameToken}}} and clear-text password only.
+- Add support for ''sparse'' soap headers via passing dictionary
+- Add support for arbitrary user defined soap headers
+- Fixes service operations with multiple soap header entries.
+- Schema loading and dereferencing algorithm enhancements.
+- Nested soap multirefs fixed.
+- Better (true) support for elementFormDefault="unqualified" provides more accurate namespaing.
+- WSDL part types no longer default to WSDL targetNamespace.
+- Fixed Tickets: #4, #6, #21, #32, #62, #66, #71, #72, #114, #155, #201.
 
 * Wed Dec 04 2008 jortel <jortel@redhat.com> - 0.3.3-2
 - Rebuild for Python 2.6
