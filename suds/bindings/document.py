@@ -93,7 +93,11 @@ class Document(Binding):
         
     def param_defs(self, method):
         """
-        Get parameter definitions.
+        Get parameter definitions for document literal.
+        The I{wrapped} vs I{unwrapped} style is detected in 2 ways.
+        If there is 2+ parts in the message then it is notI{wrapped}.
+        If there is only (1) part and that part resolves to a builtin then
+        it is not wrapped.  Otherwise, it is I{wrapped}.
         @param method: A method name.
         @type method: basestring
         @return: A collection of parameter definitions
@@ -105,6 +109,9 @@ class Document(Binding):
         result = []
         for p in pts:
             resolved = p[1].resolve()
+            if resolved.builtin():
+                result.append(p)
+                break
             for child, ancestry in resolved:
                 result.append((child.name, child))
         return result
