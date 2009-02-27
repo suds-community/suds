@@ -177,6 +177,7 @@ class Factory:
         @param wsdl: A schema object.
         @type wsdl: L{wsdl.Definitions}
         """
+        self.wsdl = wsdl
         self.resolver = PathResolver(wsdl)
         self.builder = Builder(self.resolver)
     
@@ -206,6 +207,14 @@ class Factory:
         timer.stop()
         metrics.log.debug('%s created: %s', name, timer)
         return result
+    
+    def separator(self, ps):
+        """
+        Set the path separator.
+        @param ps: The new path separator.
+        @type ps: char
+        """
+        self.resolver = PathResolver(self.wsdl, ps)
 
    
 class Wrapper:

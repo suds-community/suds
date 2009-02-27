@@ -74,22 +74,25 @@ class PathResolver(Resolver):
     @ivar wsdl: A wsdl object.
     @type wsdl: L{wsdl.Definitions}
     """
-    
-    altp = re.compile('({)(.+)(})(.+)')
-    splitp = re.compile('({.+})*[^.]+')
-    
-    def __init__(self, wsdl):
+
+    def __init__(self, wsdl, ps='.'):
         """
         @param wsdl: A schema object.
         @type wsdl: L{wsdl.Definitions}
+        @param ps: The path separator character
+        @type ps: char
         """
         Resolver.__init__(self, wsdl.schema)
         self.wsdl = wsdl
+        self.altp = re.compile('({)(.+)(})(.+)')
+        self.splitp = re.compile('({.+})*[^\%s]+' % ps[0])
 
     def find(self, path, resolved=True):
         """
         Get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
+        Actually, the path separator is usually a (.) but can be redefined
+        during contruction.
         @param path: A (.) separated path to a schema type.
         @type path: basestring
         @param resolved: A flag indicating that the fully resolved type
@@ -200,7 +203,7 @@ class PathResolver(Resolver):
         @param s: A plain or qualifed name.
         @type s: str
         @return: A list of the name's parts.
-        @rtype: [str,...]
+        @rtype: [str,..]
         """
         parts = []
         b = 0
