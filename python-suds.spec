@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.4
+Version: 0.3.5
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Wed Feb 25 2009 jortel <jortel@redhat.com> - 0.3.5-1
+- 0.3.5
+
 * Mon Dec 08 2008 jortel <jortel@redhat.com> - 0.3.4-1
 - Static (automatic) Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 - Basic ws-security with {{{UsernameToken}}} and clear-text password only.
