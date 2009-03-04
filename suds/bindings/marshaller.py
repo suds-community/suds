@@ -21,7 +21,7 @@ Provides classes for object->XML I{marshalling}.
 from logging import getLogger
 from suds import *
 from suds.bindings import *
-from suds.sudsobject import Factory, Object, Property, items
+from suds.sudsobject import Factory, Object, Property
 from suds.resolver import GraphResolver, Frame
 from suds.sax import Namespace as NS
 from suds.sax.document import Document
@@ -302,7 +302,7 @@ class ObjectAppender(Appender):
             return
         child = self.node(content)
         parent.append(child)
-        for item in items(object):
+        for item in object:
             cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
             
@@ -550,6 +550,7 @@ class Literal(MBase):
                 if known is None:
                     log.debug('object has no type information', content.value)
                     known = content.type
+                self.sort(content.value, known)
             frame = Frame(content.type, resolved=known)
             self.resolver.push(frame)
         resolved = self.resolver.top().resolved
@@ -675,6 +676,23 @@ class Literal(MBase):
             return resolved.translate(value, False)
         else:
             return None
+        
+    def sort(self, sobject, resolved):
+        """ sort attributes using the schema type """
+        md = sobject.__metadata__
+        md.ordering = self.ordering(resolved)
+
+    def ordering(self, type):
+        """ get the ordering """
+        result = []
+        for child, ancestry in type.resolve():
+            name = child.name
+            if child.name is None:
+                continue
+            if child.isattr():
+                name = '_%s' % child.name
+            result.append(name)
+        return result
 
 class Encoded(Literal):
     """
