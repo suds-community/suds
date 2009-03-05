@@ -52,7 +52,6 @@ class RPC(Binding):
         """
         n = 0
         root = self.method(method)
-        method.soap.input.body.root = root
         for pd in self.param_defs(method):
             if n < len(args):
                 value = args[n]
@@ -74,6 +73,8 @@ class RPC(Binding):
         @rtype: L{Element}
         """
         ns = method.soap.input.body.namespace
+        if ns[0] is None:
+            ns = ('ns0', ns[1])
         method = Element(method.name, ns=ns)
         return method
 

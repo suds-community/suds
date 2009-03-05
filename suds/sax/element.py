@@ -124,10 +124,13 @@ class Element:
         @type p: basestring 
         @param u: A namespace URI to be mapped to the prefix.
         @type u: basestring
+        @return: self
+        @rtype: L{Element}
         """
         self.prefix = p
         if p is not None and u is not None:
             self.addPrefix(p, u)
+        return self
 
     def qname(self):
         """
