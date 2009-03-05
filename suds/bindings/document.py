@@ -48,6 +48,10 @@ class Document(Binding):
     def bodycontent(self, method, args, kwargs):
         """
         Get the content for the soap I{body} node.
+        The I{wrapped} vs I{bare} style is detected in 2 ways.
+        If there is 2+ parts in the message then it is I{bare}.
+        If there is only (1) part and that part resolves to a builtin then
+        it is I{bare}.  Otherwise, it is I{wrapped}.
         @param method: A service method.
         @type method: I{service.Method}
         @param args: method parameter values
@@ -61,43 +65,51 @@ class Document(Binding):
         pts = self.bodypart_types(method)
         if not len(pts):
             return ()
-        root = self.document(pts)
-        method.soap.input.body.root = root
+        wrapped = False
+        if len(pts) == 1:
+            resolved = pts[0][1].resolve()
+            if not resolved.builtin():
+                wrapped = True
+        if wrapped:
+            root = self.document(pts[0])
+        else:
+            root = []
         for pd in self.param_defs(method):
             if n < len(args):
                 value = args[n]
             else:
                 value = kwargs.get(pd[0])
-            p = self.mkparam(method, pd, value)
-            if p is not None:
-                root.append(p)
             n += 1
-        if len(pts) > 1:
-            return root.children
-        else:
-            return root
+            p = self.mkparam(method, pd, value)
+            if p is None:
+                continue
+            if not wrapped:
+                ns = pd[1].namespace('ns0')
+                p.setPrefix(ns[0], ns[1])
+            root.append(p)
+        return root
         
-    def document(self, pts):
+    def document(self, wrapper):
         """
         Get the document root.  For I{document/literal}, this is the
         name of the wrapper element qualifed by the schema tns.
-        @param pts: The method name.
-        @type pts: str
+        @param wrapper: The method name.
+        @type wrapper: L{xsd.sxbase.SchemaObject}
         @return: A root element.
         @rtype: L{Element}
         """
-        tag = pts[0][1].name
-        ns = pts[0][1].namespace()
+        tag = wrapper[1].name
+        ns = wrapper[1].namespace('ns0')
         d = Element(tag, ns=ns)
         return d
         
     def param_defs(self, method):
         """
         Get parameter definitions for document literal.
-        The I{wrapped} vs I{unwrapped} style is detected in 2 ways.
-        If there is 2+ parts in the message then it is notI{wrapped}.
+        The I{wrapped} vs I{bare} style is detected in 2 ways.
+        If there is 2+ parts in the message then it is I{bare}.
         If there is only (1) part and that part resolves to a builtin then
-        it is not wrapped.  Otherwise, it is I{wrapped}.
+        it is I{bare}.  Otherwise, it is I{wrapped}.
         @param method: A method name.
         @type method: basestring
         @return: A collection of parameter definitions

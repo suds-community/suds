@@ -445,7 +445,7 @@ class PartElement(SchemaElement):
         self.name = name
         self.form_qualified = False
         
-    def namespace(self):
+    def namespace(self, prefix=None):
         return Namespace.default
         
     def resolve(self, nobuiltin=False):

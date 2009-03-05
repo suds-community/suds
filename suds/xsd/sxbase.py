@@ -152,13 +152,18 @@ class SchemaObject:
                 return (child, ancestry)
         return (None, [])
 
-    def namespace(self):
+    def namespace(self, prefix=None):
         """
         Get this properties namespace
+        @param prefix: The default prefix.
+        @type prefix: str
         @return: The schema's target namespace
         @rtype: (I{prefix},I{URI})
         """
-        return self.schema.tns
+        ns = self.schema.tns
+        if ns[0] is None:
+            ns = (prefix, ns[1])
+        return ns
     
     def default_namespace(self):
         return self.root.defaultNamespace()
@@ -518,7 +523,7 @@ class XBuiltin(SchemaObject):
         self.name = name
         self.nillable = True
             
-    def namespace(self):
+    def namespace(self, prefix=None):
         return Namespace.xsdns
     
     def builtin(self):
