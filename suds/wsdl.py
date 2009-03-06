@@ -549,13 +549,14 @@ class Binding(NamedObject):
         
     def add_operations(self, root, definitions):
         """ Add <operation/> children """
+        dsop = Element('operation', ns=soapns)
         for c in root.getChildren('operation'):
             op = SFactory.object('Operation')
             op.name = c.get('name')
-            sr = c.getChild('operation')
+            sop = c.getChild('operation', default=dsop)
             soap = SFactory.object('soap')
-            soap.action = '"%s"' % sr.get('soapAction', default='')
-            soap.style = sr.get('style', default=self.soap.style)
+            soap.action = '"%s"' % sop.get('soapAction', default='')
+            soap.style = sop.get('style', default=self.soap.style)
             soap.input = SFactory.object('Input')
             soap.input.body = SFactory.object('Body')
             soap.input.headers = []
