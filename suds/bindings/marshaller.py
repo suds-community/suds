@@ -631,7 +631,10 @@ class Literal(MBase):
     
     def encode(self, node, content):
         """
-        Add (soap) encoding information
+        Add (soap) encoding information only if the resolved
+        type is derived by extension.  Further, the xsi:type values
+        is qualified by namespace only if the content (tag) and
+        referenced type are in different namespaces.
         @param node: The node to update.
         @type node: L{Element}
         @param content: The content for which proccessing has ended.
@@ -642,13 +645,15 @@ class Literal(MBase):
         resolved = self.resolver.top().resolved
         if resolved is None:
             resolved = content.type.resolve()
-        if resolved.extension():
-            name = resolved.name
-            if resolved.form_qualified:
-                ns = resolved.namespace()
-            else:
-                ns = None
-            Typer.manual(node, name, ns)
+        if not resolved.extension():
+            return
+        ns = None
+        name = resolved.name
+        ns0 = content.type.namespace('ns0')
+        ns1 = resolved.namespace('ns1')
+        if ns0[1] != ns1[1]:
+            ns = ns1
+        Typer.manual(node, name, ns)
     
     def skip(self, content):
         """ skip this content """
