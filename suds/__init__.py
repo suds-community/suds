@@ -29,7 +29,7 @@ import socket
 # Project properties
 #
 
-properties = dict(version='0.3.5', build="(beta) R462-20090305")
+properties = dict(version='0.3.5', build="(beta) R464-20090306")
 
 #
 # Exceptions
