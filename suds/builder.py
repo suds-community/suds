@@ -48,11 +48,12 @@ class Builder:
             data = Factory.object(cls)
         else:
             data = Factory.property(cls)
+        resolved = type.resolve()
         md = data.__metadata__
-        md.sxtype = type
-        md.ordering = self.ordering(type)
+        md.sxtype = resolved
+        md.ordering = self.ordering(resolved)
         history = []
-        self.add_attributes(data, type)
+        self.add_attributes(data, resolved)
         for child, ancestry in type.children():
             if self.skip_child(child, ancestry):
                 continue
@@ -67,20 +68,20 @@ class Builder:
             return
         history.append(type)
         resolved = type.resolve()
-        self.add_attributes(data, type)
         value = None
         if type.unbounded():
             value = []
         else:
             if len(resolved) > 0:
-                value = Factory.object(type.name)
+                value = Factory.object(resolved.name)
                 md = value.__metadata__
-                md.sxtype = type
-                md.ordering = self.ordering(type)
+                md.sxtype = resolved
+                md.ordering = self.ordering(resolved)
         setattr(data, type.name, value)
         if value is not None:
             data = value
         if not isinstance(data, list):
+            self.add_attributes(data, resolved)
             for child, ancestry in resolved.children():
                 if self.skip_child(child, ancestry):
                     continue
