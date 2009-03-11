@@ -61,19 +61,15 @@ class Document(Binding):
         @return: The xml content for the <body/>
         @rtype: [L{Element},..]
         """
-        n = 0
-        pts = self.bodypart_types(method)
-        if not len(pts):
+        if not len(method.message.input.parts):
             return ()
-        wrapped = False
-        if len(pts) == 1:
-            resolved = pts[0][1].resolve()
-            if not resolved.builtin():
-                wrapped = True
+        wrapped = method.message.input.wrapped
         if wrapped:
+            pts = self.bodypart_types(method)
             root = self.document(pts[0])
         else:
             root = []
+        n = 0
         for pd in self.param_defs(method):
             if n < len(args):
                 value = args[n]
@@ -88,6 +84,22 @@ class Document(Binding):
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
         return root
+
+    def replycontent(self, method, body):
+        """
+        Get the reply body content.
+        @param method: A service method.
+        @type method: I{service.Method}
+        @param body: The soap body
+        @type body: L{Element}
+        @return: the body content
+        @rtype: [L{Element},...]
+        """
+        wrapped = method.message.output.wrapped
+        if wrapped:
+            return body[0].children
+        else:
+            return body.children
         
     def document(self, wrapper):
         """
@@ -116,14 +128,12 @@ class Document(Binding):
         @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
         """
         pts = self.bodypart_types(method)
-        if len(pts) > 1:
+        wrapped = method.message.input.wrapped
+        if not wrapped:
             return pts
         result = []
         for p in pts:
             resolved = p[1].resolve()
-            if resolved.builtin():
-                result.append(p)
-                break
             for child, ancestry in resolved:
                 result.append((child.name, child))
         return result
@@ -137,9 +147,14 @@ class Document(Binding):
         @rtype: [L{xsd.sxbase.SchemaObject}]
         """
         result = []
-        for pt in self.bodypart_types(method, input=False):
-            pt = pt.resolve(nobuiltin=True)
-            for child, ancestry in pt:
-                result.append(child)
-            break
+        wrapped = method.message.output.wrapped
+        rts = self.bodypart_types(method, input=False)
+        if wrapped:
+            for pt in rts:
+                resolved = pt.resolve(nobuiltin=True)
+                for child, ancestry in resolved:
+                    result.append(child)
+                break
+        else:
+            result += rts
         return result

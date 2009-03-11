@@ -121,7 +121,7 @@ class Binding:
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild('Body')
         soapbody = self.multiref.process(soapbody)
-        nodes = soapbody[0].children
+        nodes = self.replycontent(method, soapbody)
         rtypes = self.returned_types(method)
         if len(rtypes) == 1 and rtypes[0].unbounded():
             result = self.reply_list(rtypes[0], nodes)
@@ -170,7 +170,7 @@ class Binding:
         for rt in rtypes:
             dictionary[rt.name] = rt
         unmarshaller = self.unmarshaller.typed
-        composite = Factory.object()
+        composite = Factory.object('reply')
         for node in nodes:
             tag = node.name
             rt = dictionary.get(tag, None)
@@ -350,10 +350,8 @@ class Binding:
         """
         result = []
         if input:
-            body = method.soap.input.body
             parts = method.message.input.parts
         else:
-            body = method.soap.output.body
             parts = method.message.output.parts
         for p in parts:
             if p.element is not None:

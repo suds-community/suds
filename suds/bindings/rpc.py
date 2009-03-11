@@ -62,6 +62,18 @@ class RPC(Binding):
                 root.append(p)
             n += 1
         return root
+    
+    def replycontent(self, method, body):
+        """
+        Get the reply body content.
+        @param method: A service method.
+        @type method: I{service.Method}
+        @param body: The soap body
+        @type body: L{Element}
+        @return: the body content
+        @rtype: [L{Element},...]
+        """
+        return body[0].children
         
     def method(self, method):
         """
