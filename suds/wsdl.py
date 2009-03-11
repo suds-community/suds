@@ -29,6 +29,7 @@ from suds.bindings.document import Document
 from suds.bindings.rpc import RPC, Encoded
 from suds.xsd import qualify, Namespace
 from suds.xsd.schema import Schema, SchemaCollection
+from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SFactory
 from urlparse import urljoin
@@ -190,6 +191,7 @@ class Definitions(WObject):
         self.open_imports()
         self.resolve()
         self.build_schema()
+        self.set_wrapped()
         if self.service is not None:
             self.add_methods()
         log.debug("wsdl at '%s' loaded:\n%s", url, self)
@@ -256,6 +258,7 @@ class Definitions(WObject):
         return self.schema
                 
     def add_methods(self):
+        """ Build method view for service """
         bindings = {
             'document/literal' : Document(self),
             'rpc/literal' : RPC(self),
@@ -283,6 +286,25 @@ class Definitions(WObject):
                 m.qname = ':'.join((p.name, name))
                 self.service.methods[m.name] = m
                 self.service.methods[m.qname] = m
+                
+    def set_wrapped(self):
+        """ set (wrapped|bare) flag on messages """
+        for m in self.messages.values():
+            m.wrapped = False
+            if len(m.parts) != 1:
+                continue
+            for p in m.parts:
+                if p.element is None:
+                    continue
+                query = ElementQuery(p.element)
+                pt = query.execute(self.schema)
+                if pt is None:
+                    raise TypeNotFound(query.ref)
+                resolved = pt.resolve()
+                if resolved.builtin():
+                    continue
+                m.wrapped = True
+            
 
 
 class Import(WObject):
