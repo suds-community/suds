@@ -17,7 +17,6 @@
 
 SPEC = python-suds.spec
 SETUP = setup.py
-pythonSETUP = .python-suds
 DOCTAR = suds-docs.tar.gz
 FEDORAPEOPLE = jortel@fedorapeople.org
 
@@ -28,11 +27,9 @@ egg: clean
 	rm -rf *.egg-info
 
 dist: clean
-	sed -e "s/name=\"suds\"/name=\"python-suds\"/" $(SETUP) > $(pythonSETUP)
 	python $(SETUP) sdist bdist_egg
-	python $(pythonSETUP) sdist bdist_egg
 	rm -rf *.egg-info
-	rm -f $(pythonSETUP)
+	./mkfdist.sh
 
 rpm: dist
 	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
