@@ -10,11 +10,7 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 Requires: python >= 2.3
-%if 0%{?fedora} >= 8
 BuildRequires: python-setuptools-devel
-%else
-BuildRequires: python-setuptools
-%endif
 Url: https://fedorahosted.org/suds
 
 %description
@@ -40,9 +36,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%if 0%{?fedora} >= 8
 %{python_sitelib}/suds*.egg-info
-%endif
 %dir %{python_sitelib}/suds
 %dir %{python_sitelib}/suds/bindings
 %dir %{python_sitelib}/suds/sax
