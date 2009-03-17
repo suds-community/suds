@@ -124,10 +124,10 @@ class Binding:
         nodes = self.replycontent(method, soapbody)
         rtypes = self.returned_types(method)
         if len(rtypes) == 1 and rtypes[0].unbounded():
-            result = self.reply_list(rtypes[0], nodes)
+            result = self.replylist(rtypes[0], nodes)
             return (replyroot, result)
         if len(nodes) > 1:
-            result = self.reply_composite(rtypes, nodes)
+            result = self.replycomposite(rtypes, nodes)
             return (replyroot, result)
         if len(nodes) == 1:
             unmarshaller = self.unmarshaller.typed
@@ -136,7 +136,7 @@ class Binding:
             return (replyroot, result)
         return (replyroot, None)
     
-    def reply_list(self, rt, nodes):
+    def replylist(self, rt, nodes):
         """
         Construct a I{list} reply.  This mehod is called when it has been detected
         that the reply is a list.
@@ -155,11 +155,11 @@ class Binding:
             result.append(sobject)
         return result
     
-    def reply_composite(self, rtypes, nodes):
+    def replycomposite(self, rtypes, nodes):
         """
         Construct a I{composite} reply.  This method is called when it has been
-        detected that the reply is a composite (object).
-        @param rtypes: A list of legal return I{types}.
+        detected that the reply has multiple root nodes.
+        @param rtypes: A list of known return I{types}.
         @type rtypes: [L{suds.xsd.sxbase.SchemaObject},...]
         @param nodes: A collection of XML nodes.
         @type nodes: [L{Element},...]
@@ -175,7 +175,10 @@ class Binding:
             tag = node.name
             rt = dictionary.get(tag, None)
             if rt is None:
-                raise Exception('tag (%s), not-found' % tag)
+                if node.get('id') is None:
+                    raise Exception('<%s/> not mapped to message part', tag)
+                else:
+                    continue
             resolved = rt.resolve(nobuiltin=True)
             sobject = unmarshaller.process(node, resolved)
             if rt.unbounded():

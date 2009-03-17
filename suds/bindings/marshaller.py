@@ -626,7 +626,8 @@ class Literal(MBase):
         @type content: L{Object}
         """
         resolved = content.type.resolve()
-        if ( content.type.nillable or ( resolved.builtin() and resolved.nillable ) ):
+        if ( content.type.nillable or \
+             ( resolved.builtin() and resolved.nillable ) ):
             node.setnil()
     
     def encode(self, node, content):

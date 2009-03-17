@@ -469,5 +469,10 @@ class AttrList:
         """
         ns = attr.namespace()
         soapenc = 'http://schemas.xmlsoap.org/soap/encoding/'
-        skip = (Namespace.xmlns[1], soapenc)
+        soapenv = 'http://www.w3.org/2003/05/soap-envelope'
+        skip = (
+            Namespace.xmlns[1],
+            soapenc,
+            soapenv
+        )
         return ( Namespace.xs(ns) or ns[1] in skip )
