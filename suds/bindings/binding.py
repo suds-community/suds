@@ -314,6 +314,8 @@ class Binding:
                     continue
                 if len(pts) == n: break
                 h = self.mkheader(method, pts[n], header)
+                ns = pts[n][1].namespace('ns0')
+                h.setPrefix(ns[0], ns[1])
                 content.append(h)
                 n += 1
         else:
@@ -322,6 +324,8 @@ class Binding:
                 if header is None:
                     continue
                 h = self.mkheader(method, pt, header)
+                ns = pt[1].namespace('ns0')
+                h.setPrefix(ns[0], ns[1])
                 content.append(h)
         return content
     
