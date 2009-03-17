@@ -24,6 +24,8 @@ from suds.sax.element import Element
 
 log = getLogger(__name__)
 
+soapenc = (None, 'http://schemas.xmlsoap.org/soap/encoding/')
+
 class MultiRef:
     """
     Resolves and replaces multirefs.
@@ -81,10 +83,13 @@ class MultiRef:
         id = href.getValue()
         ref = self.catalog.get(id)
         if ref is None:
-            log.error('multiRef: %s, not-resolved', id)
+            log.error('soap multiref: %s, not-resolved', id)
             return
         node.append(ref.children)
         node.setText(ref.getText())
+        for a in ref.attributes:
+            if a.name != 'id':
+                node.append(a)
         node.remove(href)
             
     def build_catalog(self, body):
@@ -94,10 +99,28 @@ class MultiRef:
         @param body: A soap envelope body node.
         @type body: L{Element}
         """
-        for c in body.children:
-            if c.name == 'multiRef':
-                key = '#'+c.get('id')
-                self.catalog[key] = c
-            else:
-                self.nodes.append(c)
+        for child in body.children:
+            if self.soaproot(child):
+                self.nodes.append(child)
+            id = child.get('id')
+            if id is None: continue
+            key = '#%s' % id
+            self.catalog[key] = child
 
+    def soaproot(self, node):
+        """
+        Get whether the specified I{node} is a soap encoded root.
+        This is determined by examining @soapenc:root='1'.
+        The node is considered to be a root when the attribute
+        is not specified.
+        @param node: A node to evaluate.
+        @type node: L{Element}
+        @return: True if a soap encoded root.
+        @rtype: bool
+        """
+        root = node.attrib('root', ns=soapenc)
+        if root is None:
+            return True
+        else:
+            return ( root.value == '1' )
+        
