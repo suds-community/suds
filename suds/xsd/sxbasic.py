@@ -127,6 +127,42 @@ class Factory:
         for i in imports:
             children.remove(i)
         return (children, imports, attributes, elements, types, groups, agrps)
+    
+
+class TypedContent(Content):
+
+    def resolve(self, nobuiltin=False):
+        """
+        Resolve and return the nodes true self.
+        @param nobuiltin: Flag indicates that resolution must
+            not continue to include xsd builtins.
+        @return: The resolved (true) type.
+        @rtype: L{SchemaObject}
+        """
+        if self.type is None:
+            return self
+        cached = self.cache.get(nobuiltin)
+        if cached is not None:
+            return cached
+        result = self
+        defns = self.root.defaultNamespace()
+        qref = qualify(self.type, self.root, defns)
+        query = TypeQuery(qref)
+        query.history = [self]
+        log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
+        resolved = query.execute(self.schema)
+        if resolved is None:
+            log.debug(self.schema)
+            raise TypeNotFound(qref)
+        if resolved.builtin():
+            if nobuiltin:
+                result = self
+            else:
+                result = resolved
+        else:
+            result = resolved.resolve(nobuiltin)
+        return result
+
 
 
 class Complex(SchemaObject):
@@ -594,7 +630,7 @@ class Enumeration(Content):
         return True
 
     
-class Element(Content):
+class Element(TypedContent):
     """
     Represents an (xsd) schema <xs:element/> node.
     """
@@ -606,7 +642,7 @@ class Element(Content):
         @param root: The xml root node.
         @type root: L{sax.element.Element}
         """
-        Content.__init__(self, schema, root)
+        TypedContent.__init__(self, schema, root)
         self.min = root.get('minOccurs', default='1')
         self.max = root.get('maxOccurs', default='1')
         a = root.get('form')
@@ -655,38 +691,6 @@ class Element(Content):
         @rtype: boolean
         """
         return ( self.min == '0' )
-    
-    def resolve(self, nobuiltin=False):
-        """
-        Resolve and return the nodes true self.
-        @param nobuiltin: Flag indicates that resolution must
-            not continue to include xsd builtins.
-        @return: The resolved (true) type.
-        @rtype: L{SchemaObject}
-        """
-        if self.type is None:
-            return self
-        cached = self.cache.get(nobuiltin)
-        if cached is not None:
-            return cached
-        result = self
-        defns = self.root.defaultNamespace()
-        qref = qualify(self.type, self.root, defns)
-        query = TypeQuery(qref)
-        query.history = [self]
-        log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
-        resolved = query.execute(self.schema)
-        if resolved is None:
-            log.debug(self.schema)
-            raise TypeNotFound(qref)
-        if resolved.builtin():
-            if nobuiltin:
-                result = self
-            else:
-                result = resolved
-        else:
-            result = resolved.resolve(nobuiltin)
-        return result
     
     def dependencies(self):
         """
@@ -896,7 +900,7 @@ class Include(Import):
     pass
 
    
-class Attribute(Content):
+class Attribute(TypedContent):
     """
     Represents an (xsd) <attribute/> node
     """
@@ -908,7 +912,7 @@ class Attribute(Content):
         @param root: The xml root node.
         @type root: L{sax.element.Element}
         """
-        Content.__init__(self, schema, root)
+        TypedContent.__init__(self, schema, root)
         self.use = root.get('use', default='')
         
     def isattr(self):
