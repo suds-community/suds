@@ -41,10 +41,12 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{python_sitelib}/suds/bindings
 %dir %{python_sitelib}/suds/sax
 %dir %{python_sitelib}/suds/xsd
+%dir %{python_sitelib}/suds/transport
 %{python_sitelib}/suds/*.py*
 %{python_sitelib}/suds/bindings/*.py*
 %{python_sitelib}/suds/sax/*.py*
 %{python_sitelib}/suds/xsd/*.py*
+%{python_sitelib}/suds/transport/*.py*
 
 %doc README LICENSE
 
