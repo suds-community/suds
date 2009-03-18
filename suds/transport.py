@@ -39,8 +39,6 @@ class Request:
     A transport request
     @ivar url: The url for the request.
     @type url: str
-    @ivar proxy: The url of the proxy to be used for the request.
-    @type proxy: str
     @ivar message: The message to be sent in a POST request.
     @type message: str
     @ivar headers: The http headers to be used for the request.
@@ -57,6 +55,48 @@ class Request:
         self.url = url
         self.headers = {}
         self.message = message
+        
+    def __str__(self):
+        s = []
+        s.append('URL:%s' % self.url)
+        s.append('HEADERS: %s' % self.headers)
+        s.append('MESSAGE:')
+        s.append(self.message)
+        return '\n'.join(s)
+
+
+class Reply:
+    """
+    A transport reply
+    @ivar code: The http code returned.
+    @type code: int
+    @ivar message: The message to be sent in a POST request.
+    @type message: str
+    @ivar headers: The http headers to be used for the request.
+    @type headers: dict
+    """
+
+    def __init__(self, code, headers, message):
+        """
+        @param code: The http code returned.
+        @type code: int
+        @param headers: The http returned headers.
+        @type headers: dict
+        @param message: The (optional) reply message received.
+        @type message: str
+        """
+        self.code = code
+        self.headers = headers
+        self.message = message
+        
+    def __str__(self):
+        s = []
+        s.append('CODE: %s' % self.code)
+        s.append('HEADERS: %s' % self.headers)
+        s.append('MESSAGE:')
+        s.append(self.message)
+        return '\n'.join(s)
+
 
 class Transport:
     """
@@ -97,7 +137,7 @@ class Transport:
         @param request: A transport request.
         @type request: L{Request}
         @return: The reply
-        @rtype: basestring
+        @rtype: L{Reply}
         @raise TransportError: On all transport errors.
         """
         raise Exception('not-implemented')
@@ -134,16 +174,18 @@ class HttpTransport(Transport):
     def send(self, request):
         result = None
         url = request.url
-        msg = str(request.message)
+        msg = request.message
         headers = request.headers
-        log.debug('sending to (%s)\nmessage:\n%s', url, msg)
         try:
             u2request = u2.Request(url, msg, headers)
             self.__addcookies(u2request)
             self.__setproxy(url, u2request)
+            request.headers.update(u2request.headers)
+            log.debug('sending:\n%s', request)
             fp = self.__open(u2request)
             self.__getcookies(fp, u2request)
-            result = fp.read()
+            result = Reply(fp.code, fp.headers.dict, fp.read())
+            log.debug('received:\n%s', result)
         except u2.HTTPError, e:
             if e.code in (202,204):
                 result = None
