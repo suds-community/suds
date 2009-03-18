@@ -49,7 +49,7 @@ class FileCache(Cache):
             f.write(fp.read())
             f.close()
             return open(fn)
-        except Exception, e:
+        except:
             return fp
     
     def get(self, url):
@@ -57,7 +57,7 @@ class FileCache(Cache):
             fn = self.__fn(url)
             self.validate(fn)
             return open(fn)
-        except Exception, e:
+        except:
             pass
         
     def validate(self, fn):
