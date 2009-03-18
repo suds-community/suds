@@ -468,11 +468,10 @@ class AttrList:
         @rtype: bool
         """
         ns = attr.namespace()
-        soapenc = 'http://schemas.xmlsoap.org/soap/encoding/'
-        soapenv = 'http://www.w3.org/2003/05/soap-envelope'
         skip = (
             Namespace.xmlns[1],
-            soapenc,
-            soapenv
+            'http://schemas.xmlsoap.org/soap/encoding/',
+            'http://schemas.xmlsoap.org/soap/envelope/',
+            'http://www.w3.org/2003/05/soap-envelope',
         )
         return ( Namespace.xs(ns) or ns[1] in skip )
