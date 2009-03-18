@@ -35,7 +35,7 @@ credentials = dict(username='jortel', password='abc123')
 setup_logging()
 
 
-logging.getLogger('suds.transport').setLevel(logging.DEBUG)
+#logging.getLogger('suds.transport').setLevel(logging.DEBUG)
 
 def start(url):
     global errors

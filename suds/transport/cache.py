@@ -33,7 +33,7 @@ class FileCache(Cache):
     fnsuffix = 'http'
     units = ('hours', 'minutes', 'seconds')
     
-    def __init__(self, location='/tmp', **kwargs):            
+    def __init__(self, location='/tmp/suds', **kwargs):            
         self.location = location
         self.duration = (None, 0)
         if len(kwargs) == 1:
@@ -41,6 +41,14 @@ class FileCache(Cache):
             if not arg[0] in self.units:
                 raise Exception('must be: ' % self.units)
             self.duration = arg
+        self.mktmp()
+            
+    def mktmp(self):
+        try:
+            if not os.path.isdir(self.location):
+                os.makedirs(self.location)
+        except:
+            log.debug(self.location, exc_info=1)
     
     def put(self, url, fp):
         try:
@@ -50,6 +58,7 @@ class FileCache(Cache):
             f.close()
             return open(fn)
         except:
+            log.debug(url, exc_info=1)
             return fp
     
     def get(self, url):
