@@ -99,7 +99,7 @@ class Client(object):
         @see: L{Options}
         """
         options = Options()
-        options.cache = FileCache(hours=1)
+        options.cache = FileCache(days=1)
         options.transport = HttpAuthenticated(options)
         options.set(**kwargs)
         self.options = options
