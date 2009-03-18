@@ -51,14 +51,8 @@ class FileCache(Cache):
         @type location: str
         @param duration: The cached file duration which defines how
             long the file will be cached.  A duration=0 means forever.
-            @see: keywords
-        @type duration: {unit : value}
-        @keyword months: Months
-        @keyword weeks: Weeks
-        @keyword days: Days
-        @keyword hours: Hours
-        @keyword minutes: Minutes
-        @keyword seconds: Seconds
+            The duration may be: (months|weeks|days|hours|minutes|seconds).
+        @type duration: {unit:value}
         """
         self.location = location
         self.duration = (None, 0)
@@ -71,14 +65,8 @@ class FileCache(Cache):
         file will be cached.
         @param duration: The cached file duration which defines how
             long the file will be cached.  A duration=0 means forever.
-            @see: keywords
-        @type duration: {unit : value}
-        @keyword months: Months
-        @keyword weeks: Weeks
-        @keyword days: Days
-        @keyword hours: Hours
-        @keyword minutes: Minutes
-        @keyword seconds: Seconds
+            The duration may be: (months|weeks|days|hours|minutes|seconds).
+        @type duration: {unit:value}
         """
         if len(duration) == 1:
             arg = duration.items()[0]
