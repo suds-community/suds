@@ -28,29 +28,95 @@ log = getLogger(__name__)
 
 
 class FileCache(Cache):
+    """
+    A file-based URL cache.
+    @cvar fnprefix: The file name prefix.
+    @type fnprefix: str
+    @cvar fnsuffix: The file name suffix.
+    @type fnsuffix: str
+    @ivar duration: The cached file duration which defines how
+        long the file will be cached.
+    @type duration: (unit, value)
+    @ivar location: The directory for the cached files.
+    @type location: str
+    """
     
     fnprefix = 'suds'
     fnsuffix = 'http'
-    units = ('hours', 'minutes', 'seconds')
+    units = ('months', 'weeks', 'days', 'hours', 'minutes', 'seconds')
     
-    def __init__(self, location='/tmp/suds', **kwargs):            
+    def __init__(self, location='/tmp/suds', **duration):
+        """
+        @param location: The directory for the cached files.
+        @type location: str
+        @param duration: The cached file duration which defines how
+            long the file will be cached.  A duration=0 means forever.
+            @see: keywords
+        @type duration: {unit : value}
+        @keyword months: Months
+        @keyword weeks: Weeks
+        @keyword days: Days
+        @keyword hours: Hours
+        @keyword minutes: Minutes
+        @keyword seconds: Seconds
+        """
         self.location = location
         self.duration = (None, 0)
-        if len(kwargs) == 1:
-            arg = kwargs.items()[0]
+        self.setduration(**duration)
+        self.mktmp()
+        
+    def setduration(self, **duration):
+        """
+        Set the caching duration which defines how long the 
+        file will be cached.
+        @param duration: The cached file duration which defines how
+            long the file will be cached.  A duration=0 means forever.
+            @see: keywords
+        @type duration: {unit : value}
+        @keyword months: Months
+        @keyword weeks: Weeks
+        @keyword days: Days
+        @keyword hours: Hours
+        @keyword minutes: Minutes
+        @keyword seconds: Seconds
+        """
+        if len(duration) == 1:
+            arg = duration.items()[0]
             if not arg[0] in self.units:
                 raise Exception('must be: ' % self.units)
             self.duration = arg
+        return self
+    
+    def setlocation(self, location):
+        """
+        Set the location (directory) for the cached files.
+        @param location: The directory for the cached files.
+        @type location: str
+        """
+        self.location = location
         self.mktmp()
             
     def mktmp(self):
+        """
+        Make the I{location} directory if it doesn't already exits.
+        """
         try:
             if not os.path.isdir(self.location):
                 os.makedirs(self.location)
         except:
             log.debug(self.location, exc_info=1)
+        return self
     
     def put(self, url, fp):
+        """
+        Put (add) the page to the cache.
+        @param url: An http URL.
+        @type url: str
+        @param fp: An open file stream.
+        @type fp: file stream
+        @return: The cached file stream.
+        @rtype: file stream
+        """
         try:
             fn = self.__fn(url)
             f = open(fn, 'w')
@@ -62,6 +128,13 @@ class FileCache(Cache):
             return fp
     
     def get(self, url):
+        """
+        Get the cached contents for I{url}.
+        @param url: An http URL.
+        @type url: str
+        @return: An open file stream for the cached contents.
+        @rtype: file stream. 
+        """
         try:
             fn = self.__fn(url)
             self.validate(fn)
@@ -70,6 +143,11 @@ class FileCache(Cache):
             pass
         
     def validate(self, fn):
+        """
+        Validate that the file has not expired based on the I{duration}.
+        @param fn: The file name.
+        @type fn: str
+        """
         if self.duration[1] < 1:
             return
         created = dt.fromtimestamp(os.path.getctime(fn))
@@ -80,6 +158,9 @@ class FileCache(Cache):
             os.remove(fn)
  
     def clear(self):
+        """
+        Clear the cache which removes all cached files.
+        """
         for fn in os.listdir(self.location):
             if os.path.isDir(fn):
                 continue
