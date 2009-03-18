@@ -33,7 +33,8 @@ from suds.sax import *
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.attribute import Attribute
-from suds.transport import HttpTransport, Request
+from suds.transport import Request
+from suds.transport.http import HttpTransport
 from xml.sax import parse, parseString, ContentHandler
 
 log = getLogger(__name__)

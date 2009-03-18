@@ -15,17 +15,8 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Contains transport interface (classes) and reference implementation.
+Contains transport interface (classes).
 """
-
-from logging import getLogger
-
-log = getLogger(__name__)
-
-
-#
-# Transport Interface
-#
 
 
 class TransportError(Exception):
@@ -143,101 +134,37 @@ class Transport:
         raise Exception('not-implemented')
 
 
-#
-# Transport Implementation
-#
-
-import urllib2 as u2
-from urlparse import urlparse
-from cookielib import CookieJar
-
-class HttpTransport(Transport):
+class Cache:
     """
-    urllib2 transport implementation.
+    The URL caching object.
     """
     
-    def __init__(self, options=None):
-        Transport.__init__(self, options)
-        self.cookiejar = CookieJar()
-        self.urlopener = None
-        
-    def open(self, request):
-        try:
-            url = request.url
-            log.debug('opening (%s)', url)
-            u2request = u2.Request(url)
-            self.__setproxy(url, u2request)
-            return self.__open(u2request)
-        except u2.HTTPError, e:
-            raise TransportError(str(e), e.code, e.fp)
-
-    def send(self, request):
-        result = None
-        url = request.url
-        msg = request.message
-        headers = request.headers
-        try:
-            u2request = u2.Request(url, msg, headers)
-            self.__addcookies(u2request)
-            self.__setproxy(url, u2request)
-            request.headers.update(u2request.headers)
-            log.debug('sending:\n%s', request)
-            fp = self.__open(u2request)
-            self.__getcookies(fp, u2request)
-            result = Reply(fp.code, fp.headers.dict, fp.read())
-            log.debug('received:\n%s', result)
-        except u2.HTTPError, e:
-            if e.code in (202,204):
-                result = None
-            else:
-                raise TransportError(e.msg, e.code, e.fp)
-        return result
-
-    def __addcookies(self, u2request):
-        self.cookiejar.add_cookie_header(u2request)
-        
-    def __getcookies(self, fp, u2request):
-        self.cookiejar.extract_cookies(fp, u2request)
-        
-    def __open(self, u2request):
-        if self.urlopener is None:
-            return u2.urlopen(u2request)
-        else:
-            return self.urlopener.open(u2request)
-        
-    def __setproxy(self, url, u2request):
-        protocol = urlparse(url)[0]
-        proxy = self.options.proxy.get(protocol, None)
-        if proxy is None:
-            return
-        protocol = u2request.type
-        u2request.set_proxy(proxy, protocol)
-        
-
-class HttpAuthenticated(HttpTransport):
-    """
-    Provides basic http authentication.
-    @ivar pm: The password manager.
-    @ivar handler: The authentication handler.
-    """
+    def put(self, url, fp):
+        """
+        Put an item into the cache.
+        @param url: A url.
+        @type url: str
+        @param fp: A file stream.
+        @type fp: stream
+        @return: The stream.
+        @rtype: stream
+        """
+        return fp
     
-    def __init__(self, options):
-        HttpTransport.__init__(self, options)
-        self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
-        self.handler = u2.HTTPBasicAuthHandler(self.pm)
-        self.urlopener = u2.build_opener(self.handler)
-        
-    def open(self, request):
-        self.__addcredentials(request)
-        return  HttpTransport.open(self, request)
-
-    def send(self, request):
-        self.__addcredentials(request)
-        return HttpTransport.send(self, request)
+    def get(self, url):
+        """
+        Get an item from the cache by url.
+        @param url: A url.
+        @type url: str
+        @return: A stream when found, else None.
+        @rtype: stream
+        """
+        return None
     
-    def __addcredentials(self, request):
-        user = self.options.username
-        pwd = self.options.password
-        if user is not None:
-            self.pm.add_password(None, request.url, user, pwd)
-            
+    def clear(self):
+        """
+        Clear the cached items.
+        """
+        pass
+
+

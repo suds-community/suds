@@ -18,7 +18,7 @@
 Options classes.
 """
 
-from suds.transport import Transport
+from suds.transport import Transport, Cache
 from suds.wsse import Security
 
 class Options(object):
@@ -36,6 +36,8 @@ class Options(object):
                 - type: I{dict}
         - B{transport} - The message transport
                 - type: L{Transport}
+        - B{cache} - The http I{transport} cache.
+                - type: L{Cache}
         - B{headers} - Extra HTTP headers
                 - type: I{dict}
                     - I{str} B{http} - The I{http} protocol proxy URL.
@@ -54,6 +56,7 @@ class Options(object):
     dict(
         faults=(bool, True),
         transport=(Transport, None),
+        cache=(Cache, None),
         port=(basestring, None),
         location=(basestring, None),
         proxy=(dict, {}), 
