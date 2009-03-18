@@ -496,10 +496,10 @@ class SoapClient:
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent(Document(msg))
-            request = Request(location, msg)
+            request = Request(location, str(msg))
             request.headers = self.headers()
             reply = transport.send(request)
-            result = self.succeeded(binding, reply)
+            result = self.succeeded(binding, reply.message)
         except TransportError, e:
             if e.httpcode in (202,204):
                 result = None
