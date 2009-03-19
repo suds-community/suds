@@ -149,6 +149,40 @@ class Cache:
         @return: The stream.
         @rtype: stream
         """
+        raise Exception('not-implemented')
+    
+    def get(self, url):
+        """
+        Get an item from the cache by url.
+        @param url: A url.
+        @type url: str
+        @return: A stream when found, else None.
+        @rtype: stream
+        """
+        raise Exception('not-implemented')
+    
+    def clear(self):
+        """
+        Clear the cached items.
+        """
+        raise Exception('not-implemented')
+
+
+class NoCache(Cache):
+    """
+    The NO caching implementation.
+    """
+    
+    def put(self, url, fp):
+        """
+        Put an item into the cache.
+        @param url: A url.
+        @type url: str
+        @param fp: A file stream.
+        @type fp: stream
+        @return: The stream.
+        @rtype: stream
+        """
         return fp
     
     def get(self, url):
@@ -166,5 +200,3 @@ class Cache:
         Clear the cached items.
         """
         pass
-
-
