@@ -18,7 +18,7 @@
 Options classes.
 """
 
-from suds.transport import Transport, Cache
+from suds.transport import Transport, Cache, NoCache
 from suds.wsse import Security
 
 class Options(object):
@@ -56,7 +56,7 @@ class Options(object):
     dict(
         faults=(bool, True),
         transport=(Transport, None),
-        cache=(Cache, Cache()),
+        cache=(Cache, NoCache()),
         port=(basestring, None),
         location=(basestring, None),
         proxy=(dict, {}), 
