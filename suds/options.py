@@ -56,7 +56,7 @@ class Options(object):
     dict(
         faults=(bool, True),
         transport=(Transport, None),
-        cache=(Cache, None),
+        cache=(Cache, Cache()),
         port=(basestring, None),
         location=(basestring, None),
         proxy=(dict, {}), 
