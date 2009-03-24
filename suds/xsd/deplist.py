@@ -34,19 +34,19 @@ class DepList:
     @type index: list
     @ivar stack: The sorting stack.
     @type stack: list
-    @ivar pushed: A set of items pushed.  This is an effecient way to keep
-        track of the items we've pushed.
-    @type pushed: list
+    @ivar pushed: The I{pushed} set tracks items that have been
+        processed.
+    @type pushed: set
     @ivar sorted: The sorted list of items.
     @type sorted: list
     """
 
     def __init__(self):
         """ """
-        self.raw = []
+        self.unsorted = []
         self.index = {}
         self.stack = []
-        self.pushed = None
+        self.pushed = set()
         self.sorted = None
         
     def add(self, *items):
@@ -58,8 +58,9 @@ class DepList:
         @rtype: L{DepList}
         """
         for item in items:
-            self.raw.append(item)
-            self.index[item[0]] = item
+            self.unsorted.append(item)
+            key = item[0]
+            self.index[key] = item
         return self
         
     def sort(self):
@@ -69,58 +70,73 @@ class DepList:
         @rtype: list
         """
         self.sorted = list()
-        self.pushed = set()  
-        for item in self.raw:
-            self.push(item)
+        self.pushed = set()
+        for item in self.unsorted:
+            popped = []
+            self.push(item)            
             while len(self.stack):
-                self.pop()
-        self.raw = self.sorted
+                try:
+                    top = self.top()
+                    ref = top[1].next()
+                    refd = self.index.get(ref)
+                    if refd is None:
+                        log.debug('"%s" not found, skipped', Repr(ref))
+                        continue
+                    self.push(refd)
+                except StopIteration:
+                    popped.append(self.pop())
+                    continue
+            for p in popped:
+                self.sorted.append(p)
+        self.unsorted = self.sorted
         return self.sorted
+    
+    def top(self):
+        """
+        Get the item at the top of the stack.
+        @return: The top item.
+        @rtype: (item, iter)
+        """
+        return self.stack[-1]
     
     def push(self, item):
         """
         Push and item onto the sorting stack.
         @param item: An item to push.
         @type item: I{item}
+        @param popped: A list of popped items.
+        @type popped: list
         @return: The number of items pushed.
         @rtype: int
         """
         if item in self.pushed:
-            return 0
+            return
+        frame = (item, iter(item[1]))
+        self.stack.append(frame)
         self.pushed.add(item)
-        self.stack.append(item)
-        n = 1
-        for d in item[1]:
-            n += 1
-            dx = self.index.get(d)
-            if dx is None:
-                log.debug('dependency: %s not-found, skipped', Repr(d))
-                continue
-            if self.push(dx) == 1:
-                self.pop()
-                n -= 1
-        return n
     
     def pop(self):
         """
         Pop the top item off the stack and append
         it to the sorted list.
-        @return: self
-        @rtype: L{DepList}
+        @return: The popped item.
+        @rtype: I{item}
         """
-        p = self.stack.pop()
-        self.sorted.append(p)
-        return self
-
+        try:
+            frame = self.stack.pop()
+            return frame[0]
+        except:
+            pass
 
 
 if __name__ == '__main__':
-    a = ('a', ())
+    a = ('a', ('x',))
     b = ('b', ('a',))
     c = ('c', ('a','b'))
     d = ('d', ('c',))
     e = ('e', ('d','a'))
     f = ('f', ('e','c','d','a'))
+    x = ('x', ())
     L = DepList()
-    L.add(c, e, d, b, f, a)
+    L.add(c, e, d, b, f, a, x)
     print [x[0] for x in L.sort()]
