@@ -123,17 +123,18 @@ class Binding:
         soapbody = self.multiref.process(soapbody)
         nodes = self.replycontent(method, soapbody)
         rtypes = self.returned_types(method)
-        if len(rtypes) == 1 and rtypes[0].unbounded():
-            result = self.replylist(rtypes[0], nodes)
-            return (replyroot, result)
-        if len(nodes) > 1:
+        if len(rtypes) > 1:
             result = self.replycomposite(rtypes, nodes)
             return (replyroot, result)
-        if len(nodes) == 1:
-            unmarshaller = self.unmarshaller.typed
-            resolved = rtypes[0].resolve(nobuiltin=True)
-            result = unmarshaller.process(nodes[0], resolved)
-            return (replyroot, result)
+        if len(rtypes) == 1:
+            if rtypes[0].unbounded():
+                result = self.replylist(rtypes[0], nodes)
+                return (replyroot, result)
+            if len(nodes):
+                unmarshaller = self.unmarshaller.typed
+                resolved = rtypes[0].resolve(nobuiltin=True)
+                result = unmarshaller.process(nodes[0], resolved)
+                return (replyroot, result)
         return (replyroot, None)
     
     def replylist(self, rt, nodes):
