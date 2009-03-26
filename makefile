@@ -22,14 +22,10 @@ FEDORAPEOPLE = jortel@fedorapeople.org
 
 all: rpm docs
 
-egg: clean
-	python $(SETUP) bdist_egg
-	rm -rf *.egg-info
-
 dist: clean
-	python $(SETUP) sdist bdist_egg
-	rm -rf *.egg-info
-	./mkfdist.sh
+	mkdir dist
+	./sdist
+	./sdist python
 
 rpm: dist
 	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
