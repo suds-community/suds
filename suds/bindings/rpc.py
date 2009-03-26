@@ -20,7 +20,7 @@ Provides classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
 
 from logging import getLogger
 from suds import *
-from suds.bindings.binding import Binding
+from suds.bindings.binding import Binding, envns
 from suds.sax.element import Element
 
 log = getLogger(__name__)
@@ -52,7 +52,8 @@ class RPC(Binding):
         """
         env = Binding.envelope(self, header, body)
         env.addPrefix(encns[0], encns[1])
-        env.set('encodingStyle', 'http://schemas.xmlsoap.org/soap/encoding/')
+        env.set('%s:encodingStyle' % envns[0], 
+                'http://schemas.xmlsoap.org/soap/encoding/')
         return env
         
     def bodycontent(self, method, args, kwargs):
