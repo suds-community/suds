@@ -23,8 +23,10 @@ from suds import *
 from suds.bindings.binding import Binding
 from suds.sax.element import Element
 
-
 log = getLogger(__name__)
+
+
+encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
 
 class RPC(Binding):
     """
@@ -37,6 +39,21 @@ class RPC(Binding):
         @type wsdl: L{suds.wsdl.Definitions}
         """
         Binding.__init__(self, wsdl)
+        
+    def envelope(self, header, body):
+        """
+        Build the B{<Envelope/>} for an soap outbound message.
+        @param header: The soap message B{header}.
+        @type header: L{Element}
+        @param body: The soap message B{body}.
+        @type body: L{Element}
+        @return: The soap envelope containing the body and header.
+        @rtype: L{Element}
+        """
+        env = Binding.envelope(self, header, body)
+        env.addPrefix(encns[0], encns[1])
+        env.set('encodingStyle', 'http://schemas.xmlsoap.org/soap/encoding/')
+        return env
         
     def bodycontent(self, method, args, kwargs):
         """
