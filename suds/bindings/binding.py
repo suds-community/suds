@@ -33,7 +33,6 @@ from suds.options import Options
 
 log = getLogger(__name__)
 
-encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
 envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
 
 
@@ -274,7 +273,6 @@ class Binding:
         @rtype: L{Element}
         """
         env = Element('Envelope', ns=envns)
-        env.addPrefix(encns[0], encns[1])
         env.addPrefix(Namespace.xsins[0], Namespace.xsins[1])
         env.append(header)
         env.append(body)
