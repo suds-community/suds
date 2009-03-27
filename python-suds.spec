@@ -1,8 +1,9 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?version: %define version %(%{__python} -c "from suds import properties; print properties['version']")}
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.5
+Version: %{version}
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
