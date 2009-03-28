@@ -176,7 +176,7 @@ class Binding:
             rt = dictionary.get(tag, None)
             if rt is None:
                 if node.get('id') is None:
-                    raise Exception('<%s/> not mapped to message part', tag)
+                    raise Exception('<%s/> not mapped to message part' % tag)
                 else:
                     continue
             resolved = rt.resolve(nobuiltin=True)
