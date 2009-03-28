@@ -37,13 +37,6 @@ class Document(Binding):
     To support the complete specification, service methods defined with multiple documents
     (multiple message parts), must present a I{document} view for that method.
     """
-
-    def __init__(self, wsdl):
-        """
-        @param wsdl: A WSDL object.
-        @type wsdl: L{suds.wsdl.Definitions}
-        """
-        Binding.__init__(self, wsdl)
         
     def bodycontent(self, method, args, kwargs):
         """

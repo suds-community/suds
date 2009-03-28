@@ -32,13 +32,6 @@ class RPC(Binding):
     """
     RPC/Literal binding style.
     """
-
-    def __init__(self, wsdl):
-        """
-        @param wsdl: A WSDL object.
-        @type wsdl: L{suds.wsdl.Definitions}
-        """
-        Binding.__init__(self, wsdl)
         
     def envelope(self, header, body):
         """
@@ -125,11 +118,11 @@ class Encoded(RPC):
     RPC/Encoded (section 5)  binding style.
     """
 
-    def __init__(self, wsdl):
+    def marshaller(self):
         """
-        @param wsdl: A WSDL object.
-        @type wsdl: L{suds.wsdl.Definitions}
+        Get the appropriate marshaller.
+        @return: Either the I{encoded} marshaller.
+        @rtype: L{Marshaller}
         """
-        Binding.__init__(self, wsdl)
-        RPC.__init__(self, wsdl)
-        self.encoded = True
+        output = self.xcodecs[1]
+        return output.encoded
