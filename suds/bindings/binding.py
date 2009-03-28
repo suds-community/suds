@@ -50,16 +50,8 @@ class Binding:
     @type options: L{Options}
     @ivar parser: A sax parser.
     @type parser: L{suds.sax.parser.Parser}
-    @ivar unmarshaller: An unmarshaller used to generate an L{Object}
-        representation of received soap messages.
-    @type unmarshaller: L{Unmarshaller}
-    @ivar marshaller: A marshaller used to generate soap messages from
-        python L{Object}s.
-    @type marshaller: L{Marshaller}
-    @ivar encoded: The I{usr=literal} vs I{use=encoded} flag defines with version
-        of the I{marshaller} and I{unmarshaller} should be used to encode/decode
-        soap messages.
-    @type encoded: boolean
+    @ivar xcodecs: The XML (encode|decode) objects.
+    @type xcodecs: (L{Unmarshaller}, L{Marshaller})
     """
     
     replyfilter = (lambda s,r: r)
@@ -73,10 +65,32 @@ class Binding:
         self.schema = wsdl.schema
         self.options = Options()
         self.parser = Parser()
-        self.unmarshaller = Unmarshaller(self.schema)
-        self.marshaller = Marshaller(self.schema)
         self.multiref = MultiRef()
-        self.encoded = False
+        self.xcodecs = (
+            Unmarshaller(self.schema),
+            Marshaller(self.schema),
+        )
+        
+    def unmarshaller(self, typed=True):
+        """
+        Get the appropriate XML decoder.
+        @return: Either the (basic|typed) unmarshaller.
+        @rtype: L{Marshaller}
+        """
+        input = self.xcodecs[0]
+        if typed:
+            return input.typed
+        else:
+            return input.basic
+        
+    def marshaller(self):
+        """
+        Get the appropriate XML encoder.
+        @return: Either L{literal} marshaller.
+        @rtype: L{Marshaller}
+        """
+        output = self.xcodecs[1]
+        return output.literal
 
     def get_message(self, method, args, kwargs):
         """
@@ -130,7 +144,7 @@ class Binding:
                 result = self.replylist(rtypes[0], nodes)
                 return (replyroot, result)
             if len(nodes):
-                unmarshaller = self.unmarshaller.typed
+                unmarshaller = self.unmarshaller()
                 resolved = rtypes[0].resolve(nobuiltin=True)
                 result = unmarshaller.process(nodes[0], resolved)
                 return (replyroot, result)
@@ -149,7 +163,7 @@ class Binding:
         """
         result = []
         resolved = rt.resolve(nobuiltin=True)
-        unmarshaller = self.unmarshaller.typed
+        unmarshaller = self.unmarshaller()
         for node in nodes:
             sobject = unmarshaller.process(node, resolved)
             result.append(sobject)
@@ -169,7 +183,7 @@ class Binding:
         dictionary = {}
         for rt in rtypes:
             dictionary[rt.name] = rt
-        unmarshaller = self.unmarshaller.typed
+        unmarshaller = self.unmarshaller()
         composite = Factory.object('reply')
         for node in nodes:
             tag = node.name
@@ -206,7 +220,7 @@ class Binding:
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
-        unmarshaller = self.unmarshaller.basic
+        unmarshaller = self.unmarshaller(False)
         p = unmarshaller.process(fault)
         if self.options.faults:
             raise WebFault(p, faultroot)
@@ -225,10 +239,7 @@ class Binding:
         @return: The parameter fragment.
         @rtype: L{Element}
         """
-        if self.encoded:
-            marshaller = self.marshaller.encoded
-        else:
-            marshaller = self.marshaller.literal
+        marshaller = self.marshaller()
         if isinstance(object, (list, tuple)):
             tags = []
             for item in object:
@@ -250,10 +261,7 @@ class Binding:
         @return: The parameter fragment.
         @rtype: L{Element}
         """
-        if self.encoded:
-            marshaller = self.marshaller.encoded
-        else:
-            marshaller = self.marshaller.literal
+        marshaller = self.marshaller()
         if isinstance(object, (list, tuple)):
             tags = []
             for item in object:
