@@ -53,7 +53,6 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Wed Feb 25 2009 jortel <jortel@redhat.com> - 0.3.5-1
 - Adds http caching.  Default is (1) day.
-- Replaced build requires python-setuptools-devel with python-setuptools in the spec.
 - Removed checking fc version in spec since no longer building < fc9.
 - Updated makefile to roll tarball with tar.sh.
 - Moved bare/wrapped determination to wsdl for document/literal.
