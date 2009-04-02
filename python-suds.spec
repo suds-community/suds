@@ -1,9 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-%{!?version: %define version %(%{__python} -c "from suds import properties; print properties['version']")}
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: %{version}
+Version: 0.3.5
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -56,7 +55,6 @@ rm -rf $RPM_BUILD_ROOT
 - Adds http caching.  Default is (1) day.
 - Replaced build requires python-setuptools-devel with python-setuptools in the spec.
 - Removed checking fc version in spec since no longer building < fc9.
-- Updated spec to get version from suds properties.
 - Updated makefile to roll tarball with tar.sh.
 - Moved bare/wrapped determination to wsdl for document/literal.
 - Refactored Transport to provide better visibility into http headers.

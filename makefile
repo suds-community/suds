@@ -48,7 +48,7 @@ rdocs: docs
 docs: FORCE
 	rm -rf doc
 	rm -f /tmp/$(DOCTAR)
-	epydoc -o doc `find suds -name "*.py"`
+	epydoc -vo doc `find suds -name "*.py"`
 	tar czvf /tmp/$(DOCTAR) doc
 
 clean: FORCE
