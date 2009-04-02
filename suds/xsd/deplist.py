@@ -104,8 +104,6 @@ class DepList:
         Push and item onto the sorting stack.
         @param item: An item to push.
         @type item: I{item}
-        @param popped: A list of popped items.
-        @type popped: list
         @return: The number of items pushed.
         @rtype: int
         """

@@ -10,7 +10,7 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 Requires: python >= 2.3
-BuildRequires: python-setuptools
+BuildRequires: python-devel python-setuptools
 Url: https://fedorahosted.org/suds
 
 %description
