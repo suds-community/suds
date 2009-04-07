@@ -71,7 +71,7 @@ class FileCache(Cache):
         if len(duration) == 1:
             arg = duration.items()[0]
             if not arg[0] in self.units:
-                raise Exception('must be: ' % self.units)
+                raise Exception('must be: %s' % str(self.units))
             self.duration = arg
         return self
     

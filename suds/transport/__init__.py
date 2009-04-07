@@ -94,17 +94,13 @@ class Transport:
     The transport I{interface}.
     """
     
-    def __init__(self, options=None):
+    def __init__(self):
         """
-        @param options: A suds options object.
-        @type options: L{suds.options.Options}
+        Constructor.
         """
-        if options is None:
-            from suds.options import Options
-            self.options = Options()
-            del Options
-        else:
-            self.options = options
+        from suds.options import Options
+        self.options = Options()
+        del Options
     
     def open(self, request):
         """
