@@ -727,6 +727,9 @@ class Encoded(Literal):
         resolved = self.resolver.top().resolved
         if resolved is None:
             resolved = content.type.resolve()
+        if resolved.any():
+            Typer.auto(node, content.value)
+            return
         name = resolved.name
         ns = resolved.namespace()
         Typer.manual(node, name, ns)

@@ -100,7 +100,7 @@ class Client(object):
         """
         options = Options()
         options.cache = FileCache(days=1)
-        options.transport = HttpAuthenticated(options)
+        options.transport = HttpAuthenticated()
         options.set(**kwargs)
         self.options = options
         self.wsdl = Definitions(url, options)

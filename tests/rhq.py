@@ -29,6 +29,8 @@ from tests import *
 from suds import WebFault
 from suds.client import Client
 from suds.xsd.sxbasic import Import
+from suds.transport.http import HttpTransport
+from suds.transport.cache import FileCache
 
 errors = 0
 
@@ -39,6 +41,12 @@ Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
 #logging.getLogger('suds').setLevel(logging.DEBUG)
+
+class MyTransport(HttpTransport):
+    pass
+
+mycache = FileCache(days=90)
+mytransport = MyTransport(cache=mycache)
 
 def start(url):
     global errors
@@ -52,7 +60,7 @@ def basic_doc_literal():
     try:
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/WebServiceTestBean?wsdl'
         start(url)
-        client = Client(url)
+        client = Client(url, transport=mytransport)
         print client
         #
         # create name

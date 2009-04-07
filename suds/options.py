@@ -86,6 +86,7 @@ class Options(object):
             classes = p[1][0]
             constraint.classes[n] = classes
             constraint.keys.append(n)
+        self.__defined__ = set()
         self.__constraint__ = constraint
         self.prime()
         self.set(**kwargs)
@@ -95,8 +96,10 @@ class Options(object):
         if not builtin:
             self.__constraint__.validate(name, value)
             value = self.default(name, value)
+            self.__defined__.add(name)
+            self.update(value)
         self.__dict__[name] = value
-        
+
     def default(self, name, value):
         if value is None:
             p = self.__options__.get(name)
@@ -116,6 +119,15 @@ class Options(object):
             value = p[1]
             setattr(self, name, value)
             
+    def update(self, x):
+        for attr, options in self.optattrs(x):
+            if options == self:
+                continue
+            for k in options.__defined__:
+                v = options.get(k)
+                setattr(self, k, v)
+            setattr(x, attr, self)
+            
     def get(self, name, *d):
         value = getattr(self, name)
         p = self.__options__.get(name)
@@ -123,6 +135,15 @@ class Options(object):
         if value == default and len(d):
             value = d[0]
         return value
+    
+    def optattrs(self, x):
+        items = []
+        for k in dir(x):
+            v = getattr(x, k)
+            if isinstance(v, Options):
+                item = (k, v)
+                items.append(item)
+        return items
 
 
 class Constraint:

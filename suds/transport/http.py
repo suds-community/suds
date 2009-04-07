@@ -32,8 +32,19 @@ class HttpTransport(Transport):
     urllib2 transport implementation.
     """
     
-    def __init__(self, options=None):
-        Transport.__init__(self, options)
+    def __init__(self, **kwargs):
+        """
+        @param kwargs: Keyword arguments.
+            - B{proxy} - An http proxy to be specified on requests.
+                 The proxy is defined as {protocol:proxy,}
+                    - type: I{dict}
+                    - default: {}
+            - B{cache} - The http I{transport} cache.  May be set (None) for no caching.
+                    - type: L{Cache}
+                    - default: L{NoCache}
+        """
+        Transport.__init__(self)
+        self.options.set(**kwargs)
         self.cookiejar = CookieJar()
         self.urlopener = None
         
