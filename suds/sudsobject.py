@@ -251,8 +251,6 @@ class Printer:
         """ print object using the specified indent (n) and newline (nl). """
         if object is None:
             return 'None'
-        if isinstance(object, Property):
-            return self.print_property(object, h)
         if isinstance(object, Object):
             if len(object) == 0:
                 return '<empty>'
@@ -271,21 +269,6 @@ class Printer:
         if isinstance(object, basestring):
             return '"%s"' % tostr(object)
         return '%s' % tostr(object)
-    
-    def print_property(self, d, h):
-        """ print a property object """
-        s = []
-        cls = d.__class__
-        s.append('property:')
-        s.append(cls.__name__)
-        if d in h:
-            s.append('...')
-            return ''.join(s)
-        h.append(d)
-        s.append(' = ')
-        s.append(self.process(d.value, h))
-        h.pop()
-        return ''.join(s)
     
     def print_object(self, d, h, n, nl=False):
         """ print complex using the specified indent (n) and newline (nl). """
