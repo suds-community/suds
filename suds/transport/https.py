@@ -51,7 +51,6 @@ class HttpAuthenticated(HttpTransport):
                     - default: None
         """
         HttpTransport.__init__(self, **kwargs)
-        self.options.set(**kwargs)
         self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
         self.handler = u2.HTTPBasicAuthHandler(self.pm)
         self.urlopener = u2.build_opener(self.handler)
