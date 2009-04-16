@@ -29,7 +29,7 @@ from tests import *
 from suds import WebFault
 from suds.client import Client
 from suds.xsd.sxbasic import Import
-from suds.transport.http import HttpTransport
+from suds.transport.https import HttpAuthenticated
 from suds.transport.cache import FileCache
 
 errors = 0
@@ -42,7 +42,7 @@ Import.bind('http://schemas.xmlsoap.org/soap/encoding/')
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
 #logging.getLogger('suds').setLevel(logging.DEBUG)
 
-class MyTransport(HttpTransport):
+class MyTransport(HttpAuthenticated):
     pass
 
 mycache = FileCache(days=90)
