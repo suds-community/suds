@@ -19,6 +19,7 @@ Contains transport interface (classes) and reference implementation.
 """
 
 import os
+from tempfile import gettempdir as tmp
 from suds.transport import *
 from datetime import datetime as dt
 from datetime import timedelta
@@ -45,7 +46,7 @@ class FileCache(Cache):
     fnsuffix = 'http'
     units = ('months', 'weeks', 'days', 'hours', 'minutes', 'seconds')
     
-    def __init__(self, location='/tmp/suds', **duration):
+    def __init__(self, location=None, **duration):
         """
         @param location: The directory for the cached files.
         @type location: str
@@ -54,10 +55,11 @@ class FileCache(Cache):
             The duration may be: (months|weeks|days|hours|minutes|seconds).
         @type duration: {unit:value}
         """
+        if location is None:
+            location = os.path.join(tmp(), 'suds')
         self.location = location
         self.duration = (None, 0)
         self.setduration(**duration)
-        self.mktmp()
         
     def setduration(self, **duration):
         """
@@ -82,7 +84,6 @@ class FileCache(Cache):
         @type location: str
         """
         self.location = location
-        self.mktmp()
             
     def mktmp(self):
         """
@@ -107,7 +108,7 @@ class FileCache(Cache):
         """
         try:
             fn = self.__fn(url)
-            f = open(fn, 'w')
+            f = self.open(fn, 'w')
             f.write(fp.read())
             f.close()
             return open(fn)
@@ -126,7 +127,7 @@ class FileCache(Cache):
         try:
             fn = self.__fn(url)
             self.validate(fn)
-            return open(fn)
+            return self.open(fn)
         except:
             pass
         
@@ -155,6 +156,13 @@ class FileCache(Cache):
             if fn.startswith(self.prefix) and fn.endswith(self.suffix):
                 log.debug('deleted: %s', fn)
                 os.remove(fn)
+                
+    def open(self, fn, *args):
+        """
+        Open the cache file making sure the directory is created.
+        """
+        self.mktmp()
+        return open(fn, *args)
     
     def __fn(self, url):
         fn = '%s-%s.%s' % (self.fnprefix, abs(hash(url)), self.fnsuffix)
