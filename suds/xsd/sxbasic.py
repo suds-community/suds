@@ -1017,7 +1017,10 @@ class Any(Content):
         @return: The requested attribute.
         @rtype: L{SchemaObject}
         """
-        return self
+        root = self.root.clone()
+        root.set('note', 'synthesized (any) attribute')
+        attribute = Any(self.schema, root)
+        return (attribute, [])
     
     def any(self):
         """
