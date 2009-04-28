@@ -20,6 +20,7 @@ Contains transport interface (classes) and reference implementation.
 
 import os
 from tempfile import gettempdir as tmp
+from urlparse import urlparse
 from suds.transport import *
 from datetime import datetime as dt
 from datetime import timedelta
@@ -165,5 +166,12 @@ class FileCache(Cache):
         return open(fn, *args)
     
     def __fn(self, url):
+        if self.__ignored(url):
+            raise Exception('URL %s, ignored')
         fn = '%s-%s.%s' % (self.fnprefix, abs(hash(url)), self.fnsuffix)
         return os.path.join(self.location, fn)
+    
+    def __ignored(self, url):
+        """ ignore urls based on protocol """
+        protocol = urlparse(url)[0]
+        return protocol in ('file',)
