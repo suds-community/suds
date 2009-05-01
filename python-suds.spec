@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.5
+Version: 0.3.6
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -51,6 +51,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Wed May 1 2009 jortel <jortel@redhat.com> - 0.3.6-1
+- 0.3.6
 * Wed Feb 25 2009 jortel <jortel@redhat.com> - 0.3.5-1
 - Adds http caching.  Default is (1) day.
 - Removed checking fc version in spec since no longer building < fc9.
