@@ -617,15 +617,19 @@ class SimClient(SoapClient):
         fault = simulation.get('fault')
         if msg is None:
             if reply is not None:
-                return self.__reply(reply)
+                return self.__reply(reply, args, kwargs)
             if fault is not None:
                 return self.__fault(fault)
             raise Exception('(reply|fault) expected when msg=None')
         msg = Parser().parse(string=msg)
         return self.send(msg)
     
-    def __reply(self, reply):
+    def __reply(self, reply, args, kwargs):
         """ simulate the reply """
+        binding = self.method.binding.input
+        binding.options = self.options
+        msg = binding.get_message(self.method, args, kwargs)
+        log.debug('inject (simulated) send message:\n%s', msg)
         binding = self.method.binding.output
         binding.options = self.options
         return self.succeeded(binding, reply)

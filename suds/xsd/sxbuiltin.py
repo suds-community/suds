@@ -117,7 +117,8 @@ class XBoolean(XBuiltin):
     
     translation = (
         { '1':True, 'true':True, '0':False, 'false':False },
-        { True: 'true', False: 'false' },)
+        { True: 'true', False: 'false' },
+    )
         
     def translate(self, value, topython=True):
         """
@@ -149,7 +150,10 @@ class XInteger(XBuiltin):
             else:
                 return None
         else:
-            return str(value)
+            if isinstance(value, int):
+                return str(value)
+            else:
+                return value
 
        
 class XFloat(XBuiltin):
@@ -169,4 +173,7 @@ class XFloat(XBuiltin):
             else:
                 return None
         else:
-            return str(value)
+            if isinstance(value, float):
+                return str(value)
+            else:
+                return value
