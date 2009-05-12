@@ -859,12 +859,14 @@ class Import(SchemaObject):
     def open(self):
         """
         Open and import the refrenced schema.
+        @return: The referenced schema.
+        @rtype: L{Schema}
         """
         if self.opened:
             return
         self.opened = True
         log.debug('%s, importing ns="%s", location="%s"', self.id, self.ns[1], self.location)
-        result = self.schema.locate(self.ns)
+        result = self.locate()
         if result is None:
             if self.location is None:
                 log.debug('imported schema (%s) not-found', self.ns[1])
@@ -872,8 +874,16 @@ class Import(SchemaObject):
                 result = self.download()
         log.debug('imported:\n%s', result)
         return result
+    
+    def locate(self):
+        """ find the schema locally """
+        if self.ns[1] == self.schema.tns[1]:
+            return None
+        else:
+            return self.schema.locate(self.ns)
 
     def download(self):
+        """ download the schema """
         url = self.location
         try:
             if '://' not in url:
