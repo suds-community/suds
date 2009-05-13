@@ -187,6 +187,9 @@ class Schema:
         self.attributes = {}
         self.groups = {}
         self.agrps = {}
+        doctor = self.options.schemadoctor
+        if doctor is not None:
+            doctor.examine(root)
         form = self.root.get('elementFormDefault')
         if form is None:
             self.form_qualified = False
