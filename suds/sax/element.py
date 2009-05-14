@@ -785,6 +785,19 @@ class Element:
             branch += c.branch()
         return branch
     
+    def walk(self, visitor):
+        """
+        Walk the branch and call the visitor function
+        on each node.
+        @param visitor: A function.
+        @return: self
+        @rtype: L{Element}
+        """
+        visitor(self)
+        for c in self.children:
+            c.walk(visitor)
+        return self
+    
     def prune(self):
         """
         Prune the branch of empty nodes.
