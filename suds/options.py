@@ -20,6 +20,8 @@ Options classes.
 
 from suds.transport import Transport, Cache, NoCache
 from suds.wsse import Security
+from suds.xsd.doctor import Doctor
+
 
 class Options(object):
     """
@@ -62,6 +64,9 @@ class Options(object):
         - B{wsse} - The web services I{security} provider object.
                 - type: L{Security}
                 - default: None
+        - B{schemadoctor} - A schema I{doctor} object.
+                - type: L{Doctor}
+                - default: None
     """
 
     __options__ = \
@@ -77,6 +82,7 @@ class Options(object):
         username=(basestring, None),
         password=(basestring, None),
         wsse=(Security, None),
+        schemadoctor=(Doctor, None),
     )
     
     def __init__(self, **kwargs):

@@ -14,23 +14,42 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-
+from logging import getLogger
 from suds.sax import splitPrefix, Namespace
 from suds.sax.element import Element
 
+log = getLogger(__name__)
+
 
 class Doctor:
-    
+    """
+    Schema Doctor.
+    """
     def examine(self, root):
+        """
+        Examine and repair the schema (if necessary).
+        @param root: A schema root element.
+        @type root: L{Element}
+        """
         pass
 
 
 class Practice(Doctor):
+    """
+    A collection of doctors.
+    @ivar doctors: A list of doctors.
+    @type doctors: list
+    """
     
     def __init__(self):
         self.doctors = []
         
     def add(self, doctor):
+        """
+        Add a doctor to the practice
+        @param doctor: A doctor to add.
+        @type doctor: L{Doctor}
+        """
         self.doctors.append(doctor)
 
     def examine(self, root):
@@ -40,75 +59,60 @@ class Practice(Doctor):
 
 
 class ImportDoctor(Doctor):
-    
-    class Case:
-        def __init__(self, ns):
-            self.imports = 0
-            self.refs = 0
-            self.ns = ns
-            self.names = []
-            self.values = []
+    """
+    Doctor used to fix missing imports.
+    @ivar tns: A list of target namespaces.
+    @type tns: list
+    @ivar namespaces: A list of namespaces to add import for.
+    @type namespaces: list of (ns, location)
+    """
 
-        def clear(self):
-            self.imports = 0
-            self.refs = 0
-
-        def sick(self):
-            return ( self.refs and not self.imports )
-
-        def cure(self, root):
-            imp = Element('import', ns=Namespace.xsdns)
-            imp.set('namespace', self.ns)
-            root.insert(imp)
-            return root
+    def __init__(self, *tns):
+        """
+        @param tns: A list of target namespaces
+        @type tns: str
+        """
+        self.tns = tns
+        self.namespaces = []
         
-        def examine(self, node):
-            if self.findimport(node):
-                return
-            self.findrefs(node)
-            return self
-
-        def findimport(self, node):
-            if node.name == 'import':
-                ns = node.get('namespace')
-                if self.ns == ns:
-                    self.imports += 1
-                return 1
-            return 0
-            
-        def findrefs(self, node):
-            for a in node.attributes:
-                p, n = splitPrefix(a.name)
-                if n not in ('ref', 'type'):
-                    continue
-                p, v = splitPrefix(a.value)
-                if len(self.values):
-                    if v not in self.values:
-                        continue
-                ns = node.resolvePrefix(p)
-                if self.ns == ns[1]:
-                    self.refs += 1
-            return self
-
-    def __init__(self):
-        self.cases = []
-        
-    def add(self, c):
-        self.cases.append(c)
-        
-    def clear(self):
-        for c in self.cases:
-            c.clear()
+    def add(self, ns, location=None):
+        """
+        Add a namesapce to be checked.
+        @param ns: A namespace.
+        @type ns: str
+        @param location: A schema location.
+        @type location: str
+        """
+        entry = (ns,location)
+        self.namespaces.append(entry)
         
     def examine(self, root):
-        self.clear()
-        root.walk(self.check)
-        for c in self.cases:
-            if c.sick():
-                c.cure(root)
-        return self
-
-    def check(self, node):
-        for c in self.cases:
-            c.examine(node)
-
+        found = []
+        if not self.matchtarget(root):
+            return
+        for c in root.children:
+            for entry in self.namespaces:
+                if self.matchimport(c, entry):
+                    found.append(entry[0])
+        for entry in self.namespaces:
+            if entry[0] not in found:
+                self.addimport(root, entry)
+            
+    def addimport(self, root, entry):
+        node = Element('import', ns=Namespace.xsdns)
+        node.set('namespace', entry[0])
+        if entry[1] is not None:
+            node.set('schemaLocation', entry[1])
+        log.debug('add: %s', node)
+        root.insert(node)
+            
+    def matchtarget(self, root):
+        tns = root.get('targetNamespace')
+        return ( tns in self.tns )
+    
+    def matchimport(self, node, entry):
+        if node.name == 'import':
+            ns = node.get('namespace')
+            if entry[0] == ns:
+                return 1
+        return 0
