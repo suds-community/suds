@@ -58,24 +58,143 @@ class Practice(Doctor):
         return root
 
 
-class ImportDoctor(Doctor):
+class TnsFilter:
     """
-    Doctor used to fix missing imports.
+    Target Namespace filter.
     @ivar tns: A list of target namespaces.
-    @type tns: list
-    @ivar namespaces: A list of namespaces to add import for.
-    @type namespaces: list of (ns, location)
+    @type tns: [str,...]
     """
 
     def __init__(self, *tns):
         """
-        @param tns: A list of target namespaces
-        @type tns: str
+        @param tns: A list of target namespaces.
+        @type tns: [str,...]
         """
-        self.tns = tns
-        self.namespaces = []
+        self.tns = []
+        self.add(*tns)
         
-    def add(self, ns, location=None):
+    def add(self, *tns):
+        """
+        Add I{targetNamesapces} to be added.
+        @param tns: A list of target namespaces.
+        @type tns: [str,...]
+        """
+        self.tns += tns
+
+    def match(self, root, ns):
+        """
+        Match by I{targetNamespace} excluding those that
+        are equal to the specified namespace to prevent
+        adding an import to itself.
+        @param root: A schema root.
+        @type root: L{Element}
+        """
+        tns = root.get('targetNamespace')
+        if len(self.tns):
+            matched = ( tns in self.tns )
+        else:
+            matched = 1
+        itself = ( ns == tns )
+        return ( matched and not itself )
+    
+
+class Import:
+    """
+    An <xs:import/> to be applied.
+    @cvar xsdns: The XSD namespace.
+    @type xsdns: (p,u)
+    @ivar ns: An import namespace.
+    @type ns: str
+    @ivar location: An optional I{schemaLocation}.
+    @type location: str
+    @ivar filter: A filter used to restrict application to
+        a particular schema.
+    @type filter: L{TnsFilter}
+    """
+
+    xsdns = Namespace.xsdns
+    
+    def __init__(self, ns, location=None):
+        """
+        @param ns: An import namespace.
+        @type ns: str
+        @param location: An optional I{schemaLocation}.
+        @type location: str
+        """
+        self.ns = ns
+        self.location = location
+        self.filter = TnsFilter()
+        
+    def setfilter(self, filter):
+        """
+        Set the filter.
+        @param filter: A filter to set.
+        @type filter: L{TnsFilter}
+        """
+        self.filter = filter
+        
+    def apply(self, root):
+        """
+        Apply the import (rule) to the specified schema.
+        If the schema does not already contain an import for the
+        I{namespace} specified here, it is added.
+        @param root: A schema root.
+        @type root: L{Element}
+        """
+        if not self.filter.match(root, self.ns):
+            return
+        if self.exists(root):
+            return
+        node = Element('import', ns=Import.xsdns)
+        node.set('namespace', self.ns)
+        if self.location is not None:
+            node.set('schemaLocation', self.location)
+        log.debug('inserting: %s', node)
+        root.insert(node)
+        
+    def add(self, root):
+        """
+        Add an <xs:import/> to the specified schema root.
+        @param root: A schema root.
+        @type root: L{Element}
+        """
+        node = Element('import', ns=xsdns)
+        node.set('namespace', self.ns)
+        if self.location is not None:
+            node.set('schemaLocation', self.location)
+        log.debug('%s inserted', node)
+        root.insert(node) 
+        
+    def exists(self, root):
+        """
+        Check to see if the <xs:import/> already exists
+        in the specified schema root by matching I{namesapce}.
+        @param root: A schema root.
+        @type root: L{Element}
+        """
+        for node in root.children:
+            if node.name != 'import':
+                continue
+            ns = node.get('namespace')
+            if self.ns == ns:
+                return 1
+        return 0
+    
+
+class ImportDoctor(Doctor):
+    """
+    Doctor used to fix missing imports.
+    @ivar imports: A list of imports to apply.
+    @type imports: [L{Import},...]
+    """
+
+    def __init__(self, *imports):
+        """
+        """
+        self.imports = []
+        self.add(*imports)
+        
+    def add(self, *imports):
         """
         Add a namesapce to be checked.
         @param ns: A namespace.
@@ -83,36 +202,8 @@ class ImportDoctor(Doctor):
         @param location: A schema location.
         @type location: str
         """
-        entry = (ns,location)
-        self.namespaces.append(entry)
+        self.imports += imports
         
     def examine(self, root):
-        found = []
-        if not self.matchtarget(root):
-            return
-        for c in root.children:
-            for entry in self.namespaces:
-                if self.matchimport(c, entry):
-                    found.append(entry[0])
-        for entry in self.namespaces:
-            if entry[0] not in found:
-                self.addimport(root, entry)
-            
-    def addimport(self, root, entry):
-        node = Element('import', ns=Namespace.xsdns)
-        node.set('namespace', entry[0])
-        if entry[1] is not None:
-            node.set('schemaLocation', entry[1])
-        log.debug('add: %s', node)
-        root.insert(node)
-            
-    def matchtarget(self, root):
-        tns = root.get('targetNamespace')
-        return ( tns in self.tns )
-    
-    def matchimport(self, node, entry):
-        if node.name == 'import':
-            ns = node.get('namespace')
-            if entry[0] == ns:
-                return 1
-        return 0
+        for imp in self.imports:
+            imp.apply(root)
