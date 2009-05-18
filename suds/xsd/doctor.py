@@ -197,10 +197,8 @@ class ImportDoctor(Doctor):
     def add(self, *imports):
         """
         Add a namesapce to be checked.
-        @param ns: A namespace.
-        @type ns: str
-        @param location: A schema location.
-        @type location: str
+        @param imports: A list of L{Import} objects.
+        @type imports: [L{Import},..]
         """
         self.imports += imports
         
