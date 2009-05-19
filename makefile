@@ -20,38 +20,42 @@ SETUP = setup.py
 DOCTAR = suds-docs.tar.gz
 FEDORAPEOPLE = jortel@fedorapeople.org
 
-all: rpm docs
+all : rpm docs
 
-dist: clean
+dist : clean
 	mkdir dist
 	./sdist
 	./sdist python
 
-rpm: dist
+rpm : dist
 	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
 	rpmbuild -ba $(SPEC)
 	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
 	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
 	rpmlint -i dist/python-*.rpm
 
-release: rpm rdocs
+release : rpm rdocs
 	scp dist/python*.tar.gz fedorahosted.org:suds
 	scp dist/python*.rpm fedorahosted.org:suds
 	scp /tmp/$(DOCTAR) $(FEDORAPEOPLE):
 
-register: FORCE
+register :
 	python setup.py sdist bdist_egg register upload
 
-rdocs: docs
+rdocs : docs
 	ssh $(FEDORAPEOPLE) 'cd public_html/suds; rm -rf doc; tar xmzvf ~/$(DOCTAR)'
 
-docs: FORCE
+docs : FORCE
 	rm -rf doc
 	rm -f /tmp/$(DOCTAR)
 	epydoc -vo doc `find suds -name "*.py"`
 	tar czvf /tmp/$(DOCTAR) doc
 
-clean: FORCE
+pdf :
+	epydoc -vo doc --pdf `find suds -name \*.py`
+	mv doc/api.pdf doc/sudsapi.pdf
+
+clean :
 	rm -rf dist
 	rm -rf build
 	rm -rf doc
@@ -63,4 +67,4 @@ clean: FORCE
 	find . -name "*.pyc" -exec rm -f {} \;
 	find . -name "*~" -exec rm -f {} \;
 
-FORCE:
+.PHONY : clean register docs pdf
