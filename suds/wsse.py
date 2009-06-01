@@ -23,7 +23,12 @@ from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
 from datetime import datetime
-import md5
+
+try:
+    from hashlib import md5
+except ImportError:
+    # Python 2.4 compatibility
+    from md5 import md5
 
 
 dsns = \
@@ -129,7 +134,7 @@ class UsernameToken(Token):
             s.append(self.username)
             s.append(self.password)
             s.append(self.sysdate())
-            m = md5.new()
+            m = md5()
             m.update(':'.join(s))
             self.nonce = m.hexdigest()
         else:
