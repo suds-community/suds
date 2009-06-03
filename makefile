@@ -15,7 +15,8 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 #
 
-SPEC = python-suds.spec
+PKG = python-suds
+SPEC = $(PKG).spec
 SETUP = setup.py
 DOCTAR = suds-docs.tar.gz
 FEDORAPEOPLE = jortel@fedorapeople.org
@@ -28,11 +29,11 @@ dist : clean
 	./sdist python
 
 rpm : dist
-	cp dist/python-suds*.gz /usr/src/redhat/SOURCES
+	cp dist/$(PKG)*.gz /usr/src/redhat/SOURCES
 	rpmbuild -ba $(SPEC)
-	cp /usr/src/redhat/RPMS/noarch/python-suds*.rpm dist
-	cp /usr/src/redhat/SRPMS/python-suds*.rpm dist
-	rpmlint -i dist/python-*.rpm
+	cp /usr/src/redhat/RPMS/noarch/$(PKG)*.rpm dist
+	cp /usr/src/redhat/SRPMS/$(PKG)*.rpm dist
+	rpmlint -i dist/$(PKG)*.rpm
 
 release : rpm rdocs
 	scp dist/python*.tar.gz fedorahosted.org:suds
@@ -45,7 +46,7 @@ register :
 rdocs : docs
 	ssh $(FEDORAPEOPLE) 'cd public_html/suds; rm -rf doc; tar xmzvf ~/$(DOCTAR)'
 
-docs : FORCE
+docs :
 	rm -rf doc
 	rm -f /tmp/$(DOCTAR)
 	epydoc -vo doc `find suds -name "*.py"`
@@ -60,10 +61,10 @@ clean :
 	rm -rf build
 	rm -rf doc
 	rm -rf *.egg-info
-	rm -rf /usr/src/redhat/BUILD/python-suds*
-	rm -rf /usr/src/redhat/RPMS/noarch/python-suds*
-	rm -rf /usr/src/redhat/SOURCES/python-suds*
-	rm -rf /usr/src/redhat/SRPMS/python-suds*
+	rm -rf /usr/src/redhat/BUILD/$(PKG)*
+	rm -rf /usr/src/redhat/RPMS/noarch/$(PKG)*
+	rm -rf /usr/src/redhat/SOURCES/$(PKG)*
+	rm -rf /usr/src/redhat/SRPMS/$(PKG)*
 	find . -name "*.pyc" -exec rm -f {} \;
 	find . -name "*~" -exec rm -f {} \;
 

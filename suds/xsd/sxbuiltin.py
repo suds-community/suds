@@ -67,14 +67,7 @@ class XString(XBuiltin):
     """
     Represents an (xsd) <xs:string/> node
     """
-    
-    def __init__(self, schema, name):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        """
-        XBuiltin.__init__(self, schema, name)
-        self.nillable = False
+    pass
 
   
 class XAny(XBuiltin):

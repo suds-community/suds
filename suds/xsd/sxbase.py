@@ -41,6 +41,8 @@ class SchemaObject:
     @ivar nillable: A flag that inidcates that @nillable
         has a value of I{true}.
     @type nillable: boolean
+    @ivar default: The default value.
+    @type default: object
     @ivar rawchildren: A list raw of all children.
     @type rawchildren: [L{SchemaObject},...]
     """
@@ -95,6 +97,7 @@ class SchemaObject:
         self.ref = root.get('ref')
         self.form_qualified = schema.form_qualified
         self.nillable = False
+        self.default = root.get('default')
         self.rawchildren = []
         self.cache = {}
         
@@ -183,6 +186,15 @@ class SchemaObject:
         @rtype: boolean
         """
         return False
+    
+    def required(self):
+        """
+        Get whether this type is required.
+        @return: True if required, else False
+        @rtype: boolean
+        """
+        return ( not self.optional() )
+        
     
     def resolve(self, nobuiltin=False):
         """
