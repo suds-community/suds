@@ -107,7 +107,6 @@ class PathResolver(Resolver):
             result = self.root(parts)
             if len(parts) > 1:
                 result = result.resolve(nobuiltin=True)
-            if len(parts) > 2:
                 result = self.branch(result, parts)
                 result = self.leaf(result, parts)
             if resolved:
