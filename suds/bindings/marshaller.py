@@ -175,6 +175,17 @@ class Appender:
         """
         self.marshaller.setnil(node, content)
         
+    def setdefault(self, node, content):
+        """
+        Set the value of the I{node} to a default value.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
+        @return: The default.
+        """
+        return self.marshaller.setdefault(node, content)
+        
     def suspend(self, content):
         """
         Notify I{marshaller} that appending this content has suspended.
@@ -248,7 +259,9 @@ class NoneAppender(Appender):
         @type content: L{Object}
         """
         child = self.node(content)
-        self.setnil(child, content)
+        default = self.setdefault(child, content)
+        if default is None:
+            self.setnil(child, content)
         parent.append(child)
 
 
@@ -471,6 +484,17 @@ class MBase:
         """
         pass
 
+    def setdefault(self, node, content):
+        """
+        Set the value of the I{node} to a default value.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
+        @return: The default.
+        """
+        pass
+
 
 class Basic(MBase):
     """
@@ -618,17 +642,30 @@ class Literal(MBase):
     
     def setnil(self, node, content):
         """
-        Set the value of the I{node} to nill when nillable by the type or the
-        resolved type is a builtin B{and} it is nillable.
+        Set the value of the I{node} to nill when nillable.
         @param node: A I{nil} node.
         @type node: L{Element}
         @param content: The content for which proccessing has ended.
         @type content: L{Object}
         """
-        resolved = content.type.resolve()
-        if ( content.type.nillable or \
-             ( resolved.builtin() and resolved.nillable ) ):
+        if content.type.nillable:
             node.setnil()
+            
+    def setdefault(self, node, content):
+        """
+        Set the value of the I{node} to a default value.
+        @param node: A I{nil} node.
+        @type node: L{Element}
+        @param content: The content for which proccessing has ended.
+        @type content: L{Object}
+        @return: The default.
+        """
+        default = content.type.default
+        if default is None:
+            pass
+        else:
+            node.setText(default)
+        return default
     
     def encode(self, node, content):
         """
