@@ -34,7 +34,7 @@ class Encoder:
     encodings = \
         (( '&(?!(amp|lt|gt|quot|apos);)', '&amp;' ),( '<', '&lt;' ),( '>', '&gt;' ),( '"', '&quot;' ),("'", '&apos;' ))
     decodings = \
-        (( '&amp;', '&' ),( '&lt;', '<' ),( '&gt;', '>' ),( '&quot;', '"' ),( '&apos;', "'" ))
+        (( '&lt;', '<' ),( '&gt;', '>' ),( '&quot;', '"' ),( '&apos;', "'" ),( '&amp;', '&' ))
     special = \
         ('&', '<', '>', '"', "'")
     
