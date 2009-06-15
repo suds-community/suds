@@ -484,7 +484,7 @@ def content_source():
     try:
         url = 'http://localhost:7080/rhq-rhq-enterprise-server-ejb3/ContentSourceManagerBean?wsdl'
         start(url)
-        client = Client(url)
+        client = Client(url, xstq=False)
         print client
         #
         # create a configuration

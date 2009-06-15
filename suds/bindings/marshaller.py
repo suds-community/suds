@@ -541,6 +541,7 @@ class Literal(MBase):
         """
         MBase.__init__(self)
         self.schema = schema
+        self.options = schema.options
         self.resolver = GraphResolver(self.schema)
     
     def reset(self):
@@ -687,10 +688,8 @@ class Literal(MBase):
             return
         ns = None
         name = resolved.name
-        ns0 = content.type.namespace('ns0')
-        ns1 = resolved.namespace('ns1')
-        if ns0[1] != ns1[1]:
-            ns = ns1
+        if self.options.xstq:
+            ns = resolved.namespace('ns1')
         Typer.manual(node, name, ns)
     
     def skip(self, content):
@@ -767,8 +766,10 @@ class Encoded(Literal):
         if resolved.any():
             Typer.auto(node, content.value)
             return
+        ns = None
         name = resolved.name
-        ns = resolved.namespace()
+        if self.options.xstq:
+            ns = resolved.namespace()
         Typer.manual(node, name, ns)
 
 
