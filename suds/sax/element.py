@@ -231,22 +231,28 @@ class Element:
         self.text = sax.encoder.encode(value)
         return self
         
-    def getText(self, default=None, trim=False):
+    def getText(self, default=None):
         """
         Get the element's text content with optional default
         @param default: A value to be returned when no text content exists.
         @type default: basestring
-        @param trim: Return a trimmed value ( see str.strip() ).
-        @type trim: boolean
         @return: The text content, or I{default}
         @rtype: basestring
         """
         result = sax.encoder.decode(self.text)
         if result is None:
             result = default
-        if trim and result is not None:
-            result = result.strip()
         return result
+    
+    def trim(self):
+        """
+        Trim leading and trailing whitespace.
+        @return: self
+        @rtype: L{Element}
+        """
+        if self.hasText():
+            self.text = self.text.strip()
+        return self
     
     def hasText(self):
         """
