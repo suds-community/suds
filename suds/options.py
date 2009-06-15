@@ -64,9 +64,13 @@ class Options(object):
         - B{wsse} - The web services I{security} provider object.
                 - type: L{Security}
                 - default: None
-        - B{schemadoctor} - A schema I{doctor} object.
+        - B{doctor} - A schema I{doctor} object.
                 - type: L{Doctor}
                 - default: None
+        - B{xstq} - The B{x}ml B{s}chema B{t}ype B{q}ualified flag indicates
+            that the I{xsi:type} attribute values should be qualified by namespace.
+                - type: I{bool}
+                - default: True
     """
 
     __options__ = \
@@ -82,7 +86,8 @@ class Options(object):
         username=(basestring, None),
         password=(basestring, None),
         wsse=(Security, None),
-        schemadoctor=(Doctor, None),
+        doctor=(Doctor, None),
+        xstq=(bool, True),
     )
     
     def __init__(self, **kwargs):

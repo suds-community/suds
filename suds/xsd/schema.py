@@ -187,7 +187,7 @@ class Schema:
         self.attributes = {}
         self.groups = {}
         self.agrps = {}
-        doctor = self.options.schemadoctor
+        doctor = self.options.doctor
         if doctor is not None:
             doctor.examine(root)
         form = self.root.get('elementFormDefault')
