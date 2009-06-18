@@ -23,6 +23,7 @@ from suds import *
 from suds.bindings import *
 from suds.sudsobject import Factory, Object, merge
 from suds.sax import Namespace
+from suds.sax.text import Text
 from suds.resolver import NodeResolver, Frame
 
 log = getLogger(__name__)
@@ -136,9 +137,9 @@ class UMBase:
             if self.nillable(content.data):
                 return None
             else:
-                return xlstr.string('', lang)
+                return Text('', lang=lang)
         if isinstance(content.text, basestring):
-            return xlstr.string(content.text, lang)
+            return Text(content.text, lang=lang)
         else:
             return content.text
     

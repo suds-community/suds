@@ -26,6 +26,7 @@ from suds.resolver import GraphResolver, Frame
 from suds.sax import Namespace as NS
 from suds.sax.document import Document
 from suds.sax.element import Element
+from suds.sax.text import Text
 from suds.sax.attribute import Attribute
 from suds.sudsobject import footprint
 
@@ -786,7 +787,7 @@ class Typer:
         float : ('float', NS.xsdns),
         str : ('string', NS.xsdns),
         unicode : ('string', NS.xsdns),
-        xlstr : ('string', NS.xsdns),
+        Text : ('string', NS.xsdns),
         bool : ('boolean', NS.xsdns),
      }
                 

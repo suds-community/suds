@@ -38,12 +38,12 @@ rpm : dist
 release : rpm rdocs
 	scp dist/python*.tar.gz fedorahosted.org:suds
 	scp dist/python*.rpm fedorahosted.org:suds
-	scp /tmp/$(DOCTAR) $(FEDORAPEOPLE):
 
 register :
 	python setup.py sdist bdist_egg register upload
 
 rdocs : docs
+	scp /tmp/$(DOCTAR) $(FEDORAPEOPLE):
 	ssh $(FEDORAPEOPLE) 'cd public_html/suds; rm -rf doc; tar xmzvf ~/$(DOCTAR)'
 
 docs :

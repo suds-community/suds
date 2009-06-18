@@ -32,6 +32,7 @@ from suds import *
 from suds.sax import *
 from suds.sax.document import Document
 from suds.sax.element import Element
+from suds.sax.text import Text
 from suds.sax.attribute import Attribute
 from suds.transport import Request
 from suds.transport.http import HttpTransport
@@ -87,7 +88,7 @@ class Handler(ContentHandler):
         text = unicode(content)
         node = self.top()
         if node.text is None:
-            node.text = text
+            node.text = Text(text)
         else:
             node.text += text
 

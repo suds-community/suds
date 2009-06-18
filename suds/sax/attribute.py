@@ -22,6 +22,7 @@ import suds.sax
 from logging import getLogger
 from suds import *
 from suds.sax import *
+from suds.sax.text import Text
 
 log = getLogger(__name__)
 
@@ -76,8 +77,13 @@ class Attribute:
         Set the attributes value
         @param value: The new value (may be None)
         @type value: basestring
+        @return: self
+        @rtype: L{Attribute}
         """
-        self.value = sax.encoder.encode(value)
+        post = sax.encoder.encode(value)
+        encoded = ( post != value )
+        self.value = Text(post, encoded=encoded)
+        return self
         
     def getValue(self, default=''):
         """
@@ -86,12 +92,25 @@ class Attribute:
             attribute's has not been set.
         @type default: basestring
         @return: The attribute's value, or I{default}
-        @rtype: basestring
+        @rtype: L{Text}
         """
-        result = sax.encoder.decode(self.value)
-        if result is None:
+        if self.hasText():
+            if self.value.encoded:
+                result = Text(sax.encoder.decode(self.value))
+            else:
+                result = self.value
+        else:
             result = default
         return result
+    
+    def hasText(self):
+        """
+        Get whether the attribute has I{text} and that it is not an empty
+        (zero length) string.
+        @return: True when has I{text}.
+        @rtype: boolean
+        """
+        return ( self.value is not None and len(self.value) )
         
     def namespace(self):
         """
