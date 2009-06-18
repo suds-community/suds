@@ -46,9 +46,10 @@ class Encoder:
         @return: True if needs encoding.
         @rtype: boolean
         """
-        for c in self.special:
-            if c in s:
-                return True
+        if isinstance(s, basestring):
+            for c in self.special:
+                if c in s:
+                    return True
         return False
     
     def encode(self, s):

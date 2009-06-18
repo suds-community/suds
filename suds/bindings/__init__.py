@@ -18,21 +18,3 @@
 Provides modules containing classes to support Web Services (SOAP)
 bindings.
 """
-
-class xlstr(unicode):
-    """
-    Language aware string contains a I{lang} attribute.
-    @ivar lang: The string language when set (may be None).
-    @type lang: str
-    """
-    __slots__ = ('lang',)
-    
-    @classmethod
-    def string(cls, s, lang=None):
-        return xlstr(s, lang=lang)
-    
-    def __new__(cls, *args, **kwargs):
-        lang = kwargs.pop('lang', None)
-        res = super(xlstr, cls).__new__(cls, *args, **kwargs)
-        res.lang = lang
-        return res

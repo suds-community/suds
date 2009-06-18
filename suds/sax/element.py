@@ -21,6 +21,7 @@ Provides XML I{element} classes.
 from logging import getLogger
 from suds import *
 from suds.sax import *
+from suds.sax.text import Text
 from suds.sax.attribute import Attribute
 import sys 
 if sys.version_info < (2, 4, 0): 
@@ -222,25 +223,31 @@ class Element:
 
     def setText(self, value):
         """
-        Set the element's text content.
+        Set the element's L{Text} content.
         @param value: The element's text value.
         @type value: basestring
         @return: self
         @rtype: I{Element}
         """
-        self.text = sax.encoder.encode(value)
+        post = sax.encoder.encode(value)
+        encoded = ( post != value )
+        self.text = Text(post, encoded=encoded)
         return self
         
     def getText(self, default=None):
         """
-        Get the element's text content with optional default
+        Get the element's L{Text} content with optional default
         @param default: A value to be returned when no text content exists.
         @type default: basestring
         @return: The text content, or I{default}
-        @rtype: basestring
+        @rtype: L{Text}
         """
-        result = sax.encoder.decode(self.text)
-        if result is None:
+        if self.hasText():
+            if self.text.encoded:
+                result = Text(sax.encoder.decode(self.text))
+            else:
+                result = self.text
+        else:
             result = default
         return result
     
@@ -251,7 +258,7 @@ class Element:
         @rtype: L{Element}
         """
         if self.hasText():
-            self.text = self.text.strip()
+            self.text = self.text.trim()
         return self
     
     def hasText(self):

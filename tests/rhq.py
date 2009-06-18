@@ -66,8 +66,8 @@ def basic_doc_literal():
         # create name
         #
         name = client.factory.create('name')
-        name.first = u'jeff'+unichr(1234)
-        name.last = 'ortel'
+        name.first = u'Jeff'+unichr(1234)
+        name.last = 'Ortel &amp;lt; Company'
         #
         # create a phone object using the wsdl
         #
