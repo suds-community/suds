@@ -808,6 +808,8 @@ class Typer:
             value = node.getText()
         if isinstance(value, Object):
             known = cls.known(value)
+            if known.name is None:
+                return node
             tm = (known.name, known.namespace())
         else:
             tm = cls.types.get(value.__class__, cls.types.get(str))
@@ -829,8 +831,6 @@ class Typer:
         @return: The specified node.
         @rtype: L{sax.element.Element}
         """
-        if tval is None:
-            return node
         xta = ':'.join((NS.xsins[0], 'type'))
         node.addPrefix(NS.xsins[0], NS.xsins[1])
         if ns is None:
