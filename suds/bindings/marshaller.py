@@ -829,6 +829,8 @@ class Typer:
         @return: The specified node.
         @rtype: L{sax.element.Element}
         """
+        if tval is None:
+            return node
         xta = ':'.join((NS.xsins[0], 'type'))
         node.addPrefix(NS.xsins[0], NS.xsins[1])
         if ns is None:
