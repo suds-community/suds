@@ -1,0 +1,47 @@
+#!/bin/bash
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the (LGPL) GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 3 of the 
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library Lesser General Public License for more details at
+# ( http://www.gnu.org/licenses/lgpl.html ).
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# written by: Jeff Ortel ( jortel@redhat.com )
+
+product="suds"
+version=`python -c "import $product; print $product.properties['version']"`
+
+if [ $1 ]
+then
+  product="$1-$product"
+fi
+
+tarfile=$product-$version.tar.gz
+
+rm -rf build
+files=`find . -regex ".*\.\(py\|spec\|cfg\)"`
+files+="
+makefile
+LICENSE
+README"
+
+wrapper="$product-$version"
+
+echo $product
+echo $version
+echo $files
+echo $wrapper
+
+mkdir -p build/$wrapper
+tar cvf build/stage.tar $files
+cd build/$wrapper
+tar xvf ../stage.tar
+cd ../
+tar czvf ../dist/$tarfile $wrapper
