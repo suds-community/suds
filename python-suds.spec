@@ -52,7 +52,20 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Wed May 1 2009 jortel <jortel@redhat.com> - 0.3.6-1
-- 0.3.6
+- Change hard coded /tmp/suds to tempfile.gettempdir() and create suds/ on demand.
+- Fix return type for Any.get_attribute().
+- Update http caching to ignore file:// urls.
+- Better logging of messages when only the reply is injected.
+- Fix XInteger and XFloat types to translate returned arrays properly.
+- Fix xs:import schema with same namespace.
+- Update parser to not load external references and add Import.bind() for XMLSchema.xsd location.
+- Add schema doctor - used to patch XSDs at runtime.  (See Options.doctor)
+- Fix deprecation warnings in python 2.6.
+- Add behavior for @default defined on <element/>.
+- Change @xsi:type value to always be qualified for doc/literal.
+- Add Option.xstq option to control when @xsi:type is qualified.
+- Fixed Tickets: #64, #129, #205, #206, #217, #221, #222, #224, #225, #228, #229, #230
+
 * Wed Feb 25 2009 jortel <jortel@redhat.com> - 0.3.5-1
 - Adds http caching.  Default is (1) day.
 - Removed checking fc version in spec since no longer building < fc9.
