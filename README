@@ -13,6 +13,29 @@ For details, visit:
 RELEASE-NOTES:
 =================================================
 
+version 0.3.6 (04-31-09):
+  * Change hard coded /tmp/suds to tempfile.gettempdir() and create suds/ on demand.
+  * Fix return type for Any.get_attribute().
+  * Update http caching to ignore file:// urls.
+  * Better logging of messages when only the reply is injected.
+  * Fix XInteger and XFloat types to translate returned arrays properly.
+  * Fix xs:import schema with same namespace.
+  * Update parser to not load external references and add Import.bind() for XMLSchema.xsd location.
+  * Add schema doctor - used to patch XSDs at runtime. (See Option.doctor)
+  * Fix deprecation warnings in python 2.6.
+  * Add behavior for @default defined on <element/>.
+  * Change @xsi:type value to always be qualified for doc/literal. (reverts 0.3.5 change).
+  * Add Option.xstq option to control when @xsi:type is qualified.
+  * Fixed Tickets: #64, #129, #205, #206, #217, #221, #222, #224, #225, #228, #229, #230 
+
+version 0.3.5 (04-16-09):
+  * Adds http caching. Default is (1) day. Does not apply to method invocation. See: documentation for details.
+  * Removed checking fedora version check in spec since no longer building < fc9.
+  * Updated makefile to roll tarball with tar.sh.
+  * Moved bare/wrapped determination to wsdl for document/literal.
+  * Refactored Transport into a package (provides better logging of http headers).
+  * Fixed Tickets: #207, #209, #210, #212, #214, #215 
+
 version 0.3.4 (02-24-09):
   * Static (automatic) Import.bind('http://schemas.xmlsoap.org/soap/encoding/'),
       users no longer need to do this.
