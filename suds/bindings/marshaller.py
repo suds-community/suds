@@ -353,8 +353,8 @@ class ElementAppender(Appender):
         """
         if content.tag.startswith('_'):
             raise Exception('raw XML not valid as attribute value')
-        child = content.value.detach()
-        parent.append(deepcopy(child))
+        child = deepcopy(content.value)
+        parent.append(child.detach())
 
 
 class ListAppender(Appender):
