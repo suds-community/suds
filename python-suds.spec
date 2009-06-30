@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.6
+Version: 0.3.7
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -51,6 +51,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Tue Jun 30 2009 jortel <jortel@redhat.com> - 0.3.7-1
+- 0.3.7
 * Wed May 1 2009 jortel <jortel@redhat.com> - 0.3.6-1
 - Change hard coded /tmp/suds to tempfile.gettempdir() and create suds/ on demand.
 - Fix return type for Any.get_attribute().
