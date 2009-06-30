@@ -29,6 +29,7 @@ from suds.sax.element import Element
 from suds.sax.text import Text
 from suds.sax.attribute import Attribute
 from suds.sudsobject import footprint
+from copy import deepcopy 
 
 log = getLogger(__name__)
 
@@ -346,13 +347,14 @@ class ElementAppender(Appender):
     def append(self, parent, content):
         """
         Append the specified L{content} to the I{parent}.
+        Appends a I{deep} copy of the detached node.
         @param content: The content to append.
         @type content: L{Object}
         """
         if content.tag.startswith('_'):
             raise Exception('raw XML not valid as attribute value')
         child = content.value.detach()
-        parent.append(child)
+        parent.append(deepcopy(child))
 
 
 class ListAppender(Appender):

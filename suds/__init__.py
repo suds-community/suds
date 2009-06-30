@@ -29,9 +29,9 @@ import socket
 # Project properties
 #
 
-__version__ = '0.3.6'
+__version__ = '0.3.7'
 
-properties = dict(version=__version__, build="GA R526-20090624")
+properties = dict(version=__version__, build="(beta) R530-20090630")
 
 #
 # Exceptions
