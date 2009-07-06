@@ -109,8 +109,8 @@ class XBoolean(XBuiltin):
     """
     
     translation = (
-        { '1':True, 'true':True, '0':False, 'false':False },
-        { True: 'true', False: 'false' },
+        { '1':True,'true':True,'0':False,'false':False },
+        { True:'true',1:'true',False:'false',0:'false' },
     )
         
     def translate(self, value, topython=True):
@@ -120,10 +120,15 @@ class XBoolean(XBuiltin):
         @return: The converted I{language} type.
         """
         if topython:
-            table = XBoolean.translation[0]
+            if isinstance(value, basestring):
+                return XBoolean.translation[0].get(value)
+            else:
+                return None
         else:
-            table = XBoolean.translation[1]
-        return table.get(value, value)
+            if isinstance(value, (bool,int)):
+                return XBoolean.translation[1].get(value)
+            else:
+                return value
 
    
 class XInteger(XBuiltin):
