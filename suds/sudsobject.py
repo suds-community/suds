@@ -144,6 +144,16 @@ class Object:
             self.__keylist__.append(name)
         self.__dict__[name] = value
         
+    def __delattr__(self, name):
+        try:
+            del self.__dict__[name]
+            builtin =  name.startswith('__') and name.endswith('__')
+            if not builtin:
+                self.__keylist__.remove(name)
+        except:
+            cls = self.__class__.__name__
+            raise AttributeError, "%s has no attribute '%s'" % (cls, name)
+
     def __getitem__(self, name):
         if isinstance(name, int):
             name = self.__keylist__[int(name)]
