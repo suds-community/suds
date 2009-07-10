@@ -28,7 +28,9 @@ log = getLogger(__name__)
 
 class HttpAuthenticated(HttpTransport):
     """
-    Provides basic http authentication.
+    Provides basic http authentication that follows the RFC-2617 specification.
+    As defined by specifications, credentials are provided to the server
+    upon request (HTTP/1.0 401 Authorization Required) by the server only.
     @ivar pm: The password manager.
     @ivar handler: The authentication handler.
     """
@@ -56,15 +58,12 @@ class HttpAuthenticated(HttpTransport):
         self.urlopener = u2.build_opener(self.handler)
         
     def open(self, request):
-        self.__addcredentials(request)
+        credentials = self.credentials()
+        if not (None in credentials):
+            u = credentials[0]
+            p = credentials[1]
+            self.pm.add_password(None, request.url, u, p)
         return  HttpTransport.open(self, request)
-
-    def send(self, request):
-        self.__addcredentials(request)
-        return HttpTransport.send(self, request)
     
-    def __addcredentials(self, request):
-        user = self.options.username
-        pwd = self.options.password
-        if user is not None:
-            self.pm.add_password(None, request.url, user, pwd)
+    def credentials(self):
+        return (self.options.username, self.options.password)

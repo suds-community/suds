@@ -27,6 +27,7 @@ import suds.metrics as metrics
 from tests import *
 from suds import WebFault
 from suds.client import Client
+from suds.transport.http import HttpAuthenticated
 
 errors = 0
 
@@ -45,7 +46,8 @@ def start(url):
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
-    client = Client(url, **credentials)
+    t = HttpAuthenticated(**credentials)
+    client = Client(url, transport=t)
     print client
     #
     # create a name object using the wsdl
