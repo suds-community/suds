@@ -19,6 +19,7 @@ Contains transport interface (classes) and reference implementation.
 """
 
 import urllib2 as u2
+import base64
 from suds.transport import *
 from urlparse import urlparse
 from cookielib import CookieJar
@@ -29,7 +30,8 @@ log = getLogger(__name__)
 
 class HttpTransport(Transport):
     """
-    urllib2 transport implementation.
+    HTTP transport using urllib2.  Provided basic http transport
+    that provides for cookies, proxies but no authentication.
     """
     
     def __init__(self, **kwargs):
@@ -105,3 +107,23 @@ class HttpTransport(Transport):
             return
         protocol = u2request.type
         u2request.set_proxy(proxy, protocol)
+
+
+class HttpAuthenticated(HttpTransport):
+    """
+    Provides basic http authentication for servers that don't follow
+    the specified challenge / response model.  This implementation
+    appends the I{Authorization} http header with base64 encoded
+    credentials on every http request.
+    """
+    
+    def send(self, request):
+        credentials = self.credentials()
+        if not (None in credentials):
+            encoded = base64.encodestring(':'.join(credentials))
+            basic = 'Basic %s' % encoded[:-1]
+            request.headers['Authorization'] = basic
+        return HttpTransport.send(self, request)
+                 
+    def credentials(self):
+        return (self.options.username, self.options.password)
