@@ -264,8 +264,8 @@ class SchemaObject:
     
     def extension(self):
         """
-        Get whether the object is an extension/restriction
-        @return: True if an extension/restriction, else False.
+        Get whether the object is an extension of another type.
+        @return: True if an extension, else False.
         @rtype: boolean
         """
         return False

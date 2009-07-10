@@ -455,14 +455,6 @@ class Restriction(SchemaObject):
         filter = Filter(False, self.rawchildren)
         self.prepend(self.rawchildren, b.rawchildren, filter)
         
-    def extension(self):
-        """
-        Get whether the object is an extension/restriction
-        @return: True if an extension/restriction, else False.
-        @rtype: boolean
-        """
-        return ( self.ref is not None )
-        
     def description(self):
         """
         Get the names used for str() and repr() description.
@@ -797,8 +789,8 @@ class Extension(SchemaObject):
         
     def extension(self):
         """
-        Get whether the object is an extension/restriction
-        @return: True if an extension/restriction, else False.
+        Get whether the object is an extension of another type.
+        @return: True.
         @rtype: boolean
         """
         return ( self.ref is not None )

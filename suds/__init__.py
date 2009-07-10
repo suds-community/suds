@@ -31,7 +31,7 @@ import socket
 
 __version__ = '0.3.7'
 
-properties = dict(version=__version__, build="(beta) R534-20090706")
+properties = dict(version=__version__, build="(beta) R536-20090710")
 
 #
 # Exceptions
