@@ -187,6 +187,14 @@ class Appender:
         @return: The default.
         """
         return self.marshaller.setdefault(node, content)
+    
+    def optional(self, content):
+        """
+        Get whether the specified content is optional.
+        @param content: The content which to check.
+        @type content: L{Content}
+        """
+        return self.marshaller.optional(content)
         
     def suspend(self, content):
         """
@@ -320,16 +328,6 @@ class ObjectAppender(Appender):
         for item in object:
             cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
-            
-    def optional(self, content):
-        if content.type.optional():
-            return True
-        resolver = self.marshaller.resolver
-        ancestry = resolver.top().ancestry
-        for a in ancestry:
-            if a.optional():
-                return True
-        return False
 
 
 class ElementAppender(Appender):
@@ -447,7 +445,7 @@ class MBase:
         """
         Appending this content has started.
         @param content: The content for which proccessing has started.
-        @type content: L{Object}
+        @type content: L{Content}
         @return: True to continue appending
         @rtype: boolean
         """
@@ -457,7 +455,7 @@ class MBase:
         """
         Appending this content has suspended.
         @param content: The content for which proccessing has been suspended.
-        @type content: L{Object}
+        @type content: L{Content}
         """
         pass
     
@@ -465,7 +463,7 @@ class MBase:
         """
         Appending this content has resumed.
         @param content: The content for which proccessing has been resumed.
-        @type content: L{Object}
+        @type content: L{Content}
         """
         pass
 
@@ -473,7 +471,7 @@ class MBase:
         """
         Appending this content has ended.
         @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @type content: L{Content}
         """
         pass
     
@@ -482,8 +480,8 @@ class MBase:
         Set the value of the I{node} to nill.
         @param node: A I{nil} node.
         @type node: L{Element}
-        @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @param content: The content to set nil.
+        @type content: L{Content}
         """
         pass
 
@@ -492,11 +490,19 @@ class MBase:
         Set the value of the I{node} to a default value.
         @param node: A I{nil} node.
         @type node: L{Element}
-        @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @param content: The content to set the default value.
+        @type content: L{Content}
         @return: The default.
         """
         pass
+    
+    def optional(self, content):
+        """
+        Get whether the specified content is optional.
+        @param content: The content which to check.
+        @type content: L{Content}
+        """
+        return False
 
 
 class Basic(MBase):
@@ -558,7 +564,7 @@ class Literal(MBase):
         Processing of I{content} has started, find and set the content's
         schema type using the resolver.
         @param content: The content for which proccessing has stated.
-        @type content: L{Object}
+        @type content: L{Content}
         @return: True to continue appending
         @rtype: boolean
         @note: This will I{push} the type in the resolver.
@@ -594,7 +600,7 @@ class Literal(MBase):
         """
         Appending this content has suspended.
         @param content: The content for which proccessing has been suspended.
-        @type content: L{Object}
+        @type content: L{Content}
         """
         content.suspended = True
         self.resolver.pop()
@@ -603,7 +609,7 @@ class Literal(MBase):
         """
         Appending this content has resumed.
         @param content: The content for which proccessing has been resumed.
-        @type content: L{Object}
+        @type content: L{Content}
         """
         frame = Frame(content.type)
         self.resolver.push(frame)
@@ -613,7 +619,7 @@ class Literal(MBase):
         Processing of I{content} has ended, mirror the change
         in the resolver.
         @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @type content: L{Content}
         """
         log.debug('ending content:\n%s', content)
         current = self.resolver.top().type
@@ -630,7 +636,7 @@ class Literal(MBase):
         using the I{type}.  Also, make sure all referenced namespace
         prefixes are declared.
         @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @type content: L{Content}
         @return: A new node.
         @rtype: L{Element}
         """
@@ -649,8 +655,8 @@ class Literal(MBase):
         Set the value of the I{node} to nill when nillable.
         @param node: A I{nil} node.
         @type node: L{Element}
-        @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @param content: The content to set nil.
+        @type content: L{Content}
         """
         if content.type.nillable:
             node.setnil()
@@ -660,7 +666,7 @@ class Literal(MBase):
         Set the value of the I{node} to a default value.
         @param node: A I{nil} node.
         @type node: L{Element}
-        @param content: The content for which proccessing has ended.
+        @param content: The content to set default value.
         @type content: L{Object}
         @return: The default.
         """
@@ -671,6 +677,21 @@ class Literal(MBase):
             node.setText(default)
         return default
     
+    def optional(self, content):
+        """
+        Get whether the specified content is optional.
+        @param content: The content which to check.
+        @type content: L{Content}
+        """
+        if content.type.optional():
+            return True
+        resolver = self.resolver
+        ancestry = resolver.top().ancestry
+        for a in ancestry:
+            if a.optional():
+                return True
+        return False
+    
     def encode(self, node, content):
         """
         Add (soap) encoding information only if the resolved
@@ -679,8 +700,8 @@ class Literal(MBase):
         referenced type are in different namespaces.
         @param node: The node to update.
         @type node: L{Element}
-        @param content: The content for which proccessing has ended.
-        @type content: L{Object}
+        @param content: The content to encode.
+        @type content: L{Content}
         """
         if content.type.any():
             return
