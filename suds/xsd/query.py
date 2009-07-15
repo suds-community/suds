@@ -32,7 +32,7 @@ class Query(Object):
     Schema query base class.
     """
     
-    def __init__(self, ref=None, type=None, element=None):
+    def __init__(self, ref=None):
         """
         @param ref: The schema reference being queried.
         @type ref: qref
@@ -44,6 +44,17 @@ class Query(Object):
         self.resolved = False
         if not isqref(self.ref):
             raise Exception('%s, must be qref' % self.ref)
+        
+    def execute(self, schema):
+        """
+        Execute this query using the specified schema.
+        @param schema: The schema associated with the query.  The schema
+            is used by the query to search for items.
+        @type schema: L{schema.Schema}
+        @return: The item matching the search criteria.
+        @rtype: L{sxbase.SchemaObject}
+        """
+        raise Exception, 'not-implemented by subclass'
         
     def filter(self, result):
         """
@@ -82,23 +93,8 @@ class BlindQuery(Query):
     the specified schema.  It may be used to find Elements and Types but
     will match on an Element first.  This query will also find builtins.
     """
-    
-    def __init__(self, ref):
-        """
-        @param ref: The schema reference being queried.
-        @type ref: qref
-        """
-        Query.__init__(self, ref)
         
     def execute(self, schema):
-        """
-        Execute this query using the specified schema.
-        @param schema: The schema associated with the query.  The schema
-            is used by the query to search for items.
-        @type schema: L{schema.Schema}
-        @return: The item matching the search criteria.
-        @rtype: L{sxbase.SchemaObject}
-        """
         if schema.builtin(self.ref):
             name = self.ref[0]
             b = Factory.create(schema, name)
@@ -123,23 +119,8 @@ class TypeQuery(Query):
     Schema query class that searches for Type references in
     the specified schema.  Matches on root types only.
     """
-    
-    def __init__(self, ref):
-        """
-        @param ref: The schema reference being queried.
-        @type ref: qref
-        """
-        Query.__init__(self, ref)
         
     def execute(self, schema):
-        """
-        Execute this query using the specified schema.
-        @param schema: The schema associated with the query.  The schema
-            is used by the query to search for items.
-        @type schema: L{schema.Schema}
-        @return: The item matching the search criteria.
-        @rtype: L{sxbase.SchemaObject}
-        """
         if schema.builtin(self.ref):
             name = self.ref[0]
             b = Factory.create(schema, name)
@@ -150,28 +131,14 @@ class TypeQuery(Query):
             result = None
         return self.result(result)
 
+
 class GroupQuery(Query):
     """
     Schema query class that searches for Group references in
     the specified schema.
     """
-    
-    def __init__(self, ref):
-        """
-        @param ref: The schema reference being queried.
-        @type ref: qref
-        """
-        Query.__init__(self, ref)
         
     def execute(self, schema):
-        """
-        Execute this query using the specified schema.
-        @param schema: The schema associated with the query.  The schema
-            is used by the query to search for items.
-        @type schema: L{schema.Schema}
-        @return: The item matching the search criteria.
-        @rtype: L{sxbase.SchemaObject}
-        """
         result = schema.groups.get(self.ref)
         if self.filter(result):
             result = None
@@ -184,23 +151,8 @@ class AttrQuery(Query):
     the specified schema.  Matches on root Attribute by qname first, then searches
     deep into the document.
     """
-    
-    def __init__(self, ref):
-        """
-        @param ref: The schema reference being queried.
-        @type ref: qref
-        """
-        Query.__init__(self, ref)
         
     def execute(self, schema):
-        """
-        Execute this query using the specified schema.
-        @param schema: The schema associated with the query.  The schema
-            is used by the query to search for items.
-        @type schema: L{schema.Schema}
-        @return: The item matching the search criteria.
-        @rtype: L{sxbase.SchemaObject}
-        """
         result = schema.attributes.get(self.ref)
         if self.filter(result):
             result = self.__deepsearch(schema)
@@ -223,23 +175,8 @@ class AttrGroupQuery(Query):
     Schema query class that searches for attributeGroup references in
     the specified schema.
     """
-    
-    def __init__(self, ref):
-        """
-        @param ref: The schema reference being queried.
-        @type ref: qref
-        """
-        Query.__init__(self, ref)
         
     def execute(self, schema):
-        """
-        Execute this query using the specified schema.
-        @param schema: The schema associated with the query.  The schema
-            is used by the query to search for items.
-        @type schema: L{schema.Schema}
-        @return: The item matching the search criteria.
-        @rtype: L{sxbase.SchemaObject}
-        """
         result = schema.agrps.get(self.ref)
         if self.filter(result):
             result = None
@@ -252,23 +189,8 @@ class ElementQuery(Query):
     the specified schema.  Matches on root Elements by qname first, then searches
     deep into the document.
     """
-    
-    def __init__(self, ref):
-        """
-        @param ref: The schema reference being queried.
-        @type ref: qref
-        """
-        Query.__init__(self, ref)
         
     def execute(self, schema):
-        """
-        Execute this query using the specified schema.
-        @param schema: The schema associated with the query.  The schema
-            is used by the query to search for items.
-        @type schema: L{schema.Schema}
-        @return: The item matching the search criteria.
-        @rtype: L{sxbase.SchemaObject}
-        """
         result = schema.elements.get(self.ref)
         if self.filter(result):
             result = self.__deepsearch(schema)

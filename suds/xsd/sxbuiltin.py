@@ -76,30 +76,14 @@ class XAny(XBuiltin):
     """
     
     def __init__(self, schema, name):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        """
         XBuiltin.__init__(self, schema, name)
         self.nillable = False
     
     def get_child(self, name):
-        """
-        Get (find) a I{non-attribute} child by name and namespace.
-        @param name: A child name.
-        @type name: basestring
-        @return: The requested child.
-        @rtype: (L{XBuiltin}, [L{XBuiltin},..])
-        """
         child = XAny(self.schema, name)
         return (child, [])
     
     def any(self):
-        """
-        Get whether this is an xs:any
-        @return: True if any, else False
-        @rtype: boolean
-        """
         return True
 
 
@@ -114,11 +98,6 @@ class XBoolean(XBuiltin):
     )
         
     def translate(self, value, topython=True):
-        """
-        Convert a value from a schema type to a python type.
-        @param value: A value to convert.
-        @return: The converted I{language} type.
-        """
         if topython:
             if isinstance(value, basestring):
                 return XBoolean.translation[0].get(value)
@@ -137,11 +116,6 @@ class XInteger(XBuiltin):
     """
         
     def translate(self, value, topython=True):
-        """
-        Convert a value from a schema type to a python type.
-        @param value: A value to convert.
-        @return: The converted I{language} type.
-        """
         if topython:
             if isinstance(value, basestring) and len(value):
                 return int(value)
@@ -160,11 +134,6 @@ class XFloat(XBuiltin):
     """
         
     def translate(self, value, topython=True):
-        """
-        Convert a value from a schema type to a python type.
-        @param value: A value to convert.
-        @return: The converted I{language} type.
-        """
         if topython:
             if isinstance(value, basestring) and len(value):
                 return float(value)
