@@ -98,15 +98,6 @@ class FileCache(Cache):
         return self
     
     def put(self, url, fp):
-        """
-        Put (add) the page to the cache.
-        @param url: An http URL.
-        @type url: str
-        @param fp: An open file stream.
-        @type fp: file stream
-        @return: The cached file stream.
-        @rtype: file stream
-        """
         try:
             fn = self.__fn(url)
             f = self.open(fn, 'w')
@@ -118,13 +109,6 @@ class FileCache(Cache):
             return fp
     
     def get(self, url):
-        """
-        Get the cached contents for I{url}.
-        @param url: An http URL.
-        @type url: str
-        @return: An open file stream for the cached contents.
-        @rtype: file stream. 
-        """
         try:
             fn = self.__fn(url)
             self.validate(fn)
@@ -148,9 +132,6 @@ class FileCache(Cache):
             os.remove(fn)
  
     def clear(self):
-        """
-        Clear the cache which removes all cached files.
-        """
         for fn in os.listdir(self.location):
             if os.path.isDir(fn):
                 continue
