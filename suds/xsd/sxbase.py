@@ -93,6 +93,8 @@ class SchemaObject:
         self.id = objid(self)
         self.name = root.get('name')
         self.qname = (self.name, schema.tns[1])
+        self.min = root.get('minOccurs')
+        self.max = root.get('maxOccurs')
         self.type = root.get('type')
         self.ref = root.get('ref')
         self.form_qualified = schema.form_qualified
@@ -177,7 +179,13 @@ class SchemaObject:
         @return: True if unbounded, else False.
         @rtype: boolean
         """
-        return False
+        max = self.max
+        if max is None:
+            max = '1'
+        if max.isdigit():
+            return (int(max) > 1)
+        else:
+            return ( max == 'unbounded' )
     
     def optional(self):
         """
@@ -185,7 +193,10 @@ class SchemaObject:
         @return: True if optional, else False
         @rtype: boolean
         """
-        return False
+        min = self.min
+        if min is None:
+            min = '1'
+        return ( min == '0' )
     
     def required(self):
         """
@@ -319,7 +330,21 @@ class SchemaObject:
         """
         Merge another object as needed.
         """
-        pass
+        for n in ('name',
+                  'qname',
+                  'min',
+                  'max',
+                  'default',
+                  'type',
+                  'nillable',
+                  'form_qualified',):
+            if getattr(self, n) is not None:
+                continue
+            v = getattr(other, n)
+            if v is None:
+                continue
+            setattr(self, n, v)
+            
             
     def content(self, collection=None, filter=Filter(), history=None):
         """

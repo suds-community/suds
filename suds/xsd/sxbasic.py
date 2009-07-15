@@ -215,17 +215,6 @@ class Group(SchemaObject):
     @cvar childtags: A list of valid child node names
     @type childtags: (I{str},...)
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
-        self.min = root.get('minOccurs', default='1')
-        self.max = root.get('maxOccurs', default='1')
         
     def childtags(self):
         """
@@ -234,25 +223,6 @@ class Group(SchemaObject):
         @rtype: [str,...]
         """
         return ('sequence', 'all', 'choice')
-    
-    def unbounded(self):
-        """
-        Get whether this node is unbounded I{(a collection)}.
-        @return: True if unbounded, else False.
-        @rtype: boolean
-        """
-        if self.max.isdigit():
-            return (int(self.max) > 1)
-        else:
-            return ( self.max == 'unbounded' )
-        
-    def optional(self):
-        """
-        Get whether this type is optional.
-        @return: True if optional, else False
-        @rtype: boolean
-        """
-        return ( self.min == '0' )
         
     def dependencies(self):
         """
@@ -274,15 +244,14 @@ class Group(SchemaObject):
             midx = 0
         return (midx, deps)
     
-    def merge(self, g):
+    def merge(self, other):
         """
         Merge the referenced object.
-        @param g: A resoleve reference.
-        @type g: L{Group}
+        @param other: A resoleve reference.
+        @type other: L{Group}
         """
-        self.name = g.name
-        self.qname = g.qname
-        self.rawchildren = g.rawchildren
+        SchemaObject.merge(self, other)
+        self.rawchildren = other.rawchildren
 
     def description(self):
         """
@@ -299,17 +268,6 @@ class AttributeGroup(SchemaObject):
     @cvar childtags: A list of valid child node names
     @type childtags: (I{str},...)
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
-        self.min = root.get('minOccurs', default='1')
-        self.max = root.get('maxOccurs', default='1')
         
     def childtags(self):
         """
@@ -339,15 +297,14 @@ class AttributeGroup(SchemaObject):
             midx = 0
         return (midx, deps)
     
-    def merge(self, ag):
+    def merge(self, other):
         """
         Merge the referenced object.
-        @param ag: A resoleve reference.
-        @type ag: L{AttributeGroup}
+        @param other: A resoleve reference.
+        @type other: L{AttributeGroup}
         """
-        self.name = ag.name
-        self.qname = ag.qname
-        self.rawchildren = ag.rawchildren
+        SchemaObject.merge(self, other)
+        self.rawchildren = other.rawchildren
 
     def description(self):
         """
@@ -446,14 +403,15 @@ class Restriction(SchemaObject):
                 midx = 0
         return (midx, deps)
 
-    def merge(self, b):
+    def merge(self, other):
         """
         Merge the resolved I{base} object with myself.
-        @param b: A resolved base object.
-        @type b: L{SchemaObject}
+        @param other: A resolved base object.
+        @type other: L{SchemaObject}
         """
+        SchemaObject.merge(self, other)
         filter = Filter(False, self.rawchildren)
-        self.prepend(self.rawchildren, b.rawchildren, filter)
+        self.prepend(self.rawchildren, other.rawchildren, filter)
         
     def description(self):
         """
@@ -472,17 +430,6 @@ class Collection(SchemaObject):
         - all
     """
 
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        SchemaObject.__init__(self, schema, root)
-        self.min = root.get('minOccurs', default='1')
-        self.max = root.get('maxOccurs', default='1')
-
     def childtags(self):
         """
         Get a list of valid child tag names.
@@ -490,25 +437,6 @@ class Collection(SchemaObject):
         @rtype: [str,...]
         """
         return ('element', 'sequence', 'all', 'choice', 'any', 'group')
-    
-    def unbounded(self):
-        """
-        Get whether this node is unbounded I{(a collection)}.
-        @return: True if unbounded, else False.
-        @rtype: boolean
-        """
-        if self.max.isdigit():
-            return (int(self.max) > 1)
-        else:
-            return ( self.max == 'unbounded' )
-        
-    def optional(self):
-        """
-        Get whether this type is optional.
-        @return: True if optional, else False
-        @rtype: boolean
-        """
-        return ( self.min == '0' )
 
 
 class Sequence(Collection):
@@ -635,8 +563,6 @@ class Element(TypedContent):
         @type root: L{sax.element.Element}
         """
         TypedContent.__init__(self, schema, root)
-        self.min = root.get('minOccurs', default='1')
-        self.max = root.get('maxOccurs', default='1')
         a = root.get('form')
         if a is not None:
             self.form_qualified = ( a == 'qualified' )
@@ -665,25 +591,6 @@ class Element(TypedContent):
                 return True
         return False
     
-    def unbounded(self):
-        """
-        Get whether this node is unbounded I{(a collection)}.
-        @return: True if unbounded, else False.
-        @rtype: boolean
-        """
-        if self.max.isdigit():
-            return (int(self.max) > 1)
-        else:
-            return ( self.max == 'unbounded' )
-        
-    def optional(self):
-        """
-        Get whether this type is optional.
-        @return: True if optional, else False
-        @rtype: boolean
-        """
-        return ( self.min == '0' )
-    
     def dependencies(self):
         """
         Get a list of dependancies for dereferencing.
@@ -704,16 +611,14 @@ class Element(TypedContent):
             midx = 0
         return (midx, deps)
     
-    def merge(self, e):
+    def merge(self, other):
         """
         Merge the referenced object.
-        @param e: A resoleve reference.
-        @type e: L{Element}
+        @param other: A resoleve reference.
+        @type other: L{Element}
         """
-        self.name = e.name
-        self.qname = e.qname
-        self.type = e.type
-        self.rawchildren = e.rawchildren
+        SchemaObject.merge(self, other)
+        self.rawchildren = other.rawchildren
 
 
     def description(self):
@@ -778,14 +683,15 @@ class Extension(SchemaObject):
                 midx = 0
         return (midx, deps)
 
-    def merge(self, b):
+    def merge(self, other):
         """
         Merge the resolved I{base} object with myself.
-        @param b: A resolved base object.
-        @type b: L{SchemaObject}
+        @param other: A resolved base object.
+        @type other: L{SchemaObject}
         """
+        SchemaObject.merge(self, other)
         filter = Filter(False, self.rawchildren)
-        self.prepend(self.rawchildren, b.rawchildren, filter)
+        self.prepend(self.rawchildren, other.rawchildren, filter)
         
     def extension(self):
         """
@@ -961,15 +867,13 @@ class Attribute(TypedContent):
             midx = 0
         return (midx, deps)
         
-    def merge(self, a):
+    def merge(self, other):
         """
         Merge the referenced object.
-        @param a: A resoleve reference.
-        @type a: L{Attribute}
+        @param other: A resoleve reference.
+        @type other: L{Attribute}
         """
-        self.name = a.name
-        self.qname = a.qname
-        self.type = a.type
+        SchemaObject.merge(self, other)
     
     def description(self):
         """
@@ -984,17 +888,6 @@ class Any(Content):
     """
     Represents an (xsd) <any/> node
     """
-    
-    def __init__(self, schema, root):
-        """
-        @param schema: The containing schema.
-        @type schema: L{schema.Schema}
-        @param root: The xml root node.
-        @type root: L{sax.element.Element}
-        """
-        Content.__init__(self, schema, root)
-        self.min = root.get('minOccurs', default='0')
-        self.max = root.get('maxOccurs', default='1')
 
     def get_child(self, name):
         """
@@ -1005,8 +898,6 @@ class Any(Content):
         @rtype: (L{SchemaObject}, [L{SchemaObject},..])
         """
         root = self.root.clone()
-        root.set('minOccurs', '0')
-        root.set('maxOccurs', '1')
         root.set('note', 'synthesized (any) child')
         child = Any(self.schema, root)
         return (child, [])
@@ -1031,25 +922,6 @@ class Any(Content):
         @rtype: boolean
         """
         return True
-    
-    def unbounded(self):
-        """
-        Get whether this node is unbounded I{(a collection)}.
-        @return: True if unbounded, else False.
-        @rtype: boolean
-        """
-        if self.max.isdigit():
-            return (int(self.max) > 1)
-        else:
-            return ( self.max == 'unbounded' )
-        
-    def optional(self):
-        """
-        Get whether this type is optional.
-        @return: True if optional, else False
-        @rtype: boolean
-        """
-        return ( self.min == '0' )
     
 
 
