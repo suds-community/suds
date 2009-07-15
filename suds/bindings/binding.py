@@ -92,6 +92,17 @@ class Binding:
         """
         output = self.xcodecs[1]
         return output.literal
+    
+    def param_defs(self, method):
+        """
+        Get parameter definitions.  
+        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
+        @param method: A servic emethod.
+        @type method: I{service.Method}
+        @return: A collection of parameter definitions
+        @rtype: [I{pdef},..]
+        """
+        raise Exception, 'not implemented'
 
     def get_message(self, method, args, kwargs):
         """
@@ -299,6 +310,20 @@ class Binding:
         header.append(content)
         return header
     
+    def bodycontent(self, method, args, kwargs):
+        """
+        Get the content for the soap I{body} node.
+        @param method: A service method.
+        @type method: I{service.Method}
+        @param args: method parameter values
+        @type args: list
+        @param kwargs: Named (keyword) args for the method invoked.
+        @type kwargs: dict
+        @return: The xml content for the <body/>
+        @rtype: [L{Element},..]
+        """
+        raise Exception, 'not implemented'
+    
     def headercontent(self, method):
         """
         Get the content for the soap I{Header} node.
@@ -339,6 +364,18 @@ class Binding:
                 h.setPrefix(ns[0], ns[1])
                 content.append(h)
         return content
+    
+    def replycontent(self, method, body):
+        """
+        Get the reply body content.
+        @param method: A service method.
+        @type method: I{service.Method}
+        @param body: The soap body
+        @type body: L{Element}
+        @return: the body content
+        @rtype: [L{Element},...]
+        """
+        raise Exception, 'not implemented'
     
     def body(self, content):
         """
