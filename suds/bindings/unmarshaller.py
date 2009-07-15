@@ -303,20 +303,13 @@ class Typed(UMBase):
         return UMBase.process(self, content)
 
     def reset(self):
-        """
-        Reset the resolver.
-        """
         log.debug('reset')
         self.resolver.reset()
     
     def start(self, content):
-        """ 
-        Resolve to the schema type; build an object and setup metadata.
-        @param content: The current content being unmarshalled.
-        @type content: L{Content}
-        @return: A subclass of Object.
-        @rtype: L{Object}
-        """
+        #
+        # Resolve to the schema type; build an object and setup metadata.
+        #
         if content.type is None:
             found = self.resolver.find(content.node)
             if found is None:
@@ -334,22 +327,9 @@ class Typed(UMBase):
         md.sxtype = content.type
         
     def end(self, content):
-        """
-        Backup (pop) the resolver.
-        @param content: The current content being unmarshalled.
-        @type content: L{Content}
-        """
         self.resolver.pop()
         
     def unbounded(self, data):
-        """
-        Get whether the object is unbounded (a list) by looking at
-        the type embedded in the data's metadata.
-        @param data: The current object being built.
-        @type data: L{Object}
-        @return: True if unbounded, else False
-        @rtype: boolean
-        '"""
         try:
             if isinstance(data, Object):
                 md = data.__metadata__
@@ -360,13 +340,6 @@ class Typed(UMBase):
         return False
     
     def nillable(self, data):
-        """
-        Get whether the object is nillable.
-        @param data: The current object being built.
-        @type data: L{Object}
-        @return: True if nillable, else False
-        @rtype: boolean
-        '"""
         try:
             if isinstance(data, Object):
                 md = data.__metadata__

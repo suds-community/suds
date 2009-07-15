@@ -39,21 +39,12 @@ class Document(Binding):
     """
         
     def bodycontent(self, method, args, kwargs):
-        """
-        Get the content for the soap I{body} node.
-        The I{wrapped} vs I{bare} style is detected in 2 ways.
-        If there is 2+ parts in the message then it is I{bare}.
-        If there is only (1) part and that part resolves to a builtin then
-        it is I{bare}.  Otherwise, it is I{wrapped}.
-        @param method: A service method.
-        @type method: I{service.Method}
-        @param args: method parameter values
-        @type args: list
-        @param kwargs: Named (keyword) args for the method invoked.
-        @type kwargs: dict
-        @return: The xml content for the <body/>
-        @rtype: [L{Element},..]
-        """
+        #
+        # The I{wrapped} vs I{bare} style is detected in 2 ways.
+        # If there is 2+ parts in the message then it is I{bare}.
+        # If there is only (1) part and that part resolves to a builtin then
+        # it is I{bare}.  Otherwise, it is I{wrapped}.
+        #
         if not len(method.message.input.parts):
             return ()
         wrapped = method.message.input.wrapped
@@ -79,15 +70,6 @@ class Document(Binding):
         return root
 
     def replycontent(self, method, body):
-        """
-        Get the reply body content.
-        @param method: A service method.
-        @type method: I{service.Method}
-        @param body: The soap body
-        @type body: L{Element}
-        @return: the body content
-        @rtype: [L{Element},...]
-        """
         wrapped = method.message.output.wrapped
         if wrapped:
             return body[0].children
@@ -109,17 +91,13 @@ class Document(Binding):
         return d
         
     def param_defs(self, method):
-        """
-        Get parameter definitions for document literal.
-        The I{wrapped} vs I{bare} style is detected in 2 ways.
-        If there is 2+ parts in the message then it is I{bare}.
-        If there is only (1) part and that part resolves to a builtin then
-        it is I{bare}.  Otherwise, it is I{wrapped}.
-        @param method: A method name.
-        @type method: basestring
-        @return: A collection of parameter definitions
-        @rtype: [(str, L{xsd.sxbase.SchemaObject}),..]
-        """
+        #
+        # Get parameter definitions for document literal.
+        # The I{wrapped} vs I{bare} style is detected in 2 ways.
+        # If there is 2+ parts in the message then it is I{bare}.
+        # If there is only (1) part and that part resolves to a builtin then
+        # it is I{bare}.  Otherwise, it is I{wrapped}.
+        #
         pts = self.bodypart_types(method)
         wrapped = method.message.input.wrapped
         if not wrapped:
@@ -132,13 +110,6 @@ class Document(Binding):
         return result
     
     def returned_types(self, method):
-        """
-        Get the referenced type returned by the I{method}.
-        @param method: The name of a method.
-        @type method: str
-        @return: The name of the type return by the method.
-        @rtype: [L{xsd.sxbase.SchemaObject}]
-        """
         result = []
         wrapped = method.message.output.wrapped
         rts = self.bodypart_types(method, input=False)

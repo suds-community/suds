@@ -225,20 +225,8 @@ class PrimativeAppender(Appender):
     """
     An appender for python I{primative} types.
     """
-
-    def __init__(self, marshaller):
-        """
-        @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
-        """
-        Appender.__init__(self, marshaller)
         
     def append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
         if content.tag.startswith('_'):
             attr = content.tag[1:]
             value = tostr(content.value)
@@ -254,20 +242,8 @@ class NoneAppender(Appender):
     """
     An appender for I{None} values.
     """
-
-    def __init__(self, marshaller):
-        """
-        @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
-        """
-        Appender.__init__(self, marshaller)
         
     def append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
         child = self.node(content)
         default = self.setdefault(child, content)
         if default is None:
@@ -279,20 +255,8 @@ class PropertyAppender(Appender):
     """
     A L{Property} appender.
     """
-
-    def __init__(self, marshaller):
-        """
-        @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
-        """
-        Appender.__init__(self, marshaller)
         
     def append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
         p = content.value
         child = self.node(content)
         child.setText(p.get())
@@ -306,20 +270,8 @@ class ObjectAppender(Appender):
     """
     An L{Object} appender.
     """
-
-    def __init__(self, marshaller):
-        """
-        @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
-        """
-        Appender.__init__(self, marshaller)
         
     def append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
         object = content.value
         if self.optional(content) and footprint(object) == 0:
             return
@@ -335,20 +287,7 @@ class ElementAppender(Appender):
     An appender for I{Element} types.
     """
 
-    def __init__(self, marshaller):
-        """
-        @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
-        """
-        Appender.__init__(self, marshaller)
-        
     def append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        Appends a I{deep} copy of the detached node.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
         if content.tag.startswith('_'):
             raise Exception('raw XML not valid as attribute value')
         child = deepcopy(content.value)
@@ -359,20 +298,8 @@ class ListAppender(Appender):
     """
     A list/tuple appender.
     """
-    
-    def __init__(self, marshaller):
-        """
-        @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
-        """
-        Appender.__init__(self, marshaller)
-        
+
     def append(self, parent, content):
-        """
-        Append the specified L{content} to the I{parent}.
-        @param content: The content to append.
-        @type content: L{Object}
-        """
         collection = content.value
         if len(collection):
             self.suspend(content)
@@ -509,11 +436,6 @@ class Basic(MBase):
     """
     A I{basic} (untyped) marshaller.
     """
-
-    def __init__(self):
-        """
-        """
-        MBase.__init__(self)
     
     def process(self, value, tag=None):
         """
@@ -554,21 +476,9 @@ class Literal(MBase):
         self.resolver = GraphResolver(self.schema)
     
     def reset(self):
-        """
-        Reset the resolver.
-        """
         self.resolver.reset()
             
     def start(self, content):
-        """
-        Processing of I{content} has started, find and set the content's
-        schema type using the resolver.
-        @param content: The content for which proccessing has stated.
-        @type content: L{Content}
-        @return: True to continue appending
-        @rtype: boolean
-        @note: This will I{push} the type in the resolver.
-        """
         log.debug('starting content:\n%s', content)
         if content.type is None:
             name = content.tag
@@ -597,30 +507,14 @@ class Literal(MBase):
             return True
         
     def suspend(self, content):
-        """
-        Appending this content has suspended.
-        @param content: The content for which proccessing has been suspended.
-        @type content: L{Content}
-        """
         content.suspended = True
         self.resolver.pop()
     
     def resume(self, content):
-        """
-        Appending this content has resumed.
-        @param content: The content for which proccessing has been resumed.
-        @type content: L{Content}
-        """
         frame = Frame(content.type)
         self.resolver.push(frame)
         
     def end(self, content):
-        """
-        Processing of I{content} has ended, mirror the change
-        in the resolver.
-        @param content: The content for which proccessing has ended.
-        @type content: L{Content}
-        """
         log.debug('ending content:\n%s', content)
         current = self.resolver.top().type
         if current == content.type:
@@ -631,15 +525,6 @@ class Literal(MBase):
                 (current, content))
     
     def node(self, content):
-        """
-        Create and return an XML node that is qualified
-        using the I{type}.  Also, make sure all referenced namespace
-        prefixes are declared.
-        @param content: The content for which proccessing has ended.
-        @type content: L{Content}
-        @return: A new node.
-        @rtype: L{Element}
-        """
         ns = content.type.namespace()
         if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
@@ -651,25 +536,10 @@ class Literal(MBase):
         return node
     
     def setnil(self, node, content):
-        """
-        Set the value of the I{node} to nill when nillable.
-        @param node: A I{nil} node.
-        @type node: L{Element}
-        @param content: The content to set nil.
-        @type content: L{Content}
-        """
         if content.type.nillable:
             node.setnil()
             
     def setdefault(self, node, content):
-        """
-        Set the value of the I{node} to a default value.
-        @param node: A I{nil} node.
-        @type node: L{Element}
-        @param content: The content to set default value.
-        @type content: L{Object}
-        @return: The default.
-        """
         default = content.type.default
         if default is None:
             pass
@@ -678,11 +548,6 @@ class Literal(MBase):
         return default
     
     def optional(self, content):
-        """
-        Get whether the specified content is optional.
-        @param content: The content which to check.
-        @type content: L{Content}
-        """
         if content.type.optional():
             return True
         resolver = self.resolver
@@ -693,16 +558,10 @@ class Literal(MBase):
         return False
     
     def encode(self, node, content):
-        """
-        Add (soap) encoding information only if the resolved
-        type is derived by extension.  Further, the xsi:type values
-        is qualified by namespace only if the content (tag) and
-        referenced type are in different namespaces.
-        @param node: The node to update.
-        @type node: L{Element}
-        @param content: The content to encode.
-        @type content: L{Content}
-        """
+        # Add (soap) encoding information only if the resolved
+        # type is derived by extension.  Further, the xsi:type values
+        # is qualified by namespace only if the content (tag) and
+        # referenced type are in different namespaces.
         if content.type.any():
             return
         resolved = self.resolver.top().resolved
@@ -727,7 +586,6 @@ class Literal(MBase):
         return False
     
     def optional(self, content):
-        """ this content is optional """
         if content.type.optional():
             return True
         ancestry = self.resolver.top().ancestry
@@ -765,22 +623,8 @@ class Encoded(Literal):
     A SOAP section (5) encoding marshaller.
     This marshaller supports rpc/encoded soap styles.
     """
-    
-    def __init__(self, schema):
-        """
-        @param schema: A schema object
-        @type schema: L{xsd.schema.Schema}
-        """
-        Literal.__init__(self, schema)
         
     def encode(self, node, content):
-        """
-        Add (soap) encoding information
-        @param node: The node to update.
-        @type node: L{Element}
-        @param content: The content for which proccessing has ended.
-        @type content: L{Object}
-        """
         if content.type.any():
             Typer.auto(node, content.value)
             return
