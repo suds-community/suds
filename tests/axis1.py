@@ -27,6 +27,7 @@ import suds.metrics as metrics
 from tests import *
 from suds import WebFault
 from suds.client import Client
+from suds.sudsobject import Object
 from suds.transport.http import HttpAuthenticated
 
 errors = 0
@@ -167,6 +168,12 @@ except Exception, e:
 
 try:
     array = client.factory.create('ArrayOf_xsd_string')
+    print 'ArrayOf_xsd_string=\n%s' % array
+    array.item = ['my', 'dog', 'likes', 'steak']
+    result = client.service.printList(array)
+    print '\nreply( %s )\n' % str(result)
+    array = Object()
+    print 'ArrayOf_xsd_string=\n%s' % array
     array.item = ['my', 'dog', 'likes', 'steak']
     result = client.service.printList(array)
     print '\nreply( %s )\n' % str(result)
