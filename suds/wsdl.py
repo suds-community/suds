@@ -33,6 +33,7 @@ from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SFactory
 from urlparse import urljoin
+import re
 
 log = getLogger(__name__)
 
@@ -280,30 +281,29 @@ class Definitions(WObject):
                 key = '/'.join((op.soap.style, op.soap.output.body.use))
                 m.binding.output = bindings.get(key)
                 op = ptype.operation(name)
-                m.message = SFactory.object('message')
-                m.message.input = op.input
-                m.message.output = op.output
                 m.qname = ':'.join((p.name, name))
                 self.service.methods[m.name] = m
                 self.service.methods[m.qname] = m
                 
     def set_wrapped(self):
         """ set (wrapped|bare) flag on messages """
-        for m in self.messages.values():
-            m.wrapped = False
-            if len(m.parts) != 1:
-                continue
-            for p in m.parts:
-                if p.element is None:
-                    continue
-                query = ElementQuery(p.element)
-                pt = query.execute(self.schema)
-                if pt is None:
-                    raise TypeNotFound(query.ref)
-                resolved = pt.resolve()
-                if resolved.builtin():
-                    continue
-                m.wrapped = True
+        for b in self.bindings.values():
+            for op in b.operations.values():
+                for body in (op.soap.input.body, op.soap.output.body):
+                    body.wrapped = False
+                    if len(body.parts) != 1:
+                        continue
+                    for p in body.parts:
+                        if p.element is None:
+                            continue
+                        query = ElementQuery(p.element)
+                        pt = query.execute(self.schema)
+                        if pt is None:
+                            raise TypeNotFound(query.ref)
+                        resolved = pt.resolve()
+                        if resolved.builtin():
+                            continue
+                        body.wrapped = True
             
 
 
@@ -608,6 +608,11 @@ class Binding(NamedObject):
             body.use = 'literal'
             body.namespace = definitions.tns
             return
+        parts = root.get('parts')
+        if parts is None:
+            body.parts = ()
+        else:
+            body.parts = re.split('[\s,]', parts)
         body.use = root.get('use', default='literal')
         ns = root.get('namespace')
         if ns is None:
@@ -643,6 +648,7 @@ class Binding(NamedObject):
         @type definitions: L{Definitions}
         """
         self.resolveport(definitions)
+        self.resolvesoapbody(definitions)
         self.resolveheaders(definitions)
         
     def resolveport(self, definitions):
@@ -658,6 +664,37 @@ class Binding(NamedObject):
         else:
             self.type = port_type
             
+    def resolvesoapbody(self, definitions):
+        """
+        Resolve soap body I{message} parts.
+        @param definitions: A definitions object.
+        @type definitions: L{Definitions}
+        """
+        for op in self.operations.values():
+            ptop = self.type.operation(op.name)
+            if ptop is None:
+                raise Exception, \
+                    "operation '%s' not defined in portType" % op.name
+            soap = op.soap
+            parts = soap.input.body.parts
+            if len(parts):
+                pts = []
+                for p in ptop.input.parts:
+                    if p.name in parts:
+                        pts.append(p)
+                soap.input.body.parts = pts
+            else:
+                soap.input.body.parts = ptop.input.parts
+            parts = soap.output.body.parts
+            if len(parts):
+                pts = []
+                for p in ptop.output.parts:
+                    if p.name in parts:
+                        pts.append(p)
+                soap.output.body.parts = pts
+            else:
+                soap.output.body.parts = ptop.output.parts
+            
     def resolveheaders(self, definitions):
         """
         Resolve soap header I{message} references.
@@ -672,15 +709,15 @@ class Binding(NamedObject):
                 ref = qualify(mn, self.root, definitions.tns)
                 message = definitions.messages.get(ref)
                 if message is None:
-                    raise Exception("message'%s', not-found" % mn)
-                header.message = SFactory.object('Message')
-                header.message.name = message.name
-                header.message.qname = message.qname
-                header.message.parts = []
+                    raise Exception, "message'%s', not-found" % mn
+                pn = header.part
                 for p in message.parts:
-                    if p.name == header.part:
-                        header.message.parts.append(p)
+                    if p.name == pn:
+                        header.part = p
                         break
+                if pn == header.part:
+                    raise Exception, \
+                        "message '%s' has not part named '%s'" % (ref, pn)
             
     def operation(self, name):
         """

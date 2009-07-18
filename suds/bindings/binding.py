@@ -402,9 +402,9 @@ class Binding:
         """
         result = []
         if input:
-            parts = method.message.input.parts
+            parts = method.soap.input.body.parts
         else:
-            parts = method.message.output.parts
+            parts = method.soap.output.body.parts
         for p in parts:
             if p.element is not None:
                 query = ElementQuery(p.element)
@@ -441,23 +441,23 @@ class Binding:
         else:
             headers = method.soap.output.headers
         for header in headers:
-            for p in header.message.parts:
-                if p.element is not None:
-                    query = ElementQuery(p.element)
+            part = header.part
+            if part.element is not None:
+                query = ElementQuery(part.element)
+            else:
+                query = TypeQuery(part.type)
+            pt = query.execute(self.schema)
+            if pt is None:
+                raise TypeNotFound(query.ref)
+            if part.type is not None:
+                pt = PartElement(part.name, pt)
+            if input:
+                if pt.name is None:
+                    result.append((part.name, pt))
                 else:
-                    query = TypeQuery(p.type)
-                pt = query.execute(self.schema)
-                if pt is None:
-                    raise TypeNotFound(query.ref)
-                if p.type is not None:
-                    pt = PartElement(p.name, pt)
-                if input:
-                    if pt.name is None:
-                        result.append((p.name, pt))
-                    else:
-                        result.append((pt.name, pt))
-                else:
-                    result.append(pt)
+                    result.append((pt.name, pt))
+            else:
+                result.append(pt)
         return result
     
     def returned_types(self, method):

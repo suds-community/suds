@@ -45,9 +45,9 @@ class Document(Binding):
         # If there is only (1) part and that part resolves to a builtin then
         # it is I{bare}.  Otherwise, it is I{wrapped}.
         #
-        if not len(method.message.input.parts):
+        if not len(method.soap.input.body.parts):
             return ()
-        wrapped = method.message.input.wrapped
+        wrapped = method.soap.input.body.wrapped
         if wrapped:
             pts = self.bodypart_types(method)
             root = self.document(pts[0])
@@ -70,7 +70,7 @@ class Document(Binding):
         return root
 
     def replycontent(self, method, body):
-        wrapped = method.message.output.wrapped
+        wrapped = method.soap.output.body.wrapped
         if wrapped:
             return body[0].children
         else:
@@ -99,7 +99,7 @@ class Document(Binding):
         # it is I{bare}.  Otherwise, it is I{wrapped}.
         #
         pts = self.bodypart_types(method)
-        wrapped = method.message.input.wrapped
+        wrapped = method.soap.input.body.wrapped
         if not wrapped:
             return pts
         result = []
@@ -111,7 +111,7 @@ class Document(Binding):
     
     def returned_types(self, method):
         result = []
-        wrapped = method.message.output.wrapped
+        wrapped = method.soap.output.body.wrapped
         rts = self.bodypart_types(method, input=False)
         if wrapped:
             for pt in rts:
