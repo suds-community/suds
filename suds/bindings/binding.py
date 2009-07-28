@@ -123,8 +123,11 @@ class Binding:
         content = self.bodycontent(method, args, kwargs)
         body = self.body(content)
         env = self.envelope(header, body)
-        body.normalizePrefixes()
-        env.promotePrefixes()
+        if self.options.prefixes:
+            body.normalizePrefixes()
+            env.promotePrefixes()
+        else:
+            env.refitPrefixes()
         return env
     
     def get_reply(self, method, reply):

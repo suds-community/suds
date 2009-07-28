@@ -71,6 +71,10 @@ class Options(object):
             that the I{xsi:type} attribute values should be qualified by namespace.
                 - type: I{bool}
                 - default: True
+        - B{prefixes} - Elements of the soap message should be qualified (when needed)
+            using XML prefixes as opposed to xmlns="" syntax.
+                - type: I{bool}
+                - default: True
     """
 
     __options__ = \
@@ -88,6 +92,7 @@ class Options(object):
         wsse=(Security, None),
         doctor=(Doctor, None),
         xstq=(bool, True),
+        prefixes=(bool, True),
     )
     
     def __init__(self, **kwargs):
