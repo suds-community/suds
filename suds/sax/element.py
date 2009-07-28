@@ -632,6 +632,23 @@ class Element:
                 self.parent.nsprefixes[p] = u
                 del self.nsprefixes[p]
         return self
+    
+    def refitPrefixes(self):
+        """
+        Refit namespace qualification by replacing prefixes
+        with explicit namespaces. Also purges prefix mapping table.
+        @return: self
+        @rtype: L{Element}
+        """
+        for c in self.children:
+            c.refitPrefixes()
+        if self.prefix is not None:
+            ns = self.resolvePrefix(self.prefix)
+            if ns[1] is not None:
+                self.expns = ns[1]
+        self.prefix = None
+        self.nsprefixes = {}
+        return self
                 
     def normalizePrefixes(self):
         """
