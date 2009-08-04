@@ -133,11 +133,11 @@ class FileCache(Cache):
  
     def clear(self):
         for fn in os.listdir(self.location):
-            if os.path.isDir(fn):
+            if os.path.isdir(fn):
                 continue
-            if fn.startswith(self.prefix) and fn.endswith(self.suffix):
+            if fn.startswith(self.fnprefix) and fn.endswith(self.fnsuffix):
                 log.debug('deleted: %s', fn)
-                os.remove(fn)
+                os.remove(os.path.join(self.location, fn))
                 
     def open(self, fn, *args):
         """
