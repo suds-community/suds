@@ -405,8 +405,21 @@ class Element(TypedContent):
         a = self.root.get('nillable')
         if a is not None:
             self.nillable = ( a in ('1', 'true') )
-        if self.type is None and self.root.isempty():
-            self.type = self.anytype()
+        self.implany()
+            
+    def implany(self):
+        """
+        Set the type as any when implicit.
+        An implicit <xs:any/> is when an element has not
+        body and no type defined.
+        @return: self
+        @rtype: L{Element}
+        """
+        if self.type is None and \
+            self.ref is None and \
+            self.root.isempty():
+                self.type = self.anytype()
+        return self
         
     def childtags(self):
         return ('attribute', 'simpleType', 'complexType', 'any',)
