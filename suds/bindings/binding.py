@@ -498,6 +498,9 @@ class PartElement(SchemaElement):
         self.name = name
         self.form_qualified = False
         
+    def implany(self):
+        return self
+        
     def namespace(self, prefix=None):
         return Namespace.default
         

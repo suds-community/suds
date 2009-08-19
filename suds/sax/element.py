@@ -201,6 +201,22 @@ class Element:
         else:
             attr.setValue(value)
             
+    def unset(self, name):
+        """
+        Unset (remove) an attribute.
+        @param name: The attribute name.
+        @type name: str
+        @return: self
+        @rtype: L{Element}
+        """
+        try:
+            attr = self.attrib(name)
+            self.attributes.remove(attr)
+        except:
+            pass
+        return self
+            
+            
     def get(self, name, ns=None, default=None):
         """
         Get the value of an attribute by name.
