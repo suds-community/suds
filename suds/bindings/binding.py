@@ -72,7 +72,7 @@ class Binding:
         """
         Get the appropriate XML decoder.
         @return: Either the (basic|typed) unmarshaller.
-        @rtype: L{Marshaller}
+        @rtype: L{UmxTyped}
         """
         if typed:
             return UmxTyped(self.schema)
@@ -82,8 +82,8 @@ class Binding:
     def marshaller(self):
         """
         Get the appropriate XML encoder.
-        @return: Either L{literal} marshaller.
-        @rtype: L{Marshaller}
+        @return: An L{MxLiteral} marshaller.
+        @rtype: L{MxLiteral}
         """
         return MxLiteral(self.schema)
     

@@ -182,7 +182,7 @@ class Definitions(WObject):
         self.messages = {}
         self.port_types = {}
         self.bindings = {}
-        self.service = None
+        self.services = []
         self.add_children(self.root)
         self.children.sort()
         pmd = self.__metadata__.__print__
@@ -193,8 +193,8 @@ class Definitions(WObject):
         self.resolve()
         self.build_schema()
         self.set_wrapped()
-        if self.service is not None:
-            self.add_methods()
+        for s in self.services:
+            self.add_methods(s)
         log.debug("wsdl at '%s' loaded:\n%s", url, self)
         
     def mktns(self, root):
@@ -228,7 +228,7 @@ class Definitions(WObject):
                 self.bindings[child.qname] = child
                 continue
             if isinstance(child, Service):
-                self.service = child
+                self.services.append(child)
                 continue
                 
     def open_imports(self):
@@ -258,14 +258,14 @@ class Definitions(WObject):
             self.schema.merge(s)
         return self.schema
                 
-    def add_methods(self):
+    def add_methods(self, service):
         """ Build method view for service """
         bindings = {
             'document/literal' : Document(self),
             'rpc/literal' : RPC(self),
             'rpc/encoded' : Encoded(self)
         }
-        for p in self.service.ports:
+        for p in service.ports:
             binding = p.binding
             ptype = p.binding.type
             operations = p.binding.type.operations.values()
@@ -281,9 +281,7 @@ class Definitions(WObject):
                 key = '/'.join((op.soap.style, op.soap.output.body.use))
                 m.binding.output = bindings.get(key)
                 op = ptype.operation(name)
-                m.qname = ':'.join((p.name, name))
-                self.service.methods[m.name] = m
-                self.service.methods[m.qname] = m
+                p.methods[name] = m
                 
     def set_wrapped(self):
         """ set (wrapped|bare) flag on messages """
@@ -762,6 +760,7 @@ class Port(NamedObject):
         self.binding = root.get('binding')
         address = root.getChild('address')
         self.location = address.get('location').encode('utf-8')
+        self.methods = {}
         
     def method(self, name):
         """
@@ -771,8 +770,7 @@ class Port(NamedObject):
         @return: The requested method object.
         @rtype: I{Method}
         """
-        qname = ':'.join((self.name, name))
-        return self.__service.method(qname)
+        return self.methods.get(name)
         
 
 class Service(NamedObject):
@@ -793,7 +791,6 @@ class Service(NamedObject):
         """
         NamedObject.__init__(self, root, definitions)
         self.ports = []
-        self.methods = {}
         for p in root.getChildren('port'):
             port = Port(p, definitions, self)
             self.ports.append(port)
@@ -810,16 +807,6 @@ class Service(NamedObject):
             if p.name == name:
                 return p
         return None
-    
-    def method(self, name):
-        """
-        Get a method defined in one of the portTypes by name.
-        @param name: A method name.
-        @type name: str
-        @return: The requested method object.
-        @rtype: I{Method}
-        """
-        return self.methods.get(name)
     
     def setlocation(self, url, names=None):
         """

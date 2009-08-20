@@ -31,7 +31,7 @@ import socket
 
 __version__ = '0.3.7'
 
-properties = dict(version=__version__, build="(beta) R549-20090819")
+properties = dict(version=__version__, build="(beta) R550-20090820")
 
 #
 # Exceptions
@@ -44,6 +44,10 @@ class MethodNotFound(Exception):
 class PortNotFound(Exception):
     def __init__(self, name):
         Exception.__init__(self, "Port not found: '%s'" % name)
+        
+class ServiceNotFound(Exception):
+    def __init__(self, name):
+        Exception.__init__(self, "Service not found: '%s'" % name)
     
 class TypeNotFound(Exception):
     def __init__(self, name):
