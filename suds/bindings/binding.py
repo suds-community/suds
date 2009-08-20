@@ -24,8 +24,10 @@ from suds.sax import Namespace
 from suds.sax.parser import Parser
 from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
-from suds.bindings.marshaller import Marshaller, Content
-from suds.bindings.unmarshaller import Unmarshaller
+from suds.mx import Content
+from suds.mx.literal import Literal as MxLiteral
+from suds.umx.basic import Basic as UmxBasic
+from suds.umx.typed import Typed as UmxTyped
 from suds.bindings.multiref import MultiRef
 from suds.xsd.query import TypeQuery, ElementQuery
 from suds.xsd.sxbasic import Element as SchemaElement
@@ -51,8 +53,6 @@ class Binding:
     @type options: L{Options}
     @ivar parser: A sax parser.
     @type parser: L{suds.sax.parser.Parser}
-    @ivar xcodecs: The XML (encode|decode) objects.
-    @type xcodecs: (L{Unmarshaller}, L{Marshaller})
     """
     
     replyfilter = (lambda s,r: r)
@@ -67,10 +67,6 @@ class Binding:
         self.options = Options()
         self.parser = Parser()
         self.multiref = MultiRef()
-        self.xcodecs = (
-            Unmarshaller(self.schema),
-            Marshaller(self.schema),
-        )
         
     def unmarshaller(self, typed=True):
         """
@@ -78,11 +74,10 @@ class Binding:
         @return: Either the (basic|typed) unmarshaller.
         @rtype: L{Marshaller}
         """
-        input = self.xcodecs[0]
         if typed:
-            return input.typed
+            return UmxTyped(self.schema)
         else:
-            return input.basic
+            return UmxBasic()
         
     def marshaller(self):
         """
@@ -90,8 +85,7 @@ class Binding:
         @return: Either L{literal} marshaller.
         @rtype: L{Marshaller}
         """
-        output = self.xcodecs[1]
-        return output.literal
+        return MxLiteral(self.schema)
     
     def param_defs(self, method):
         """
