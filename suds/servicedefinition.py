@@ -41,14 +41,20 @@ class ServiceDefinition:
     @type types: [I{Type},..] 
     """
     
-    def __init__(self, wsdl):
+    def __init__(self, wsdl, service):
+        """
+        @param wsdl: A wsdl object
+        @type wsdl: L{Definitions}
+        @param service: A service B{name}.
+        @type service: str
+        """
         self.wsdl = wsdl
-        self.service = wsdl.service
+        self.service = service
         self.ports = []
         self.params = []
         self.types = []
         self.prefixes = []
-        self.addports(wsdl.service)
+        self.addports()
         self.paramtypes()
         self.publictypes()
         self.getprefixes()
@@ -62,7 +68,7 @@ class ServiceDefinition:
         for ns in self.prefixes:
             self.wsdl.root.addPrefix(ns[0], ns[1])
 
-    def addports(self, s):
+    def addports(self):
         """
         Look through the list of service ports and construct a list of tuples where
         each tuple is used to describe a port and it's list of methods as:
@@ -71,11 +77,10 @@ class ServiceDefinition:
         """
         timer = metrics.Timer()
         timer.start()
-        for port in s.ports:
+        for port in self.service.ports:
             p = self.findport(port)
             for op in port.binding.operations.values():
-                qname = ':'.join((port.name, op.name))
-                m = s.method(qname)
+                m = p[0].method(op.name)
                 binding = m.binding.input
                 method = (m.name, binding.param_defs(m))
                 p[1].append(method)

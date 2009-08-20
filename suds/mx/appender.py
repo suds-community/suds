@@ -61,7 +61,7 @@ class ContentAppender:
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
+        @type marshaller: L{suds.mx.core.Core}
         """
         self.default = PrimativeAppender(marshaller)
         self.appenders = (
@@ -99,13 +99,13 @@ class Appender:
     """
     An appender used by the marshaller to append content.
     @ivar marshaller: A marshaller.
-    @type marshaller: L{MBase}
+    @type marshaller: L{suds.mx.core.Core}
     """
     
     def __init__(self, marshaller):
         """
         @param marshaller: A marshaller.
-        @type marshaller: L{MBase}
+        @type marshaller: L{suds.mx.core.Core}
         """
         self.marshaller  = marshaller
         
