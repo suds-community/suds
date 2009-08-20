@@ -28,7 +28,7 @@ from tests import *
 from suds import WebFault
 from suds.client import Client
 from suds.sudsobject import Object
-from suds.transport.http import HttpAuthenticated
+from suds.transport.https import HttpAuthenticated
 
 errors = 0
 

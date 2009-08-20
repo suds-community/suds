@@ -20,6 +20,7 @@ Provides classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
 
 from logging import getLogger
 from suds import *
+from suds.mx.encoded import Encoded as MxEncoded
 from suds.bindings.binding import Binding, envns
 from suds.sax.element import Element
 
@@ -82,5 +83,4 @@ class Encoded(RPC):
     """
 
     def marshaller(self):
-        output = self.xcodecs[1]
-        return output.encoded
+        return MxEncoded(self.schema)

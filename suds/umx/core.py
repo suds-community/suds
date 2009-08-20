@@ -15,62 +15,22 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Provides classes for XML->object I{unmarshalling}.
+Provides base classes for XML->object I{unmarshalling}.
 """
 
 from logging import getLogger
 from suds import *
-from suds.bindings import *
-from suds.sudsobject import Factory, Object, merge
-from suds.sax import Namespace
+from suds.umx import *
+from suds.umx.attrlist import AttrList
 from suds.sax.text import Text
-from suds.resolver import NodeResolver, Frame
+from suds.sudsobject import Factory
+
 
 log = getLogger(__name__)
 
-
 reserved = { 'class':'cls', 'def':'dfn', }
 
-
-class Unmarshaller:
-    """
-    An unmarshaller object.
-    @ivar basic: A basic I{plain} (untyped) marshaller.
-    @type basic: L{Basic}
-    @ivar typed: A I{typed} marshaller.
-    @type typed: L{Typed}
-    """
-    
-    def __init__(self, schema):
-        """
-        @param schema: A schema object
-        @type schema: L{xsd.schema.Schema}
-        """
-        self.basic = Basic()
-        self.typed = Typed(schema)
-
-       
-class Content(Object):
-    """
-    @ivar node: The content source node.
-    @type node: L{sax.element.Element}
-    @ivar data: The (optional) content data.
-    @type data: L{Object}
-    @ivar type: The (optional) content schema type.
-    @type type: L{xsd.sxbase.SchemaObject}
-    @ivar text: The (optional) content (xml) text.
-    @type text: basestring
-    """
-
-    def __init__(self, node):
-        Object.__init__(self)
-        self.node = node
-        self.data = None
-        self.type = None
-        self.text = None
-
-    
-class UMBase:
+class Core:
     """
     The abstract XML I{node} unmarshaller.  This class provides the
     I{core} unmarshalling functionality.
@@ -255,197 +215,3 @@ class UMBase:
         @rtype: boolean
         '"""
         return False
-    
-    
-class Basic(UMBase):
-    """
-    A object builder (unmarshaller).
-    """
-        
-    def process(self, node):
-        """
-        Process an object graph representation of the xml I{node}.
-        @param node: An XML tree.
-        @type node: L{sax.element.Element}
-        @return: A suds object.
-        @rtype: L{Object}
-        """
-        content = Content(node)
-        return UMBase.process(self, content)
-
-
-class Typed(UMBase):
-    """
-    A I{typed} XML unmarshaller
-    @ivar resolver: A schema type resolver.
-    @type resolver: L{NodeResolver}
-    """
-    
-    def __init__(self, schema):
-        """
-        @param schema: A schema object.
-        @type schema: L{xsd.schema.Schema}
-        """
-        self.resolver = NodeResolver(schema)
-        
-    def process(self, node, type):
-        """
-        Process an object graph representation of the xml L{node}.
-        @param node: An XML tree.
-        @type node: L{sax.element.Element}
-        @param type: The I{optional} schema type.
-        @type type: L{xsd.sxbase.SchemaObject}
-        @return: A suds object.
-        @rtype: L{Object}
-        """
-        content = Content(node)
-        content.type = type
-        return UMBase.process(self, content)
-
-    def reset(self):
-        log.debug('reset')
-        self.resolver.reset()
-    
-    def start(self, content):
-        #
-        # Resolve to the schema type; build an object and setup metadata.
-        #
-        if content.type is None:
-            found = self.resolver.find(content.node)
-            if found is None:
-                log.error(self.resolver.schema)
-                raise TypeNotFound(content.node.qname())
-            content.type = found
-        else:
-            frame = Frame(content.type)
-            self.resolver.push(frame)
-        cls_name = content.type.name
-        if cls_name is None:
-            cls_name = content.node.name
-        content.data = Factory.object(cls_name)
-        md = content.data.__metadata__
-        md.sxtype = content.type
-        
-    def end(self, content):
-        self.resolver.pop()
-        
-    def unbounded(self, data):
-        try:
-            if isinstance(data, Object):
-                md = data.__metadata__
-                type = md.sxtype
-                return type.unbounded()
-        except:
-            log.error('metadata error:\n%s', data, exc_info=True)
-        return False
-    
-    def nillable(self, data):
-        try:
-            if isinstance(data, Object):
-                md = data.__metadata__
-                type = md.sxtype
-                resolved = type.resolve()
-                return ( type.nillable or (resolved.builtin() and resolved.nillable ) )
-        except:
-            log.error('metadata error:\n%s', data, exc_info=True)
-        return False
-    
-    def append_attribute(self, name, value, content):
-        """
-        Append an attribute name/value into L{Content.data}.
-        @param name: The attribute name
-        @type name: basestring
-        @param value: The attribute's value
-        @type value: basestring
-        @param content: The current content being unmarshalled.
-        @type content: L{Content}
-        """
-        type = self.resolver.findattr(name)
-        if type is None:
-            log.warn('attribute (%s) type, not-found', name)
-        else:
-            value = self.translated(value, type)
-        UMBase.append_attribute(self, name, value, content)
-    
-    def append_text(self, content):
-        """
-        Append text nodes into L{Content.data}
-        @param content: The current content being unmarshalled.
-        @type content: L{Content}
-        """
-        UMBase.append_text(self, content)
-        resolved = content.type.resolve()
-        content.text = self.translated(content.text, content.type)
-            
-    def translated(self, value, type):
-        """ translate using the schema type """
-        if value is not None:
-            resolved = type.resolve()
-            return resolved.translate(value)
-        else:
-            return value
-
-
-class AttrList:
-    """
-    A filtered attribute list.
-    Items are included during iteration if they are in either the (xs) or
-    (xml) namespaces.
-    @ivar raw: The I{raw} attribute list.
-    @type raw: list
-    """
-    def __init__(self, attributes):
-        """
-        @param attributes: A list of attributes
-        @type attributes: list
-        """
-        self.raw = attributes
-        
-    def real(self):
-        """
-        Get list of I{real} attributes which exclude xs and xml attributes.
-        @return: A list of I{real} attributes.
-        @rtype: I{generator}
-        """
-        for a in self.raw:
-            if self.skip(a): continue
-            yield a
-            
-    def rlen(self):
-        """
-        Get the number of I{real} attributes which exclude xs and xml attributes.
-        @return: A count of I{real} attributes. 
-        @rtype: L{int}
-        """
-        n = 0
-        for a in self.real():
-            n += 1
-        return n
-            
-    def lang(self):
-        """
-        Get list of I{filtered} attributes which exclude xs.
-        @return: A list of I{filtered} attributes.
-        @rtype: I{generator}
-        """
-        for a in self.raw:
-            if a.qname() == 'xml:lang':
-                return a.value
-            return None
-
-    def skip(self, attr):
-        """
-        Get whether to skip (filter-out) the specified attribute.
-        @param attr: An attribute.
-        @type attr: I{Attribute}
-        @return: True if should be skipped.
-        @rtype: bool
-        """
-        ns = attr.namespace()
-        skip = (
-            Namespace.xmlns[1],
-            'http://schemas.xmlsoap.org/soap/encoding/',
-            'http://schemas.xmlsoap.org/soap/envelope/',
-            'http://www.w3.org/2003/05/soap-envelope',
-        )
-        return ( Namespace.xs(ns) or ns[1] in skip )
