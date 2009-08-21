@@ -105,7 +105,7 @@ class Client(object):
         self.options = options
         self.wsdl = Definitions(url, options)
         self.factory = Factory(self.wsdl)
-        self.service = ServiceIterator(self, self.wsdl.services)
+        self.service = ServiceSelector(self, self.wsdl.services)
         self.sd = []
         for s in self.wsdl.services:
             sd = ServiceDefinition(self.wsdl, s)
@@ -224,114 +224,133 @@ class Factory:
         self.resolver = PathResolver(self.wsdl, ps)
 
 
-class ServiceIterator:
-    """
-    Services (namespace) iterator.
-    @ivar client: A client object.
-    @type client: L{Client}
-    @ivar services: A list of services.
-    @type services: list
-    """
+class ServiceSelector:
+
     def __init__(self, client, services):
-        """
-        @param client: A client object.
-        @type client: L{Client}
-        @param services: A list of services.
-        @type services: list
-        """
-        self.client = client
-        self.services = services
+        self.__client__ = client
+        self.__services__ = services
     
     def __getattr__(self, name):
         builtin = name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
-        if len(self.services):
-            s = self.services[0]
-            p = PortIterator(self.client, s.ports)
+        default = self.__ds__()
+        if default is None:
+            port = self.__find__(0)
         else:
-            raise Exception, 'No services defined'
-        return getattr(p, name)
+            port = default
+        return getattr(port, name)
     
     def __getitem__(self, name):
-        if len(self.services) == 1:
-            s = self.services[0]
-            p = PortIterator(self.client, s.ports)
-            return p[name]
+        if len(self.__services__) == 1:
+            port = self.__find__(0)
+            return port[name]
+        default = self.__ds__()
+        if default is not None:
+            port = default
+            return port[name]
+        return self.__find__(name)
+    
+    def __find__(self, name):
+        service = None
+        if not len(self.__services__):
+            raise Exception, 'No services defined'
         if isinstance(name, int):
-            s = self.services[name]
-            return PortIterator(self.client, s.ports)
-        for s in self.services:
-            if name == s.name:
-                return PortIterator(self.client, s.ports)
-        raise ServiceNotFound, name
+            try:
+                service = self.__services__[name]
+                name = service.name
+            except IndexError:
+                raise ServiceNotFound, 'at [%d]' % name
+        else:
+            for s in self.__services__:
+                if name == s.name:
+                    service = s
+                    break
+        if service is None:
+            raise ServiceNotFound, name
+        return PortSelector(self.__client__, service.ports, name)
+    
+    def __ds__(self):
+        ds = self.__client__.options.service
+        if ds is None:
+            return None
+        else:
+            return self.__find__(ds)
 
 
-class PortIterator:
-    """
-    Port (namespace) iterator.
-    @ivar client: A client object.
-    @type client: L{Client}
-    @ivar ports: A list of ports.
-    @type ports: list
-    """
-    def __init__(self, client, ports):
-        """
-        @param client: A client object.
-        @type client: L{Client}
-        @param ports: A list of ports.
-        @type ports: list
-        """
-        self.client = client
-        self.ports = ports
+class PortSelector:
+
+    def __init__(self, client, ports, qn):
+        self.__client__ = client
+        self.__ports__ = ports
+        self.__qn__ = qn
     
     def __getattr__(self, name):
         builtin = name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
-        if len(self.ports):
-            p = self.ports[0]
-            m = MethodIterator(self.client, p.methods)
+        default = self.__dp__()
+        if default is None:
+            m = self.__find__(0)
         else:
-            raise Exception, 'No ports defined'
+            m = default
         return getattr(m, name)
     
     def __getitem__(self, name):
+        default = self.__dp__()
+        if default is None:
+            return self.__find__(name)
+        else:
+            return default
+    
+    def __find__(self, name):
+        port = None
+        if not len(self.__ports__):
+            raise Exception, 'No ports defined: %s' % self.__qn__
         if isinstance(name, int):
-            p = self.ports[name]
-            return MethodIterator(self.client, p.methods)
-        for p in self.ports:
-            if name == p.name:
-                return MethodIterator(self.client, p.methods)
-        raise PortNotFound(name)
+            qn = '%s[%d]' % (self.__qn__, name)
+            try:
+                port = self.__ports__[name]
+            except IndexError:
+                raise PortNotFound, qn
+        else:
+            qn = '.'.join((self.__qn__, name))
+            for p in self.__ports__:
+                if name == p.name:
+                    port = p
+                    break
+        if port is None:
+            raise PortNotFound, qn
+        qn = '.'.join((self.__qn__, port.name))
+        return MethodSelector(self.__client__, port.methods, qn)
+    
+    def __dp__(self):
+        dp = self.__client__.options.port
+        if dp is None:
+            return None
+        else:
+            return self.__find__(dp)
     
 
-class MethodIterator:
-    """
-    Method (namespace) iterator.
-    @ivar client: A client object.
-    @type client: L{Client}
-    @ivar methods: A dict of methods.
-    @type methods: dict
-    """
-    def __init__(self, client, methods):
-        """
-        @param client: A client object.
-        @type client: L{Client}
-        @param methods: A dict of methods.
-        @type methods: dict
-        """
-        self.client = client
-        self.methods = methods
+class MethodSelector:
+
+    def __init__(self, client, methods, qn):
+        self.__client__ = client
+        self.__methods__ = methods
+        self.__qn__ = qn
     
     def __getattr__(self, name):
         builtin = name.startswith('__') and name.endswith('__')
         if builtin:
             return self.__dict__[name]
-        m = self.methods.get(name)
+        return self[name]
+    
+    def __getitem__(self, name):
+        m = self.__methods__.get(name)
         if m is None:
-            raise MethodNotFound, name
-        return Method(self.client, m)
+            qn = '.'.join((self.__qn__, name))
+            raise MethodNotFound, qn
+        return Method(self.__client__, m)
 
 
 class Method:
