@@ -71,7 +71,8 @@ class Typed(Core):
                 raise TypeNotFound(content.node.qname())
             content.type = found
         else:
-            frame = Frame(content.type)
+            known = self.resolver.known(content.node)
+            frame = Frame(content.type, resolved=known)
             self.resolver.push(frame)
         cls_name = content.type.name
         if cls_name is None:
