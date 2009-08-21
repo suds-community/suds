@@ -225,132 +225,256 @@ class Factory:
 
 
 class ServiceSelector:
-
+    """
+    The B{service} selector is used to select a web service.
+    In most cases, the wsdl only defines (1) service in which access
+    by subscript is passed through to a L{PortSelector}.  This is also the
+    behavior when a I{default} service has been specified.  In cases
+    where multiple services have been defined and no default has been
+    specified, the service is found by name (or index) and a L{PortSelector}
+    for the service is returned.  In all cases, attribute access is
+    forwarded to the L{PortSelector} for either the I{first} service or the
+    I{default} service (when specified).
+    @ivar __client: A suds client.
+    @type __client: L{Client}
+    @ivar __services: A list of I{wsdl} services.
+    @type __services: list
+    """
     def __init__(self, client, services):
-        self.__client__ = client
-        self.__services__ = services
+        """
+        @param client: A suds client.
+        @type client: L{Client}
+        @param services: A list of I{wsdl} services.
+        @type services: list
+        """
+        self.__client = client
+        self.__services = services
     
     def __getattr__(self, name):
-        builtin = name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
-        default = self.__ds__()
+        """
+        Request to access an attribute is forwarded to the
+        L{PortSelector} for either the I{first} service or the
+        I{default} service (when specified).
+        @param name: The name of a method.
+        @type name: str
+        @return: A L{PortSelector}.
+        @rtype: L{PortSelector}. 
+        """
+        default = self.__ds()
         if default is None:
-            port = self.__find__(0)
+            port = self.__find(0)
         else:
             port = default
         return getattr(port, name)
     
     def __getitem__(self, name):
-        if len(self.__services__) == 1:
-            port = self.__find__(0)
+        """
+        Provides selection of the I{service} by name (string) or 
+        index (integer).  In cases where only (1) service is defined
+        or a I{default} has been specified, the request is forwarded
+        to the L{PortSelector}.
+        @param name: The name (or index) of a service.
+        @type name: (int|str)
+        @return: A L{PortSelector} for the specified service.
+        @rtype: L{PortSelector}. 
+        """
+        if len(self.__services) == 1:
+            port = self.__find(0)
             return port[name]
-        default = self.__ds__()
+        default = self.__ds()
         if default is not None:
             port = default
             return port[name]
-        return self.__find__(name)
+        return self.__find(name)
     
-    def __find__(self, name):
+    def __find(self, name):
+        """
+        Find a I{service} by name (string) or index (integer).
+        @param name: The name (or index) of a service.
+        @type name: (int|str)
+        @return: A L{PortSelector} for the found service.
+        @rtype: L{PortSelector}. 
+        """
         service = None
-        if not len(self.__services__):
+        if not len(self.__services):
             raise Exception, 'No services defined'
         if isinstance(name, int):
             try:
-                service = self.__services__[name]
+                service = self.__services[name]
                 name = service.name
             except IndexError:
                 raise ServiceNotFound, 'at [%d]' % name
         else:
-            for s in self.__services__:
+            for s in self.__services:
                 if name == s.name:
                     service = s
                     break
         if service is None:
             raise ServiceNotFound, name
-        return PortSelector(self.__client__, service.ports, name)
+        return PortSelector(self.__client, service.ports, name)
     
-    def __ds__(self):
-        ds = self.__client__.options.service
+    def __ds(self):
+        """
+        Get the I{default} service if defined in the I{options}.
+        @return: A L{PortSelector} for the I{default} service.
+        @rtype: L{PortSelector}. 
+        """
+        ds = self.__client.options.service
         if ds is None:
             return None
         else:
-            return self.__find__(ds)
+            return self.__find(ds)
 
 
 class PortSelector:
-
+    """
+    The B{port} selector is used to select a I{web service} B{port}.
+    In cases where multiple ports have been defined and no default has been
+    specified, the port is found by name (or index) and a L{MethodSelector}
+    for the port is returned.  In all cases, attribute access is
+    forwarded to the L{MethodSelector} for either the I{first} port or the
+    I{default} port (when specified).
+    @ivar __client: A suds client.
+    @type __client: L{Client}
+    @ivar __ports: A list of I{service} ports.
+    @type __ports: list
+    @ivar __qn: The I{qualified} name of the port (used for logging).
+    @type __qn: str
+    """
     def __init__(self, client, ports, qn):
-        self.__client__ = client
-        self.__ports__ = ports
-        self.__qn__ = qn
+        """
+        @param client: A suds client.
+        @type client: L{Client}
+        @param ports: A list of I{service} ports.
+        @type ports: list
+        @param qn: The name of the service.
+        @type qn: str
+        """
+        self.__client = client
+        self.__ports = ports
+        self.__qn = qn
     
     def __getattr__(self, name):
-        builtin = name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
-        default = self.__dp__()
+        """
+        Request to access an attribute is forwarded to the
+        L{MethodSelector} for either the I{first} port or the
+        I{default} port (when specified).
+        @param name: The name of a method.
+        @type name: str
+        @return: A L{MethodSelector}.
+        @rtype: L{MethodSelector}. 
+        """
+        default = self.__dp()
         if default is None:
-            m = self.__find__(0)
+            m = self.__find(0)
         else:
             m = default
         return getattr(m, name)
     
     def __getitem__(self, name):
-        default = self.__dp__()
+        """
+        Provides selection of the I{port} by name (string) or 
+        index (integer).  In cases where only (1) port is defined
+        or a I{default} has been specified, the request is forwarded
+        to the L{MethodSelector}.
+        @param name: The name (or index) of a port.
+        @type name: (int|str)
+        @return: A L{MethodSelector} for the specified port.
+        @rtype: L{MethodSelector}. 
+        """
+        default = self.__dp()
         if default is None:
-            return self.__find__(name)
+            return self.__find(name)
         else:
             return default
     
-    def __find__(self, name):
+    def __find(self, name):
+        """
+        Find a I{port} by name (string) or index (integer).
+        @param name: The name (or index) of a port.
+        @type name: (int|str)
+        @return: A L{MethodSelector} for the found port.
+        @rtype: L{MethodSelector}. 
+        """
         port = None
-        if not len(self.__ports__):
-            raise Exception, 'No ports defined: %s' % self.__qn__
+        if not len(self.__ports):
+            raise Exception, 'No ports defined: %s' % self.__qn
         if isinstance(name, int):
-            qn = '%s[%d]' % (self.__qn__, name)
+            qn = '%s[%d]' % (self.__qn, name)
             try:
-                port = self.__ports__[name]
+                port = self.__ports[name]
             except IndexError:
                 raise PortNotFound, qn
         else:
-            qn = '.'.join((self.__qn__, name))
-            for p in self.__ports__:
+            qn = '.'.join((self.__qn, name))
+            for p in self.__ports:
                 if name == p.name:
                     port = p
                     break
         if port is None:
             raise PortNotFound, qn
-        qn = '.'.join((self.__qn__, port.name))
-        return MethodSelector(self.__client__, port.methods, qn)
+        qn = '.'.join((self.__qn, port.name))
+        return MethodSelector(self.__client, port.methods, qn)
     
-    def __dp__(self):
-        dp = self.__client__.options.port
+    def __dp(self):
+        """
+        Get the I{default} port if defined in the I{options}.
+        @return: A L{MethodSelector} for the I{default} port.
+        @rtype: L{MethodSelector}. 
+        """
+        dp = self.__client.options.port
         if dp is None:
             return None
         else:
-            return self.__find__(dp)
+            return self.__find(dp)
     
 
 class MethodSelector:
-
+    """
+    The B{method} selector is used to select a B{method} by name.
+    @ivar __client: A suds client.
+    @type __client: L{Client}
+    @ivar __methods: A dictionary of methods.
+    @type __methods: dict
+    @ivar __qn: The I{qualified} name of the method (used for logging).
+    @type __qn: str
+    """
     def __init__(self, client, methods, qn):
-        self.__client__ = client
-        self.__methods__ = methods
-        self.__qn__ = qn
+        """
+        @param client: A suds client.
+        @type client: L{Client}
+        @param methods: A dictionary of methods.
+        @type methods: dict
+        @param qn: The I{qualified} name of the port.
+        @type qn: str
+        """
+        self.__client = client
+        self.__methods = methods
+        self.__qn = qn
     
     def __getattr__(self, name):
-        builtin = name.startswith('__') and name.endswith('__')
-        if builtin:
-            return self.__dict__[name]
+        """
+        Get a method by name and return it in an I{execution wrapper}.
+        @param name: The name of a method.
+        @type name: str
+        @return: An I{execution wrapper} for the specified method name.
+        @rtype: L{Method}
+        """
         return self[name]
     
     def __getitem__(self, name):
-        m = self.__methods__.get(name)
+        """
+        Get a method by name and return it in an I{execution wrapper}.
+        @param name: The name of a method.
+        @type name: str
+        @return: An I{execution wrapper} for the specified method name.
+        @rtype: L{Method}
+        """
+        m = self.__methods.get(name)
         if m is None:
-            qn = '.'.join((self.__qn__, name))
+            qn = '.'.join((self.__qn, name))
             raise MethodNotFound, qn
-        return Method(self.__client__, m)
+        return Method(self.__client, m)
 
 
 class Method:
