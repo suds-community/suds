@@ -30,7 +30,10 @@ class Options(object):
             else return tuple from service method invocation as (httpcode, object).
                 - type: I{bool}
                 - default: True
-        - B{port} - The default service port, not tcp port.
+        - B{service} - The default service name.
+                - type: I{str}
+                - default: None
+        - B{port} - The default service port name, not tcp port.
                 - type: I{str}
                 - default: None
         - B{location} - This overrides the service port address I{URL} defined 
@@ -82,7 +85,8 @@ class Options(object):
         faults=(bool, True),
         transport=(Transport, None),
         cache=(Cache, NoCache()),
-        port=(basestring, None),
+        service=((int, basestring), None),
+        port=((int, basestring), None),
         location=(basestring, None),
         proxy=(dict, {}), 
         headers=(dict, {}),
