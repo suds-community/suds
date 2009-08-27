@@ -74,7 +74,8 @@ class Typed(Core):
             known = self.resolver.known(content.node)
             frame = Frame(content.type, resolved=known)
             self.resolver.push(frame)
-        cls_name = content.type.name
+        resolved = self.resolver.top().resolved
+        cls_name = resolved.name
         if cls_name is None:
             cls_name = content.node.name
         content.data = Factory.object(cls_name)
