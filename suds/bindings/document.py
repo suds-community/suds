@@ -103,9 +103,18 @@ class Document(Binding):
         if not wrapped:
             return pts
         result = []
+        # wrapped
         for p in pts:
             resolved = p[1].resolve()
             for child, ancestry in resolved:
+                if child.isattr():
+                    continue
+                if self.bychoice(ancestry):
+                    log.debug(
+                        '%s\ncontained by <choice/>, excluded as param for %s()',
+                        child,
+                        method.name)
+                    continue
                 result.append((child.name, child))
         return result
     
@@ -122,3 +131,16 @@ class Document(Binding):
         else:
             result += rts
         return result
+    
+    def bychoice(self, ancestry):
+        """
+        The ancestry contains a <choice/>
+        @param ancestry: A list of ancestors.
+        @type ancestry: list
+        @return: True if contains <choice/>
+        @rtype: boolean
+        """
+        for x in ancestry:
+            if x.choice():
+                return True
+        return False
