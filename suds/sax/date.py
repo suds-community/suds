@@ -26,37 +26,33 @@ import time
 import datetime as dt
 import re
 
+log = getLogger(__name__)
+
 
 class Date:
     """
-    An XML date object (YYYY-MM-DD).
+    An XML date object.
+    Supported formats:
+        YYYY-MM-DD
+        YYYY-MM-DD(z|Z)
+        YYYY-MM-DD+06:00
+        YYYY-MM-DD-06:00
     @ivar date: The object value.
     @type date: L{dt.date}
     """
     def __init__(self, date):
         """
         @param date: The value of the object.
-        @type date: ( L{dt.date}| L{dt.datetime} | L{str} )
+        @type date: (L{dt.date}|L{str})
         @raise ValueError: When I{date} is invalid.
         """
         if isinstance(date, dt.date):
             self.date = date
             return
-        if isinstance(date, dt.datetime):
-            self.date = date.date()
-            return
         if isinstance(date, basestring):
             self.date = self.__parse(date)
             return
         raise ValueError, type(date)
-    
-    def native(self):
-        """
-        Get the native I{python} representation.
-        @return: The python date object.
-        @rtype: L{dt.date}
-        """
-        return self.date
     
     def year(self):
         """
@@ -84,7 +80,14 @@ class Date:
         
     def __parse(self, s):
         """
-        Parse the string date format: "YYYY-MM-DD".
+        Parse the string date.
+        Supported formats:
+            YYYY-MM-DD
+            YYYY-MM-DD(z|Z)
+            YYYY-MM-DD+06:00
+            YYYY-MM-DD-06:00
+        Although, the TZ is ignored because it's meaningless
+        without the time, right?
         @param s: A date string.
         @type s: str
         @return: A date object.
@@ -96,7 +99,8 @@ class Date:
             month = int(month)
             day = int(day)
             return dt.date(year, month, day)
-        except Exception, e:
+        except:
+            log.debug(s, exec_info=True)
             raise ValueError, 'Invalid format "%s"' % s
         
     def __str__(self):
@@ -105,36 +109,38 @@ class Date:
     def __unicode__(self):
         return self.date.isoformat()
 
+
 class Time:
     """
-    An XML time object (HH:MM:SS(Z|z|(-|+)[0-9]+)).
+    An XML time object.
+    Supported formats:
+        HH:MI:SS
+        HH:MI:SS(z|Z)
+        HH:MI:SS.ms
+        HH:MI:SS.ms(z|Z)
+        HH:MI:SS(+|-)06:00
+        HH:MI:SS.ms(+|-)06:00
     @ivar date: The object value.
-    @type date: L{dt.date}
+    @type date: L{dt.time}
     """
-    def __init__(self, tm):
-        """
-        @param tm: The value of the object.
-        @type tm: ( L{dt.time}| L{dt.datetime} | L{str} )
-        @raise ValueError: When I{tm} is invalid.
-        """
-        if isinstance(tm, dt.time):
-            self.tm = tm
-            return
-        if isinstance(tm, dt.datetime):
-            self.tm = tm.time()
-            return
-        if isinstance(tm, basestring):
-            self.tm = self.__parse(tm)
-            return
-        raise ValueError, type(tm)
     
-    def native(self):
+    def __init__(self, time, adjusted=True):
         """
-        Get the native I{python} representation.
-        @return: The python date object.
-        @rtype: L{dt.time}
+        @param time: The value of the object.
+        @type time: (L{dt.time}|L{str})
+        @param adjusted: Adjust for I{local} Timezone.
+        @type adjusted: boolean
+        @raise ValueError: When I{time} is invalid.
         """
-        return self.tm
+        if isinstance(time, dt.time):
+            self.time = time
+            return
+        if isinstance(time, basestring):
+            self.time = self.__parse(time)
+            if adjusted:
+                self.__adjust()
+            return
+        raise ValueError, type(time)
     
     def hour(self):
         """
@@ -142,7 +148,7 @@ class Time:
         @return: The hour.
         @rtype: int
         """
-        return self.tm.hour
+        return self.time.hour
     
     def minute(self):
         """
@@ -150,7 +156,7 @@ class Time:
         @return: The minute.
         @rtype: int
         """
-        return self.tm.minute
+        return self.time.minute
     
     def second(self):
         """
@@ -158,7 +164,7 @@ class Time:
         @return: The seconds.
         @rtype: int
         """
-        return self.tm.second
+        return self.time.second
     
     def microsecond(self):
         """
@@ -166,51 +172,60 @@ class Time:
         @return: The microsecond.
         @rtype: int
         """
-        return self.tm.microsecond
+        return self.time.microsecond
     
-    def adjust(self, day):
+    def __adjust(self):
         """
-        Adjust the day based on TZ.
-        @param day: The (+|-) days to adjust.
-        @type day: int
+        Adjust for TZ offset.
         """
-        pass
+        if hasattr(self, 'offset'):
+            today = dt.date.today()
+            tz = Timezone()
+            delta = Timezone.adjustment(self.offset)
+            d = dt.datetime.combine(today, self.time)
+            d = ( d + delta )
+            self.time = d.time()
         
     def __parse(self, s):
         """
         Parse the string date.
-        Format:"HH:MM:SS(Z|z|(-|+)[0-9]+)?".
+        Patterns:
+            HH:MI:SS
+            HH:MI:SS(z|Z)
+            HH:MI:SS.ms
+            HH:MI:SS.ms(z|Z)
+            HH:MI:SS(+|-)06:00
+            HH:MI:SS.ms(+|-)06:00
         @param s: A time string.
         @type s: str
         @return: A time object.
         @rtype: L{dt.time}
         """
         try:
-            part = self.__split(s)
+            offset = None
+            part = Timezone.split(s)
             hour, minute, second = part[0].split(':', 2)
             hour = int(hour)
             minute = int(minute)
             second, ms = self.__second(second)
             if len(part) == 2:
-                offset = self.__offset(part[1])
-                tz = Timezone(offset)
-                day, hour = tz.adjusted(hour)
-                self.adjust(day)
+                self.offset = self.__offset(part[1])
             if ms is None:
                 return dt.time(hour, minute, second)
             else:
                 return dt.time(hour, minute, second, ms)
         except:
+            log.debug(s, exec_info=True)
             raise ValueError, 'Invalid format "%s"' % s
         
-    def __split(self, s):
-        m = re.search('[zZ\-\+]', s)
-        if m is None:
-            return (s,)
-        x = (m.end(0)-1)
-        return (s[:x], s[x:])
-        
     def __second(self, s):
+        """
+        Parse the seconds and microseconds.
+        @param s: A string representation of the seconds.
+        @type s: str
+        @return: Tuple of (sec,ms)
+        @rtype: tuple.
+        """
         part = s.split('.')
         if len(part) == 1:
             return (int(part[0]), None)
@@ -218,6 +233,13 @@ class Time:
             return (int(part[0]), int(part[1]))
         
     def __offset(self, s):
+        """
+        Parse the TZ offset.
+        @param s: A string representation of the TZ offset.
+        @type s: str
+        @return: The signed offset in hours.
+        @rtype: str
+        """
         if len(s) == len('-00:00'):
             return int(s[:3])
         if len(s) == 0:
@@ -230,49 +252,57 @@ class Time:
         return unicode(self)
     
     def __unicode__(self):
-        return '%s%+.2d:00' % (self.tm.isoformat(), Timezone.local)
+        time = self.time.isoformat()
+        return '%s%+.2d:00' % (time, Timezone.local)
 
 
 class DateTime(Date,Time):
     """
-    An XML time object (HH:MM:SS(Z|z|(-|+)[0-9]+)).
+    An XML time object.
+    Supported formats:
+        YYYY-MM-DDTHH:MI:SS
+        YYYY-MM-DDTHH:MI:SS(z|Z)
+        YYYY-MM-DDTHH:MI:SS.ms
+        YYYY-MM-DDTHH:MI:SS.ms(z|Z)
+        YYYY-MM-DDTHH:MI:SS(+|-)06:00
+        YYYY-MM-DDTHH:MI:SS.ms(+|-)06:00
     @ivar date: The object value.
     @type date: L{dt.date}
     """
-    def __init__(self, dtm):
+    def __init__(self, date):
         """
         @param tm: The value of the object.
         @type tm: ( L{dt.time}| L{dt.datetime} | L{str} )
         @raise ValueError: When I{tm} is invalid.
         """
-        if isinstance(dtm, dt.datetime):
-            Date.__init__(self, dtm.date())
-            Time.__init__(self, dtm.time())
+        if isinstance(date, dt.datetime):
+            Date.__init__(self, date.date())
+            Time.__init__(self, date.time())
+            self.datetime = \
+                dt.datetime.combine(self.date, self.time)
             return
-        if isinstance(dtm, basestring):
-            part = dtm.split('T')
+        if isinstance(date, basestring):
+            part = date.split('T')
             Date.__init__(self, part[0])
-            Time.__init__(self, part[1])
+            Time.__init__(self, part[1], 0)
+            self.datetime = \
+                dt.datetime.combine(self.date, self.time)
+            self.__adjust()
             return
-        raise ValueError, type(dtm)
+        raise ValueError, type(date)
     
-    def native(self):
+    def __adjust(self):
         """
-        Get the native I{python} representation.
-        @return: The python datetime object.
-        @rtype: L{dt.datetime}
+        Adjust for TZ offset.
         """
-        return dt.datetime.combine(self.date, self.tm)
-    
-    def adjust(self, day):
-        """
-        Adjust the day based on TZ.
-        @param day: The (+|-) days to adjust.
-        @type day: int
-        """
-        d = ( self.day() + day )
-        self.date = self.date.replace(day=d)
-        
+        if hasattr(self, 'offset'):
+            tz = Timezone()
+            delta = Timezone.adjustment(self.offset)
+            d = ( self.datetime + delta )
+            self.datetime = d
+            self.date = d.date()
+            self.time = d.time()
+
     def __str__(self):
         return unicode(self)
     
@@ -288,47 +318,48 @@ class Timezone:
     Timezone object used to do TZ conversions
     @cvar local: The (A) local TZ offset.
     @type local: int
-    @ivar offset: The (B) offset to convert.
-    @type offset: int
+    @cvar patten: The regex patten to match TZ.
+    @type patten: L{re.RegexObject}
     """
+
     local = ( 0-time.timezone/60/60 )
+    pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
     
-    def __init__(self, offset):
+    @classmethod
+    def split(cls, s):
         """
-        @param offset: The (B) offset to convert.
-        @type offset: int
+        Split the TZ from string.
+        @param s: A string containing a timezone
+        @type s: basestring
+        @return: The split parts.
+        @rtype: tuple
         """
-        self.offset = offset
-        
-    def adjusted(self, hour):
-        """
-        Adjust the I{hour} to the local TZ.
-        @param hour: The hour to convert.
-        @type hour: int
-        @return: The adjusted hour.
-        @rtype: int
-        """
-        day = 0
-        adj = (self.local-self.offset)
-        hour += adj
-        if hour < 0:
-            day = -1
-            hour = (24+hour)
-        if hour > 23:
-            day = 1
-            hour = (24-hour)
-        return (day, hour)
+        m = cls.pattern.search(s)
+        if m is None:
+            return (s,)
+        x = m.start(0)
+        return (s[:x], s[x:])
     
+    @classmethod
+    def adjustment(cls, offset):
+        """
+        Get the adjustment to the I{local} TZ.
+        @return: The delta between I{offset} and local TZ.
+        @rtype: L{dt.timedelta}
+        """
+        delta = ( cls.local - offset )
+        return dt.timedelta(hours=delta)
+
+
+
+
 
 def DT(s):
     t = DateTime(s)
     print '\n"%s"\n %s' % (s, t)
 
-
 if __name__ == '__main__':
     print 'TIME'
-    t = Time(dt.datetime.now())
-    print t
     t = Time(dt.datetime.now().time())
     print t
     t = Time('10:30:22.445')
@@ -338,11 +369,15 @@ if __name__ == '__main__':
     t = Time('10:30:42-02:00')
     print t
     print 'DATE'
-    d = Date(dt.datetime.now())
-    print d
     d = Date(dt.datetime.now().date())
     print d
     d = Date('2009-07-28')
+    print d
+    d = Date('2009-07-29Z')
+    print d
+    d = Date('2009-07-30-06:00')
+    print d
+    d = Date('2009-07-31+06:00')
     print d
     print 'DATETIME'
     t = DateTime(dt.datetime.now())
