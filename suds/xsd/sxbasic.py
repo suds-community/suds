@@ -590,9 +590,69 @@ class Import(SchemaObject):
     def description(self):
         return ('ns', 'location')
     
+
+class Include(SchemaObject):
+    """
+    Represents an (xsd) schema <xs:include/> node
+    @ivar location: The (optional) location.
+    @type location: namespace-uri
+    @ivar opened: Opened and I{imported} flag.
+    @type opened: boolean
+    """
     
-class Include(Import):
-    pass
+    locations = {}
+    
+    def __init__(self, schema, root):
+        SchemaObject.__init__(self, schema, root)
+        self.location = root.get('schemaLocation')
+        if self.location is None:
+            self.location = self.locations.get(self.ns[1])
+        self.opened = False
+        
+    def open(self):
+        """
+        Open and include the refrenced schema.
+        @return: The referenced schema.
+        @rtype: L{Schema}
+        """
+        if self.opened:
+            return
+        self.opened = True
+        log.debug('%s, including location="%s"', self.id, self.location)
+        result = self.download()
+        log.debug('included:\n%s', result)
+        return result
+
+    def download(self):
+        """ download the schema """
+        url = self.location
+        try:
+            if '://' not in url:
+                url = urljoin(self.schema.baseurl, url)
+            transport = self.schema.options.transport
+            root = Parser(transport).parse(url=url).root()
+            root.set('url', url)
+            self.__applytns(root)
+            return self.schema.instance(root, url)
+        except TransportError:
+            msg = 'include schema at (%s), failed' % url
+            log.error('%s, %s', self.id, msg, exc_info=True)
+            raise Exception(msg)
+        
+    def __applytns(self, root):
+        """ make sure included schema has same tns. """
+        TNS = 'targetNamespace'
+        tns = root.get(TNS)
+        if tns is None:
+            tns = self.schema.tns[1]
+            root.set(TNS, tns)
+        else:
+            if self.schema.tns[1] != tns:
+                raise Exception, '%s mismatch' % TNS
+                
+ 
+    def description(self):
+        return ('location')
 
    
 class Attribute(TypedContent):
