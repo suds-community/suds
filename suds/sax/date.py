@@ -33,10 +33,10 @@ class Date:
     """
     An XML date object.
     Supported formats:
-        YYYY-MM-DD
-        YYYY-MM-DD(z|Z)
-        YYYY-MM-DD+06:00
-        YYYY-MM-DD-06:00
+        - YYYY-MM-DD
+        - YYYY-MM-DD(z|Z)
+        - YYYY-MM-DD+06:00
+        - YYYY-MM-DD-06:00
     @ivar date: The object value.
     @type date: L{dt.date}
     """
@@ -82,10 +82,10 @@ class Date:
         """
         Parse the string date.
         Supported formats:
-            YYYY-MM-DD
-            YYYY-MM-DD(z|Z)
-            YYYY-MM-DD+06:00
-            YYYY-MM-DD-06:00
+            - YYYY-MM-DD
+            - YYYY-MM-DD(z|Z)
+            - YYYY-MM-DD+06:00
+            - YYYY-MM-DD-06:00
         Although, the TZ is ignored because it's meaningless
         without the time, right?
         @param s: A date string.
@@ -114,12 +114,12 @@ class Time:
     """
     An XML time object.
     Supported formats:
-        HH:MI:SS
-        HH:MI:SS(z|Z)
-        HH:MI:SS.ms
-        HH:MI:SS.ms(z|Z)
-        HH:MI:SS(+|-)06:00
-        HH:MI:SS.ms(+|-)06:00
+        - HH:MI:SS
+        - HH:MI:SS(z|Z)
+        - HH:MI:SS.ms
+        - HH:MI:SS.ms(z|Z)
+        - HH:MI:SS(+|-)06:00
+        - HH:MI:SS.ms(+|-)06:00
     @ivar date: The object value.
     @type date: L{dt.time}
     """
@@ -190,12 +190,12 @@ class Time:
         """
         Parse the string date.
         Patterns:
-            HH:MI:SS
-            HH:MI:SS(z|Z)
-            HH:MI:SS.ms
-            HH:MI:SS.ms(z|Z)
-            HH:MI:SS(+|-)06:00
-            HH:MI:SS.ms(+|-)06:00
+            - HH:MI:SS
+            - HH:MI:SS(z|Z)
+            - HH:MI:SS.ms
+            - HH:MI:SS.ms(z|Z)
+            - HH:MI:SS(+|-)06:00
+            - HH:MI:SS.ms(+|-)06:00
         @param s: A time string.
         @type s: str
         @return: A time object.
@@ -260,19 +260,19 @@ class DateTime(Date,Time):
     """
     An XML time object.
     Supported formats:
-        YYYY-MM-DDTHH:MI:SS
-        YYYY-MM-DDTHH:MI:SS(z|Z)
-        YYYY-MM-DDTHH:MI:SS.ms
-        YYYY-MM-DDTHH:MI:SS.ms(z|Z)
-        YYYY-MM-DDTHH:MI:SS(+|-)06:00
-        YYYY-MM-DDTHH:MI:SS.ms(+|-)06:00
+        - YYYY-MM-DDB{T}HH:MI:SS
+        - YYYY-MM-DDB{T}HH:MI:SS(z|Z)
+        - YYYY-MM-DDB{T}HH:MI:SS.ms
+        - YYYY-MM-DDB{T}HH:MI:SS.ms(z|Z)
+        - YYYY-MM-DDB{T}HH:MI:SS(+|-)06:00
+        - YYYY-MM-DDB{T}HH:MI:SS.ms(+|-)06:00
     @ivar date: The object value.
     @type date: L{dt.date}
     """
     def __init__(self, date):
         """
-        @param tm: The value of the object.
-        @type tm: ( L{dt.time}| L{dt.datetime} | L{str} )
+        @param date: The value of the object.
+        @type date: ( L{dt.time}| L{dt.datetime} | L{str} )
         @raise ValueError: When I{tm} is invalid.
         """
         if isinstance(date, dt.datetime):
