@@ -38,12 +38,12 @@ class Date:
         - YYYY-MM-DD+06:00
         - YYYY-MM-DD-06:00
     @ivar date: The object value.
-    @type date: L{dt.date}
+    @type date: B{datetime}.I{date}
     """
     def __init__(self, date):
         """
         @param date: The value of the object.
-        @type date: (L{dt.date}|L{str})
+        @type date: (date|str)
         @raise ValueError: When I{date} is invalid.
         """
         if isinstance(date, dt.date):
@@ -91,7 +91,7 @@ class Date:
         @param s: A date string.
         @type s: str
         @return: A date object.
-        @rtype: L{dt.date}
+        @rtype: I{date}
         """
         try:
             year, month, day = s[:10].split('-', 2)
@@ -121,13 +121,13 @@ class Time:
         - HH:MI:SS(+|-)06:00
         - HH:MI:SS.ms(+|-)06:00
     @ivar date: The object value.
-    @type date: L{dt.time}
+    @type date: B{datetime}.I{time}
     """
     
     def __init__(self, time, adjusted=True):
         """
         @param time: The value of the object.
-        @type time: (L{dt.time}|L{str})
+        @type time: (time|str)
         @param adjusted: Adjust for I{local} Timezone.
         @type adjusted: boolean
         @raise ValueError: When I{time} is invalid.
@@ -199,7 +199,7 @@ class Time:
         @param s: A time string.
         @type s: str
         @return: A time object.
-        @rtype: L{dt.time}
+        @rtype: B{datetime}.I{time}
         """
         try:
             offset = None
@@ -266,13 +266,13 @@ class DateTime(Date,Time):
         - YYYY-MM-DDB{T}HH:MI:SS.ms(z|Z)
         - YYYY-MM-DDB{T}HH:MI:SS(+|-)06:00
         - YYYY-MM-DDB{T}HH:MI:SS.ms(+|-)06:00
-    @ivar date: The object value.
-    @type date: L{dt.date}
+    @ivar datetime: The object value.
+    @type datetime: B{datetime}.I{datedate}
     """
     def __init__(self, date):
         """
         @param date: The value of the object.
-        @type date: ( L{dt.time}| L{dt.datetime} | L{str} )
+        @type date: (datetime|str)
         @raise ValueError: When I{tm} is invalid.
         """
         if isinstance(date, dt.datetime):
@@ -345,7 +345,7 @@ class Timezone:
         """
         Get the adjustment to the I{local} TZ.
         @return: The delta between I{offset} and local TZ.
-        @rtype: L{dt.timedelta}
+        @rtype: B{datetime}.I{timedelta}
         """
         delta = ( cls.local - offset )
         return dt.timedelta(hours=delta)
