@@ -23,7 +23,7 @@ from suds import *
 from suds.umx import *
 from suds.umx.attrlist import AttrList
 from suds.sax.text import Text
-from suds.sudsobject import Factory
+from suds.sudsobject import Factory, merge
 
 
 log = getLogger(__name__)
