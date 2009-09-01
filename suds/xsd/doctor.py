@@ -150,7 +150,7 @@ class Import:
             return
         if self.exists(root):
             return
-        node = Element('import', ns=Import.xsdns)
+        node = Element('import', ns=self.xsdns)
         node.set('namespace', self.ns)
         if self.location is not None:
             node.set('schemaLocation', self.location)
@@ -163,7 +163,7 @@ class Import:
         @param root: A schema root.
         @type root: L{Element}
         """
-        node = Element('import', ns=xsdns)
+        node = Element('import', ns=self.xsdns)
         node.set('namespace', self.ns)
         if self.location is not None:
             node.set('schemaLocation', self.location)
