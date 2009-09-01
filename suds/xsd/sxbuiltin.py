@@ -34,16 +34,61 @@ class Factory:
 
     tags =\
     {
+        # any
         'anyType' : lambda x,y: XAny(x,y),
+        # strings
         'string' : lambda x,y: XString(x,y),
-        'boolean' : lambda x,y: XBoolean(x,y),
+        'normalizedString' : lambda x,y: XString(x,y),
+        'ID' : lambda x,y: XString(x,y),
+        'Name' : lambda x,y: XString(x,y),
+        'QName' : lambda x,y: XString(x,y),
+        'NCName' : lambda x,y: XString(x,y),
+        'anySimpleType' : lambda x,y: XString(x,y),
+        'anyURI' : lambda x,y: XString(x,y),
+        'NOTATION' : lambda x,y: XString(x,y),
+        'token' : lambda x,y: XString(x,y),
+        'language' : lambda x,y: XString(x,y),
+        'IDREFS' : lambda x,y: XString(x,y),
+        'ENTITIES' : lambda x,y: XString(x,y),
+        'IDREF' : lambda x,y: XString(x,y),
+        'ENTITY' : lambda x,y: XString(x,y),
+        'NMTOKEN' : lambda x,y: XString(x,y),
+        'NMTOKENS' : lambda x,y: XString(x,y),
+        # binary
+        'hexBinary' : lambda x,y: XString(x,y),
+        'base64Binary' : lambda x,y: XString(x,y),
+        # integers
         'int' : lambda x,y: XInteger(x,y),
-        'long' : lambda x,y: XInteger(x,y),
+        'integer' : lambda x,y: XInteger(x,y),
+        'unsignedInt' : lambda x,y: XInteger(x,y),
+        'positiveInteger' : lambda x,y: XInteger(x,y),
+        'negativeInteger' : lambda x,y: XInteger(x,y),
+        'nonPositiveInteger' : lambda x,y: XInteger(x,y),
+        'nonNegativeInteger' : lambda x,y: XInteger(x,y),
+        # longs
+        'long' : lambda x,y: XLong(x,y),
+        'unsignedLong' : lambda x,y: XLong(x,y),
+        # shorts
+        'short' : lambda x,y: XInteger(x,y),
+        'unsignedShort' : lambda x,y: XInteger(x,y),
+        'byte' : lambda x,y: XInteger(x,y),
+        'unsignedByte' : lambda x,y: XInteger(x,y),
+        # floats
         'float' : lambda x,y: XFloat(x,y),
         'double' : lambda x,y: XFloat(x,y),
+        'decimal' : lambda x,y: XFloat(x,y),
+        # dates & times
         'date' : lambda x,y: XDate(x,y),
         'time' : lambda x,y: XTime(x,y),
         'dateTime': lambda x,y: XDateTime(x,y),
+        'duration': lambda x,y: XString(x,y),
+        'gYearMonth' : lambda x,y: XString(x,y),
+        'gYear' : lambda x,y: XString(x,y),
+        'gMonthDay' : lambda x,y: XString(x,y),
+        'gDay' : lambda x,y: XString(x,y),
+        'gMonth' : lambda x,y: XString(x,y),
+        # boolean
+        'boolean' : lambda x,y: XBoolean(x,y),
     }
 
     @classmethod
@@ -124,6 +169,23 @@ class XInteger(XBuiltin):
                 return None
         else:
             if isinstance(value, int):
+                return str(value)
+            else:
+                return value
+            
+class XLong(XBuiltin):
+    """
+    Represents an (xsd) xs:long builtin type.
+    """
+        
+    def translate(self, value, topython=True):
+        if topython:
+            if isinstance(value, basestring) and len(value):
+                return long(value)
+            else:
+                return None
+        else:
+            if isinstance(value, (int,long)):
                 return str(value)
             else:
                 return value

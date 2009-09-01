@@ -342,12 +342,12 @@ class Schema:
         try:
             if isqref(ref):
                 ns = ref[1]
-                return ns.startswith(w3)
+                return ( ref[0] in Factory.tags and ns.startswith(w3) )
             if context is None:
                 context = self.root    
             prefix = splitPrefix(ref)[0]
             prefixes = context.findPrefixes(w3, 'startswith')
-            return (prefix in prefixes)
+            return ( prefix in prefixes and ref[0] in Factory.tags )
         except:
             return False
         
