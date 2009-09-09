@@ -492,6 +492,13 @@ class PortType(NamedObject):
                 op.output = None
             else:
                 op.output = output.get('message')
+            faults = []
+            for fault in c.getChildren('fault'):
+                f = SFactory.object('Operation')
+                f.name = fault.get('name')
+                f.message = fault.get('message')
+                faults.append(f)
+            op.faults = faults
             self.operations[op.name] = op
             
     def resolve(self, definitions):
@@ -513,6 +520,12 @@ class PortType(NamedObject):
                 raise Exception("msg '%s', not-found" % op.output)
             else:
                 op.output = msg
+            for f in op.faults:
+                qref = qualify(f.message, self.root, definitions.tns)
+                msg = definitions.messages.get(qref)
+                if msg is None:
+                    raise Exception, "msg '%s', not-found" % f.message
+                f.message = msg
                 
     def operation(self, name):
         """
@@ -598,6 +611,16 @@ class Binding(NamedObject):
             self.body(definitions, soap.output.body, output)
             for header in output.getChildren('header'):
                 self.header(definitions, soap.output, header)
+            faults = []
+            for fault in c.getChildren('fault'):
+                fault = fault.getChild('fault')
+                if fault is None:
+                    continue
+                f = SFactory.object('Fault')
+                f.name = fault.get('name')
+                f.use = fault.get('use', default='literal')
+                faults.append(f)
+            soap.faults = faults
             self.operations[op.name] = op
             
     def body(self, definitions, body, root):
@@ -646,8 +669,10 @@ class Binding(NamedObject):
         @type definitions: L{Definitions}
         """
         self.resolveport(definitions)
-        self.resolvesoapbody(definitions)
-        self.resolveheaders(definitions)
+        for op in self.operations.values():
+            self.resolvesoapbody(definitions, op)
+            self.resolveheaders(definitions, op)
+            self.resolvefaults(definitions, op)
         
     def resolveport(self, definitions):
         """
@@ -662,60 +687,87 @@ class Binding(NamedObject):
         else:
             self.type = port_type
             
-    def resolvesoapbody(self, definitions):
+    def resolvesoapbody(self, definitions, op):
         """
-        Resolve soap body I{message} parts.
+        Resolve soap body I{message} parts by 
+        cross-referencing with operation defined in port type.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
+        @param op: An I{operation} object.
+        @type op: I{operation}
         """
-        for op in self.operations.values():
-            ptop = self.type.operation(op.name)
-            if ptop is None:
-                raise Exception, \
-                    "operation '%s' not defined in portType" % op.name
-            soap = op.soap
-            parts = soap.input.body.parts
-            if len(parts):
-                pts = []
-                for p in ptop.input.parts:
-                    if p.name in parts:
-                        pts.append(p)
-                soap.input.body.parts = pts
-            else:
-                soap.input.body.parts = ptop.input.parts
-            parts = soap.output.body.parts
-            if len(parts):
-                pts = []
-                for p in ptop.output.parts:
-                    if p.name in parts:
-                        pts.append(p)
-                soap.output.body.parts = pts
-            else:
-                soap.output.body.parts = ptop.output.parts
+        ptop = self.type.operation(op.name)
+        if ptop is None:
+            raise Exception, \
+                "operation '%s' not defined in portType" % op.name
+        soap = op.soap
+        parts = soap.input.body.parts
+        if len(parts):
+            pts = []
+            for p in ptop.input.parts:
+                if p.name in parts:
+                    pts.append(p)
+            soap.input.body.parts = pts
+        else:
+            soap.input.body.parts = ptop.input.parts
+        parts = soap.output.body.parts
+        if len(parts):
+            pts = []
+            for p in ptop.output.parts:
+                if p.name in parts:
+                    pts.append(p)
+            soap.output.body.parts = pts
+        else:
+            soap.output.body.parts = ptop.output.parts
             
-    def resolveheaders(self, definitions):
+    def resolveheaders(self, definitions, op):
         """
         Resolve soap header I{message} references.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
+        @param op: An I{operation} object.
+        @type op: I{operation}
         """
-        for op in self.operations.values():
-            soap = op.soap
-            headers = soap.input.headers + soap.output.headers
-            for header in headers:
-                mn = header.message
-                ref = qualify(mn, self.root, definitions.tns)
-                message = definitions.messages.get(ref)
-                if message is None:
-                    raise Exception, "message'%s', not-found" % mn
-                pn = header.part
-                for p in message.parts:
-                    if p.name == pn:
-                        header.part = p
-                        break
-                if pn == header.part:
-                    raise Exception, \
-                        "message '%s' has not part named '%s'" % (ref, pn)
+        soap = op.soap
+        headers = soap.input.headers + soap.output.headers
+        for header in headers:
+            mn = header.message
+            ref = qualify(mn, self.root, definitions.tns)
+            message = definitions.messages.get(ref)
+            if message is None:
+                raise Exception, "message'%s', not-found" % mn
+            pn = header.part
+            for p in message.parts:
+                if p.name == pn:
+                    header.part = p
+                    break
+            if pn == header.part:
+                raise Exception, \
+                    "message '%s' has not part named '%s'" % (ref, pn)
+                        
+    def resolvefaults(self, definitions, op):
+        """
+        Resolve soap fault I{message} references by
+        cross-referencing with operation defined in port type.
+        @param definitions: A definitions object.
+        @type definitions: L{Definitions}
+        @param op: An I{operation} object.
+        @type op: I{operation}
+        """
+        ptop = self.type.operation(op.name)
+        if ptop is None:
+            raise Exception, \
+                "operation '%s' not defined in portType" % op.name
+        soap = op.soap
+        for fault in soap.faults:
+            for f in ptop.faults:
+                if f.name == fault.name:
+                    fault.parts = f.message.parts
+                    continue
+            if hasattr(fault, 'parts'):
+                continue
+            raise Exception, \
+                "fault '%s' not defined in portType '%s'" % (fault.name, self.type.name)
             
     def operation(self, name):
         """
