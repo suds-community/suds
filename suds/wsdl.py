@@ -664,7 +664,9 @@ class Binding(NamedObject):
             
     def resolve(self, definitions):
         """
-        Resolve named references to other WSDL objects.
+        Resolve named references to other WSDL objects.  This includes
+        cross-linking information (from) the portType (to) the I{soap}
+        protocol information on the binding for each operation.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
