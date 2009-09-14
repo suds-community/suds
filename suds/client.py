@@ -154,6 +154,25 @@ class Client(object):
         @rtype: L{Document}
         """
         return self.messages.get('rx')
+    
+    def clone(self):
+        """
+        Get a shallow clone of this object.
+        @note: THIS METHOD NOT YET WORKING CORRECTLY OR SUPPORTED !!
+        @return: A shallow clone.
+        @rtype: L{Client}
+        """
+        class Uninitialized(Client):
+            def __init__(self):
+                pass
+        clone = Uninitialized()
+        clone.options = Options()
+        clone.options.set(**self.options.__dict__)
+        clone.wsdl = self.wsdl
+        clone.factory = self.factory
+        clone.service = ServiceSelector(clone, self.wsdl.services)
+        clone.sd = self.sd
+        return clone
  
     def __str__(self):
         return unicode(self)
