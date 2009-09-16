@@ -92,22 +92,16 @@ class Factory:
     cache = {}
     
     @classmethod
-    def subclass(cls, name, super):
+    def subclass(cls, name, bases, dict={}):
+        if not isinstance(bases, tuple):
+            bases = (bases,)
         name = name.encode('utf-8')
-        key = "%s.%s" % (name, super.__name__)
-        myclass = cls.cache.get(key)
-        if myclass is None:
-            myclass = classobj(name,(super,),{})
-            cls.cache[key] = myclass
-        init = '__init__'
-        src = 'def %s(self):\n' % init
-        src += '\t%s.%s(self)\n' % (super.__name__,init)
-        code = compile(src, '', 'exec')
-        code = code.co_consts[0]
-        fn = function(code, globals())
-        m =  instancemethod(fn, None, myclass)
-        setattr(myclass, name, m)
-        return myclass
+        key = '.'.join((name, str(bases)))
+        subclass = cls.cache.get(key)
+        if subclass is None:
+            subclass = classobj(name, bases, dict)
+            cls.cache[key] = subclass
+        return subclass
     
     @classmethod
     def object(cls, classname=None, dict={}):
