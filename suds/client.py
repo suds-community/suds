@@ -606,13 +606,17 @@ class SoapClient:
         location = self.location()
         binding = self.method.binding.input
         transport = self.options.transport
+        retxml = self.options.retxml
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent(Document(msg))
             request = Request(location, str(msg))
             request.headers = self.headers()
             reply = transport.send(request)
-            result = self.succeeded(binding, reply.message)
+            if retxml:
+                result = reply.message
+            else:
+                result = self.succeeded(binding, reply.message)
         except TransportError, e:
             if e.httpcode in (202,204):
                 result = None

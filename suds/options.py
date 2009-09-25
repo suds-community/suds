@@ -78,6 +78,10 @@ class Options(object):
             using XML prefixes as opposed to xmlns="" syntax.
                 - type: I{bool}
                 - default: True
+        - B{retxml} - Flag that causes the I{raw} soap envelope to be returned instead
+                of the python object graph.
+                - type: I{bool}
+                - default: True
     """
 
     __options__ = \
@@ -97,6 +101,7 @@ class Options(object):
         doctor=(Doctor, None),
         xstq=(bool, True),
         prefixes=(bool, True),
+        retxml=(bool, False),
     )
     
     def __init__(self, **kwargs):
