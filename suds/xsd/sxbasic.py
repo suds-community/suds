@@ -134,7 +134,8 @@ class TypedContent(Content):
     def resolve(self, nobuiltin=False):
         if self.type is None:
             return self
-        cached = self.cache.get(nobuiltin)
+        key = nobuiltin
+        cached = self.cache.get(key)
         if cached is not None:
             return cached
         result = self
@@ -147,6 +148,7 @@ class TypedContent(Content):
         if resolved is None:
             log.debug(self.schema)
             raise TypeNotFound(qref)
+        self.cache[key] = resolved
         if resolved.builtin():
             if nobuiltin:
                 result = self
