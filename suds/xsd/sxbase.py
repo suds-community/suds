@@ -325,6 +325,20 @@ class SchemaObject:
         @rtype: (int, [L{SchemaObject},...])
         """
         return (None, [])
+    
+    def qualify(self):
+        """
+        Convert attribute values, that are references to other
+        objects, into I{qref}.
+        """
+        defns = self.root.defaultNamespace()
+        for a in ('type', 'ref'):
+            ref = getattr(self, a)
+            if ref is None:
+                continue
+            qref = qualify(ref, self.root, defns)
+            log.debug('%s, convert %s="%s" to %s', self.id, a, ref, qref)
+            setattr(self, a, qref)
             
     def merge(self, other):
         """

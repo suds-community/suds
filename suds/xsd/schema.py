@@ -291,6 +291,7 @@ class Schema:
             child.content(all)
         deplist = DepList()
         for x in all:
+            x.qualify()
             midx, deps = x.dependencies()
             item = (x, tuple(deps))
             deplist.add(item)
