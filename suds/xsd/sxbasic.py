@@ -134,20 +134,18 @@ class TypedContent(Content):
     def resolve(self, nobuiltin=False):
         if self.type is None:
             return self
-        key = nobuiltin
+        key = 'resolved:nb=%s' % nobuiltin
         cached = self.cache.get(key)
         if cached is not None:
             return cached
         result = self
-        defns = self.root.defaultNamespace()
-        qref = qualify(self.type, self.root, defns)
-        query = TypeQuery(qref)
+        query = TypeQuery(self.type)
         query.history = [self]
-        log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
+        log.debug('%s, resolving: %s\n using:%s', self.id, self.type, query)
         resolved = query.execute(self.schema)
         if resolved is None:
             log.debug(self.schema)
-            raise TypeNotFound(qref)
+            raise TypeNotFound(self.type)
         self.cache[key] = resolved
         if resolved.builtin():
             if nobuiltin:
@@ -203,13 +201,11 @@ class Group(SchemaObject):
         deps = []
         midx = None
         if self.ref is not None:     
-            defns = self.default_namespace()
-            qref = qualify(self.ref, self.root, defns)
-            query = GroupQuery(qref)
+            query = GroupQuery(self.ref)
             g = query.execute(self.schema)
             if g is None:
                 log.debug(self.schema)
-                raise TypeNotFound(qref)
+                raise TypeNotFound(self.ref)
             deps.append(g)
             midx = 0
         return (midx, deps)
@@ -236,13 +232,11 @@ class AttributeGroup(SchemaObject):
         deps = []
         midx = None
         if self.ref is not None:
-            defns = self.default_namespace()
-            qref = qualify(self.ref, self.root, defns)
-            query = AttrGroupQuery(qref)
+            query = AttrGroupQuery(self.ref)
             ag = query.execute(self.schema)
             if ag is None:
                 log.debug(self.schema)
-                raise TypeNotFound(qref)
+                raise TypeNotFound(self.ref)
             deps.append(ag)
             midx = 0
         return (midx, deps)
@@ -295,13 +289,11 @@ class Restriction(SchemaObject):
         deps = []
         midx = None
         if self.ref is not None:
-            defns = self.default_namespace()
-            qref = qualify(self.ref, self.root, defns)
-            query = TypeQuery(qref)
+            query = TypeQuery(self.ref)
             super = query.execute(self.schema)
             if super is None:
                 log.debug(self.schema)
-                raise TypeNotFound(qref)
+                raise TypeNotFound(self.ref)
             if not super.builtin():
                 deps.append(super)
                 midx = 0
@@ -436,13 +428,11 @@ class Element(TypedContent):
         deps = []
         midx = None
         if self.ref is not None:
-            defns = self.default_namespace()
-            qref = qualify(self.ref, self.root, defns)
-            query = ElementQuery(qref)
+            query = ElementQuery(self.ref)
             e = query.execute(self.schema)
             if e is None:
                 log.debug(self.schema)
-                raise TypeNotFound(qref)
+                raise TypeNotFound(self.ref)
             deps.append(e)
             midx = 0
         return (midx, deps)
@@ -486,13 +476,11 @@ class Extension(SchemaObject):
         deps = []
         midx = None
         if self.ref is not None:
-            defns = self.default_namespace()
-            qref = qualify(self.ref, self.root, defns)
-            query = TypeQuery(qref)
+            query = TypeQuery(self.ref)
             super = query.execute(self.schema)
             if super is None:
                 log.debug(self.schema)
-                raise TypeNotFound(qref)
+                raise TypeNotFound(self.ref)
             if not super.builtin():
                 deps.append(super)
                 midx = 0
@@ -684,13 +672,11 @@ class Attribute(TypedContent):
         deps = []
         midx = None
         if self.ref is not None:
-            defns = self.default_namespace()
-            qref = qualify(self.ref, self.root, defns)
-            query = AttrQuery(qref)
+            query = AttrQuery(self.ref)
             a = query.execute(self.schema)
             if a is None:
                 log.debug(self.schema)
-                raise TypeNotFound(qref)
+                raise TypeNotFound(self.ref)
             deps.append(a)
             midx = 0
         return (midx, deps)
