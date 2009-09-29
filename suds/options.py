@@ -79,9 +79,9 @@ class Options(object):
                 - type: I{bool}
                 - default: True
         - B{retxml} - Flag that causes the I{raw} soap envelope to be returned instead
-                of the python object graph.
+            of the python object graph.
                 - type: I{bool}
-                - default: True
+                - default: False
     """
 
     __options__ = \
