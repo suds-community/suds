@@ -19,7 +19,7 @@ The I{2nd generation} service proxy provides access to web services.
 See I{README.txt}
 """
 
-from logging import getLogger
+import suds
 import suds.metrics as metrics
 from cookielib import CookieJar
 from suds import *
@@ -39,6 +39,7 @@ from suds.options import Options
 from suds.properties import Unskin
 from urlparse import urlparse
 from copy import deepcopy
+from logging import getLogger
 
 log = getLogger(__name__)
 
@@ -183,10 +184,9 @@ class Client(object):
         
     def __unicode__(self):
         s = ['\n']
-        version = properties.get('version')
-        build = properties.get('build').split()
+        build = suds.__build__.split()
         s.append('Suds ( https://fedorahosted.org/suds/ )')
-        s.append('  version: %s' % version)
+        s.append('  version: %s' % suds.__version__)
         s.append(' %s  build: %s' % (build[0], build[1]))
         for sd in self.sd:
             s.append('\n\n%s' % unicode(sd))

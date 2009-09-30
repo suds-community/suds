@@ -17,12 +17,12 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 import sys
+import suds
 from setuptools import setup, find_packages
-from suds import properties
 
 setup(
     name="suds",
-    version=properties['version'],
+    version=suds.__version__,
     description="Lightweight SOAP client",
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
