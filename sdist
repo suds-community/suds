@@ -16,7 +16,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 product="suds"
-version=`python -c "import $product; print $product.properties['version']"`
+version=`python -c "import $product; print $product.__version__"`
 
 if [ $1 ]
 then

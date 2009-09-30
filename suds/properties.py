@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Options classes.
+Properties classes.
 """
 
 from logging import getLogger
@@ -56,7 +56,7 @@ class Definition:
         @param classes: The (class) list of permitted values
         @type classes: tuple
         @param default: The default value.
-        @ivar type: any
+        @type default: any
         """
         if not isinstance(classes, (list, tuple)):
             classes = (classes,)
