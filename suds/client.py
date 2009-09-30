@@ -36,7 +36,9 @@ from suds.wsdl import Definitions
 from suds.sax.document import Document
 from suds.sax.parser import Parser
 from suds.options import Options
+from suds.properties import Unskin
 from urlparse import urlparse
+from copy import deepcopy
 
 log = getLogger(__name__)
 
@@ -99,10 +101,9 @@ class Client(object):
         @see: L{Options}
         """
         options = Options()
-        options.cache = FileCache(days=1)
         options.transport = HttpAuthenticated()
-        options.set(**kwargs)
         self.options = options
+        self.set_options(**kwargs)
         self.wsdl = Definitions(url, options)
         self.factory = Factory(self.wsdl)
         self.service = ServiceSelector(self, self.wsdl.services)
@@ -118,7 +119,8 @@ class Client(object):
         @param kwargs: keyword arguments.
         @see: L{Options}
         """
-        self.options.set(**kwargs)
+        p = Unskin(self.options)
+        p.update(kwargs)
         
     def add_prefix(self, prefix, uri):
         """
@@ -167,7 +169,9 @@ class Client(object):
                 pass
         clone = Uninitialized()
         clone.options = Options()
-        clone.options.set(**self.options.__dict__)
+        cp = Unskin(clone.options)
+        mp = Unskin(self.options)
+        cp.update(deepcopy(mp))
         clone.wsdl = self.wsdl
         clone.factory = self.factory
         clone.service = ServiceSelector(clone, self.wsdl.services)
@@ -684,7 +688,8 @@ class SoapClient:
             return (status, None)
 
     def location(self):
-        return self.options.get('location', self.method.location)
+        p = Unskin(self.options)
+        return p.get('location', self.method.location)
     
     def last_sent(self, d=None):
         key = 'tx'

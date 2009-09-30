@@ -20,7 +20,9 @@ Contains transport interface (classes) and reference implementation.
 
 import urllib2 as u2
 import base64
+import socket
 from suds.transport import *
+from suds.properties import Unskin
 from urlparse import urlparse
 from cookielib import CookieJar
 from logging import getLogger
@@ -41,12 +43,15 @@ class HttpTransport(Transport):
                  The proxy is defined as {protocol:proxy,}
                     - type: I{dict}
                     - default: {}
+            - B{timeout} - Set the url open timeout (seconds).
+                    - type: I{float}
+                    - default: 90
             - B{cache} - The http I{transport} cache.  May be set (None) for no caching.
                     - type: L{Cache}
                     - default: L{NoCache}
         """
         Transport.__init__(self)
-        self.options.set(**kwargs)
+        Unskin(self.options).update(kwargs)
         self.cookiejar = CookieJar()
         self.urlopener = None
         
@@ -95,6 +100,7 @@ class HttpTransport(Transport):
         self.cookiejar.extract_cookies(fp, u2request)
         
     def __open(self, u2request):
+        socket.setdefaulttimeout(self.options.timeout)
         if self.urlopener is None:
             return u2.urlopen(u2request)
         else:
@@ -107,6 +113,13 @@ class HttpTransport(Transport):
             return
         protocol = u2request.type
         u2request.set_proxy(proxy, protocol)
+        
+    def __deepcopy__(self, memo={}):
+        clone = self.__class__()
+        p = Unskin(self.options)
+        cp = Unskin(clone.options)
+        cp.update(p)
+        return clone
 
 
 class HttpAuthenticated(HttpTransport):
