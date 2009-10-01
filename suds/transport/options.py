@@ -21,7 +21,6 @@ Contains classes for general suds options.
 
 from suds.transport import *
 from suds.properties import *
-from suds.transport.cache import FileCache
 
    
 class Options(Skin):
@@ -51,7 +50,7 @@ class Options(Skin):
     """    
     def __init__(self, **kwargs):
         definitions = [
-            Definition('cache', Cache, FileCache(days=1)),
+            Definition('cache', Cache, NoCache()),
             Definition('proxy', dict, {}),
             Definition('timeout', (int,float), 90),
             Definition('headers', dict, {}),

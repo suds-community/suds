@@ -104,6 +104,7 @@ class Client(object):
         options = Options()
         options.transport = HttpAuthenticated()
         self.options = options
+        options.cache = FileCache(days=1)
         self.set_options(**kwargs)
         self.wsdl = Definitions(url, options)
         self.factory = Factory(self.wsdl)
