@@ -178,7 +178,7 @@ class Properties:
         if owner is self:
             d = self.definition(name)
             d.validate(value)
-            v = d.nvl(value)
+            value = d.nvl(value)
             prev = self.defined[name]
             self.defined[name] = value
             d.linker.updated(self, prev, value)
