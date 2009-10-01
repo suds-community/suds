@@ -131,6 +131,7 @@ class Properties:
             self.definitions[d.name] = d
         self.links = []
         self.defined = {}
+        self.modified = set()
         self.prime()
         self.update(kwargs)
         
@@ -161,6 +162,16 @@ class Properties:
         for n,v in other.items():
             self.set(n, v)
         return self
+    
+    def notset(self, name):
+        """
+        Get whether a property has never been set by I{name}.
+        @param name: A property name.
+        @type name: str
+        @return: True if never been set.
+        @rtype: bool
+        """
+        self.find(name).__notset(name)
             
     def set(self, name, value):
         """
@@ -174,16 +185,18 @@ class Properties:
         @return: self
         @rtype: L{Properties}
         """
-        owner = self.find(name)
-        if owner is self:
-            d = self.definition(name)
-            d.validate(value)
-            value = d.nvl(value)
-            prev = self.defined[name]
-            self.defined[name] = value
-            d.linker.updated(self, prev, value)
-        else:
-            owner.set(name, value)
+        self.find(name).__set(name, value)
+        return self
+    
+    def unset(self, name):
+        """
+        Unset a property by I{name}.
+        @param name: A property name.
+        @type name: str
+        @return: self
+        @rtype: L{Properties}
+        """
+        self.find(name).__set(name, None)
         return self
             
     def get(self, name, *df):
@@ -197,15 +210,7 @@ class Properties:
         @return: The stored value, or I{df[0]} if not set.
         @rtype: any 
         """
-        owner = self.find(name)
-        if owner is self:
-            d = self.definition(name)
-            value = self.defined.get(name)
-            if value == d.default and len(df):
-                value = df[0]
-            return value
-        else:
-            return owner.get(name, *df)
+        return self.find(name).__get(name, *df)
     
     def link(self, other, replace=True):
         """
@@ -296,6 +301,25 @@ class Properties:
         for d in self.definitions.values():
             self.defined[d.name] = d.default
         return self
+    
+    def __notset(self, name):
+        return not (name in self.modified)
+    
+    def __set(self, name, value):
+        d = self.definition(name)
+        d.validate(value)
+        value = d.nvl(value)
+        prev = self.defined[name]
+        self.defined[name] = value
+        self.modified.add(name)
+        d.linker.updated(self, prev, value)
+        
+    def __get(self, name, *df):
+        d = self.definition(name)
+        value = self.defined.get(name)
+        if value == d.default and len(df):
+            value = df[0]
+        return value
             
     def str(self, history):
         s = []
