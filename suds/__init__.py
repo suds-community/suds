@@ -30,7 +30,7 @@ import socket
 #
 
 __version__ = '0.3.7'
-__build__="(beta) R575-20091030"
+__build__="(beta) R578-20091014"
 
 #
 # Exceptions

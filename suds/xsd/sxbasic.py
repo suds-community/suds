@@ -127,25 +127,36 @@ class Factory:
         for i in imports:
             children.remove(i)
         return (children, imports, attributes, elements, types, groups, agrps)
+
+
+class RestrictionMatcher:
+    """
+    For use with L{NodeFinder} to match restriction.
+    """
+    def match(self, n):
+        return ( n.restriction() and n.ref is not None )
     
 
 class TypedContent(Content):
-
+    """
+    Represents any I{typed} content.
+    """
     def resolve(self, nobuiltin=False):
-        if self.type is None:
+        qref = self.qref()
+        if qref is None:
             return self
         key = 'resolved:nb=%s' % nobuiltin
         cached = self.cache.get(key)
         if cached is not None:
             return cached
         result = self
-        query = TypeQuery(self.type)
+        query = TypeQuery(qref)
         query.history = [self]
-        log.debug('%s, resolving: %s\n using:%s', self.id, self.type, query)
+        log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
         resolved = query.execute(self.schema)
         if resolved is None:
             log.debug(self.schema)
-            raise TypeNotFound(self.type)
+            raise TypeNotFound(qref)
         self.cache[key] = resolved
         if resolved.builtin():
             if nobuiltin:
@@ -155,7 +166,24 @@ class TypedContent(Content):
         else:
             result = resolved.resolve(nobuiltin)
         return result
-
+    
+    def qref(self):
+        """
+        Get the I{type} qualified reference.
+        This method takes into account types defined
+        through restriction.
+        @return: The I{type} qualified reference.
+        @rtype: qref
+        """
+        qref = self.type
+        if qref is None:
+            ls = []
+            m = RestrictionMatcher()
+            finder = NodeFinder(m, 1)
+            finder.find(self, ls)
+            if len(ls):
+                return ls[0].ref
+        return qref
 
 
 class Complex(SchemaObject):
@@ -271,6 +299,12 @@ class Simple(SchemaObject):
             if c.extension():
                 return True
         return False
+    
+    def restriction(self):
+        for c in self.rawchildren:
+            if c.restriction():
+                return True
+        return False
 
    
 class Restriction(SchemaObject):
@@ -298,6 +332,9 @@ class Restriction(SchemaObject):
                 deps.append(super)
                 midx = 0
         return (midx, deps)
+    
+    def restriction(self):
+        return True
 
     def merge(self, other):
         SchemaObject.merge(self, other)
@@ -356,6 +393,12 @@ class ComplexContent(SchemaObject):
             if c.extension():
                 return True
         return False
+    
+    def restriction(self):
+        for c in self.rawchildren:
+            if c.restriction():
+                return True
+        return False
 
 
 class SimpleContent(SchemaObject):
@@ -369,6 +412,12 @@ class SimpleContent(SchemaObject):
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
+                return True
+        return False
+    
+    def restriction(self):
+        for c in self.rawchildren:
+            if c.restriction():
                 return True
         return False
 
@@ -424,6 +473,12 @@ class Element(TypedContent):
                 return True
         return False
     
+    def restriction(self):
+        for c in self.rawchildren:
+            if c.restriction():
+                return True
+        return False
+    
     def dependencies(self):
         deps = []
         midx = None
@@ -440,7 +495,6 @@ class Element(TypedContent):
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
-
 
     def description(self):
         return ('name', 'ref', 'type')
@@ -653,6 +707,9 @@ class Attribute(TypedContent):
     def __init__(self, schema, root):
         TypedContent.__init__(self, schema, root)
         self.use = root.get('use', default='')
+        
+    def childtags(self):
+        return ('restriction',)
         
     def isattr(self):
         return True

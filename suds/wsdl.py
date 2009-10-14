@@ -234,7 +234,6 @@ class Definitions(WObject):
     def open_imports(self):
         """ Import the I{imported} WSDLs. """
         for imp in self.imports:
-            base = self.url
             imp.load(self)
                 
     def resolve(self):
