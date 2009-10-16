@@ -23,7 +23,6 @@ for Web Services.
 
 import os
 import sys
-import socket
 
 #
 # Project properties
