@@ -68,8 +68,10 @@ rm -rf $RPM_BUILD_ROOT
 - Better <simpleType/> by <xs:restriction/> support.
 - Performance enhancements. 
 - Fixed tickets: #65, #232, #233, #235, #241, #242, #244, #247, #254, #254, #256, #257, #258
+
 * Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.3.6-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
 * Wed May 1 2009 jortel <jortel@redhat.com> - 0.3.6-1
 - Change hard coded /tmp/suds to tempfile.gettempdir() and create suds/ on demand.
 - Fix return type for Any.get_attribute().
