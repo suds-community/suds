@@ -34,14 +34,13 @@ class WindowsHttpAuthenticated(HttpAuthenticated):
     @author: Christopher Bess
     """
     
-    def __init__(self, options):
+    def __init__(self, **kwargs):
         # try to import ntlm support
         try:
             from ntlm import HTTPNtlmAuthHandler
         except ImportError:
             raise Exception("Cannot import python-ntlm module")    
-        HttpTransport.__init__(self, options)
+        HttpTransport.__init__(self, **kwargs)
         self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
         self.handler = u2.HTTPNtlmAuthHandler.HTTPNtlmAuthHandler(self.pm)
         self.urlopener = u2.build_opener(self.handler)
-        u2.install_opener(self.urlopener)
