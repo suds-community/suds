@@ -245,9 +245,13 @@ class Element:
         @return: self
         @rtype: I{Element}
         """
-        post = sax.encoder.encode(value)
-        encoded = ( post != value )
-        self.text = Text(post, encoded=encoded)
+        if value is None:
+            self.text = None
+            return self
+        if isinstance(value, Text):
+            self.text = value.escape()
+        else:
+            self.text = Text(value).escape()
         return self
         
     def getText(self, default=None):
@@ -259,13 +263,9 @@ class Element:
         @rtype: L{Text}
         """
         if self.hasText():
-            if self.text.encoded:
-                result = Text(sax.encoder.decode(self.text))
-            else:
-                result = self.text
+            return self.text.unescape()
         else:
-            result = default
-        return result
+            return default
     
     def trim(self):
         """

@@ -18,15 +18,19 @@
 Contains XML text classes.
 """
 
+from suds import *
+from suds.sax import *
+
+
 class Text(unicode):
     """
     An XML text object used to represent text content.
     @ivar lang: The (optional) language flag.
     @type lang: bool
-    @ivar encoded: The (optional) XML encoded flag.
-    @type encoded: bool
+    @ivar escaped: The (optional) XML special character escaped flag.
+    @type escaped: bool
     """
-    __slots__ = ('lang', 'encoded',)
+    __slots__ = ('lang', 'escaped',)
     
     @classmethod
     def __valid(cls, *args):
@@ -35,28 +39,66 @@ class Text(unicode):
     def __new__(cls, *args, **kwargs):
         if cls.__valid(*args):
             lang = kwargs.pop('lang', None)
-            encoded = kwargs.pop('encoded', False)
+            escaped = kwargs.pop('escaped', False)
             result = super(Text, cls).__new__(cls, *args, **kwargs)
             result.lang = lang
-            result.encoded = encoded
+            result.escaped = escaped
         else:
             result = None
         return result
     
+    def escape(self):
+        """
+        Encode (escape) special XML characters.
+        @return: The text with XML special characters escaped.
+        @rtype: L{Text}
+        """
+        if not self.escaped:
+            post = sax.encoder.encode(self)
+            escaped = ( post != self )
+            return Text(post, escaped=escaped)
+        return self
+    
+    def unescape(self):
+        """
+        Decode (unescape) special XML characters.
+        @return: The text with escaped XML special characters decoded.
+        @rtype: L{Text}
+        """
+        if self.escaped:
+            return sax.encoder.decode(self)
+        return self
+    
     def __add__(self, other):
         joined = u''.join((self, other))
-        result = Text(joined, lang=self.lang, encoded=self.encoded)
+        result = Text(joined, lang=self.lang, escaped=self.escaped)
         if isinstance(other, Text):
-            result.encoded = ( self.encoded or other.encoded )
+            result.escaped = ( self.escaped or other.escaped )
         return result
     
     def __repr__(self):
         s = [self]
         if self.lang is not None:
             s.append(' [%s]' % self.lang)
-        if self.encoded:
-            s.append(' <encoded>')
+        if self.escaped:
+            s.append(' <escaped>')
         return ''.join(s)
     
     def trim(self):
-        return Text(self.strip(), encoded=self.encoded)
+        return Text(self.strip(), escaped=self.escaped)
+    
+    
+class Raw(Text):
+    """
+    Raw text which is not XML escaped.
+    This may include I{string} XML.
+    """
+    def escape(self):
+        return self
+    
+    def unescape(self):
+        return self
+    
+    def __add__(self, other):
+        joined = u''.join((self, other))
+        return Raw(joined, lang=self.lang)
