@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Contains transport interface (classes) and reference implementation.
+Contains classes for basic HTTP transport implementations.
 """
 
 import urllib2 as u2
