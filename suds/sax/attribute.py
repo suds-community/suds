@@ -80,9 +80,13 @@ class Attribute:
         @return: self
         @rtype: L{Attribute}
         """
-        post = sax.encoder.encode(value)
-        encoded = ( post != value )
-        self.value = Text(post, encoded=encoded)
+        if value is None:
+            self.value = None
+            return self
+        if isinstance(value, Text):
+            self.value = value.escape()
+        else:
+            self.value = Text(value).escape()
         return self
         
     def getValue(self, default=''):
@@ -95,13 +99,9 @@ class Attribute:
         @rtype: L{Text}
         """
         if self.hasText():
-            if self.value.encoded:
-                result = Text(sax.encoder.decode(self.value))
-            else:
-                result = self.value
+            return self.value.unescape()
         else:
-            result = default
-        return result
+            return default
     
     def hasText(self):
         """

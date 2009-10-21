@@ -24,6 +24,7 @@ from suds.mx import *
 from suds.sudsobject import footprint
 from suds.sudsobject import Object, Property
 from suds.sax.element import Element
+from suds.sax.text import Text
 from copy import deepcopy
 
 log = getLogger(__name__)
@@ -73,6 +74,8 @@ class ContentAppender:
                 ObjectAppender(marshaller)),
             (Matcher(Element), 
                 ElementAppender(marshaller)),
+            (Matcher(Text), 
+                TextAppender(marshaller)),
             (Matcher(list), 
                 ListAppender(marshaller)),
             (Matcher(tuple), 
@@ -261,3 +264,14 @@ class ListAppender(Appender):
                 cont = Content(tag=content.tag, value=item)
                 Appender.append(self, parent, cont)
             self.resume(content)
+
+
+class TextAppender(Appender):
+    """
+    An appender for I{Text} values.
+    """
+
+    def append(self, parent, content):
+        child = self.node(content)
+        child.setText(content.value)
+        parent.append(child)
