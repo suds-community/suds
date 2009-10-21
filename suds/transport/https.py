@@ -70,3 +70,23 @@ class HttpAuthenticated(HttpTransport):
     
     def credentials(self):
         return (self.options.username, self.options.password)
+    
+    
+class WindowsHttpAuthenticated(HttpAuthenticated):
+    """
+    Provides Windows (NTLM) http authentication.
+    @ivar pm: The password manager.
+    @ivar handler: The authentication handler.
+    @author: Christopher Bess
+    """
+    
+    def __init__(self, **kwargs):
+        # try to import ntlm support
+        try:
+            from ntlm import HTTPNtlmAuthHandler
+        except ImportError:
+            raise Exception("Cannot import python-ntlm module")    
+        HttpTransport.__init__(self, **kwargs)
+        self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
+        self.handler = HTTPNtlmAuthHandler.HTTPNtlmAuthHandler(self.pm)
+        self.urlopener = u2.build_opener(self.handler)

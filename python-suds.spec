@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.7
+Version: 0.3.8
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -55,6 +55,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Tue Oct 19 2009 jortel <jortel@redhat.com> - 0.3.8-1
+- 0.3.8
+
 * Thu Oct 16 2009 jortel <jortel@redhat.com> - 0.3.7-1
 - Better soap header support
 - Added new transport HttpAuthenticated for active (not passive) basic authentication.
