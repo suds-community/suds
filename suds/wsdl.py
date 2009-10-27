@@ -485,8 +485,11 @@ class PortType(NamedObject):
             op.name = c.get('name')
             op.tns = definitions.tns
             input = c.getChild('input')
-            op.input = input.get('message')
-            output = c.getChild('output', default=input)
+            if input is None:
+                op.input = None
+            else:
+                op.input = input.get('message')
+            output = c.getChild('output')
             if output is None:
                 op.output = None
             else:
@@ -507,18 +510,24 @@ class PortType(NamedObject):
         @type definitions: L{Definitions}
         """
         for op in self.operations.values():
-            qref = qualify(op.input, self.root, definitions.tns)
-            msg = definitions.messages.get(qref)
-            if msg is None:
-                raise Exception("msg '%s', not-found" % op.input)
+            if op.input is None:
+                op.input = Message(Element('no-input'), definitions)
             else:
-                op.input = msg
-            qref = qualify(op.output, self.root, definitions.tns)
-            msg = definitions.messages.get(qref)
-            if msg is None:
-                raise Exception("msg '%s', not-found" % op.output)
+                qref = qualify(op.input, self.root, definitions.tns)
+                msg = definitions.messages.get(qref)
+                if msg is None:
+                    raise Exception("msg '%s', not-found" % op.input)
+                else:
+                    op.input = msg
+            if op.output is None:
+                op.output = Message(Element('no-output'), definitions)
             else:
-                op.output = msg
+                qref = qualify(op.output, self.root, definitions.tns)
+                msg = definitions.messages.get(qref)
+                if msg is None:
+                    raise Exception("msg '%s', not-found" % op.output)
+                else:
+                    op.output = msg
             for f in op.faults:
                 qref = qualify(f.message, self.root, definitions.tns)
                 msg = definitions.messages.get(qref)
@@ -627,6 +636,7 @@ class Binding(NamedObject):
         if root is None:
             body.use = 'literal'
             body.namespace = definitions.tns
+            body.parts = ()
             return
         parts = root.get('parts')
         if parts is None:
