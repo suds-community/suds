@@ -869,9 +869,10 @@ class Service(NamedObject):
         @param names:  A list of method names.  None=ALL
         @type names: [str,..]
         """
-        for m in self.methods.values():
-            if names is None or m.name in names:
-                m.location = url
+        for p in self.ports:
+            for m in p.methods.values():
+                if names is None or m.name in names:
+                    m.location = url
         
     def resolve(self, definitions):
         """
