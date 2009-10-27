@@ -494,6 +494,9 @@ class PartElement(SchemaElement):
         
     def implany(self):
         return self
+    
+    def optional(self):
+        return True
         
     def namespace(self, prefix=None):
         return Namespace.default
