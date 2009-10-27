@@ -89,7 +89,7 @@ class Definition:
             return
         if len(self.classes) and \
             not isinstance(value, self.classes):
-                msg = '"%s" must be: %s' % (name, self.classes)
+                msg = '"%s" must be: %s' % (self.name, self.classes)
                 raise AttributeError,msg
                     
             
