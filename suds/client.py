@@ -178,6 +178,7 @@ class Client(object):
         clone.factory = self.factory
         clone.service = ServiceSelector(clone, self.wsdl.services)
         clone.sd = self.sd
+        clone.messages = dict(tx=None, rx=None)
         return clone
  
     def __str__(self):
