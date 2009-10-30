@@ -87,6 +87,24 @@ except Exception, e:
     tb.print_exc()
     
 try:
+    url = 'http://jira.atlassian.com/rpc/soap/jirasoapservice-v2?wsdl'
+    start(url+'  ** cloned **')
+    client = Client(url).clone()
+    print client
+    token = client.service.login('soaptester', 'soaptester')
+    print 'token="%s"' % token
+    user = client.service.getUser(token, 'soaptester')
+    print 'user="%s"' % user
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e: 
+    errors += 1
+    print e
+    tb.print_exc()
+    
+try:
     url = ' http://www.boyzoid.com/comp/randomQuote.cfc?wsdl '
     start(url)
     client = Client(url)
