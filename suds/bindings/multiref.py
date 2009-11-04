@@ -77,7 +77,7 @@ class MultiRef:
         @param node: A node to update.
         @type node: L{Element}
         """
-        href = node.attrib('href')
+        href = node.getAttribute('href')
         if href is None:
             return
         id = href.getValue()
@@ -118,7 +118,7 @@ class MultiRef:
         @return: True if a soap encoded root.
         @rtype: bool
         """
-        root = node.attrib('root', ns=soapenc)
+        root = node.getAttribute('root', ns=soapenc)
         if root is None:
             return True
         else:

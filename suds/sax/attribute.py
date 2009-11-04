@@ -137,6 +137,26 @@ class Attribute:
             ns = self.parent.resolvePrefix(prefix)
         return ns
     
+    def match(self, name=None, ns=None):
+        """
+        Match by (optional) name and/or (optional) namespace.
+        @param name: The optional attribute tag name.
+        @type name: str
+        @param ns: An optional namespace.
+        @type ns: (I{prefix}, I{name})
+        @return: True if matched.
+        @rtype: boolean
+        """
+        if name is None:
+            byname = True
+        else:
+            byname = ( self.name == name )
+        if ns is None:
+            byns = True
+        else:
+            byns = ( self.namespace()[1] == ns[1] )
+        return ( byname and byns )
+    
     def __eq__(self, rhs):
         """ equals operator """
         return rhs is not None and \

@@ -194,7 +194,7 @@ class Element:
         @type value: basestring
         @see: __setitem__()
         """
-        attr = self.attrib(name)
+        attr = self.getAttribute(name)
         if attr is None:
             attr = Attribute(name, value)
             self.append(attr)
@@ -210,7 +210,7 @@ class Element:
         @rtype: L{Element}
         """
         try:
-            attr = self.attrib(name)
+            attr = self.getAttribute(name)
             self.attributes.remove(attr)
         except:
             pass
@@ -231,7 +231,7 @@ class Element:
         @rtype: basestring
         @see: __getitem__()
         """
-        attr = self.attrib(name, ns)
+        attr = self.getAttribute(name, ns)
         if attr is None or attr.value is None:
             return default
         else:
@@ -285,31 +285,6 @@ class Element:
         @rtype: boolean
         """
         return ( self.text is not None and len(self.text) )
-    
-    def attrib(self, name, ns=None):
-        """
-        Get an attribute by name and (optional) namespace
-        @param name: The name of a contained attribute (may contain prefix).
-        @type name: basestring
-        @param ns: An optional namespace
-        @type ns: (I{prefix}, I{name})
-        @return: The requested attribute object.
-        @rtype: L{Attribute}
-        """
-        result = None
-        if len(self.attributes) == 0:
-            return result
-        if ns is None:
-            p, n = splitPrefix(name)
-            p = [p]
-        else:
-            prefixes = self.findPrefixes(ns[1])
-            p, n = (prefixes, name)
-        for a in self.attributes:
-            if a.prefix in p and a.name == n:
-                result = a
-                break
-        return result
         
     def namespace(self):
         """
@@ -415,6 +390,29 @@ class Element:
             self.children.insert(index, node.detach())
             node.parent = self
             index += 1
+            
+    def getAttribute(self, name, ns=None, default=None):
+        """
+        Get an attribute by name and (optional) namespace
+        @param name: The name of a contained attribute (may contain prefix).
+        @type name: basestring
+        @param ns: An optional namespace
+        @type ns: (I{prefix}, I{name})
+        @param default: Returned when attribute not-found.
+        @type default: L{Attribute}
+        @return: The requested attribute object.
+        @rtype: L{Attribute}
+        """
+        if ns is None:
+            prefix, name = splitPrefix(name)
+            if prefix is None:
+                ns = None
+            else:
+                ns = self.resolvePrefix(prefix)
+        for a in self.attributes:
+            if a.match(name, ns):
+                return a
+        return default
 
     def getChild(self, name, ns=None, default=None):
         """
@@ -703,7 +701,7 @@ class Element:
         @return: True if I{nil}, else False
         @rtype: boolean
         """
-        nilattr = self.attrib('nil', ns=Namespace.xsins)
+        nilattr = self.getAttribute('nil', ns=Namespace.xsins)
         if nilattr is None:
             return False
         else:
