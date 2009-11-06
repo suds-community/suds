@@ -29,6 +29,9 @@ from suds.sax.element import Element
 log = getLogger(__name__)
 
 
+Content.extensions.append('type')
+
+
 class Literal(Core):
     """
     A I{literal} marshaller.

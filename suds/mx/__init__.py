@@ -29,19 +29,35 @@ class Content(Object):
     @type tag: str
     @ivar value: The content's value.
     @type value: I{any}
-    @ivar type: The (optional) content schema type.
-    @type type: L{xsd.sxbase.SchemaObject}
     """
-    def __init__(self, tag=None, value=None, type=None):
+    
+    extensions = []
+    
+    def __init__(self, tag=None, value=None, **kwargs):
         """
         @param tag: The content tag.
         @type tag: str
         @param value: The content's value.
         @type value: I{any}
-        @param type: The (optional) content schema type.
-        @type type: L{xsd.sxbase.SchemaObject}
         """
         Object.__init__(self)
         self.tag = tag
         self.value = value
-        self.type = type
+        for k,v in kwargs.items():
+            if k in self.extensions:
+                setattr(self, k, v)
+            else:
+                raise Exception, \
+                    'extension "%s" not declared' % k
+            
+    def __getattr__(self, name):
+        if name not in self.__dict__:
+            if name in self.extensions:
+                v = None
+                setattr(self, name, v)
+            else:
+                raise AttributeError, \
+                    'Content has no attribute %s' % name
+        else:
+            v = self.__dict__[name]
+        return v
