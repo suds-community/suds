@@ -28,6 +28,9 @@ from suds.sudsobject import Factory
 log = getLogger(__name__)
 
 
+Content.extensions.append('type')
+
+
 class Typed(Core):
     """
     A I{typed} XML unmarshaller
