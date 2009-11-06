@@ -30,6 +30,8 @@ from suds.bindings.rpc import RPC, Encoded
 from suds.xsd import qualify, Namespace
 from suds.xsd.schema import Schema, SchemaCollection
 from suds.xsd.query import ElementQuery
+from suds.xsd.sxbasic import Factory as SXFactory
+from suds.xsd.sxbasic import Attribute as SXAttribute
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SFactory
 from urlparse import urljoin
@@ -909,3 +911,46 @@ class Service(NamedObject):
         
     def __gt__(self, other):
         return True
+
+
+class Attribute(SXAttribute):
+    """
+    Represents an XSD <attribute/> that handles special
+    attributes that are extensions for WSDLs.
+    @ivar aty: Array type information.
+    @type aty: The value of wsdl:arrayType.
+    """
+
+    def __init__(self, schema, root, aty):
+        """
+        @param aty: Array type information.
+        @type aty: The value of wsdl:arrayType.
+        """
+        SXAttribute.__init__(self, schema, root)
+        self.aty = aty[:-2]
+        
+    def autoqualified(self):
+        aqs = SXAttribute.autoqualified(self)
+        aqs.append('aty')
+        return aqs
+    
+    def description(self):
+        d = SXAttribute.description(self)
+        d = d+('aty',)
+        return d
+
+#
+# Builder function, only builds Attribute when arrayType
+# attribute is defined on root.
+#
+def __fn(x, y):
+    aty = y.get('arrayType', ns=wsdlns)
+    if aty is None:
+        return SXAttribute(x, y)
+    else:
+        return Attribute(x, y, aty)
+
+#
+# Remap <xs:attrbute/> tags to __fn() builder.
+#
+SXFactory.maptag('attribute', __fn)

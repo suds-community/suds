@@ -65,13 +65,15 @@ class Core:
     def append(self, parent, content):
         """
         Append the specified L{content} to the I{parent}.
+        @param parent: The parent node to append to.
+        @type parent: L{Element}
         @param content: The content to append.
         @type content: L{Object}
         """
         log.debug('appending parent:\n%s\ncontent:\n%s', parent, content)
         if self.start(content):
             self.appender.append(parent, content)
-            self.end(content)
+            self.end(parent, content)
 
     def reset(self):
         """
@@ -115,9 +117,11 @@ class Core:
         """
         pass
 
-    def end(self, content):
+    def end(self, parent, content):
         """
         Appending this content has ended.
+        @param parent: The parent node ending.
+        @type parent: L{Element}
         @param content: The content for which proccessing has ended.
         @type content: L{Content}
         """

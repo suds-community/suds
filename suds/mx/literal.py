@@ -85,14 +85,12 @@ class Literal(Core):
             return True
         
     def suspend(self, content):
-        content.suspended = True
         self.resolver.pop()
     
     def resume(self, content):
-        frame = Frame(content.type)
-        self.resolver.push(frame)
+        self.resolver.push(Frame(content.type))
         
-    def end(self, content):
+    def end(self, parent, content):
         log.debug('ending content:\n%s', content)
         current = self.resolver.top().type
         if current == content.type:

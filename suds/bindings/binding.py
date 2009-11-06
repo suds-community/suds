@@ -249,11 +249,6 @@ class Binding:
         @rtype: L{Element}
         """
         marshaller = self.marshaller()
-        if isinstance(object, (list, tuple)):
-            tags = []
-            for item in object:
-                tags.append(self.mkparam(method, pdef, item))
-            return tags
         content = Content(tag=pdef[0], value=object, type=pdef[1])
         return marshaller.process(content)
     
