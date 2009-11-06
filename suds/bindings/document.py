@@ -89,6 +89,20 @@ class Document(Binding):
         ns = wrapper[1].namespace('ns0')
         d = Element(tag, ns=ns)
         return d
+    
+    def mkparam(self, method, pdef, object):
+        #
+        # Expand list parameters into individual parameters
+        # each with the type information.  This is because in document
+        # arrays are simply unbounded elements.
+        #
+        if isinstance(object, (list, tuple)):
+            tags = []
+            for item in object:
+                tags.append(self.mkparam(method, pdef, item))
+            return tags
+        else:
+            return Binding.mkparam(self, method, pdef, object)
         
     def param_defs(self, method):
         #

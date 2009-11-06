@@ -23,8 +23,12 @@ from suds import *
 from suds.mx import *
 from suds.mx.literal import Literal
 from suds.mx.typer import Typer
+from suds.sudsobject import Factory
 
 log = getLogger(__name__)
+
+
+Content.extensions.append('aty')
 
 
 class Encoded(Literal):
@@ -32,6 +36,34 @@ class Encoded(Literal):
     A SOAP section (5) encoding marshaller.
     This marshaller supports rpc/encoded soap styles.
     """
+    
+    def start(self, content):
+        start = Literal.start(self, content)
+        if start and isinstance(content.value, (list,tuple)):
+            resolved = content.type.resolve()
+            for c in resolved:
+                if hasattr(c[0], 'aty'):
+                    content.aty = (content.tag, c[0].aty)
+                    array = Factory.object(resolved.name)
+                    array.item = content.value
+                    content.value = array
+                    break
+        return start
+    
+    def end(self, parent, content):
+        Literal.end(self, parent, content)
+        if content.aty is None:
+            return
+        tag, aty = content.aty
+        ns0 = ('at0', aty[1])
+        ns1 = ('at1', 'http://schemas.xmlsoap.org/soap/encoding/')
+        array = content.value.item
+        child = parent.getChild(tag)
+        child.addPrefix(ns0[0], ns0[1])
+        child.addPrefix(ns1[0], ns1[1])
+        name = '%s:arrayType' % ns1[0]
+        value = '%s:%s[%d]' % (ns0[0], aty[0], len(array)) 
+        child.set(name, value)
         
     def encode(self, node, content):
         if content.type.any():

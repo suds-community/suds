@@ -41,11 +41,7 @@ class Content(Object):
         self.data = None
         self.text = None
         for k,v in kwargs.items():
-            if k in self.extensions:
-                setattr(self, k, v)
-            else:
-                raise Exception, \
-                    'extension "%s" not declared' % k
+            setattr(self, k, v)
 
     def __getattr__(self, name):
         if name not in self.__dict__:

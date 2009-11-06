@@ -33,102 +33,6 @@ from urlparse import urljoin
 log = getLogger(__name__)
 
 
-class Factory:
-    """
-    @cvar tags: A factory to create object objects based on tag.
-    @type tags: {tag:fn,}
-    """
-
-    tags =\
-    {
-        'import' : lambda x,y: Import(x,y),
-        'include' : lambda x,y: Include(x,y), 
-        'complexType' : lambda x,y: Complex(x,y),
-        'group' : lambda x,y: Group(x,y),
-        'attributeGroup' : lambda x,y: AttributeGroup(x,y), 
-        'simpleType' : lambda x,y: Simple(x,y), 
-        'element' : lambda x,y: Element(x,y),
-        'attribute' : lambda x,y: Attribute(x,y),
-        'sequence' : lambda x,y: Sequence(x,y),
-        'all' : lambda x,y: All(x,y),
-        'choice' : lambda x,y: Choice(x,y),
-        'complexContent' : lambda x,y: ComplexContent(x,y),
-        'simpleContent' : lambda x,y: SimpleContent(x,y),
-        'restriction' : lambda x,y: Restriction(x,y),
-        'enumeration' : lambda x,y: Enumeration(x,y),
-        'extension' : lambda x,y: Extension(x,y),
-        'any' : lambda x,y: Any(x,y),
-    }
-    
-    @classmethod
-    def create(cls, root, schema):
-        """
-        Create an object based on the root tag name.
-        @param root: An XML root element.
-        @type root: L{Element}
-        @param schema: A schema object.
-        @type schema: L{schema.Schema}
-        @return: The created object.
-        @rtype: L{SchemaObject} 
-        """
-        fn = cls.tags.get(root.name)
-        if fn is not None:
-            return fn(schema, root)
-        else:
-            return None
-
-    @classmethod
-    def build(cls, root, schema, filter=('*',)):
-        """
-        Build an xsobject representation.
-        @param root: An schema XML root.
-        @type root: L{sax.element.Element}
-        @param filter: A tag filter.
-        @type filter: [str,...]
-        @return: A schema object graph.
-        @rtype: L{sxbase.SchemaObject}
-        """
-        children = []
-        for node in root.getChildren(ns=Namespace.xsdns):
-            if '*' in filter or node.name in filter:
-                child = cls.create(node, schema)
-                if child is None:
-                    continue
-                children.append(child)
-                c = cls.build(node, schema, child.childtags())
-                child.rawchildren = c
-        return children
-    
-    @classmethod
-    def collate(cls, children):
-        imports = []
-        elements = {}
-        attributes = {}
-        types = {}
-        groups = {}
-        agrps = {}
-        for c in children:
-            if isinstance(c, (Import, Include)):
-                imports.append(c)
-                continue
-            if isinstance(c, Attribute):
-                attributes[c.qname] = c
-                continue
-            if isinstance(c, Element):
-                elements[c.qname] = c
-                continue
-            if isinstance(c, Group):
-                groups[c.qname] = c
-                continue
-            if isinstance(c, AttributeGroup):
-                agrps[c.qname] = c
-                continue
-            types[c.qname] = c
-        for i in imports:
-            children.remove(i)
-        return (children, imports, attributes, elements, types, groups, agrps)
-
-
 class RestrictionMatcher:
     """
     For use with L{NodeFinder} to match restriction.
@@ -761,6 +665,114 @@ class Any(Content):
     
     def any(self):
         return True
+    
+    
+class Factory:
+    """
+    @cvar tags: A factory to create object objects based on tag.
+    @type tags: {tag:fn,}
+    """
+
+    tags =\
+    {
+        'import' : Import,
+        'include' : Include, 
+        'complexType' : Complex,
+        'group' : Group,
+        'attributeGroup' : AttributeGroup, 
+        'simpleType' : Simple, 
+        'element' : Element,
+        'attribute' : Attribute,
+        'sequence' : Sequence,
+        'all' : All,
+        'choice' : Choice,
+        'complexContent' : ComplexContent,
+        'simpleContent' : SimpleContent,
+        'restriction' : Restriction,
+        'enumeration' : Enumeration,
+        'extension' : Extension,
+        'any' : Any,
+    }
+    
+    @classmethod
+    def maptag(cls, tag, fn):
+        """
+        Map (override) tag => I{class} mapping.
+        @param tag: An xsd tag name.
+        @type tag: str
+        @param fn: A function or class.
+        @type fn: fn|class.
+        """
+        cls.tags[tag] = fn
+    
+    @classmethod
+    def create(cls, root, schema):
+        """
+        Create an object based on the root tag name.
+        @param root: An XML root element.
+        @type root: L{Element}
+        @param schema: A schema object.
+        @type schema: L{schema.Schema}
+        @return: The created object.
+        @rtype: L{SchemaObject} 
+        """
+        fn = cls.tags.get(root.name)
+        if fn is not None:
+            return fn(schema, root)
+        else:
+            return None
+
+    @classmethod
+    def build(cls, root, schema, filter=('*',)):
+        """
+        Build an xsobject representation.
+        @param root: An schema XML root.
+        @type root: L{sax.element.Element}
+        @param filter: A tag filter.
+        @type filter: [str,...]
+        @return: A schema object graph.
+        @rtype: L{sxbase.SchemaObject}
+        """
+        children = []
+        for node in root.getChildren(ns=Namespace.xsdns):
+            if '*' in filter or node.name in filter:
+                child = cls.create(node, schema)
+                if child is None:
+                    continue
+                children.append(child)
+                c = cls.build(node, schema, child.childtags())
+                child.rawchildren = c
+        return children
+    
+    @classmethod
+    def collate(cls, children):
+        imports = []
+        elements = {}
+        attributes = {}
+        types = {}
+        groups = {}
+        agrps = {}
+        for c in children:
+            if isinstance(c, (Import, Include)):
+                imports.append(c)
+                continue
+            if isinstance(c, Attribute):
+                attributes[c.qname] = c
+                continue
+            if isinstance(c, Element):
+                elements[c.qname] = c
+                continue
+            if isinstance(c, Group):
+                groups[c.qname] = c
+                continue
+            if isinstance(c, AttributeGroup):
+                agrps[c.qname] = c
+                continue
+            types[c.qname] = c
+        for i in imports:
+            children.remove(i)
+        return (children, imports, attributes, elements, types, groups, agrps)
+
     
 
 

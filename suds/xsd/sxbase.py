@@ -27,7 +27,7 @@ from suds.sax.element import Element
 log = getLogger(__name__)
 
 
-class SchemaObject:
+class SchemaObject(object):
     """
     A schema object is an extension to object object with
     with schema awareness.
@@ -334,13 +334,22 @@ class SchemaObject:
         """
         return (None, [])
     
+    def autoqualified(self):
+        """
+        The list of I{auto} qualified attribute values.
+        Qualification means to convert values into I{qref}.
+        @return: A list of attibute names.
+        @rtype: list
+        """
+        return ['type', 'ref']
+    
     def qualify(self):
         """
         Convert attribute values, that are references to other
         objects, into I{qref}.
         """
         defns = self.root.defaultNamespace()
-        for a in ('type', 'ref'):
+        for a in self.autoqualified():
             ref = getattr(self, a)
             if ref is None:
                 continue

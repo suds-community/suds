@@ -28,85 +28,6 @@ import datetime as dt
 
 
 log = getLogger(__name__)
-
-
-class Factory:
-
-    tags =\
-    {
-        # any
-        'anyType' : lambda x,y: XAny(x,y),
-        # strings
-        'string' : lambda x,y: XString(x,y),
-        'normalizedString' : lambda x,y: XString(x,y),
-        'ID' : lambda x,y: XString(x,y),
-        'Name' : lambda x,y: XString(x,y),
-        'QName' : lambda x,y: XString(x,y),
-        'NCName' : lambda x,y: XString(x,y),
-        'anySimpleType' : lambda x,y: XString(x,y),
-        'anyURI' : lambda x,y: XString(x,y),
-        'NOTATION' : lambda x,y: XString(x,y),
-        'token' : lambda x,y: XString(x,y),
-        'language' : lambda x,y: XString(x,y),
-        'IDREFS' : lambda x,y: XString(x,y),
-        'ENTITIES' : lambda x,y: XString(x,y),
-        'IDREF' : lambda x,y: XString(x,y),
-        'ENTITY' : lambda x,y: XString(x,y),
-        'NMTOKEN' : lambda x,y: XString(x,y),
-        'NMTOKENS' : lambda x,y: XString(x,y),
-        # binary
-        'hexBinary' : lambda x,y: XString(x,y),
-        'base64Binary' : lambda x,y: XString(x,y),
-        # integers
-        'int' : lambda x,y: XInteger(x,y),
-        'integer' : lambda x,y: XInteger(x,y),
-        'unsignedInt' : lambda x,y: XInteger(x,y),
-        'positiveInteger' : lambda x,y: XInteger(x,y),
-        'negativeInteger' : lambda x,y: XInteger(x,y),
-        'nonPositiveInteger' : lambda x,y: XInteger(x,y),
-        'nonNegativeInteger' : lambda x,y: XInteger(x,y),
-        # longs
-        'long' : lambda x,y: XLong(x,y),
-        'unsignedLong' : lambda x,y: XLong(x,y),
-        # shorts
-        'short' : lambda x,y: XInteger(x,y),
-        'unsignedShort' : lambda x,y: XInteger(x,y),
-        'byte' : lambda x,y: XInteger(x,y),
-        'unsignedByte' : lambda x,y: XInteger(x,y),
-        # floats
-        'float' : lambda x,y: XFloat(x,y),
-        'double' : lambda x,y: XFloat(x,y),
-        'decimal' : lambda x,y: XFloat(x,y),
-        # dates & times
-        'date' : lambda x,y: XDate(x,y),
-        'time' : lambda x,y: XTime(x,y),
-        'dateTime': lambda x,y: XDateTime(x,y),
-        'duration': lambda x,y: XString(x,y),
-        'gYearMonth' : lambda x,y: XString(x,y),
-        'gYear' : lambda x,y: XString(x,y),
-        'gMonthDay' : lambda x,y: XString(x,y),
-        'gDay' : lambda x,y: XString(x,y),
-        'gMonth' : lambda x,y: XString(x,y),
-        # boolean
-        'boolean' : lambda x,y: XBoolean(x,y),
-    }
-
-    @classmethod
-    def create(cls, schema, name):
-        """
-        Create an object based on the root tag name.
-        @param schema: A schema object.
-        @type schema: L{schema.Schema}
-        @param name: The name.
-        @type name: str
-        @return: The created object.
-        @rtype: L{XBuiltin} 
-        """
-        fn = cls.tags.get(name)
-        if fn is not None:
-            return fn(schema, name)
-        else:
-            return XBuiltin(schema, name)
     
     
 class XString(XBuiltin):
@@ -261,3 +182,93 @@ class XDateTime(XBuiltin):
                 return str(DateTime(value))
             else:
                 return value
+            
+            
+class Factory:
+
+    tags =\
+    {
+        # any
+        'anyType' : XAny,
+        # strings
+        'string' : XString,
+        'normalizedString' : XString,
+        'ID' : XString,
+        'Name' : XString,
+        'QName' : XString,
+        'NCName' : XString,
+        'anySimpleType' : XString,
+        'anyURI' : XString,
+        'NOTATION' : XString,
+        'token' : XString,
+        'language' : XString,
+        'IDREFS' : XString,
+        'ENTITIES' : XString,
+        'IDREF' : XString,
+        'ENTITY' : XString,
+        'NMTOKEN' : XString,
+        'NMTOKENS' : XString,
+        # binary
+        'hexBinary' : XString,
+        'base64Binary' : XString,
+        # integers
+        'int' : XInteger,
+        'integer' : XInteger,
+        'unsignedInt' : XInteger,
+        'positiveInteger' : XInteger,
+        'negativeInteger' : XInteger,
+        'nonPositiveInteger' : XInteger,
+        'nonNegativeInteger' : XInteger,
+        # longs
+        'long' : XLong,
+        'unsignedLong' : XLong,
+        # shorts
+        'short' : XInteger,
+        'unsignedShort' : XInteger,
+        'byte' : XInteger,
+        'unsignedByte' : XInteger,
+        # floats
+        'float' : XFloat,
+        'double' : XFloat,
+        'decimal' : XFloat,
+        # dates & times
+        'date' : XDate,
+        'time' : XTime,
+        'dateTime': XDateTime,
+        'duration': XString,
+        'gYearMonth' : XString,
+        'gYear' : XString,
+        'gMonthDay' : XString,
+        'gDay' : XString,
+        'gMonth' : XString,
+        # boolean
+        'boolean' : XBoolean,
+    }
+    
+    @classmethod
+    def maptag(cls, tag, fn):
+        """
+        Map (override) tag => I{class} mapping.
+        @param tag: An xsd tag name.
+        @type tag: str
+        @param fn: A function or class.
+        @type fn: fn|class.
+        """
+        cls.tags[tag] = fn
+
+    @classmethod
+    def create(cls, schema, name):
+        """
+        Create an object based on the root tag name.
+        @param schema: A schema object.
+        @type schema: L{schema.Schema}
+        @param name: The name.
+        @type name: str
+        @return: The created object.
+        @rtype: L{XBuiltin} 
+        """
+        fn = cls.tags.get(name)
+        if fn is not None:
+            return fn(schema, name)
+        else:
+            return XBuiltin(schema, name)
