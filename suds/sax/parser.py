@@ -66,11 +66,11 @@ class Handler(ContentHandler):
         skip = False
         if attribute.name == 'xmlns':
             if len(attribute.value):
-                node.expns = attribute.value
+                node.expns = unicode(attribute.value)
             skip = True
         elif attribute.prefix == 'xmlns':
             prefix = attribute.name
-            node.nsprefixes[prefix] = attribute.value
+            node.nsprefixes[prefix] = unicode(attribute.value)
             skip = True
         return skip
  
