@@ -22,7 +22,7 @@ import suds.sax
 from logging import getLogger
 from suds import *
 from suds.sax import *
-from suds.sax.text import Text
+from suds.sax.text import Text, Pickler
 
 log = getLogger(__name__)
 
@@ -177,3 +177,12 @@ class Attribute:
     def __unicode__(self):
         """ get an xml string representation """
         return u'%s="%s"' % (self.qname(), self.value)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['value'] = Pickler.dump(self.value)
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.value = Pickler.load(self.value)
