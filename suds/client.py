@@ -162,7 +162,8 @@ class Client(object):
     def clone(self):
         """
         Get a shallow clone of this object.
-        @note: THIS METHOD NOT YET WORKING CORRECTLY OR SUPPORTED !!
+        The clone only shares the WSDL.  All other attributes are
+        unique to the cloned object including options.
         @return: A shallow clone.
         @rtype: L{Client}
         """
