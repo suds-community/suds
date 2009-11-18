@@ -37,7 +37,7 @@ credentials = dict(username='jortel', password='abc123')
 setup_logging()
 
 
-#logging.getLogger('suds.transport').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -125,12 +125,12 @@ except Exception, e:
     tb.print_exc()
     
 try:
-    print "echo('this is cool')"
+    print "echo(' this is cool ')"
     result = client.service.echo('this is cool')
-    print '\nreply( %s )\n' % str(result)
+    print '\nreply( "%s" )\n' % str(result)
     print 'echo(None)'
     result = client.service.echo(None)
-    print '\nreply( %s )\n' % str(result)
+    print '\nreply( "%s" )\n' % str(result)
 except WebFault, f:
     errors += 1
     print f
@@ -167,12 +167,13 @@ except Exception, e:
     tb.print_exc()
 
 try:
-    array = client.factory.create('ArrayOf_xsd_string')
-    print 'ArrayOf_xsd_string=\n%s' % array
-    array.item = ['my', 'dog', 'likes', 'steak']
-    result = client.service.printList(array)
+    print '** new style arrays **'
+    words = ['my', 'dog', 'likes', 'steak']
+    result = client.service.printList(words)
     print '\nreply( %s )\n' % str(result)
-    array = Object()
+
+    print '** old style arrays **'
+    array = client.factory.create('ArrayOf_xsd_string')
     print 'ArrayOf_xsd_string=\n%s' % array
     array.item = ['my', 'dog', 'likes', 'steak']
     result = client.service.printList(array)
