@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Contains classes for general suds options.
+Contains classes for transport options.
 """
 
 
