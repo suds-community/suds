@@ -26,7 +26,7 @@ import logging
 import traceback as tb
 import suds.metrics as metrics
 from tests import *
-from suds import WebFault
+from suds import null, WebFault
 from suds.client import Client
 from suds.xsd.sxbasic import Import
 from suds.transport.https import HttpAuthenticated
@@ -283,7 +283,7 @@ def basic_rpc_literal():
         print 'updatePersion()'
         result = client.service.updatePerson(person, newname)
         print '\nreply(\n%s\n)\n' % str(result)
-        result = client.service.updatePerson(person, None)
+        result = client.service.updatePerson(person, null())
         print '\nreply(\n%s\n)\n' % str(result)
     except WebFault, f:
         errors += 1
@@ -299,7 +299,7 @@ def basic_rpc_literal():
         result = client.service.echo('this is cool')
         print '\nreply( %s )\n' % str(result)
         print 'echo(None)'
-        result = client.service.echo(None)
+        result = client.service.echo(null())
         print '\nreply( %s )\n' % str(result)
     except WebFault, f:
         errors += 1

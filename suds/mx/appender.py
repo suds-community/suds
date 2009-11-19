@@ -68,6 +68,8 @@ class ContentAppender:
         self.appenders = (
             (Matcher(None),
                 NoneAppender(marshaller)),
+            (Matcher(null),
+                NoneAppender(marshaller)),
             (Matcher(Property),
                 PropertyAppender(marshaller)),
             (Matcher(Object),
