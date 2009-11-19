@@ -141,6 +141,13 @@ def tostr(object, encoding=None):
     except:
         return str(object)
     
+class null:
+    """
+    The I{null} object.
+    Used to pass NULL for optional XML nodes.
+    """
+    pass
+    
 def objid(obj):
     return obj.__class__.__name__\
         +':'+hex(id(obj))
