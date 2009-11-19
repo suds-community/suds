@@ -82,6 +82,7 @@ class Options(Skin):
                 - default: False
     """    
     def __init__(self, **kwargs):
+        domain = __name__
         definitions = [
             Definition('faults', bool, True),
             Definition('transport', Transport, None, TpLinker()),
@@ -95,4 +96,4 @@ class Options(Skin):
             Definition('prefixes', bool, True),
             Definition('retxml', bool, False)
         ]
-        Skin.__init__(self, definitions, kwargs)
+        Skin.__init__(self, domain, definitions, kwargs)

@@ -49,6 +49,7 @@ class Options(Skin):
                 - default: None
     """    
     def __init__(self, **kwargs):
+        domain = __name__
         definitions = [
             Definition('cache', Cache, NoCache()),
             Definition('proxy', dict, {}),
@@ -57,4 +58,4 @@ class Options(Skin):
             Definition('username', basestring, None),
             Definition('password', basestring, None),
         ]
-        Skin.__init__(self, definitions, kwargs)
+        Skin.__init__(self, domain, definitions, kwargs)
