@@ -65,8 +65,8 @@ class HttpTransport(Transport):
                 return fp
             log.debug('opening (%s)', url)
             u2request = u2.Request(url)
-            self.__setproxy(url, u2request)
-            fp = self.__open(u2request)
+            self.setproxy(url, u2request)
+            fp = self.u2open(u2request)
             return cache.put(url, fp)
         except u2.HTTPError, e:
             raise TransportError(str(e), e.code, e.fp)
