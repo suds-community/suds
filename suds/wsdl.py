@@ -498,7 +498,7 @@ class PortType(NamedObject):
                 op.output = output.get('message')
             faults = []
             for fault in c.getChildren('fault'):
-                f = SFactory.object('Operation')
+                f = SFactory.object('Fault')
                 f.name = fault.get('name')
                 f.message = fault.get('message')
                 faults.append(f)
