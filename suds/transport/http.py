@@ -78,12 +78,12 @@ class HttpTransport(Transport):
         headers = request.headers
         try:
             u2request = u2.Request(url, msg, headers)
-            self.__addcookies(u2request)
-            self.__setproxy(url, u2request)
+            self.addcookies(u2request)
+            self.setproxy(url, u2request)
             request.headers.update(u2request.headers)
             log.debug('sending:\n%s', request)
-            fp = self.__open(u2request)
-            self.__getcookies(fp, u2request)
+            fp = self.u2open(u2request)
+            self.getcookies(fp, u2request)
             result = Reply(200, fp.headers.dict, fp.read())
             log.debug('received:\n%s', result)
         except u2.HTTPError, e:
@@ -93,20 +93,65 @@ class HttpTransport(Transport):
                 raise TransportError(e.msg, e.code, e.fp)
         return result
 
-    def __addcookies(self, u2request):
+    def addcookies(self, u2request):
+        """
+        Add cookies in the cookiejar to the request.
+        @param u2request: A urllib2 request.
+        @rtype: u2request: urllib2.Requet.
+        """
         self.cookiejar.add_cookie_header(u2request)
         
-    def __getcookies(self, fp, u2request):
+    def getcookies(self, fp, u2request):
+        """
+        Add cookies in the request to the cookiejar.
+        @param u2request: A urllib2 request.
+        @rtype: u2request: urllib2.Requet.
+        """
         self.cookiejar.extract_cookies(fp, u2request)
         
-    def __open(self, u2request):
-        socket.setdefaulttimeout(self.options.timeout)
-        if self.urlopener is None:
-            return u2.urlopen(u2request)
+    def u2open(self, u2request):
+        """
+        Open a connection.
+        @param u2request: A urllib2 request.
+        @rtype: u2request: urllib2.Requet.
+        @return: The opened file-like urllib2 object.
+        @rtype: A urllib2 file-like object or reading from the connection.
+        """
+        tm = self.options.timeout
+        if self.u2ver() >= 2.6:
+            if self.urlopener is None:
+                return u2.urlopen(u2request, timeout=tm)
+            else:
+                return self.urlopener.open(u2request, timeout=tm)
         else:
-            return self.urlopener.open(u2request)
+            socket.setdefaulttimeout(tm)
+            if self.urlopener is None:
+                return u2.urlopen(u2request)
+            else:
+                return self.urlopener.open(u2request)
+            
+    def u2ver(self):
+        """
+        Get the major/minor version of the urllib2 lib.
+        @return: The urllib2 version.
+        @rtype: float
+        """
+        try:
+            part = u2.__version__.split('.', 1)
+            n = float('.'.join(part))
+            return n
+        except Exception, e:
+            log.exception(e)
+            return 0
         
-    def __setproxy(self, url, u2request):
+    def setproxy(self, url, u2request):
+        """
+        Setup the http/https proxy.
+        @param url: The URL to be opened.
+        @type url: str
+        @param u2request: A urllib2 request.
+        @rtype: u2request: urllib2.Requet.
+        """
         protocol = urlparse(url)[0]
         proxy = self.options.proxy.get(protocol, None)
         if proxy is None:
