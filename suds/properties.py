@@ -267,7 +267,7 @@ class Properties:
         @return: True if never been set.
         @rtype: bool
         """
-        self.find(name).__notset(name)
+        self.provider(name).__notset(name)
             
     def set(self, name, value):
         """
@@ -281,7 +281,7 @@ class Properties:
         @return: self
         @rtype: L{Properties}
         """
-        self.find(name).__set(name, value)
+        self.provider(name).__set(name, value)
         return self
     
     def unset(self, name):
@@ -292,7 +292,7 @@ class Properties:
         @return: self
         @rtype: L{Properties}
         """
-        self.find(name).__set(name, None)
+        self.provider(name).__set(name, None)
         return self
             
     def get(self, name, *df):
@@ -306,7 +306,7 @@ class Properties:
         @return: The stored value, or I{df[0]} if not set.
         @rtype: any 
         """
-        return self.find(name).__get(name, *df)
+        return self.provider(name).__get(name, *df)
     
     def link(self, other):
         """
@@ -335,15 +335,15 @@ class Properties:
                 p.teardown()
         return self
     
-    def find(self, name, history=None):
+    def provider(self, name, history=None):
         """
-        Find the owner of the property by I{name}.
+        Find the provider of the property by I{name}.
         @param name: The property name.
         @type name: str
         @param history: A history of nodes checked to prevent
             circular hunting.
         @type history: [L{Properties},..]
-        @return: The owner when found.  Otherwise, None (when nested)
+        @return: The provider when found.  Otherwise, None (when nested)
             and I{self} when not nested.
         @rtype: L{Properties}
         """
@@ -355,9 +355,9 @@ class Properties:
         for x in self.links:
             if x in history:
                 continue
-            owner = x.find(name, history)
-            if owner is not None:
-                return owner
+            provider = x.provider(name, history)
+            if provider is not None:
+                return provider
         history.remove(self)
         if len(history):
             return None
