@@ -59,6 +59,13 @@ try:
     result = client.service.echoFloat(input)
     print 'echoFloat() = %s' % result
     assert result == input
+    input = [1,2,3,4]
+    # suds 0.3.8+
+    result = client.service.echoIntegerArray(input)
+    print 'echoIntegerArray() = %s' % result
+    # looks like umx package needs an 'encoded' unmarshaller
+    # that respects arrayType="" and creates a python [].
+    # assert result == input
 except WebFault, f:
     errors += 1
     print f
