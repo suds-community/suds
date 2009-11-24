@@ -37,7 +37,7 @@ credentials = dict(username='jortel', password='abc123')
 setup_logging()
 
 
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
@@ -48,7 +48,7 @@ try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
     t = HttpAuthenticated(**credentials)
-    client = Client(url, transport=t)
+    client = Client(url, transport=t, cache=None)
     print client
     #
     # create a name object using the wsdl
@@ -193,6 +193,7 @@ try:
         print 'getList(%s, %d)' % (s, n)
         result = client.service.getList(s, n)
         print '\nreply( %s )\n' % str(result)
+        assert ( isinstance(result, list) and len(result) == n )
 except WebFault, f:
     errors += 1
     print f

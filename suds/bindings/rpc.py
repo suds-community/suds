@@ -21,6 +21,7 @@ Provides classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
 from logging import getLogger
 from suds import *
 from suds.mx.encoded import Encoded as MxEncoded
+from suds.umx.encoded import Encoded as UmxEncoded
 from suds.bindings.binding import Binding, envns
 from suds.sax.element import Element
 
@@ -84,3 +85,14 @@ class Encoded(RPC):
 
     def marshaller(self):
         return MxEncoded(self.schema)
+
+    def unmarshaller(self, typed=True):
+        """
+        Get the appropriate XML decoder.
+        @return: Either the (basic|typed) unmarshaller.
+        @rtype: L{UmxTyped}
+        """
+        if typed:
+            return UmxEncoded(self.schema)
+        else:
+            return RPC.unmarshaller(self, typed)

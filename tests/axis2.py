@@ -29,7 +29,7 @@ errors = 0
 
 setup_logging()
 
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
     
@@ -172,13 +172,11 @@ print '\nreply( %s )\n' % str(result)
 #
 # test list returned
 #
-print 'getList(str, 1)'
-result = client.service.getList('hello', 1)
-print '\nreply( %s )\n' % str(result)
-
-print 'getList(str, 3)'
-result = client.service.getList('hello', 3)
-print '\nreply( %s )\n' % str(result)
+for n in range(0, 3):
+    print 'getList(str, %d)' % n
+    result = client.service.getList('hello', n)
+    print '\nreply( %s )\n' % str(result)
+    assert ( isinstance(result, list) and len(result) == n )
 
 print 'addPet()'
 dog = client.factory.create('ns2:Dog')
