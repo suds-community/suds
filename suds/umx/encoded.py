@@ -22,8 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.umx import *
 from suds.umx.typed import Typed
-from suds.sax import splitPrefix
-from suds.xsd.query import TypeQuery
+from suds.sax import splitPrefix, Namespace
 
 log = getLogger(__name__)
 
@@ -41,9 +40,8 @@ class Encoded(Typed):
         #
         # Grab the array type and continue
         #
-        start = Typed.start(self, content)
         self.setaty(content)
-        return start
+        Typed.start(self, content)
     
     def end(self, content):
         #
@@ -53,12 +51,10 @@ class Encoded(Typed):
         #
         aty = content.aty
         if aty is not None:
-            pylist = []
             if len(content.data):
-                items = content.data[0]
-                for x in items:
-                    pylist.append(aty.translate(x))
-            content.data = pylist
+                content.data = content.data[0]
+            else:
+                content.data = []
         return Typed.end(self, content)
     
     def postprocess(self, content):
@@ -79,14 +75,36 @@ class Encoded(Typed):
         @return: self
         @rtype: L{Encoded}
         """
-        spns = (None, 'http://schemas.xmlsoap.org/soap/encoding/')
-        aty = content.node.get('arrayType', spns)
-        if aty is None:
-            return
-        aty = aty.split('[')[0]
-        p,t = splitPrefix(aty)
-        ns = content.node.resolvePrefix(p)
-        qref = (t, ns[1])
-        query = TypeQuery(qref)
-        content.aty = query.execute(self.resolver.schema)
+        name = 'arrayType'
+        ns = (None, 'http://schemas.xmlsoap.org/soap/encoding/')
+        aty = content.node.get(name, ns)
+        if aty is not None:
+            content.aty = aty
+            ref = aty.split('[')[0]
+            self.applyaty(content, ref)
         return self
+    
+    def applyaty(self, content, xty):
+        """
+        Apply the type referenced in the I{arrayType} to the content
+        (child nodes) of the array.  Each element (node) in the array 
+        that does not have an explicit xsi:type attribute is given one
+        based on the I{arrayType}.
+        @param content: A array content.
+        @type content: L{Content}
+        @param xty: The XSI type reference.
+        @type xty: str
+        @return: self
+        @rtype: L{Encoded}
+        """
+        name = 'type'
+        ns = Namespace.xsins
+        parent = content.node
+        for child in parent.getChildren():
+            ref = child.get(name, ns)
+            if ref is None:
+                parent.addPrefix(ns[0], ns[1])
+                attr = ':'.join((ns[0], name))
+                child.set(attr, xty)
+        return self
+                

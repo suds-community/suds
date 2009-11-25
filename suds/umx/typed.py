@@ -129,12 +129,14 @@ class Typed(Core):
     def append_text(self, content):
         """
         Append text nodes into L{Content.data}
+        Here is where the I{true} type is used to translate the value
+        into the proper python type.
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
         Core.append_text(self, content)
-        resolved = content.type.resolve()
-        content.text = self.translated(content.text, content.type)
+        known = self.resolver.top().resolved
+        content.text = self.translated(content.text, known)
             
     def translated(self, value, type):
         """ translate using the schema type """
