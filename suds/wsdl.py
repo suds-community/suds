@@ -618,7 +618,7 @@ class Binding(NamedObject):
             if output is None:
                 output = Element('output', ns=wsdlns)
             body = output.getChild('body')
-            self.body(definitions, soap.output.body, output)
+            self.body(definitions, soap.output.body, body)
             for header in output.getChildren('header'):
                 self.header(definitions, soap.output, header)
             faults = []
