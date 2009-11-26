@@ -118,7 +118,7 @@ class Pickler:
     def dump(cls, t):
         if isinstance(t, Text):
             d = {}
-            d[cls.base] = str(t)
+            d[cls.base] = unicode(t)
             for k in Text.__slots__:
                 d[k] = getattr(t, k)
             return d
