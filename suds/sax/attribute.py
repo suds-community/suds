@@ -80,16 +80,13 @@ class Attribute:
         @return: self
         @rtype: L{Attribute}
         """
-        if value is None:
-            self.value = None
-            return self
         if isinstance(value, Text):
-            self.value = value.escape()
+            self.value = value
         else:
-            self.value = Text(value).escape()
+            self.value = Text(value)
         return self
         
-    def getValue(self, default=''):
+    def getValue(self, default=Text('')):
         """
         Get the attributes value with optional default.
         @param default: An optional value to be return when the
@@ -99,7 +96,7 @@ class Attribute:
         @rtype: L{Text}
         """
         if self.hasText():
-            return self.value.unescape()
+            return self.value
         else:
             return default
     
@@ -176,7 +173,12 @@ class Attribute:
     
     def __unicode__(self):
         """ get an xml string representation """
-        return u'%s="%s"' % (self.qname(), self.value)
+        n = self.qname()
+        if self.hasText():
+            v = self.value.escape()
+        else:
+            v = self.value
+        return u'%s="%s"' % (n, v)
 
     def __getstate__(self):
         state = self.__dict__.copy()

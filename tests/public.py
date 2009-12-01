@@ -67,6 +67,9 @@ try:
     result = client.service.echoIntegerArray(input)
     print 'echoIntegerArray() = %s' % result
     assert result == input
+    result = client.service.echoIntegerArray(inputIntegerArray=input)
+    print 'echoIntegerArray() = %s' % result
+    assert result == input
 except WebFault, f:
     errors += 1
     print f

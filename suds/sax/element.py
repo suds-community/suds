@@ -245,13 +245,10 @@ class Element:
         @return: self
         @rtype: I{Element}
         """
-        if value is None:
-            self.text = None
-            return self
         if isinstance(value, Text):
-            self.text = value.escape()
+            self.text = value
         else:
-            self.text = Text(value).escape()
+            self.text = Text(value)
         return self
         
     def getText(self, default=None):
@@ -263,7 +260,7 @@ class Element:
         @rtype: L{Text}
         """
         if self.hasText():
-            return self.text.unescape()
+            return self.text
         else:
             return default
     
@@ -760,8 +757,8 @@ class Element:
             result.append('/>')
             return ''.join(result)
         result.append('>')
-        if self.text is not None:
-            result.append(self.text)
+        if self.hasText():
+            result.append(self.text.escape())
         for c in self.children:
             result.append('\n')
             result.append(c.str(indent+1))
