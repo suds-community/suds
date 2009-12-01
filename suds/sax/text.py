@@ -56,7 +56,7 @@ class Text(unicode):
         if not self.escaped:
             post = sax.encoder.encode(self)
             escaped = ( post != self )
-            return Text(post, escaped=escaped)
+            return Text(post, lang=self.lang, escaped=escaped)
         return self
     
     def unescape(self):
@@ -66,8 +66,13 @@ class Text(unicode):
         @rtype: L{Text}
         """
         if self.escaped:
-            return sax.encoder.decode(self)
+            post = sax.encoder.decode(self)
+            return Text(post, lang=self.lang)
         return self
+    
+    def trim(self):
+        post = self.strip()
+        return Text(post, lang=self.lang, escaped=self.escaped)
     
     def __add__(self, other):
         joined = u''.join((self, other))
@@ -83,9 +88,6 @@ class Text(unicode):
         if self.escaped:
             s.append(' <escaped>')
         return ''.join(s)
-    
-    def trim(self):
-        return Text(self.strip(), escaped=self.escaped)
     
     
 class Raw(Text):
