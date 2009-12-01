@@ -113,9 +113,9 @@ class HttpTransport(Transport):
         """
         Open a connection.
         @param u2request: A urllib2 request.
-        @rtype: u2request: urllib2.Requet.
+        @type u2request: urllib2.Requet.
         @return: The opened file-like urllib2 object.
-        @rtype: A urllib2 file-like object or reading from the connection.
+        @rtype: fp
         """
         tm = self.options.timeout
         if self.u2ver() >= 2.6:
