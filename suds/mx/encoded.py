@@ -79,16 +79,13 @@ class Encoded(Literal):
         if content.type.any():
             Typer.auto(node, content.value)
             return
-        resolved = self.resolver.top().resolved
-        if resolved is None:
-            resolved = content.type.resolve()
-        if resolved.any():
+        if content.real.any():
             Typer.auto(node, content.value)
             return
         ns = None
-        name = resolved.name
+        name = content.real.name
         if self.options.xstq:
-            ns = resolved.namespace()
+            ns = content.real.namespace()
         Typer.manual(node, name, ns)
         
     def cast(self, content):
@@ -111,13 +108,7 @@ class Encoded(Literal):
         if ref is None:
             raise TypeNotFound(qref)
         for x in content.value:
-            if isinstance(x, Object):
-                array.item.append(x)
-                continue
-            if isinstance(x, dict):
-                x = Factory.object(ref.name, x)
-                md = x.__metadata__
-                md.sxtype = ref
+            if isinstance(x, (list, tuple, Object)):
                 array.item.append(x)
                 continue
             x = Factory.property(ref.name, x)

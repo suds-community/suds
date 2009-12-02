@@ -130,6 +130,69 @@ except Exception, e:
     tb.print_exc()
     
 try:
+    url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
+    start(url)
+    t = HttpAuthenticated(**credentials)
+    client = Client(url, transport=t, cache=None)
+    print client
+    #
+    # create a name object as dict
+    #
+    print 'create name'
+    name = {}
+    name['first'] = 'Elmer'
+    name['last'] = 'Fudd'
+    print name
+    #
+    # create a phone as dict
+    #
+    print 'create phone'
+    phoneA = {}
+    phoneA['npa'] = 410
+    phoneA['nxx'] = 555
+    phoneA['number'] = 5138
+    phoneB = {}
+    phoneB['npa'] = 919
+    phoneB['nxx'] = 555
+    phoneB['number'] = 4406
+    phoneC = {
+        'npa':205,
+        'nxx':777,
+        'number':1212
+    }
+    #
+    # create a dog
+    #
+    dog = {
+        'name':'Chance',
+        'trained':True,
+    }
+    #
+    # create a person as dict
+    #
+    person = {}
+    print '{empty} person=\n%s' % person
+    person['name'] = name
+    person['age'] = 43
+    person['phone'] = [phoneA,phoneB, phoneC]
+    person['pets'] = [dog]
+    print 'person=\n%s' % person
+    #
+    # add the person (using the webservice)
+    #
+    print 'addPersion()'
+    result = client.service.addPerson(person)
+    print '\nreply(\n%s\n)\n' % str(result)
+except WebFault, f:
+    errors += 1
+    print f
+    print f.fault
+except Exception, e:
+    errors += 1
+    print e
+    tb.print_exc()
+    
+try:
     print "echo(' this is cool ')"
     result = client.service.echo('this is cool')
     print '\nreply( "%s" )\n' % str(result)
