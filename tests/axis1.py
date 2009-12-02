@@ -70,6 +70,11 @@ try:
     phoneB.npa = 919
     phoneB.nxx = 555
     phoneB.number = 4406
+    phoneC = {
+        'npa':205,
+        'nxx':777,
+        'number':1212
+    }
     #
     # create a dog
     #
@@ -83,7 +88,7 @@ try:
     print '{empty} person=\n%s' % person
     person.name = name
     person.age = 43
-    person.phone = [phoneA,phoneB]
+    person.phone = [phoneA,phoneB, phoneC]
     person.pets = [dog]
     print 'person=\n%s' % person
     #
