@@ -80,8 +80,12 @@ class Encoded(Typed):
         aty = content.node.get(name, ns)
         if aty is not None:
             content.aty = aty
-            ref = aty.split('[')[0]
-            self.applyaty(content, ref)
+            parts = aty.split('[')
+            ref = parts[0]
+            if len(parts) == 2:
+                self.applyaty(content, ref)
+            else:
+                pass # (2) dimensional array
         return self
     
     def applyaty(self, content, xty):
