@@ -82,6 +82,8 @@ class ContentAppender:
                 ListAppender(marshaller)),
             (Matcher(tuple), 
                 ListAppender(marshaller)),
+            (Matcher(dict), 
+                DictAppender(marshaller)),
         )
         
     def append(self, parent, content):
@@ -237,6 +239,22 @@ class ObjectAppender(Appender):
         child = self.node(content)
         parent.append(child)
         for item in object:
+            cont = Content(tag=item[0], value=item[1])
+            Appender.append(self, child, cont)
+            
+
+class DictAppender(Appender):
+    """
+    An python I{dict} appender.
+    """
+        
+    def append(self, parent, content):
+        d = content.value
+        if self.optional(content) and len(d) == 0:
+            return
+        child = self.node(content)
+        parent.append(child)
+        for item in d.items():
             cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
 

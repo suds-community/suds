@@ -23,7 +23,8 @@ from suds import *
 from suds.mx import *
 from suds.mx.literal import Literal
 from suds.mx.typer import Typer
-from suds.sudsobject import Factory
+from suds.sudsobject import Factory, Object
+from suds.xsd.query import TypeQuery
 
 log = getLogger(__name__)
 
@@ -38,19 +39,28 @@ class Encoded(Literal):
     """
     
     def start(self, content):
+        #
+        # For soap encoded arrays, the 'aty' (array type) information
+        # is extracted and added to the 'content'.  Then, the content.value
+        # is replaced with an object containing an 'item=[]' attribute
+        # containing values that are 'typed' suds objects. 
+        #
         start = Literal.start(self, content)
         if start and isinstance(content.value, (list,tuple)):
             resolved = content.type.resolve()
             for c in resolved:
                 if hasattr(c[0], 'aty'):
                     content.aty = (content.tag, c[0].aty)
-                    array = Factory.object(resolved.name)
-                    array.item = content.value
-                    content.value = array
+                    self.cast(content)
                     break
         return start
     
     def end(self, parent, content):
+        #
+        # For soap encoded arrays, the soapenc:arrayType attribute is
+        # added with proper type and size information.
+        # Eg: soapenc:arrayType="xs:int[3]"
+        #
         Literal.end(self, parent, content)
         if content.aty is None:
             return
@@ -80,3 +90,39 @@ class Encoded(Literal):
         if self.options.xstq:
             ns = resolved.namespace()
         Typer.manual(node, name, ns)
+        
+    def cast(self, content):
+        """
+        Cast the I{untyped} list items found in content I{value}.
+        Each items contained in the list is checked for XSD type information.
+        Items (values) that are I{untyped}, are replaced with suds objects and
+        type I{metadata} is added.
+        @param content: The content holding the collection.
+        @type content: L{Content}
+        @return: self
+        @rtype: L{Encoded}
+        """
+        aty = content.aty[1]
+        resolved = content.type.resolve()
+        array = Factory.object(resolved.name)
+        array.item = []
+        query = TypeQuery(aty)
+        ref = query.execute(self.schema)
+        if ref is None:
+            raise TypeNotFound(qref)
+        for x in content.value:
+            if isinstance(x, Object):
+                array.item.append(x)
+                continue
+            if isinstance(x, dict):
+                x = Factory.object(ref.name, x)
+                md = x.__metadata__
+                md.sxtype = ref
+                array.item.append(x)
+                continue
+            x = Factory.property(ref.name, x)
+            md = x.__metadata__
+            md.sxtype = ref
+            array.item.append(x)
+        content.value = array
+        return self
