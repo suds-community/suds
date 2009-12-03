@@ -28,7 +28,10 @@ from suds.xsd.query import TypeQuery
 
 log = getLogger(__name__)
 
-
+#
+# Add encoded extensions
+# aty = The soap (section 5) encoded array type.
+#
 Content.extensions.append('aty')
 
 
@@ -110,6 +113,12 @@ class Encoded(Literal):
         for x in content.value:
             if isinstance(x, (list, tuple, Object)):
                 array.item.append(x)
+                continue
+            if isinstance(x, dict):
+                x = Factory.object(ref.name, x)
+                md = x.__metadata__
+                md.sxtype = ref
+                array.item.append(x) 
                 continue
             x = Factory.property(ref.name, x)
             md = x.__metadata__

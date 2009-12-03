@@ -26,7 +26,10 @@ from suds.sax import splitPrefix, Namespace
 
 log = getLogger(__name__)
 
-
+#
+# Add encoded extensions
+# aty = The soap (section 5) encoded array type.
+#
 Content.extensions.append('aty')
 
 
