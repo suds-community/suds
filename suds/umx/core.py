@@ -45,8 +45,7 @@ class Core:
         @rtype: L{Object}
         """
         self.reset()
-        data, result = self.append(content)
-        return result
+        return self.append(content)
     
     def append(self, content):
         """
@@ -64,7 +63,7 @@ class Core:
         self.append_children(content)
         self.append_text(content)
         self.end(content)
-        return content.data, self.postprocess(content)
+        return self.postprocess(content)
             
     def postprocess(self, content):
         """
@@ -94,7 +93,7 @@ class Core:
         if content.node.isnil():
             return None
         if not len(node.children) and content.text is None:
-            if self.nillable(content.data):
+            if self.nillable(content):
                 return None
             else:
                 return Text('', lang=lang)
@@ -138,7 +137,7 @@ class Core:
         """
         for child in content.node.children:
             cont = Content(child)
-            cdata, cval = self.append(cont)
+            cval = self.append(cont)
             key = reserved.get(child.name, child.name)
             if key in content.data:
                 v = getattr(content.data, key)
@@ -147,7 +146,7 @@ class Core:
                 else:
                     setattr(content.data, key, [v, cval])
                 continue
-            if self.unbounded(cdata):
+            if self.unbounded(cont):
                 if cval is None:
                     setattr(content.data, key, [])
                 else:
@@ -186,31 +185,31 @@ class Core:
         """
         pass
     
-    def bounded(self, data):
+    def bounded(self, content):
         """
-        Get whether the object is bounded (not a list).
-        @param data: The current object being built.
-        @type data: L{Object}
+        Get whether the content is bounded (not a list).
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: True if bounded, else False
         @rtype: boolean
         '"""
-        return ( not self.unbounded(data) )
+        return ( not self.unbounded(content) )
     
-    def unbounded(self, data):
+    def unbounded(self, content):
         """
         Get whether the object is unbounded (a list).
-        @param data: The current object being built.
-        @type data: L{Object}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: True if unbounded, else False
         @rtype: boolean
         '"""
         return False
     
-    def nillable(self, data):
+    def nillable(self, content):
         """
         Get whether the object is nillable.
-        @param data: The current object being built.
-        @type data: L{Object}
+        @param content: The current content being unmarshalled.
+        @type content: L{Content}
         @return: True if nillable, else False
         @rtype: boolean
         '"""

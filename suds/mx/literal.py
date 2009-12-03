@@ -32,6 +32,9 @@ log = getLogger(__name__)
 
 #
 # Add typed extensions
+# type = The expected xsd type
+# real = The 'true' XSD type
+# ancestry = The 'type' ancestry
 #
 Content.extensions.append('type')
 Content.extensions.append('real')
@@ -232,6 +235,8 @@ class Typed(Core):
         if isinstance(v, dict):
             cls = content.real.name
             content.value = Factory.object(cls, v)
+            md = content.value.__metadata__
+            md.sxtype = content.type
             return
         v = content.real.translate(v, False)
         content.value = v

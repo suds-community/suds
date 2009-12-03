@@ -38,7 +38,7 @@ print 'url=%s' % url
 #
 # create a service client using the wsdl.
 #
-client = Client(url)
+client = Client(url, cache=None)
 
 #
 # print the service (introspection)

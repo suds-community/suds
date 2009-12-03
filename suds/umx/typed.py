@@ -28,7 +28,13 @@ from suds.sudsobject import Factory
 log = getLogger(__name__)
 
 
+#
+# Add typed extensions
+# type = The expected xsd type
+# real = The 'true' XSD type
+#
 Content.extensions.append('type')
+Content.extensions.append('real')
 
 
 class Typed(Core):
@@ -77,8 +83,9 @@ class Typed(Core):
             known = self.resolver.known(content.node)
             frame = Frame(content.type, resolved=known)
             self.resolver.push(frame)
-        resolved = self.resolver.top().resolved
-        cls_name = resolved.name
+        real = self.resolver.top().resolved
+        content.real = real
+        cls_name = real.name
         if cls_name is None:
             cls_name = content.node.name
         content.data = Factory.object(cls_name)
@@ -88,26 +95,13 @@ class Typed(Core):
     def end(self, content):
         self.resolver.pop()
         
-    def unbounded(self, data):
-        try:
-            if isinstance(data, Object):
-                md = data.__metadata__
-                type = md.sxtype
-                return type.unbounded()
-        except:
-            log.error('metadata error:\n%s', data, exc_info=True)
-        return False
+    def unbounded(self, content):
+        return content.type.unbounded()
     
-    def nillable(self, data):
-        try:
-            if isinstance(data, Object):
-                md = data.__metadata__
-                type = md.sxtype
-                resolved = type.resolve()
-                return ( type.nillable or (resolved.builtin() and resolved.nillable ) )
-        except:
-            log.error('metadata error:\n%s', data, exc_info=True)
-        return False
+    def nillable(self, content):
+        resolved = content.type.resolve()
+        return ( content.type.nillable or \
+            (resolved.builtin() and resolved.nillable ) )
     
     def append_attribute(self, name, value, content):
         """

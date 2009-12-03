@@ -88,7 +88,7 @@ try:
     print '{empty} person=\n%s' % person
     person.name = name
     person.age = 43
-    person.phone = [phoneA,phoneB, phoneC]
+    person.phone = [phoneA,phoneB,phoneC]
     person.pets = [dog]
     print 'person=\n%s' % person
     #
