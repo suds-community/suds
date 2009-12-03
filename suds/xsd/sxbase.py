@@ -353,6 +353,8 @@ class SchemaObject(object):
             ref = getattr(self, a)
             if ref is None:
                 continue
+            if isqref(ref):
+                continue
             qref = qualify(ref, self.root, defns)
             log.debug('%s, convert %s="%s" to %s', self.id, a, ref, qref)
             setattr(self, a, qref)
@@ -361,6 +363,7 @@ class SchemaObject(object):
         """
         Merge another object as needed.
         """
+        other.qualify()
         for n in ('name',
                   'qname',
                   'min',
