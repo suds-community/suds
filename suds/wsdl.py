@@ -359,7 +359,7 @@ class Import(WObject):
             types = Types.create(definitions)
             definitions.types.append(types)
         else:
-            types = definitions.types[:-1]
+            types = definitions.types[-1]
         types.root.append(d.root)
         log.debug('imported (XSD):\n%s', d.root)
    
