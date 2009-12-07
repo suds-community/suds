@@ -221,16 +221,22 @@ class Time:
     def __second(self, s):
         """
         Parse the seconds and microseconds.
+        The microseconds are truncated to 999999 due to a restriction in
+        the python datetime.datetime object.
         @param s: A string representation of the seconds.
         @type s: str
         @return: Tuple of (sec,ms)
         @rtype: tuple.
         """
         part = s.split('.')
-        if len(part) == 1:
-            return (int(part[0]), None)
+        if len(part) > 1:
+            second = int(part[0])
+            ms = int(part[1])
+            if ms > 999999: ms = 999999
         else:
-            return (int(part[0]), int(part[1]))
+            second = int(part[0])
+            ms = None
+        return (second, ms)
         
     def __offset(self, s):
         """

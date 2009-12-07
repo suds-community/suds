@@ -72,9 +72,23 @@ class TimeTest(TestCase):
         t = xtime.translate(s)
         self.assertEqual(t, ref)
         
-    def testSimpleWithMicrosecond(self):
-        ref = dt.time(10, 30, 22, 454)
+    def testSimpleWithShortMicrosecond(self):
+        ref = dt.time(10, 30, 22, 34)
         s = '%.2d:%.2d:%.2d.%4.d' % (ref.hour, ref.minute, ref.second, ref.microsecond)
+        xtime = Time()
+        t = xtime.translate(s)
+        self.assertEqual(t, ref)
+        
+    def testSimpleWithMicrosecond(self):
+        ref = dt.time(10, 30, 22, 999999)
+        s = '%.2d:%.2d:%.2d.%4.d' % (ref.hour, ref.minute, ref.second, ref.microsecond)
+        xtime = Time()
+        t = xtime.translate(s)
+        self.assertEqual(t, ref)
+        
+    def testSimpleWithLongMicrosecond(self):
+        ref = dt.time(10, 30, 22, 999999)
+        s = '%.2d:%.2d:%.2d.%4.d' % (ref.hour, ref.minute, ref.second, int('999999999'))
         xtime = Time()
         t = xtime.translate(s)
         self.assertEqual(t, ref)
