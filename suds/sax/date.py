@@ -230,13 +230,9 @@ class Time:
         """
         part = s.split('.')
         if len(part) > 1:
-            second = int(part[0])
-            ms = int(part[1])
-            if ms > 999999: ms = 999999
+            return (int(part[0]), int(part[1][:6]))
         else:
-            second = int(part[0])
-            ms = None
-        return (second, ms)
+            return (int(part[0]), None)
         
     def __offset(self, s):
         """
