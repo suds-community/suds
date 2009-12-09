@@ -55,8 +55,20 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
-* Tue Oct 19 2009 jortel <jortel@redhat.com> - 0.3.8-1
-- 0.3.8
+* Wed Dec 9 2009 jortel <jortel@redhat.com> - 0.3.8-1
+- Includeds Windows NTLM Transport.
+- Add missing self.messages in Client.clone().
+- Changed default behavior for WSDL PartElement to be optional.
+- Add support for services/ports defined without <address/> element in WSDL.
+- Fix sax.attribute.Element.attrib() to find by name only when ns is not specified; renamed to Element.getAttribute().
+- Update HttpTransport to pass timeout parameter to urllib2 open() methods when supported by urllib2.
+- Add null class to pass explicit NULL values for parameters and optional elements.
+- Soap encoded array (soap-enc:Array) enhancement for rpc/encoded.
+  Arrays passed as python arrays - works like document/literal now.
+  No more using the factory to create the Array.
+  Automatically includes arrayType attribute.  Eg: soap-enc:arrayType="Array[2]".
+  Reintroduced ability to pass complex (objects) using python dict instead of suds object via factory.
+- Fixed tickets: #84, #261, #262, #263, #265, #266, #278, #280, #282.
 
 * Thu Oct 16 2009 jortel <jortel@redhat.com> - 0.3.7-1
 - Better soap header support
