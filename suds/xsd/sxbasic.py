@@ -38,7 +38,7 @@ class RestrictionMatcher:
     For use with L{NodeFinder} to match restriction.
     """
     def match(self, n):
-        return ( n.restriction() and n.ref is not None )
+        return isinstance(n, Restriction)
     
 
 class TypedContent(Content):
