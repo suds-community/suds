@@ -621,12 +621,13 @@ class Binding(NamedObject):
                 self.header(definitions, soap.output, header)
             faults = []
             for fault in c.getChildren('fault'):
-                fault = fault.getChild('fault')
-                if fault is None:
+                sf = fault.getChild('fault')
+                if sf is None:
                     continue
+                fn = fault.get('name')
                 f = SFactory.object('Fault')
-                f.name = fault.get('name')
-                f.use = fault.get('use', default='literal')
+                f.name = sf.get('name', default=fn)
+                f.use = sf.get('use', default='literal')
                 faults.append(f)
             soap.faults = faults
             self.operations[op.name] = op
