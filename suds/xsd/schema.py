@@ -25,7 +25,6 @@ tranparent referenced type resolution and targeted denormalization.
 from logging import getLogger
 import suds.metrics
 from suds import *
-from suds.metrics import Timer
 from suds.xsd import *
 from suds.xsd.sxbuiltin import *
 from suds.xsd.sxbasic import Factory as BasicFactory
@@ -106,8 +105,6 @@ class SchemaCollection:
         @return: self
         @rtype: L{SchemaCollection}
         """
-        timer = Timer()
-        timer.start()
         namespaces = self.namespaces.keys()
         for s in self.children:
             for ns in namespaces:
@@ -120,8 +117,6 @@ class SchemaCollection:
                 imp = Element('import', ns=Namespace.xsdns)
                 imp.set('namespace', ns)
                 s.root.append(imp)
-        timer.stop()
-        print timer.duration()
         return self
         
     def locate(self, ns):
