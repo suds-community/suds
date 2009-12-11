@@ -81,7 +81,7 @@ class Options(Skin):
                 - type: I{bool}
                 - default: False
         - B{autoblend} - Flag that ensures that the schema(s) defined within the
-            WSDL import each other.
+            WSDL import each other.  B{**Experimental**}.
                 - type: I{bool}
                 - default: False
     """    
