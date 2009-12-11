@@ -80,6 +80,10 @@ class Options(Skin):
             of the python object graph.
                 - type: I{bool}
                 - default: False
+        - B{autoblend} - Flag that ensures that the schema(s) defined within the
+            WSDL import each other.
+                - type: I{bool}
+                - default: False
     """    
     def __init__(self, **kwargs):
         domain = __name__
@@ -94,6 +98,7 @@ class Options(Skin):
             Definition('doctor', Doctor, None),
             Definition('xstq', bool, True),
             Definition('prefixes', bool, True),
-            Definition('retxml', bool, False)
+            Definition('retxml', bool, False),
+            Definition('autoblend', bool, False),
         ]
         Skin.__init__(self, domain, definitions, kwargs)

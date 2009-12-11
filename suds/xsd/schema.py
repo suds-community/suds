@@ -25,12 +25,14 @@ tranparent referenced type resolution and targeted denormalization.
 from logging import getLogger
 import suds.metrics
 from suds import *
+from suds.metrics import Timer
 from suds.xsd import *
 from suds.xsd.sxbuiltin import *
 from suds.xsd.sxbasic import Factory as BasicFactory
 from suds.xsd.sxbuiltin import Factory as BuiltinFactory
 from suds.xsd.sxbase import SchemaObject
 from suds.xsd.deplist import DepList
+from suds.sax.element import Element
 from suds.sax import splitPrefix, Namespace
 
 log = getLogger(__name__)
@@ -84,6 +86,8 @@ class SchemaCollection:
         @return: The merged schema.
         @rtype: L{Schema}
         """
+        if self.options.autoblend:
+            self.autoblend()
         for child in self.children:
             child.build()
         for child in self.children:
@@ -94,6 +98,31 @@ class SchemaCollection:
         merged = self.merge()
         log.debug('MERGED:\n%s', merged)
         return merged
+        
+    def autoblend(self):
+        """
+        Ensure that all schemas within the collection
+        import each other which has a blending effect.
+        @return: self
+        @rtype: L{SchemaCollection}
+        """
+        timer = Timer()
+        timer.start()
+        namespaces = self.namespaces.keys()
+        for s in self.children:
+            for ns in namespaces:
+                tns = s.root.get('targetNamespace')
+                if  tns == ns:
+                    continue
+                for imp in s.root.getChildren('import'):
+                    if imp.get('namespace') == ns:
+                        continue
+                imp = Element('import', ns=Namespace.xsdns)
+                imp.set('namespace', ns)
+                s.root.append(imp)
+        timer.stop()
+        print timer.duration()
+        return self
         
     def locate(self, ns):
         """
