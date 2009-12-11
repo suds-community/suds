@@ -249,7 +249,11 @@ class Binding:
         @rtype: L{Element}
         """
         marshaller = self.marshaller()
-        content = Content(tag=pdef[0], value=object, type=pdef[1])
+        content = \
+            Content(tag=pdef[0],
+                    value=object, 
+                    type=pdef[1], 
+                    real=pdef[1].resolve())
         return marshaller.process(content)
     
     def mkheader(self, method, hdef, object):
