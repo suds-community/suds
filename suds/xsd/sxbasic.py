@@ -73,14 +73,15 @@ class TypedContent(Content):
     
     def qref(self):
         """
-        Get the I{type} qualified reference.
-        This method takes into account types defined
-        through restriction.
+        Get the I{type} qualified reference to the referenced xsd type.
+        This method takes into account simple types defined through
+        restriction with are detected by determining that self is simple
+        (len=0) and by finding a restriction child.
         @return: The I{type} qualified reference.
         @rtype: qref
         """
         qref = self.type
-        if qref is None:
+        if qref is None and len(self) == 0:
             ls = []
             m = RestrictionMatcher()
             finder = NodeFinder(m, 1)
