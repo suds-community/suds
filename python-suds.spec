@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.3.8
+Version: 0.3.9
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -55,6 +55,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Thu Dec 17 2009 jortel <jortel@redhat.com> - 0.3.9-1
+ - 0.3.9
 * Wed Dec 9 2009 jortel <jortel@redhat.com> - 0.3.8-1
 - Includeds Windows NTLM Transport.
 - Add missing self.messages in Client.clone().
