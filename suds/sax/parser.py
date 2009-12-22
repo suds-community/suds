@@ -77,6 +77,8 @@ class Handler(ContentHandler):
     def endElement(self, name):
         name = unicode(name)
         current = self.top()
+        if len(current):
+            current.trim()
         currentqname = current.qname()
         if name == currentqname:
             self.pop()
@@ -93,9 +95,10 @@ class Handler(ContentHandler):
 
     def push(self, node):
         self.nodes.append(node)
+        return node
 
     def pop(self):
-        self.nodes.pop()
+        return self.nodes.pop()
  
     def top(self):
         return self.nodes[len(self.nodes)-1]
