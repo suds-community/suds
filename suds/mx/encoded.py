@@ -111,8 +111,13 @@ class Encoded(Literal):
         if ref is None:
             raise TypeNotFound(qref)
         for x in content.value:
-            if isinstance(x, (list, tuple, Object)):
+            if isinstance(x, (list, tuple)):
                 array.item.append(x)
+                continue
+            if isinstance(x, Object):
+                md = x.__metadata__
+                md.sxtype = ref
+                array.item.append(x) 
                 continue
             if isinstance(x, dict):
                 x = Factory.object(ref.name, x)
