@@ -90,7 +90,7 @@ class Typed(Core):
             cls_name = content.node.name
         content.data = Factory.object(cls_name)
         md = content.data.__metadata__
-        md.sxtype = content.type
+        md.sxtype = real
         
     def end(self, content):
         self.resolver.pop()
