@@ -14,10 +14,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-
+import sys
+sys.path.append('../')
 from suds.sax.date import Timezone as Tz
 from suds.xsd.sxbuiltin import *
 from unittest import TestCase
+from tests import *
+
+setup_logging()
 
 
 class Date(XDate):
@@ -224,6 +228,19 @@ class DateTimeTest(TestCase):
     def testSimple(self):
         ref = dt.datetime(1941, 12, 7, 10, 30, 22)
         s = '%.4d-%.2d-%.2dT%.2d:%.2d:%.2d' \
+            % (ref.year,
+               ref.month, 
+               ref.day, 
+               ref.hour, 
+               ref.minute, 
+               ref.second)
+        xdt = DateTime()
+        t = xdt.translate(s)
+        self.assertEqual(t, ref)
+        
+    def testOverflow(self):
+        ref = dt.datetime(1, 1, 1, 0, 0, 0)
+        s = '%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ' \
             % (ref.year,
                ref.month, 
                ref.day, 

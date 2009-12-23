@@ -297,13 +297,17 @@ class DateTime(Date,Time):
         """
         Adjust for TZ offset.
         """
-        if hasattr(self, 'offset'):
-            tz = Timezone()
-            delta = Timezone.adjustment(self.offset)
+        if not hasattr(self, 'offset'):
+            return
+        tz = Timezone()
+        delta = Timezone.adjustment(self.offset)
+        try:
             d = ( self.datetime + delta )
             self.datetime = d
             self.date = d.date()
             self.time = d.time()
+        except OverflowError:
+            log.warn('"%s" caused overflow, not-adjusted', self.datetime)
 
     def __str__(self):
         return unicode(self)
