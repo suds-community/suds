@@ -59,6 +59,7 @@ class Handler(ContentHandler):
             if self.mapPrefix(node, attribute):
                 continue
             node.append(attribute)
+        node.charbuffer = []
         top.append(node)
         self.push(node)
         
@@ -77,6 +78,9 @@ class Handler(ContentHandler):
     def endElement(self, name):
         name = unicode(name)
         current = self.top()
+        if len(current.charbuffer):
+            current.text = Text(u''.join(current.charbuffer))
+        del current.charbuffer
         if len(current):
             current.trim()
         currentqname = current.qname()
@@ -88,10 +92,7 @@ class Handler(ContentHandler):
     def characters(self, content):
         text = unicode(content)
         node = self.top()
-        if node.text is None:
-            node.text = Text(text)
-        else:
-            node.text += text
+        node.charbuffer.append(text)
 
     def push(self, node):
         self.nodes.append(node)
