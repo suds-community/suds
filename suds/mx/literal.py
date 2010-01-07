@@ -186,6 +186,8 @@ class Typed(Core):
             return
         if not content.real.extension():
             return
+        if content.type.resolve() == content.real:
+            return
         ns = None
         name = content.real.name
         if self.options.xstq:
