@@ -23,8 +23,6 @@ found in the document.
 from logging import getLogger
 from suds import *
 from suds.sax import splitPrefix
-from suds.transport import Request
-from suds.sax.parser import Parser
 from suds.sax.element import Element
 from suds.bindings.document import Document
 from suds.bindings.rpc import RPC, Encoded
@@ -33,6 +31,7 @@ from suds.xsd.schema import Schema, SchemaCollection
 from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object
 from suds.sudsobject import Factory as SFactory
+from suds.reader import DocumentReader
 from urlparse import urljoin
 import re, soaparray
 
@@ -169,9 +168,8 @@ class Definitions(WObject):
         @type options: L{options.Options}
         """
         log.debug('reading wsdl at: %s ...', url)
-        fp = options.transport.open(Request(url))
-        p = Parser()
-        d = p.parse(file=fp)
+        reader = DocumentReader(options)
+        d = reader.open(url)
         root = d.root()
         WObject.__init__(self, root)
         self.id = objid(self)

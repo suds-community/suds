@@ -26,9 +26,6 @@ from suds.properties import *
 class Options(Skin):
     """
     Options:
-        - B{cache} - The http I{transport} cache.  May be set (None) for no caching.
-                - type: L{Cache}
-                - default: L{NoCache}
         - B{proxy} - An http proxy to be specified on requests.
              The proxy is defined as {protocol:proxy,}
                 - type: I{dict}
@@ -51,7 +48,6 @@ class Options(Skin):
     def __init__(self, **kwargs):
         domain = __name__
         definitions = [
-            Definition('cache', Cache, NoCache()),
             Definition('proxy', dict, {}),
             Definition('timeout', (int,float), 90),
             Definition('headers', dict, {}),

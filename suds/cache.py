@@ -15,26 +15,73 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Contains transport interface (classes) and reference implementation.
+Contains basic caching classes.
 """
 
 import os
 from tempfile import gettempdir as tmp
-from urlparse import urlparse
 from suds.transport import *
 from datetime import datetime as dt
 from datetime import timedelta
+from cStringIO import StringIO
 from logging import getLogger
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 log = getLogger(__name__)
 
 
-class FileCache(Cache):
+class ByteCache:
+    """
+    The URL caching object.
+    """
+    
+    def put(self, id, fp):
+        """
+        Put an item into the cache.
+        @param id: A file ID.
+        @type id: str
+        @param fp: A file stream.
+        @type fp: stream
+        @return: The stream.
+        @rtype: stream
+        """
+        raise Exception('not-implemented')
+    
+    def get(self, id):
+        """
+        Get an item from the cache by id.
+        @param id: A file ID.
+        @type id: str
+        @return: A stream when found, else None.
+        @rtype: stream
+        """
+        raise Exception('not-implemented')
+    
+    def purge(self, id):
+        """
+        Purge a file from the cache by id.
+        @param id: A file ID.
+        @type id: str        
+        """
+        raise Exception('not-implemented')
+    
+    def clear(self):
+        """
+        @param id: A file ID.
+        @type id: str
+        """
+        raise Exception('not-implemented')
+
+
+class FileCache(ByteCache):
     """
     A file-based URL cache.
     @cvar fnprefix: The file name prefix.
     @type fnprefix: str
-    @cvar fnsuffix: The file name suffix.
+    @ivar fnsuffix: The file name suffix.
     @type fnsuffix: str
     @ivar duration: The cached file duration which defines how
         long the file will be cached.
@@ -42,9 +89,7 @@ class FileCache(Cache):
     @ivar location: The directory for the cached files.
     @type location: str
     """
-    
     fnprefix = 'suds'
-    fnsuffix = 'http'
     units = ('months', 'weeks', 'days', 'hours', 'minutes', 'seconds')
     
     def __init__(self, location=None, **duration):
@@ -56,6 +101,7 @@ class FileCache(Cache):
             The duration may be: (months|weeks|days|hours|minutes|seconds).
         @type duration: {unit:value}
         """
+        self.fnsuffix = 'xml'
         if location is None:
             location = os.path.join(tmp(), 'suds')
         self.location = location
@@ -97,20 +143,20 @@ class FileCache(Cache):
             log.debug(self.location, exc_info=1)
         return self
     
-    def put(self, url, fp):
+    def put(self, id, fp):
         try:
-            fn = self.__fn(url)
+            fn = self.__fn(id)
             f = self.open(fn, 'w')
             f.write(fp.read())
             f.close()
             return open(fn)
         except:
-            log.debug(url, exc_info=1)
+            log.debug(id, exc_info=1)
             return fp
     
-    def get(self, url):
+    def get(self, id):
         try:
-            fn = self.__fn(url)
+            fn = self.__fn(id)
             self.validate(fn)
             return self.open(fn)
         except:
@@ -139,6 +185,13 @@ class FileCache(Cache):
                 log.debug('deleted: %s', fn)
                 os.remove(os.path.join(self.location, fn))
                 
+    def purge(self, id):
+        fn = self.__fn(id)
+        try:
+            os.remove(fn)
+        except:
+            pass
+                
     def open(self, fn, *args):
         """
         Open the cache file making sure the directory is created.
@@ -146,13 +199,92 @@ class FileCache(Cache):
         self.mktmp()
         return open(fn, *args)
     
-    def __fn(self, url):
-        if self.__ignored(url):
-            raise Exception('URL %s, ignored')
-        fn = '%s-%s.%s' % (self.fnprefix, abs(hash(url)), self.fnsuffix)
+    def __fn(self, id):
+        fn = '%s-%s.%s' % (self.fnprefix, abs(hash(id)), self.fnsuffix)
         return os.path.join(self.location, fn)
+
+
+class Cache:
+    """
+    The XML document cache.
+    """
+
+    def get(self, id):
+        """
+        Get a document from the store by ID.
+        @param id: The document ID.
+        @type id: str
+        @return: The document, else None
+        @rtype: I{Document}
+        """
+        raise Exception('not-implemented')
     
-    def __ignored(self, url):
-        """ ignore urls based on protocol """
-        protocol = urlparse(url)[0]
-        return protocol in ('file',)
+    def put(self, id, document):
+        """
+        Put a document into the store.
+        @param id: The document ID.
+        @type id: str
+        @param document: The document to add.
+        @type document: I{Document}
+        """
+        raise Exception('not-implemented')
+    
+    def purge(self, id):
+        """
+        Purge a document from the cache by id.
+        @param id: A document ID.
+        @type id: str        
+        """
+        raise Exception('not-implemented')
+    
+    def clear(self):
+        """
+        Clear all documents from the cache.
+        """
+        raise Exception('not-implemented')
+    
+
+class NoCache(Cache):
+    """
+    The passthru document cache.
+    """
+    
+    def get(self, id):
+        return None
+    
+    def put(self, id, document):
+        pass
+    
+
+class DocumentStore(Cache):
+    
+    def __init__(self, location=None, **duration):
+        """
+        @param location: The directory for the cached documents.
+        @type location: str
+        @param duration: The cached file duration which defines how
+            long the document will be cached.  A duration=0 means forever.
+            The duration may be: (months|weeks|days|hours|minutes|seconds).
+        @type duration: {unit:value}
+        """
+        cache = FileCache(location, **duration)
+        cache.fnsuffix = 'pxd'
+        self.cache = cache
+    
+    def get(self, id):
+        try:
+            fp = self.cache.get(id)
+            if fp is None:
+                return None
+            else:
+                return pickle.load(fp)
+        except:
+            self.cache.purge(id)
+    
+    def put(self, id, document):
+        ostr = StringIO()
+        pickle.dump(document, ostr)
+        istr = StringIO(ostr.getvalue())
+        fp = self.cache.put(id, istr)
+        fp.close()
+        return document

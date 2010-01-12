@@ -25,7 +25,6 @@ from cookielib import CookieJar
 from suds import *
 from suds.transport import TransportError, Request
 from suds.transport.https import HttpAuthenticated
-from suds.transport.cache import FileCache
 from suds.servicedefinition import ServiceDefinition
 from suds import sudsobject
 from sudsobject import Factory as InstFactory
@@ -33,6 +32,7 @@ from sudsobject import Object
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import Definitions
+from suds.cache import DocumentStore
 from suds.sax.document import Document
 from suds.sax.parser import Parser
 from suds.options import Options
@@ -104,7 +104,7 @@ class Client(object):
         options = Options()
         options.transport = HttpAuthenticated()
         self.options = options
-        options.cache = FileCache(days=1)
+        options.cache = DocumentStore(days=1)
         self.set_options(**kwargs)
         self.wsdl = Definitions(url, options)
         self.factory = Factory(self.wsdl)
@@ -743,7 +743,8 @@ class SimClient(SoapClient):
             if fault is not None:
                 return self.__fault(fault)
             raise Exception('(reply|fault) expected when msg=None')
-        msg = Parser().parse(string=msg)
+        sax = Parser()
+        msg = sax.parse(string=msg)
         return self.send(msg)
     
     def __reply(self, reply, args, kwargs):

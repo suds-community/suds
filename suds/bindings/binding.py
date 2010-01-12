@@ -51,8 +51,6 @@ class Binding:
     @type schema: L{xsd.schema.Schema}
     @ivar options: A dictionary options.
     @type options: L{Options}
-    @ivar parser: A sax parser.
-    @type parser: L{suds.sax.parser.Parser}
     """
     
     replyfilter = (lambda s,r: r)
@@ -64,8 +62,7 @@ class Binding:
         """
         self.wsdl = wsdl
         self.schema = wsdl.schema
-        self.options = Options()
-        self.parser = Parser()
+        self.options = wsdl.options
         self.multiref = MultiRef()
         
     def unmarshaller(self, typed=True):
@@ -138,7 +135,8 @@ class Binding:
         @rtype: tuple ( L{Element}, L{Object} )
         """
         reply = self.replyfilter(reply)
-        replyroot = self.parser.parse(string=reply)
+        sax = Parser()
+        replyroot = sax.parse(string=reply)
         soapenv = replyroot.getChild('Envelope')
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild('Body')
@@ -225,7 +223,8 @@ class Binding:
         @rtype: tuple ( L{Element}, L{Object} )
         """
         reply = self.replyfilter(reply)
-        faultroot = self.parser.parse(string=reply)
+        sax = Parser()
+        faultroot = sax.parse(string=reply)
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
