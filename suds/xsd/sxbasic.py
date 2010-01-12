@@ -26,7 +26,7 @@ from suds.xsd.sxbase import *
 from suds.xsd.query import *
 from suds.sax import splitPrefix, Namespace
 from suds.sax.parser import Parser
-from suds.transport import TransportError
+from suds.transport import Request, TransportError
 from urlparse import urljoin
 
 
@@ -528,7 +528,10 @@ class Import(SchemaObject):
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
             transport = self.schema.options.transport
-            root = Parser(transport).parse(url=url).root()
+            p = Parser()
+            fp = transport.open(Request(url))
+            d = p.parse(file=fp)
+            root = d.root()
             root.set('url', url)
             return self.schema.instance(root, url)
         except TransportError:
@@ -579,7 +582,10 @@ class Include(SchemaObject):
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
             transport = self.schema.options.transport
-            root = Parser(transport).parse(url=url).root()
+            p = Parser()
+            fp = transport.open(Request(url))
+            d = p.parse(file=fp)
+            root = d.root()
             root.set('url', url)
             self.__applytns(root)
             return self.schema.instance(root, url)
