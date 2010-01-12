@@ -15,13 +15,14 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Suds base pptions classes.
+Suds basic options classes.
 """
 
 from suds.properties import *
 from suds.wsse import Security
 from suds.xsd.doctor import Doctor
 from suds.transport import Transport
+from suds.cache import Cache, NoCache
 
 
 class TpLinker(AutoLinker):
@@ -42,6 +43,9 @@ class TpLinker(AutoLinker):
 class Options(Skin):
     """
     Options:
+        - B{cache} - The XML document cache.  May be set (None) for no caching.
+                - type: L{Cache}
+                - default: L{NoCache}
         - B{faults} - Raise faults raised by server,
             else return tuple from service method invocation as (httpcode, object).
                 - type: I{bool}
@@ -84,10 +88,14 @@ class Options(Skin):
             WSDL import each other.  B{**Experimental**}.
                 - type: I{bool}
                 - default: False
+        - B{store} - The SAX document store.
+                - type: L{DocumentStore}
+                - default: None
     """    
     def __init__(self, **kwargs):
         domain = __name__
         definitions = [
+            Definition('cache', Cache, NoCache()),
             Definition('faults', bool, True),
             Definition('transport', Transport, None, TpLinker()),
             Definition('service', (int, basestring), None),

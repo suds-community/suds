@@ -45,9 +45,6 @@ class HttpAuthenticated(HttpTransport):
             - B{timeout} - Set the url open timeout (seconds).
                     - type: I{float}
                     - default: 90
-            - B{cache} - The http I{transport} cache.  May be set (None) for no caching.
-                    - type: L{Cache}
-                    - default: L{NoCache}
             - B{username} - The username used for http authentication.
                     - type: I{str}
                     - default: None
