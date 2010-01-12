@@ -23,6 +23,7 @@ found in the document.
 from logging import getLogger
 from suds import *
 from suds.sax import splitPrefix
+from suds.transport import Request
 from suds.sax.parser import Parser
 from suds.sax.element import Element
 from suds.bindings.document import Document
@@ -168,8 +169,10 @@ class Definitions(WObject):
         @type options: L{options.Options}
         """
         log.debug('reading wsdl at: %s ...', url)
-        p = Parser(options.transport)
-        root = p.parse(url=url).root()
+        fp = options.transport.open(Request(url))
+        p = Parser()
+        d = p.parse(file=fp)
+        root = d.root()
         WObject.__init__(self, root)
         self.id = objid(self)
         self.options = options

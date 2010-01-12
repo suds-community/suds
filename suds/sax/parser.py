@@ -34,8 +34,6 @@ from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.text import Text
 from suds.sax.attribute import Attribute
-from suds.transport import Request
-from suds.transport.http import HttpTransport
 from xml.sax import make_parser, InputSource, ContentHandler
 from xml.sax.handler import feature_external_ges
 from cStringIO import StringIO
@@ -106,7 +104,7 @@ class Handler(ContentHandler):
 
 
 class Parser:
-    """ sax parser """
+    """ SAX Parser """
     
     @classmethod
     def saxparser(cls):
@@ -115,15 +113,15 @@ class Parser:
         h = Handler()
         p.setContentHandler(h)
         return (p, h)
-    
-    def __init__(self, transport=None):
-        if transport is None:
-            self.transport = HttpTransport()
-        else:
-            self.transport = transport
-
         
-    def parse(self, file=None, url=None, string=None):
+    def parse(self, file=None, string=None):
+        """
+        SAX parse XML text.
+        @param file: Parse a python I{file-like} object.
+        @type file: I{file-like} object.
+        @param string: Parse string XML.
+        @type string: str
+        """
         timer = metrics.Timer()
         timer.start()
         sax, handler = self.saxparser()
@@ -131,12 +129,6 @@ class Parser:
             sax.parse(file)
             timer.stop()
             metrics.log.debug('sax (%s) duration: %s', file, timer)
-            return handler.nodes[0]
-        if url is not None:
-            fp = self.transport.open(Request(url))
-            sax.parse(fp)
-            timer.stop()
-            metrics.log.debug('sax (%s) duration: %s', url, timer)
             return handler.nodes[0]
         if string is not None:
             source = InputSource(None)
