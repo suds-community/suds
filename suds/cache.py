@@ -70,8 +70,7 @@ class ByteCache:
     
     def clear(self):
         """
-        @param id: A file ID.
-        @type id: str
+        Clear the cache.
         """
         raise Exception('not-implemented')
 

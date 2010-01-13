@@ -88,9 +88,6 @@ class Options(Skin):
             WSDL import each other.  B{**Experimental**}.
                 - type: I{bool}
                 - default: False
-        - B{store} - The SAX document store.
-                - type: L{DocumentStore}
-                - default: None
     """    
     def __init__(self, **kwargs):
         domain = __name__
