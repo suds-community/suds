@@ -23,11 +23,30 @@ from suds.sax.parser import Parser
 from suds.transport import Request
 
 class DocumentReader:
+    """
+    The XML document reader provides an integration
+    between the SAX L{Parser} and the document cache.
+    """
     
     def __init__(self, options):
+        """
+        @param options: An options object.
+        @type options: I{Options}
+        """
         self.options = options
     
     def open(self, url):
+        """
+        Open an XML document at the specified I{url}.
+        First, the document attempted to be retrieved from
+        the I{document cache}.  If not found, it is downloaded and
+        parsed using the SAX parser.  The result is added to the
+        document store for the next open().
+        @param url: A document url.
+        @type url: str.
+        @return: The specified XML document.
+        @rtype: I{Document}
+        """
         d = self.options.cache.get(url)
         if d is None:
             fp = self.options.transport.open(Request(url))
