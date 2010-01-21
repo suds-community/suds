@@ -22,7 +22,7 @@ wsdl/xsd defined types.
 
 from logging import getLogger
 from suds import *
-from new import classobj, function, instancemethod
+from new import classobj
 
 log = getLogger(__name__)
 
@@ -211,14 +211,21 @@ class Iter:
         
     def __iter__(self):
         return self
-    
-    
+
+
 class Metadata(Object):
     def __init__(self):
         self.__keylist__ = []
         self.__printer__ = Printer()
-        
-        
+
+
+class Facade(Object):
+    def __init__(self, name):
+        Object.__init__(self)
+        md = self.__metadata__
+        md.facade = name
+
+       
 class Property(Object):
 
     def __init__(self, value):
@@ -278,6 +285,7 @@ class Printer:
         """ print complex using the specified indent (n) and newline (nl). """
         s = []
         cls = d.__class__
+        md = d.__metadata__
         if d in h:
             s.append('(')
             s.append(cls.__name__)
@@ -290,7 +298,10 @@ class Printer:
             s.append(self.indent(n))
         if cls != Object:
             s.append('(')
-            s.append(cls.__name__)
+            if isinstance(d, Facade):
+                s.append(md.facade)
+            else:
+                s.append(cls.__name__)
             s.append(')')
         s.append('{')
         for item in d:
