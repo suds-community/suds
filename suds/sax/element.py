@@ -895,15 +895,6 @@ class Element:
             if index < len(self.children) and \
                 isinstance(value, Element):
                 self.children.insert(index, value)
-                
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state['text'] = Pickler.dump(self.text)
-        return state
-    
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.text = Pickler.load(self.text)
 
     def __eq__(self, rhs):
         return  rhs is not None and \
