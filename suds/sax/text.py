@@ -89,6 +89,16 @@ class Text(unicode):
             s.append(' <escaped>')
         return ''.join(s)
     
+    def __getstate__(self):
+        state = {}
+        for k in self.__slots__:
+            state[k] = getattr(self, k)
+        return state
+    
+    def __setstate__(self, state):
+        for k in self.__slots__:
+            setattr(self, k, state[k])
+    
     
 class Raw(Text):
     """
