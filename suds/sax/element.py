@@ -21,7 +21,7 @@ Provides XML I{element} classes.
 from logging import getLogger
 from suds import *
 from suds.sax import *
-from suds.sax.text import Text, Pickler
+from suds.sax.text import Text
 from suds.sax.attribute import Attribute
 import sys 
 if sys.version_info < (2, 4, 0): 
