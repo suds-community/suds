@@ -114,33 +114,3 @@ class Raw(Text):
     def __add__(self, other):
         joined = u''.join((self, other))
         return Raw(joined, lang=self.lang)
-
-
-class Pickler:
-    """
-    Special object used to pickle Text objects because they
-    are a subclass of unicode.
-    @cvar base: The key for I{base} string value.
-    @type base: str
-    """
-
-    base = 'str'
-
-    @classmethod
-    def dump(cls, t):
-        if isinstance(t, Text):
-            d = {}
-            d[cls.base] = unicode(t)
-            for k in Text.__slots__:
-                d[k] = getattr(t, k)
-            return d
-        else:
-            return None
-            
-    @classmethod
-    def load(cls, t):
-        if isinstance(t, dict):
-            s = t.pop(cls.base)
-            return Text(s, **t)
-        else:
-            return None

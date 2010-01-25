@@ -22,7 +22,7 @@ import suds.sax
 from logging import getLogger
 from suds import *
 from suds.sax import *
-from suds.sax.text import Text, Pickler
+from suds.sax.text import Text
 
 log = getLogger(__name__)
 
@@ -179,12 +179,3 @@ class Attribute:
         else:
             v = self.value
         return u'%s="%s"' % (n, v)
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state['value'] = Pickler.dump(self.value)
-        return state
-    
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.value = Pickler.load(self.value)
