@@ -9,7 +9,7 @@ License: LGPLv3+
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
-Requires: python >= 2.3
+Requires: python >= 2.4
 BuildRequires: python-setuptools-devel
 Url: https://fedorahosted.org/suds
 
@@ -56,7 +56,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Thu Dec 17 2009 jortel <jortel@redhat.com> - 0.3.9-1
- - 0.3.9
+ - Bumped python requires to 2.4
 * Wed Dec 9 2009 jortel <jortel@redhat.com> - 0.3.8-1
 - Includeds Windows NTLM Transport.
 - Add missing self.messages in Client.clone().
