@@ -23,6 +23,7 @@ import suds
 import suds.metrics as metrics
 from cookielib import CookieJar
 from suds import *
+from suds.reader import DefinitionsReader
 from suds.transport import TransportError, Request
 from suds.transport.https import HttpAuthenticated
 from suds.servicedefinition import ServiceDefinition
@@ -32,7 +33,7 @@ from sudsobject import Object
 from suds.resolver import PathResolver
 from suds.builder import Builder
 from suds.wsdl import Definitions
-from suds.cache import DocumentStore
+from suds.cache import ObjectCache
 from suds.sax.document import Document
 from suds.sax.parser import Parser
 from suds.options import Options
@@ -104,9 +105,10 @@ class Client(object):
         options = Options()
         options.transport = HttpAuthenticated()
         self.options = options
-        options.cache = DocumentStore(days=1)
+        options.cache = ObjectCache(days=1)
         self.set_options(**kwargs)
-        self.wsdl = Definitions(url, options)
+        reader = DefinitionsReader(options, Definitions)
+        self.wsdl = reader.open(url)
         self.factory = Factory(self.wsdl)
         self.service = ServiceSelector(self, self.wsdl.services)
         self.sd = []
@@ -587,7 +589,6 @@ class SoapClient:
         timer.start()
         result = None
         binding = self.method.binding.input
-        binding.options = self.options
         msg = binding.get_message(self.method, args, kwargs)
         timer.stop()
         metrics.log.debug(
@@ -750,17 +751,14 @@ class SimClient(SoapClient):
     def __reply(self, reply, args, kwargs):
         """ simulate the reply """
         binding = self.method.binding.input
-        binding.options = self.options
         msg = binding.get_message(self.method, args, kwargs)
         log.debug('inject (simulated) send message:\n%s', msg)
         binding = self.method.binding.output
-        binding.options = self.options
         return self.succeeded(binding, reply)
     
     def __fault(self, reply):
         """ simulate the (fault) reply """
         binding = self.method.binding.output
-        binding.options = self.options
         if self.options.faults:
             r, p = binding.get_fault(reply)
             self.last_received(r)

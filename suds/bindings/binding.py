@@ -61,9 +61,13 @@ class Binding:
         @type wsdl: L{wsdl.Definitions}
         """
         self.wsdl = wsdl
-        self.schema = wsdl.schema
-        self.options = wsdl.options
         self.multiref = MultiRef()
+        
+    def schema(self):
+        return self.wsdl.schema
+    
+    def options(self):
+        return self.wsdl.options
         
     def unmarshaller(self, typed=True):
         """
@@ -72,7 +76,7 @@ class Binding:
         @rtype: L{UmxTyped}
         """
         if typed:
-            return UmxTyped(self.schema)
+            return UmxTyped(self.schema())
         else:
             return UmxBasic()
         
@@ -82,7 +86,7 @@ class Binding:
         @return: An L{MxLiteral} marshaller.
         @rtype: L{MxLiteral}
         """
-        return MxLiteral(self.schema)
+        return MxLiteral(self.schema(), self.options().xstq)
     
     def param_defs(self, method):
         """
@@ -114,7 +118,7 @@ class Binding:
         content = self.bodycontent(method, args, kwargs)
         body = self.body(content)
         env = self.envelope(header, body)
-        if self.options.prefixes:
+        if self.options().prefixes:
             body.normalizePrefixes()
             env.promotePrefixes()
         else:
@@ -230,7 +234,7 @@ class Binding:
         fault = soapbody.getChild('Fault')
         unmarshaller = self.unmarshaller(False)
         p = unmarshaller.process(fault)
-        if self.options.faults:
+        if self.options().faults:
             raise WebFault(p, faultroot)
         return (faultroot, p.detail)
     
@@ -329,10 +333,10 @@ class Binding:
         """
         n = 0
         content = []
-        wsse = self.options.wsse
+        wsse = self.options().wsse
         if wsse is not None:
             content.append(wsse.xml())
-        headers = self.options.soapheaders
+        headers = self.options().soapheaders
         if not isinstance(headers, (tuple,list,dict)):
             headers = (headers,)
         if len(headers) == 0:
@@ -405,7 +409,7 @@ class Binding:
                 query = ElementQuery(p.element)
             else:
                 query = TypeQuery(p.type)
-            pt = query.execute(self.schema)
+            pt = query.execute(self.schema())
             if pt is None:
                 raise TypeNotFound(query.ref)
             if p.type is not None:
@@ -441,7 +445,7 @@ class Binding:
                 query = ElementQuery(part.element)
             else:
                 query = TypeQuery(part.type)
-            pt = query.execute(self.schema)
+            pt = query.execute(self.schema())
             if pt is None:
                 raise TypeNotFound(query.ref)
             if part.type is not None:

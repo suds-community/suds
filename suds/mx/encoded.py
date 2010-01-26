@@ -87,7 +87,7 @@ class Encoded(Literal):
             return
         ns = None
         name = content.real.name
-        if self.options.xstq:
+        if self.xstq:
             ns = content.real.namespace()
         Typer.manual(node, name, ns)
         
