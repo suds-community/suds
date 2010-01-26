@@ -53,14 +53,17 @@ class Typed(Core):
     @type resolver: L{GraphResolver}
     """
 
-    def __init__(self, schema):
+    def __init__(self, schema, xstq=True):
         """
         @param schema: A schema object
         @type schema: L{xsd.schema.Schema}
+        @param xstq: The B{x}ml B{s}chema B{t}ype B{q}ualified flag indicates
+            that the I{xsi:type} attribute values should be qualified by namespace.
+        @type xstq: bool
         """
         Core.__init__(self)
         self.schema = schema
-        self.options = schema.options
+        self.xstq = xstq
         self.resolver = GraphResolver(self.schema)
     
     def reset(self):
@@ -190,7 +193,7 @@ class Typed(Core):
             return
         ns = None
         name = content.real.name
-        if self.options.xstq:
+        if self.xstq:
             ns = content.real.namespace('ns1')
         Typer.manual(node, name, ns)
     

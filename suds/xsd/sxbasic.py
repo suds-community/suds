@@ -495,9 +495,11 @@ class Import(SchemaObject):
             self.location = self.locations.get(self.ns[1])
         self.opened = False
         
-    def open(self):
+    def open(self, options):
         """
         Open and import the refrenced schema.
+        @param options: An options dictionary.
+        @type options: L{options.Options}
         @return: The referenced schema.
         @rtype: L{Schema}
         """
@@ -510,7 +512,7 @@ class Import(SchemaObject):
             if self.location is None:
                 log.debug('imported schema (%s) not-found', self.ns[1])
             else:
-                result = self.download()
+                result = self.download(options)
         log.debug('imported:\n%s', result)
         return result
     
@@ -521,17 +523,17 @@ class Import(SchemaObject):
         else:
             return self.schema.locate(self.ns)
 
-    def download(self):
+    def download(self, options):
         """ download the schema """
         url = self.location
         try:
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
-            reader = DocumentReader(self.schema.options)
+            reader = DocumentReader(options)
             d = reader.open(url)
             root = d.root()
             root.set('url', url)
-            return self.schema.instance(root, url)
+            return self.schema.instance(root, url, options)
         except TransportError:
             msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
             log.error('%s, %s', self.id, msg, exc_info=True)
@@ -559,9 +561,11 @@ class Include(SchemaObject):
             self.location = self.locations.get(self.ns[1])
         self.opened = False
         
-    def open(self):
+    def open(self, options):
         """
         Open and include the refrenced schema.
+        @param options: An options dictionary.
+        @type options: L{options.Options}
         @return: The referenced schema.
         @rtype: L{Schema}
         """
@@ -569,22 +573,22 @@ class Include(SchemaObject):
             return
         self.opened = True
         log.debug('%s, including location="%s"', self.id, self.location)
-        result = self.download()
+        result = self.download(options)
         log.debug('included:\n%s', result)
         return result
 
-    def download(self):
+    def download(self, options):
         """ download the schema """
         url = self.location
         try:
             if '://' not in url:
                 url = urljoin(self.schema.baseurl, url)
-            reader = DocumentReader(self.schema.options)
+            reader = DocumentReader(options)
             d = reader.open(url)
             root = d.root()
             root.set('url', url)
             self.__applytns(root)
-            return self.schema.instance(root, url)
+            return self.schema.instance(root, url, options)
         except TransportError:
             msg = 'include schema at (%s), failed' % url
             log.error('%s, %s', self.id, msg, exc_info=True)

@@ -33,49 +33,85 @@ except:
 log = getLogger(__name__)
 
 
-class ByteCache:
+class Cache:
     """
-    The URL caching object.
+    An object object cache.
     """
-    
-    def put(self, id, fp):
+
+    def get(self, id):
         """
-        Put an item into the cache.
-        @param id: A file ID.
+        Get a object from the cache by ID.
+        @param id: The object ID.
         @type id: str
-        @param fp: A file stream.
-        @type fp: stream
-        @return: The stream.
-        @rtype: stream
+        @return: The object, else None
+        @rtype: any
         """
         raise Exception('not-implemented')
     
-    def get(self, id):
+    def getf(self, id):
         """
-        Get an item from the cache by id.
-        @param id: A file ID.
+        Get a object from the cache by ID.
+        @param id: The object ID.
         @type id: str
-        @return: A stream when found, else None.
-        @rtype: stream
+        @return: The object, else None
+        @rtype: any
+        """
+        raise Exception('not-implemented')
+    
+    def put(self, id, object):
+        """
+        Put a object into the cache.
+        @param id: The object ID.
+        @type id: str
+        @param object: The object to add.
+        @type object: any
+        """
+        raise Exception('not-implemented')
+    
+    def putf(self, id, fp):
+        """
+        Write a fp into the cache.
+        @param id: The object ID.
+        @type id: str
+        @param fp: File pointer.
+        @type fp: file-like object.
         """
         raise Exception('not-implemented')
     
     def purge(self, id):
         """
-        Purge a file from the cache by id.
-        @param id: A file ID.
+        Purge a object from the cache by id.
+        @param id: A object ID.
         @type id: str        
         """
         raise Exception('not-implemented')
     
     def clear(self):
         """
-        Clear the cache.
+        Clear all objects from the cache.
         """
         raise Exception('not-implemented')
+    
+
+class NoCache(Cache):
+    """
+    The passthru object cache.
+    """
+    
+    def get(self, id):
+        return None
+    
+    def getf(self, id):
+        return None
+    
+    def put(self, id, object):
+        pass
+
+    def putf(self, id, fp):
+        pass
 
 
-class FileCache(ByteCache):
+class FileCache(Cache):
     """
     A file-based URL cache.
     @cvar fnprefix: The file name prefix.
@@ -89,6 +125,7 @@ class FileCache(ByteCache):
     @type location: str
     """
     fnprefix = 'suds'
+    fnsuffix = 'gcf'
     units = ('months', 'weeks', 'days', 'hours', 'minutes', 'seconds')
     
     def __init__(self, location=None, **duration):
@@ -100,7 +137,6 @@ class FileCache(ByteCache):
             The duration may be: (months|weeks|days|hours|minutes|seconds).
         @type duration: {unit:value}
         """
-        self.fnsuffix = 'xml'
         if location is None:
             location = os.path.join(tmp(), 'suds')
         self.location = location
@@ -142,25 +178,45 @@ class FileCache(ByteCache):
             log.debug(self.location, exc_info=1)
         return self
     
-    def put(self, id, fp):
+    def put(self, id, bfr):
+        try:
+            fn = self.__fn(id)
+            f = self.open(fn, 'w')
+            f.write(bfr)
+            f.close()
+            return bfr
+        except:
+            log.debug(id, exc_info=1)
+            return fp
+        
+    def putf(self, id, fp):
         try:
             fn = self.__fn(id)
             f = self.open(fn, 'w')
             f.write(fp.read())
             f.close()
-            return open(fn)
+            return fp
         except:
             log.debug(id, exc_info=1)
             return fp
-    
+        
     def get(self, id):
+        try:
+            f = self.getf(id)
+            bfr = f.read()
+            f.close()
+            return bfr
+        except:
+            pass
+    
+    def getf(self, id):
         try:
             fn = self.__fn(id)
             self.validate(fn)
             return self.open(fn)
         except:
             pass
-        
+
     def validate(self, fn):
         """
         Validate that the file has not expired based on the I{duration}.
@@ -199,91 +255,35 @@ class FileCache(ByteCache):
         return open(fn, *args)
     
     def __fn(self, id):
-        fn = '%s-%s.%s' % (self.fnprefix, abs(hash(id)), self.fnsuffix)
+        if hasattr(id, 'name') and hasattr(id, 'suffix'):
+            name = id.name
+            suffix = id.suffix
+        else:
+            name = id
+            suffix = self.fnsuffix
+        fn = '%s-%s.%s' % (self.fnprefix, abs(hash(name)), suffix)
         return os.path.join(self.location, fn)
 
 
-class Cache:
+class ObjectCache(FileCache):
     """
-    The XML document cache.
+    Provides pickled object caching.
+    @cvar protocol: The pickling protocol.
+    @type protocol: int
     """
-
-    def get(self, id):
-        """
-        Get a document from the store by ID.
-        @param id: The document ID.
-        @type id: str
-        @return: The document, else None
-        @rtype: I{Document}
-        """
-        raise Exception('not-implemented')
-    
-    def put(self, id, document):
-        """
-        Put a document into the store.
-        @param id: The document ID.
-        @type id: str
-        @param document: The document to add.
-        @type document: I{Document}
-        """
-        raise Exception('not-implemented')
-    
-    def purge(self, id):
-        """
-        Purge a document from the cache by id.
-        @param id: A document ID.
-        @type id: str        
-        """
-        raise Exception('not-implemented')
-    
-    def clear(self):
-        """
-        Clear all documents from the cache.
-        """
-        raise Exception('not-implemented')
-    
-
-class NoCache(Cache):
-    """
-    The passthru document cache.
-    """
-    
-    def get(self, id):
-        return None
-    
-    def put(self, id, document):
-        pass
-    
-
-class DocumentStore(Cache):
-    
-    def __init__(self, location=None, **duration):
-        """
-        @param location: The directory for the cached documents.
-        @type location: str
-        @param duration: The cached file duration which defines how
-            long the document will be cached.  A duration=0 means forever.
-            The duration may be: (months|weeks|days|hours|minutes|seconds).
-        @type duration: {unit:value}
-        """
-        cache = FileCache(location, **duration)
-        cache.fnsuffix = 'pxd'
-        self.cache = cache
+    protocol = 2
     
     def get(self, id):
         try:
-            fp = self.cache.get(id)
+            fp = FileCache.getf(self, id)
             if fp is None:
                 return None
             else:
                 return pickle.load(fp)
         except:
-            self.cache.purge(id)
+            FileCache.purge(self, id)
     
-    def put(self, id, document):
-        ostr = StringIO()
-        pickle.dump(document, ostr)
-        istr = StringIO(ostr.getvalue())
-        fp = self.cache.put(id, istr)
-        fp.close()
-        return document
+    def put(self, id, object):
+        bfr = pickle.dumps(object, self.protocol)
+        FileCache.put(self, id, bfr)
+        return object

@@ -84,7 +84,7 @@ class Encoded(RPC):
     """
 
     def marshaller(self):
-        return MxEncoded(self.schema)
+        return MxEncoded(self.schema())
 
     def unmarshaller(self, typed=True):
         """
@@ -93,6 +93,6 @@ class Encoded(RPC):
         @rtype: L{UmxTyped}
         """
         if typed:
-            return UmxEncoded(self.schema)
+            return UmxEncoded(self.schema())
         else:
             return RPC.unmarshaller(self, typed)
