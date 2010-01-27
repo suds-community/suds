@@ -299,7 +299,7 @@ class Import(WObject):
         self.ns = root.get('namespace')
         self.imported = None
         pmd = self.__metadata__.__print__
-        pmd.wrappers['imported'] = getid
+        pmd.wrappers['imported'] = self.getid
         
     def load(self, definitions):
         """ Load the object by opening the URL """
