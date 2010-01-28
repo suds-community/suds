@@ -271,6 +271,9 @@ class Definitions(WObject):
         d = self.__dict__.copy()
         del d['options']
         return d
+    
+    def __repr__(self):
+        return 'Definitions (id=%s)' % self.id
 
 
 class Import(WObject):
@@ -284,9 +287,6 @@ class Import(WObject):
     @type imported: L{Definitions}
     """
     
-    def getid(x):
-        return x.id
-    
     def __init__(self, root, definitions):
         """
         @param root: An XML root element.
@@ -299,7 +299,7 @@ class Import(WObject):
         self.ns = root.get('namespace')
         self.imported = None
         pmd = self.__metadata__.__print__
-        pmd.wrappers['imported'] = self.getid
+        pmd.wrappers['imported'] = repr
         
     def load(self, definitions):
         """ Load the object by opening the URL """
