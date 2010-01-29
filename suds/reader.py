@@ -106,9 +106,10 @@ class DefinitionsReader:
         """
         Open a WSDL at the specified I{url}.
         First, the WSDL attempted to be retrieved from
-        the I{object cache}.  If not found, it is downloaded and
-        instantiated using the I{fn} constructor.  The result is added
-        to the cache for the next open().
+        the I{object cache}.  After unpickled from the cache, the
+        I{options} attribute is restored.
+        If not found, it is downloaded and instantiated using the 
+        I{fn} constructor and added to the cache for the next open().
         @param url: A WSDL url.
         @type url: str.
         @return: The WSDL object.
@@ -120,5 +121,8 @@ class DefinitionsReader:
         if d is None:
             d = self.fn(url, self.options)
             cache.put(id, d)
-        d.options = self.options
+        else:
+            d.options = self.options
+            for imp in d.imports:
+                imp.imported.options = self.options
         return d

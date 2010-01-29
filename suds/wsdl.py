@@ -268,9 +268,12 @@ class Definitions(WObject):
                         body.wrapped = True
                         
     def __getstate__(self):
-        d = self.__dict__.copy()
-        del d['options']
-        return d
+        nopickle = ('options',)
+        state = self.__dict__.copy()
+        for k in nopickle:
+            if k in state:
+                del state[k]
+        return state
     
     def __repr__(self):
         return 'Definitions (id=%s)' % self.id
