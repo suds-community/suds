@@ -75,6 +75,13 @@ class DocumentReader:
         return d
     
     def download(self, url):
+        """
+        Download the docuemnt.
+        @param url: A document url.
+        @type url: str.
+        @return: A file pointer to the docuemnt.
+        @rtype: file-like
+        """
         store = DocumentStore()
         fp = store.open(url)
         if fp is None:
