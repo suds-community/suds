@@ -21,6 +21,7 @@ Contains xml document reader classes.
 
 from suds.sax.parser import Parser
 from suds.transport import Request
+from suds.store import DocumentStore
 from logging import getLogger
 
 
@@ -69,11 +70,17 @@ class DocumentReader:
         cache = self.options.cache
         d = cache.get(id)
         if d is None:
-            fp = self.options.transport.open(Request(url))
-            sax = Parser()
-            d = sax.parse(file=fp)
+            d = self.download(url)
             cache.put(id, d)
         return d
+    
+    def download(self, url):
+        store = DocumentStore()
+        fp = store.open(url)
+        if fp is None:
+            fp = self.options.transport.open(Request(url))
+        sax = Parser()
+        return sax.parse(file=fp)
 
 
 class DefinitionsReader:
