@@ -257,6 +257,19 @@ class DictAppender(Appender):
         for item in d.items():
             cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
+            
+
+class ElementWrapper(Element):
+    """
+    Element wrapper.
+    """
+    
+    def __init__(self, content):
+        Element.__init__(self, content.name, content.parent)
+        self.__content = content
+        
+    def str(self, indent=0):
+        return self.__content.str(indent)
 
 
 class ElementAppender(Appender):
@@ -267,8 +280,8 @@ class ElementAppender(Appender):
     def append(self, parent, content):
         if content.tag.startswith('_'):
             raise Exception('raw XML not valid as attribute value')
-        child = deepcopy(content.value)
-        parent.append(child.detach())
+        child = ElementWrapper(content.value)
+        parent.append(child)
 
 
 class ListAppender(Appender):
