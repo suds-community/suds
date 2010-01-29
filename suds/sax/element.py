@@ -820,11 +820,23 @@ class Element:
         @return: A flat list of nodes.
         @rtype: [L{Element},..]
         """
-        branch = []
+        branch = [self]
         for c in self.children:
-            branch.append(c)
             branch += c.branch()
         return branch
+    
+    def ancestors(self):
+        """
+        Get a list of ancestors.
+        @return: A list of ancestors.
+        @rtype: [L{Element},..]
+        """
+        ancestors = []
+        p = self.parent
+        while p is not None:
+            ancestors.append(p)
+            p = p.parent
+        return ancestors
     
     def walk(self, visitor):
         """
@@ -955,7 +967,7 @@ class PrefixNormalizer:
         @rtype: set
         """
         s = set()
-        for n in self.branch:
+        for n in self.branch + self.node.ancestors():
             if self.permit(n.expns):
                 s.add(n.expns)
             s = s.union(self.pset(n))
