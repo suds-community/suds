@@ -558,8 +558,37 @@ class DocumentStore:
         @return: A file pointer to the document.
         @rtype: StringIO
         """
-        protocol, location = url.split('://', 1)
+        protocol, location = self.split(url)
         if protocol == self.protocol:
-            return StringIO(self.store[location])
+            return self.find(location)
         else:
             return None
+        
+    def find(self, location):
+        """
+        Find the specified location in the store.
+        @param location: The I{location} part of a URL.
+        @type location: str
+        @return: An input stream to the document.
+        @rtype: StringIO
+        """
+        try:
+            content = self.store[location]
+            return StringIO(content)
+        except:
+            reason = 'location "%s" not in document store' % location
+            raise Exception, reason
+        
+    def split(self, url):
+        """
+        Split the url into I{protocol} and I{location}
+        @param url: A URL.
+        @param url: str
+        @return: (I{url}, I{location})
+        @rtype: tuple
+        """
+        parts = url.split('://', 1)
+        if len(parts) == 2:
+            return parts
+        else:
+            return (None, url)
