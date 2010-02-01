@@ -54,8 +54,11 @@ class HttpAuthenticated(HttpTransport):
         """
         HttpTransport.__init__(self, **kwargs)
         self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
-        self.handler = u2.HTTPBasicAuthHandler(self.pm)
-        self.urlopener = u2.build_opener(self.handler)
+        
+    def u2handlers(self):
+            handlers = HttpTransport.u2handlers(self)
+            handlers.append(u2.HTTPBasicAuthHandler(self.pm))
+            return handlers
         
     def open(self, request):
         credentials = self.credentials()
@@ -76,14 +79,13 @@ class WindowsHttpAuthenticated(HttpAuthenticated):
     @ivar handler: The authentication handler.
     @author: Christopher Bess
     """
-    
-    def __init__(self, **kwargs):
-        # try to import ntlm support
+        
+    def u2handlers(self):
+        # try to import ntlm support  
         try:
             from ntlm import HTTPNtlmAuthHandler
         except ImportError:
-            raise Exception("Cannot import python-ntlm module")    
-        HttpTransport.__init__(self, **kwargs)
-        self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
-        self.handler = HTTPNtlmAuthHandler.HTTPNtlmAuthHandler(self.pm)
-        self.urlopener = u2.build_opener(self.handler)
+            raise Exception("Cannot import python-ntlm module")
+        handlers = HttpTransport.u2handlers(self)
+        handlers.append(HTTPNtlmAuthHandler.HTTPNtlmAuthHandler(self.pm))
+        return handlers
