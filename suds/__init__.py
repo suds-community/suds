@@ -27,7 +27,7 @@ import sys
 #
 
 __version__ = '0.3.9'
-__build__="(beta) R654-20100201"
+__build__="(beta) R655-20100201"
 
 #
 # Exceptions

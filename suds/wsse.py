@@ -22,7 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     from hashlib import md5
@@ -83,6 +83,14 @@ class Security(Object):
 class Token(Object):
     """ I{Abstract} security token. """
     
+    @classmethod
+    def now(cls):
+        return datetime.now()
+    
+    @classmethod
+    def sysdate(cls):
+        return cls.now().isoformat()
+    
     def __init__(self):
             Object.__init__(self)
 
@@ -99,14 +107,6 @@ class UsernameToken(Token):
     @ivar created: The token created.
     @type created: L{datetime}
     """
-    
-    @classmethod
-    def now(cls):
-        return datetime.now()
-    
-    @classmethod
-    def sysdate(cls):
-        return cls.now().isoformat()
 
     def __init__(self, username=None, password=None):
         """
@@ -133,7 +133,7 @@ class UsernameToken(Token):
             s = []
             s.append(self.username)
             s.append(self.password)
-            s.append(self.sysdate())
+            s.append(Token.sysdate())
             m = md5()
             m.update(':'.join(s))
             self.nonce = m.hexdigest()
@@ -148,7 +148,7 @@ class UsernameToken(Token):
         @type dt: L{datetime}
         """
         if dt is None:
-            self.created = self.now()
+            self.created = Token.now()
         else:
             self.created = dt
         
@@ -174,4 +174,33 @@ class UsernameToken(Token):
             n = Element('Created', ns=wsuns)
             n.setText(self.created.isoformat())
             root.append(n)
+        return root
+
+
+class Timestamp(Token):
+    """
+    Represents the I{Timestamp} WS-Secuirty token.
+    @ivar created: The token created.
+    @type created: L{datetime}
+    @ivar expires: The token expires.
+    @type expires: L{datetime}
+    """
+
+    def __init__(self, validity=90):
+        """
+        @param validity: The time in seconds.
+        @type validity: int
+        """
+        Token.__init__(self)
+        self.created = Token.now()
+        self.expires = self.created + timedelta(seconds=validity)
+        
+    def xml(self):
+        root = Element("Timestamp", ns=wsuns)
+        created = Element('Created', ns=wsuns)
+        created.setText(self.created.isoformat())
+        expires = Element('Expires', ns=wsuns)
+        expires.setText(self.expires.isoformat())
+        root.append(created)
+        root.append(expires)
         return root
