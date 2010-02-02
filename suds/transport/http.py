@@ -168,13 +168,20 @@ class HttpAuthenticated(HttpTransport):
     credentials on every http request.
     """
     
+    def open(self, request):
+        self.addcredentials(request)
+        return HttpTransport.open(self, request)
+    
     def send(self, request):
+        self.addcredentials(request)
+        return HttpTransport.send(self, request)
+    
+    def addcredentials(self, request):
         credentials = self.credentials()
         if not (None in credentials):
             encoded = base64.encodestring(':'.join(credentials))
             basic = 'Basic %s' % encoded[:-1]
             request.headers['Authorization'] = basic
-        return HttpTransport.send(self, request)
                  
     def credentials(self):
         return (self.options.username, self.options.password)
