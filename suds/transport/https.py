@@ -55,21 +55,28 @@ class HttpAuthenticated(HttpTransport):
         HttpTransport.__init__(self, **kwargs)
         self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
         
-    def u2handlers(self):
-            handlers = HttpTransport.u2handlers(self)
-            handlers.append(u2.HTTPBasicAuthHandler(self.pm))
-            return handlers
-        
     def open(self, request):
+        self.addcredentials(request)
+        return  HttpTransport.open(self, request)
+    
+    def send(self, request):
+        self.addcredentials(request)
+        return  HttpTransport.send(self, request)
+    
+    def addcredentials(self, request):
         credentials = self.credentials()
         if not (None in credentials):
             u = credentials[0]
             p = credentials[1]
             self.pm.add_password(None, request.url, u, p)
-        return  HttpTransport.open(self, request)
     
     def credentials(self):
         return (self.options.username, self.options.password)
+    
+    def u2handlers(self):
+            handlers = HttpTransport.u2handlers(self)
+            handlers.append(u2.HTTPBasicAuthHandler(self.pm))
+            return handlers
     
     
 class WindowsHttpAuthenticated(HttpAuthenticated):
