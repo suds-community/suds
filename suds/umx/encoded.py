@@ -54,10 +54,7 @@ class Encoded(Typed):
         #
         aty = content.aty
         if aty is not None:
-            if len(content.data):
-                content.data = content.data[0]
-            else:
-                content.data = []
+            self.promote(content)
         return Typed.end(self, content)
     
     def postprocess(self, content):
@@ -97,7 +94,7 @@ class Encoded(Typed):
         (child nodes) of the array.  Each element (node) in the array 
         that does not have an explicit xsi:type attribute is given one
         based on the I{arrayType}.
-        @param content: A array content.
+        @param content: An array content.
         @type content: L{Content}
         @param xty: The XSI type reference.
         @type xty: str
@@ -114,4 +111,18 @@ class Encoded(Typed):
                 attr = ':'.join((ns[0], name))
                 child.set(attr, xty)
         return self
-                
+
+    def promote(self, content):
+        """
+        Promote (replace) the content.data with the first attribute
+        of the current content.data that is a I{list}.  Note: the 
+        content.data may be empty or contain only _x attributes.
+        In either case, the content.data is assigned an empty list.
+        @param content: An array content.
+        @type content: L{Content}
+        """
+        for n,v in content.data:
+            if isinstance(v, list):
+                content.data = v
+                return
+        content.data = []
