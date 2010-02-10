@@ -187,7 +187,7 @@ class FileCache(Cache):
             return bfr
         except:
             log.debug(id, exc_info=1)
-            return fp
+            return bfr
         
     def putf(self, id, fp):
         try:
