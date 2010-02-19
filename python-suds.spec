@@ -56,7 +56,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Thu Dec 17 2009 jortel <jortel@redhat.com> - 0.3.9-1
- - Bumped python requires to 2.4
+- Bumped python requires to 2.4
+- Replaced stream-based caching in the transport package with document-based caching.
+- Caches pickled Document objects instead of XML text. 2x Faster!
+- No more SAX parsing exceptions on damaged or incomplete cached files. 
+- Cached WSDL objects. Entire Definitions object including contained Schema object cached via pickle.
+- Copy of soap encoding schema packaged with suds.
+- Refactor Transports to use ProxyHandler instead of urllib2.Request.set_proxy().
+- Added WSSE enhancements <Timestamp/> and <Expires/> support. See: Timestamp token. 
+- Fixed Tickets: #256, #291, #294, #295, #296
+
 * Wed Dec 9 2009 jortel <jortel@redhat.com> - 0.3.8-1
 - Includeds Windows NTLM Transport.
 - Add missing self.messages in Client.clone().
