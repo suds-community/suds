@@ -101,11 +101,11 @@ try:
     url = 'http://jira.atlassian.com/rpc/soap/jirasoapservice-v2?wsdl'
     start(url+'  ** cloned **')
     client = Client(url).clone()
-    print client
+    print '**clone**\n%s' % client
     token = client.service.login('soaptester', 'soaptester')
-    print 'token="%s"' % token
+    print '**clone** token="%s"' % token
     user = client.service.getUser(token, 'soaptester')
-    print 'user="%s"' % user
+    print '**clone** user="%s"' % user
 except WebFault, f:
     errors += 1
     print f
