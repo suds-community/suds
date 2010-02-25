@@ -225,6 +225,14 @@ class SchemaObject(object):
         """
         return False
     
+    def xslist(self):
+        """
+        Get whether this is an <xs:list/>
+        @return: True if any, else False
+        @rtype: boolean
+        """
+        return False
+    
     def all(self):
         """
         Get whether this is an <xs:all/>

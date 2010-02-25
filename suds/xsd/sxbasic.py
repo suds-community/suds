@@ -188,7 +188,7 @@ class Simple(SchemaObject):
     """
 
     def childtags(self):
-        return ('restriction', 'any',)
+        return ('restriction', 'any', 'list',)
     
     def enum(self):
         for child, ancestry in self.children():
@@ -210,6 +210,21 @@ class Simple(SchemaObject):
             if c.restriction():
                 return True
         return False
+    
+
+class List(SchemaObject):
+    """
+    Represents an (xsd) schema <xs:list/> node
+    """
+
+    def childtags(self):
+        return ()
+
+    def description(self):
+        return ('name',)
+    
+    def xslist(self):
+        return True
 
    
 class Restriction(SchemaObject):
@@ -687,7 +702,8 @@ class Factory:
         'complexType' : Complex,
         'group' : Group,
         'attributeGroup' : AttributeGroup, 
-        'simpleType' : Simple, 
+        'simpleType' : Simple,
+        'list' : List,
         'element' : Element,
         'attribute' : Attribute,
         'sequence' : Sequence,
