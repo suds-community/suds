@@ -310,8 +310,8 @@ class Import(WObject):
         log.debug('importing (%s)', url)
         if '://' not in url:
             url = urljoin(definitions.url, url)
-        reader = DefinitionsReader(definitions.options, Definitions)
-        d = reader.open(url)
+        options = definitions.options
+        d = Definitions(url, options)
         if d.root.match(Definitions.Tag, wsdlns):
             self.import_definitions(definitions, d)
             return
