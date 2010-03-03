@@ -16,6 +16,7 @@
 
 import sys
 sys.path.append('../')
+import unittest
 from suds.sax.date import Timezone as Tz
 from suds.xsd.sxbuiltin import *
 from unittest import TestCase
