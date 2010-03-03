@@ -22,6 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
+from suds.sax.date import UTC
 from datetime import datetime, timedelta
 
 try:
@@ -88,8 +89,13 @@ class Token(Object):
         return datetime.now()
     
     @classmethod
+    def utc(cls):
+        return datetime.utcnow()
+    
+    @classmethod
     def sysdate(cls):
-        return cls.now().isoformat()
+        utc = UTC()
+        return str(utc)
     
     def __init__(self):
             Object.__init__(self)
@@ -144,11 +150,11 @@ class UsernameToken(Token):
         """
         Set I{created}.
         @param dt: The created date & time.
-            Set as datetime.now() when I{None}.
+            Set as datetime.utc() when I{None}.
         @type dt: L{datetime}
         """
         if dt is None:
-            self.created = Token.now()
+            self.created = Token.utc()
         else:
             self.created = dt
         
@@ -172,7 +178,7 @@ class UsernameToken(Token):
             root.append(n)
         if self.created is not None:
             n = Element('Created', ns=wsuns)
-            n.setText(self.created.isoformat())
+            n.setText(str(UTC(self.created)))
             root.append(n)
         return root
 
@@ -192,15 +198,15 @@ class Timestamp(Token):
         @type validity: int
         """
         Token.__init__(self)
-        self.created = Token.now()
+        self.created = Token.utc()
         self.expires = self.created + timedelta(seconds=validity)
         
     def xml(self):
         root = Element("Timestamp", ns=wsuns)
         created = Element('Created', ns=wsuns)
-        created.setText(self.created.isoformat())
+        created.setText(str(UTC(self.created)))
         expires = Element('Expires', ns=wsuns)
-        expires.setText(self.expires.isoformat())
+        expires.setText(str(UTC(self.expires)))
         root.append(created)
         root.append(expires)
         return root

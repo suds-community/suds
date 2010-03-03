@@ -132,6 +132,7 @@ class Time:
         @type adjusted: boolean
         @raise ValueError: When I{time} is invalid.
         """
+        self.tz = Timezone()
         if isinstance(time, dt.time):
             self.time = time
             return
@@ -245,7 +246,7 @@ class Time:
         if len(s) == len('-00:00'):
             return int(s[:3])
         if len(s) == 0:
-            return Timezone.local
+            return self.tz.local
         if len(s) == 1:
             return 0
         raise Exception()
@@ -255,7 +256,10 @@ class Time:
     
     def __unicode__(self):
         time = self.time.isoformat()
-        return '%s%+.2d:00' % (time, Timezone.local)
+        if self.tz.local:
+            return '%s%+.2d:00' % (time, self.tz.local)
+        else:
+            return '%sZ' % time
 
 
 class DateTime(Date,Time):
@@ -319,6 +323,18 @@ class DateTime(Date,Time):
         return 'T'.join(s)
     
     
+class UTC(DateTime):
+    """
+    Represents current UTC time.
+    """
+    
+    def __init__(self, date=None):
+        if date is None:
+            date = dt.datetime.utcnow()
+        DateTime.__init__(self, date)
+        self.tz.local = 0
+    
+    
 class Timezone:
     """
     Timezone object used to do TZ conversions
@@ -327,9 +343,11 @@ class Timezone:
     @cvar patten: The regex patten to match TZ.
     @type patten: L{re.RegexObject}
     """
-
-    local = ( 0-time.timezone/60/60 )
+    
     pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
+
+    def __init__(self):
+        self.local = ( 0-time.timezone/60/60 )
     
     @classmethod
     def split(cls, s):
