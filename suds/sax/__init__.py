@@ -69,6 +69,10 @@ class Namespace:
         return (p, u)
     
     @classmethod
+    def none(cls, ns):
+        return ( ns == cls.default )
+    
+    @classmethod
     def xsd(cls, ns):
         try:
             return cls.w3(ns) and ns[1].endswith('XMLSchema')

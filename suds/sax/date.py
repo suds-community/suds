@@ -120,6 +120,8 @@ class Time:
         - HH:MI:SS.ms(z|Z)
         - HH:MI:SS(+|-)06:00
         - HH:MI:SS.ms(+|-)06:00
+    @ivar tz: The timezone
+    @type tz: L{Timezone}
     @ivar date: The object value.
     @type date: B{datetime}.I{time}
     """
@@ -181,8 +183,7 @@ class Time:
         """
         if hasattr(self, 'offset'):
             today = dt.date.today()
-            tz = Timezone()
-            delta = Timezone.adjustment(self.offset)
+            delta = self.tz.adjustment(self.offset)
             d = dt.datetime.combine(today, self.time)
             d = ( d + delta )
             self.time = d.time()
@@ -303,8 +304,7 @@ class DateTime(Date,Time):
         """
         if not hasattr(self, 'offset'):
             return
-        tz = Timezone()
-        delta = Timezone.adjustment(self.offset)
+        delta = self.tz.adjustment(self.offset)
         try:
             d = ( self.datetime + delta )
             self.datetime = d
@@ -345,9 +345,13 @@ class Timezone:
     """
     
     pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
+    
+    LOCAL = ( 0-time.timezone/60/60 )
 
-    def __init__(self):
-        self.local = ( 0-time.timezone/60/60 )
+    def __init__(self, offset=None):
+        if offset is None:
+            offset = self.LOCAL
+        self.local = offset
     
     @classmethod
     def split(cls, s):
@@ -363,13 +367,12 @@ class Timezone:
             return (s,)
         x = m.start(0)
         return (s[:x], s[x:])
-    
-    @classmethod
-    def adjustment(cls, offset):
+
+    def adjustment(self, offset):
         """
         Get the adjustment to the I{local} TZ.
         @return: The delta between I{offset} and local TZ.
         @rtype: B{datetime}.I{timedelta}
         """
-        delta = ( cls.local - offset )
+        delta = ( self.local - offset )
         return dt.timedelta(hours=delta)
