@@ -206,14 +206,19 @@ class Binding:
                     continue
             resolved = rt.resolve(nobuiltin=True)
             sobject = unmarshaller.process(node, resolved)
-            if rt.unbounded():
-                value = getattr(composite, tag, None)
-                if value is None:
+            value = getattr(composite, tag, None)
+            if value is None:
+                if rt.unbounded():
                     value = []
                     setattr(composite, tag, value)
-                value.append(sobject)
+                    value.append(sobject)
+                else:
+                    setattr(composite, tag, sobject)
             else:
-                setattr(composite, tag, sobject)
+                if not isinstance(value, list):
+                    value = [value,]
+                    setattr(composite, tag, value)
+                value.append(sobject)          
         return composite
     
     def get_fault(self, reply):
