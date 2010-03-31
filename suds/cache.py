@@ -19,6 +19,7 @@ Contains basic caching classes.
 """
 
 import os
+import suds
 from tempfile import gettempdir as tmp
 from suds.transport import *
 from suds.sax.parser import Parser
@@ -141,6 +142,7 @@ class FileCache(Cache):
         self.location = location
         self.duration = (None, 0)
         self.setduration(**duration)
+        self.checkversion()
         
     def fnsuffix(self):
         """
@@ -260,6 +262,21 @@ class FileCache(Cache):
         """
         self.mktmp()
         return open(fn, *args)
+    
+    def checkversion(self):
+        path = os.path.join(self.location, 'version')
+        try:
+            
+            f = open(path)
+            version = f.read()
+            f.close()
+            if version != suds.__version__:
+                raise Exception()
+        except:
+            self.clear()
+            f = open(path, 'w')
+            f.write(suds.__version__)
+            f.close()        
     
     def __fn(self, id):
         name = id
