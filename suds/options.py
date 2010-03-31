@@ -85,9 +85,14 @@ class Options(Skin):
                 - type: I{bool}
                 - default: False
         - B{autoblend} - Flag that ensures that the schema(s) defined within the
-            WSDL import each other.  B{**Experimental**}.
+            WSDL import each other.
                 - type: I{bool}
                 - default: False
+        - B{cachingpolicy} - The caching policy.
+                - type: I{int}
+                  - 0 = Cache XML documents.
+                  - 1 = Cache WSDL (pickled) object.
+                - default: 0
     """    
     def __init__(self, **kwargs):
         domain = __name__
@@ -105,5 +110,6 @@ class Options(Skin):
             Definition('prefixes', bool, True),
             Definition('retxml', bool, False),
             Definition('autoblend', bool, False),
+            Definition('cachingpolicy', int, 0),
         ]
         Skin.__init__(self, domain, definitions, kwargs)

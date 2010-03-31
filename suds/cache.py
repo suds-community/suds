@@ -21,6 +21,8 @@ Contains basic caching classes.
 import os
 from tempfile import gettempdir as tmp
 from suds.transport import *
+from suds.sax.parser import Parser
+from suds.sax.element import Element
 from datetime import datetime as dt
 from datetime import timedelta
 from cStringIO import StringIO
@@ -115,8 +117,6 @@ class FileCache(Cache):
     """
     A file-based URL cache.
     @cvar fnprefix: The file name prefix.
-    @type fnprefix: str
-    @ivar fnsuffix: The file name suffix.
     @type fnsuffix: str
     @ivar duration: The cached file duration which defines how
         long the file will be cached.
@@ -125,7 +125,6 @@ class FileCache(Cache):
     @type location: str
     """
     fnprefix = 'suds'
-    fnsuffix = 'gcf'
     units = ('months', 'weeks', 'days', 'hours', 'minutes', 'seconds')
     
     def __init__(self, location=None, **duration):
@@ -142,6 +141,14 @@ class FileCache(Cache):
         self.location = location
         self.duration = (None, 0)
         self.setduration(**duration)
+        
+    def fnsuffix(self):
+        """
+        Get the file name suffix
+        @return: The suffix
+        @rtype: str
+        """
+        return 'gcf'
         
     def setduration(self, **duration):
         """
@@ -255,14 +262,34 @@ class FileCache(Cache):
         return open(fn, *args)
     
     def __fn(self, id):
-        if hasattr(id, 'name') and hasattr(id, 'suffix'):
-            name = id.name
-            suffix = id.suffix
-        else:
-            name = id
-            suffix = self.fnsuffix
-        fn = '%s-%s.%s' % (self.fnprefix, abs(hash(name)), suffix)
+        name = id
+        suffix = self.fnsuffix()
+        fn = '%s-%s.%s' % (self.fnprefix, name, suffix)
         return os.path.join(self.location, fn)
+    
+    
+class DocumentCache(FileCache):
+    """
+    Provides xml document caching.
+    """
+    
+    def fnsuffix(self):
+        return 'xml'
+    
+    def get(self, id):
+        try:
+            fp = FileCache.getf(self, id)
+            if fp is None:
+                return None
+            p = Parser()
+            return p.parse(fp)
+        except:
+            FileCache.purge(self, id)
+    
+    def put(self, id, object):
+        if isinstance(object, Element):
+            FileCache.put(self, id, str(object))
+        return object
 
 
 class ObjectCache(FileCache):
@@ -272,6 +299,9 @@ class ObjectCache(FileCache):
     @type protocol: int
     """
     protocol = 2
+    
+    def fnsuffix(self):
+        return 'px'
     
     def get(self, id):
         try:

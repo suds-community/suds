@@ -21,6 +21,7 @@ Contains xml document reader classes.
 
 from suds.sax.parser import Parser
 from suds.transport import Request
+from suds.cache import Cache, NoCache
 from suds.store import DocumentStore
 from logging import getLogger
 
@@ -28,31 +29,34 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-class ObjectId(object):
-    
-    def __init__(self, name, suffix):
-        self.name = name
-        self.suffix = suffix
-
-
-class DocumentReader:
+class Reader:
     """
-    The XML document reader provides an integration
-    between the SAX L{Parser} and the document cache.
-    @cvar suffix: The cache file suffix.
-    @type suffix: str
+    The reader provides integration with cache.
     @ivar options: An options object.
     @type options: I{Options}
     """
-    
-    suffix = 'pxd'
-    
+
     def __init__(self, options):
         """
         @param options: An options object.
         @type options: I{Options}
         """
         self.options = options
+
+    def mangle(self, name, x):
+        """
+        Mangle the name by hashing the I{name} and appending I{x}.
+        @return: the mangled name.
+        """
+        h = abs(hash(name))
+        return '%s-%s' % (h, x)
+
+
+class DocumentReader(Reader):
+    """
+    The XML document reader provides an integration
+    between the SAX L{Parser} and the document cache.
+    """
     
     def open(self, url):
         """
@@ -66,8 +70,8 @@ class DocumentReader:
         @return: The specified XML document.
         @rtype: I{Document}
         """
-        id = ObjectId(url, self.suffix)
-        cache = self.options.cache
+        cache = self.cache()
+        id = self.mangle(url, 'document')
         d = cache.get(id)
         if d is None:
             d = self.download(url)
@@ -88,22 +92,27 @@ class DocumentReader:
             fp = self.options.transport.open(Request(url))
         sax = Parser()
         return sax.parse(file=fp)
+    
+    def cache(self):
+        """
+        Get the cache.
+        @return: The I{options} when I{cachingpolicy} = B{0}.
+        @rtype: L{Cache}
+        """
+        if self.options.cachingpolicy == 0:
+            return self.options.cache
+        else:
+            return NoCache()
 
 
-class DefinitionsReader:
+class DefinitionsReader(Reader):
     """
     The WSDL definitions reader provides an integration
     between the Definitions and the object cache.
-    @cvar suffix: The cache file suffix.
-    @type suffix: str
-    @ivar options: An options object.
-    @type options: I{Options}
     @ivar fn: A factory function (constructor) used to
         create the object not found in the cache.
     @type fn: I{Constructor}
     """
-    
-    suffix = 'pw'
     
     def __init__(self, options, fn):
         """
@@ -113,7 +122,7 @@ class DefinitionsReader:
             create the object not found in the cache.
         @type fn: I{Constructor}
         """
-        self.options = options
+        Reader.__init__(self, options)
         self.fn = fn
     
     def open(self, url):
@@ -129,8 +138,8 @@ class DefinitionsReader:
         @return: The WSDL object.
         @rtype: I{Definitions}
         """
-        id = ObjectId(url, self.suffix)
-        cache = self.options.cache
+        cache = self.cache()
+        id = self.mangle(url, 'wsdl')
         d = cache.get(id)
         if d is None:
             d = self.fn(url, self.options)
@@ -140,3 +149,14 @@ class DefinitionsReader:
             for imp in d.imports:
                 imp.imported.options = self.options
         return d
+
+    def cache(self):
+        """
+        Get the cache.
+        @return: The I{options} when I{cachingpolicy} = B{1}.
+        @rtype: L{Cache}
+        """
+        if self.options.cachingpolicy == 1:
+            return self.options.cache
+        else:
+            return NoCache()
