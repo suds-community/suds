@@ -135,7 +135,7 @@ class Core:
         @param content: The current content being unmarshalled.
         @type content: L{Content}
         """
-        for child in content.node.children:
+        for child in content.node:
             cont = Content(child)
             cval = self.append(cont)
             key = reserved.get(child.name, child.name)
