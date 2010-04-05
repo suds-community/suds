@@ -22,6 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sax import Namespace
 from suds.sax.parser import Parser
+from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
 from suds.mx import Content
@@ -109,8 +110,8 @@ class Binding:
         @type args: list
         @param kwargs: Named (keyword) args for the method invoked.
         @type kwargs: dict
-        @return: The soap message.
-        @rtype: str
+        @return: The soap envelope.
+        @rtype: L{Document}
         """
 
         content = self.headercontent(method)
@@ -123,7 +124,7 @@ class Binding:
             env.promotePrefixes()
         else:
             env.refitPrefixes()
-        return env
+        return Document(env)
     
     def get_reply(self, method, reply):
         """

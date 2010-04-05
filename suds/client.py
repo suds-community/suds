@@ -640,7 +640,7 @@ class SoapClient:
         @rtype: dict
         """
         action = self.method.soap.action
-        stock = { 'Content-Type' : 'text/xml', 'SOAPAction': action }
+        stock = { 'Content-Type' : 'text/xml; charset=utf-8', 'SOAPAction': action }
         result = dict(stock, **self.options.headers)
         log.debug('headers = %s', result)
         return result
