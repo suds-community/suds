@@ -203,8 +203,9 @@ class FileCache(Cache):
             fn = self.__fn(id)
             f = self.open(fn, 'w')
             f.write(fp.read())
+            fp.close()
             f.close()
-            return fp
+            return open(fn)
         except:
             log.debug(id, exc_info=1)
             return fp
@@ -235,7 +236,7 @@ class FileCache(Cache):
         if self.duration[1] < 1:
             return
         created = dt.fromtimestamp(os.path.getctime(fn))
-        d = {self.duration[0] : self.duration[1]}
+        d = { self.duration[0]:self.duration[1] }
         expired = created+timedelta(**d)
         if expired < dt.now():
             log.debug('%s expired, deleted', fn)
