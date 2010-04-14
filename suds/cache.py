@@ -268,14 +268,14 @@ class FileCache(Cache):
         path = os.path.join(self.location, 'version')
         try:
             
-            f = open(path)
+            f = self.open(path)
             version = f.read()
             f.close()
             if version != suds.__version__:
                 raise Exception()
         except:
             self.clear()
-            f = open(path, 'w')
+            f = self.open(path, 'w')
             f.write(suds.__version__)
             f.close()        
     
