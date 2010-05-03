@@ -191,7 +191,7 @@ class PrimativeAppender(Appender):
         if content.tag.startswith('_'):
             attr = content.tag[1:]
             value = tostr(content.value)
-            if value is not None and len(value):
+            if value:
                 parent.set(attr, value)
         else:
             child = self.node(content)
@@ -305,6 +305,12 @@ class TextAppender(Appender):
     """
 
     def append(self, parent, content):
-        child = self.node(content)
-        child.setText(content.value)
-        parent.append(child)
+        if content.tag.startswith('_'):
+            attr = content.tag[1:]
+            value = tostr(content.value)
+            if value:
+                parent.set(attr, value)
+        else:
+            child = self.node(content)
+            child.setText(content.value)
+            parent.append(child)
