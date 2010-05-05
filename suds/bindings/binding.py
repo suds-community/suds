@@ -145,6 +145,7 @@ class Binding:
         soapenv = replyroot.getChild('Envelope')
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild('Body')
+        self.detect_fault(soapbody)
         soapbody = self.multiref.process(soapbody)
         nodes = self.replycontent(method, soapbody)
         rtypes = self.returned_types(method)
@@ -161,6 +162,23 @@ class Binding:
                 result = unmarshaller.process(nodes[0], resolved)
                 return (replyroot, result)
         return (replyroot, None)
+    
+    def detect_fault(self, body):
+        """
+        Detect I{hidden} soapenv:Fault element in the soap body.
+        @param body: The soap envelope body.
+        @type body: L{Element}
+        @raise WebFault: When found.
+        """
+        fault = body.getChild('Fault', envns)
+        if fault is None:
+            return
+        unmarshaller = self.unmarshaller(False)
+        p = unmarshaller.process(fault)
+        if self.options().faults:
+            raise WebFault(p, fault)
+        return self
+        
     
     def replylist(self, rt, nodes):
         """
