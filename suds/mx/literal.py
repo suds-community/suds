@@ -143,10 +143,7 @@ class Typed(Core):
         # by the schema (elementFormDefault).
         #
         ns = content.type.namespace()
-        qualify = \
-            ( content.type.form_qualified or
-              content.type.element() == 1)
-        if qualify:
+        if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
             node.addPrefix(ns[0], ns[1])
         else:

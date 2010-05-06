@@ -387,12 +387,6 @@ class Element(TypedContent):
     def childtags(self):
         return ('attribute', 'simpleType', 'complexType', 'any',)
     
-    def element(self):
-        if self in self.schema.children:
-            return 1
-        else:
-            return 2
-    
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
@@ -800,10 +794,7 @@ class Factory:
             types[c.qname] = c
         for i in imports:
             children.remove(i)
-        s = set()
-        for c in children:
-            s.add(c)
-        return (s, imports, attributes, elements, types, groups, agrps)
+        return (children, imports, attributes, elements, types, groups, agrps)
 
     
 
