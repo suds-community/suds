@@ -218,10 +218,21 @@ class SchemaObject(object):
         """
         return self.cache.get(nobuiltin, self)
     
+    def element(self):
+        """
+        Get whether this is an <xs:element/>
+        @return: code.
+          - 0=not an element
+          - 1=root,
+          - 2=non-root
+        @rtype: int
+        """
+        return 0
+    
     def sequence(self):
         """
         Get whether this is an <xs:sequence/>
-        @return: True if any, else False
+        @return: True if <xs:sequence/>, else False
         @rtype: boolean
         """
         return False

@@ -34,7 +34,7 @@ errors = 0
 
 setup_logging()
 
-#logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 #logging.getLogger('suds.metrics').setLevel(logging.DEBUG)
 #logging.getLogger('suds').setLevel(logging.DEBUG)
 
@@ -51,7 +51,7 @@ def rhqTest():
     
     url = 'http://localhost.localdomain:7080/rhq-rhq-enterprise-server-ejb3/WebservicesManagerBean?wsdl'
     start(url)
-    client = Client(url, cache=None)
+    client = Client(url)
     print client
 
     try:
