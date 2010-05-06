@@ -800,7 +800,10 @@ class Factory:
             types[c.qname] = c
         for i in imports:
             children.remove(i)
-        return (children, imports, attributes, elements, types, groups, agrps)
+        s = set()
+        for c in children:
+            s.add(c)
+        return (s, imports, attributes, elements, types, groups, agrps)
 
     
 
