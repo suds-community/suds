@@ -387,6 +387,12 @@ class Element(TypedContent):
     def childtags(self):
         return ('attribute', 'simpleType', 'complexType', 'any',)
     
+    def element(self):
+        if self in self.schema.children:
+            return 1
+        else:
+            return 2
+    
     def extension(self):
         for c in self.rawchildren:
             if c.extension():

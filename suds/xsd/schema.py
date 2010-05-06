@@ -166,16 +166,26 @@ class Schema:
     @type baseurl: str
     @ivar container: A schema collection containing this schema.
     @type container: L{SchemaCollection}
-    @ivar types: A schema types cache.
-    @type types: {name:L{SchemaObject}}
-    @ivar groups: A schema groups cache.
-    @type groups: {name:L{SchemaObject}}
     @ivar children: A list of direct top level children.
     @type children: [L{SchemaObject},...]
+    @ivar all: A children.
+    @type all: [L{SchemaObject},...]
+    @ivar groups: A schema groups cache.
+    @type groups: {name:L{SchemaObject}}
     @ivar all: A list of all (includes imported) top level children.
     @type all: [L{SchemaObject},...]
+    @ivar types: A schema types cache.
+    @type types: {name:L{SchemaObject}}
     @ivar imports: A list of import objects.
     @type imports: [L{SchemaObject},...]
+    @ivar elements: A list of <element/> objects.
+    @type elements: [L{SchemaObject},...]
+    @ivar attributes: A list of <attribute/> objects.
+    @type attributes: [L{SchemaObject},...]
+    @ivar groups: A list of group objects.
+    @type groups: [L{SchemaObject},...]
+    @ivar agrps: A list of attribute group objects.
+    @type agrps: [L{SchemaObject},...]
     @ivar form_qualified: The flag indicating:
         (@elementFormDefault).
     @type form_qualified: bool
