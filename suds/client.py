@@ -624,7 +624,7 @@ class SoapClient:
         try:
             self.last_sent(Document(msg))
             plugins = PluginContainer(self.options.plugins)
-            plugins.onSend(env=msg)
+            plugins.onSend(envelope=msg)
             request = Request(location, str(msg))
             request.headers = self.headers()
             reply = transport.send(request)
