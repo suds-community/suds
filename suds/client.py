@@ -40,6 +40,7 @@ from suds.options import Options
 from suds.properties import Unskin
 from urlparse import urlparse
 from copy import deepcopy
+from suds.plugin import PluginContainer
 from logging import getLogger
 
 log = getLogger(__name__)
@@ -109,6 +110,8 @@ class Client(object):
         self.set_options(**kwargs)
         reader = DefinitionsReader(options, Definitions)
         self.wsdl = reader.open(url)
+        plugins = PluginContainer(options.plugins)
+        plugins.onInit(wsdl=self.wsdl)
         self.factory = Factory(self.wsdl)
         self.service = ServiceSelector(self, self.wsdl.services)
         self.sd = []
@@ -593,13 +596,15 @@ class SoapClient:
         timer.stop()
         metrics.log.debug(
                 "message for '%s' created: %s",
-                self.method.name, timer)
+                self.method.name,
+                timer)
         timer.start()
         result = self.send(msg)
         timer.stop()
         metrics.log.debug(
                 "method '%s' invoked: %s",
-                self.method.name, timer)
+                self.method.name,
+                timer)
         return result
     
     def send(self, msg):
@@ -618,6 +623,8 @@ class SoapClient:
         log.debug('sending to (%s)\nmessage:\n%s', location, msg)
         try:
             self.last_sent(Document(msg))
+            plugins = PluginContainer(self.options.plugins)
+            plugins.onSend(env=msg)
             request = Request(location, str(msg))
             request.headers = self.headers()
             reply = transport.send(request)
@@ -655,6 +662,9 @@ class SoapClient:
         @raise WebFault: On server.
         """
         log.debug('http succeeded:\n%s', reply)
+        plugins = PluginContainer(self.options.plugins)
+        ctx = plugins.onReply(reply=reply)
+        reply = ctx.reply
         if len(reply) > 0:
             r, p = binding.get_reply(self.method, reply)
             self.last_received(r)

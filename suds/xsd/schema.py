@@ -33,6 +33,7 @@ from suds.xsd.sxbase import SchemaObject
 from suds.xsd.deplist import DepList
 from suds.sax.element import Element
 from suds.sax import splitPrefix, Namespace
+from suds.plugin import PluginContainer
 
 log = getLogger(__name__)
 
@@ -168,10 +169,6 @@ class Schema:
     @type container: L{SchemaCollection}
     @ivar children: A list of direct top level children.
     @type children: [L{SchemaObject},...]
-    @ivar all: A children.
-    @type all: [L{SchemaObject},...]
-    @ivar groups: A schema groups cache.
-    @type groups: {name:L{SchemaObject}}
     @ivar all: A list of all (includes imported) top level children.
     @type all: [L{SchemaObject},...]
     @ivar types: A schema types cache.
@@ -217,6 +214,8 @@ class Schema:
         self.attributes = {}
         self.groups = {}
         self.agrps = {}
+        plugins = PluginContainer(options.plugins)
+        plugins.onLoad(root=root)
         if options.doctor is not None:
             options.doctor.examine(root)
         form = self.root.get('elementFormDefault')

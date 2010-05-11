@@ -31,6 +31,7 @@ from suds.xsd.schema import Schema, SchemaCollection
 from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object, Facade, Metadata
 from suds.reader import DocumentReader, DefinitionsReader
+from suds.plugin import PluginContainer
 from urlparse import urljoin
 import re, soaparray
 
@@ -135,6 +136,8 @@ class Definitions(WObject):
         reader = DocumentReader(options)
         d = reader.open(url)
         root = d.root()
+        plugins = PluginContainer(options.plugins)
+        plugins.onLoad(root=root)
         WObject.__init__(self, root)
         self.id = objid(self)
         self.options = options
