@@ -214,7 +214,7 @@ class ImportDoctor(Doctor, Plugin):
 
     def onLoad(self, context):
         root = context.root
-        if root.get('name') == 'schema':
+        if Namespace.xsd(root.namespace()):
             self.examine(root)
         else:
             pass
