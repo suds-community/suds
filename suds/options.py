@@ -93,6 +93,8 @@ class Options(Skin):
                   - 0 = Cache XML documents.
                   - 1 = Cache WSDL (pickled) object.
                 - default: 0
+        - B{plugins} - A plugin container.
+                - type: I{list}
     """    
     def __init__(self, **kwargs):
         domain = __name__
@@ -111,5 +113,6 @@ class Options(Skin):
             Definition('retxml', bool, False),
             Definition('autoblend', bool, False),
             Definition('cachingpolicy', int, 0),
+            Definition('plugins', [], (list, tuple)),
         ]
         Skin.__init__(self, domain, definitions, kwargs)

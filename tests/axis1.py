@@ -29,12 +29,28 @@ from suds import WebFault
 from suds.client import Client
 from suds.sudsobject import Object
 from suds.transport.https import HttpAuthenticated
+from suds.plugin import Plugin
 
 errors = 0
 
 credentials = dict(username='jortel', password='abc123')
 
 setup_logging()
+
+
+class TestPlugin(Plugin):
+    
+    def onInit(self, context):
+        print 'init: ctx=%s' % context.__dict__
+        
+    def onLoad(self, context):
+        print 'loading: ctx=%s' % context.__dict__
+    
+    def onSend(self, context):
+        print 'sending: ctx=%s' % context.__dict__
+
+    def onReply(self, context):
+        print 'gotreply: ctx=%s' % context.__dict__
 
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
@@ -48,7 +64,7 @@ try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
     t = HttpAuthenticated(**credentials)
-    client = Client(url, transport=t, cache=None)
+    client = Client(url, transport=t, cache=None, plugins=[TestPlugin()])
     print client
     #
     # create a name object using the wsdl
