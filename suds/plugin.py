@@ -53,7 +53,7 @@ class LoadContext(Context):
 class SendContext(Context):
     """
     The context for sending the soap envelope.
-    @ivar envelope: The soap envelope to be sent.
+    @ivar envelope: The soap envelope I{root} element to be sent.
     @type envelope: L{sax.Element}
     """
     pass
