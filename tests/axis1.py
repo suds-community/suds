@@ -40,17 +40,17 @@ setup_logging()
 
 class TestPlugin(Plugin):
     
-    def onInit(self, context):
-        print 'init: ctx=%s' % context.__dict__
+    def initialized(self, context):
+        print 'initialized: ctx=%s' % context.__dict__
         
-    def onLoad(self, context):
-        print 'loading: ctx=%s' % context.__dict__
+    def loaded(self, context):
+        print 'loaded: ctx=%s' % context.__dict__
     
-    def onSend(self, context):
+    def sending(self, context):
         print 'sending: ctx=%s' % context.__dict__
 
-    def onReply(self, context):
-        print 'gotreply: ctx=%s' % context.__dict__
+    def received(self, context):
+        print 'received: ctx=%s' % context.__dict__
 
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)

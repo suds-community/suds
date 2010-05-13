@@ -76,7 +76,7 @@ class Plugin:
     All plugins should implement this interface.
     """
     
-    def onInit(self, context):
+    def initialized(self, context):
         """
         Suds initialization.
         Called after wsdl the has been loaded.  Provides the plugin
@@ -86,7 +86,7 @@ class Plugin:
         """
         pass
     
-    def onLoad(self, context):
+    def loaded(self, context):
         """
         Suds has loaded an XSD document.  Provides the plugin
         with an opportunity to inspect/modify the loaded XSD.
@@ -96,7 +96,7 @@ class Plugin:
         """
         pass
     
-    def onSend(self, context):
+    def sending(self, context):
         """
         Suds will send the specified soap envelope.
         Provides the plugin with the opportunity to inspect/modify
@@ -106,7 +106,7 @@ class Plugin:
         """
         pass
     
-    def onReply(self, context):
+    def received(self, context):
         """
         Suds has received the specified reply.
         Provides the plugin with the opportunity to inspect/modify
@@ -127,10 +127,10 @@ class PluginContainer:
     """
     
     ctxclass = {\
-        'onInit':InitContext,
-        'onLoad':LoadContext,
-        'onSend':SendContext,
-        'onReply':ReplyContext,
+        'initialized':InitContext,
+        'loaded':LoadContext,
+        'sending':SendContext,
+        'received':ReplyContext,
     }
     
     def __init__(self, plugins):
@@ -141,7 +141,7 @@ class PluginContainer:
         self.plugins = plugins
     
     def __getattr__(self, name):
-        ctx = self.ctxclass.get(name, Context)
+        ctx = self.ctxclass.get(name)
         if ctx:
             return Method(name, ctx, self.plugins)
         else:

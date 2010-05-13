@@ -212,7 +212,7 @@ class ImportDoctor(Doctor, Plugin):
         for imp in self.imports:
             imp.apply(root)
 
-    def onLoad(self, context):
+    def loaded(self, context):
         root = context.root
         if Namespace.xsd(root.namespace()):
             self.examine(root)
