@@ -111,7 +111,7 @@ class Client(object):
         reader = DefinitionsReader(options, Definitions)
         self.wsdl = reader.open(url)
         plugins = PluginContainer(options.plugins)
-        plugins.onInit(wsdl=self.wsdl)
+        plugins.initialized(wsdl=self.wsdl)
         self.factory = Factory(self.wsdl)
         self.service = ServiceSelector(self, self.wsdl.services)
         self.sd = []
@@ -624,7 +624,7 @@ class SoapClient:
         try:
             self.last_sent(Document(msg))
             plugins = PluginContainer(self.options.plugins)
-            plugins.onSend(envelope=msg.root())
+            plugins.sending(envelope=msg.root())
             request = Request(location, str(msg))
             request.headers = self.headers()
             reply = transport.send(request)
@@ -663,7 +663,7 @@ class SoapClient:
         """
         log.debug('http succeeded:\n%s', reply)
         plugins = PluginContainer(self.options.plugins)
-        ctx = plugins.onReply(reply=reply)
+        ctx = plugins.received(reply=reply)
         reply = ctx.reply
         if len(reply) > 0:
             r, p = binding.get_reply(self.method, reply)
