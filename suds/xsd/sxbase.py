@@ -297,6 +297,12 @@ class SchemaObject(object):
         @rtype: boolean
         """
         return False
+    
+    def mixed(self):
+        """
+        Get whether this I{mixed} content.
+        """
+        return False
         
     def find(self, qref, classes=()):
         """

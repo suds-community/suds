@@ -44,10 +44,10 @@ class Builder:
         else:
             type = name
         cls = type.name
-        if len(type):
-            data = Factory.object(cls)
-        else:
+        if type.mixed():
             data = Factory.property(cls)
+        else:
+            data = Factory.object(cls)
         resolved = type.resolve()
         md = data.__metadata__
         md.sxtype = resolved
@@ -73,10 +73,15 @@ class Builder:
             value = []
         else:
             if len(resolved) > 0:
-                value = Factory.object(resolved.name)
-                md = value.__metadata__
-                md.sxtype = resolved
-                md.ordering = self.ordering(resolved)
+                if resolved.mixed():
+                    value = Factory.property(resolved.name)
+                    md = value.__metadata__
+                    md.sxtype = resolved
+                else:
+                    value = Factory.object(resolved.name)
+                    md = value.__metadata__
+                    md.sxtype = resolved
+                    md.ordering = self.ordering(resolved)
         setattr(data, type.name, value)
         if value is not None:
             data = value

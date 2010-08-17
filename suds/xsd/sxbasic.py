@@ -118,6 +118,12 @@ class Complex(SchemaObject):
             if c.extension():
                 return True
         return False
+    
+    def mixed(self):
+        for c in self.rawchildren:
+            if isinstance(c, SimpleContent) and c.mixed():
+                return True
+        return False
 
 
 class Group(SchemaObject):
@@ -195,6 +201,9 @@ class Simple(SchemaObject):
             if isinstance(child, Enumeration):
                 return True
         return False
+    
+    def mixed(self):
+        return len(self)
 
     def description(self):
         return ('name',)
@@ -340,6 +349,9 @@ class SimpleContent(SchemaObject):
             if c.restriction():
                 return True
         return False
+    
+    def mixed(self):
+        return len(self)
 
 
 class Enumeration(Content):
@@ -470,7 +482,7 @@ class Extension(SchemaObject):
 
     def description(self):
         return ('ref',)
-
+    
 
 class Import(SchemaObject):
     """
