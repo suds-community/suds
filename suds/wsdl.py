@@ -137,7 +137,7 @@ class Definitions(WObject):
         d = reader.open(url)
         root = d.root()
         plugins = PluginContainer(options.plugins)
-        plugins.loaded(root=root)
+        plugins.document.parsed(root=root)
         WObject.__init__(self, root)
         self.id = objid(self)
         self.options = options
