@@ -154,7 +154,7 @@ class MessagePlugin(Plugin):
         """
         Suds has sax parsed the received reply.
         Provides the plugin with the opportunity to inspect/modify
-        the sax parsed DOM tree for the reply.
+        the sax parsed DOM tree for the reply before it is unmarshalled.
         @param context: The reply context.
             The I{reply} is DOM tree.
         @type context: L{MessageContext}
@@ -163,11 +163,11 @@ class MessagePlugin(Plugin):
     
     def unmarshalled(self, context):
         """
-        Suds has sax parsed the received reply.
+        Suds has unmarshalled the received reply.
         Provides the plugin with the opportunity to inspect/modify
-        the unmarshalled reply.
+        the unmarshalled reply object before it is returned.
         @param context: The reply context.
-            The I{reply} is DOM tree.
+            The I{reply} is unmarshalled suds object.
         @type context: L{MessageContext}
         """
         pass
