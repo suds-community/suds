@@ -111,7 +111,7 @@ class Client(object):
         reader = DefinitionsReader(options, Definitions)
         self.wsdl = reader.open(url)
         plugins = PluginContainer(options.plugins)
-        plugins.initialized(wsdl=self.wsdl)
+        plugins.init.initialized(wsdl=self.wsdl)
         self.factory = Factory(self.wsdl)
         self.service = ServiceSelector(self, self.wsdl.services)
         self.sd = []
@@ -624,10 +624,14 @@ class SoapClient:
         try:
             self.last_sent(Document(msg))
             plugins = PluginContainer(self.options.plugins)
-            plugins.sending(envelope=msg.root())
-            request = Request(location, str(msg))
+            plugins.message.marshalled(envelope=msg.root())
+            soapenv = str(msg)
+            plugins.message.sending(envelope=soapenv)
+            request = Request(location, soapenv)
             request.headers = self.headers()
             reply = transport.send(request)
+            ctx = plugins.message.received(reply=reply.message)
+            reply.message = ctx.reply
             if retxml:
                 result = reply.message
             else:
@@ -657,26 +661,25 @@ class SoapClient:
         Request succeeded, process the reply
         @param binding: The binding to be used to process the reply.
         @type binding: L{bindings.binding.Binding}
+        @param reply: The raw reply text.
+        @type reply: str
         @return: The method result.
         @rtype: I{builtin}, L{Object}
         @raise WebFault: On server.
         """
         log.debug('http succeeded:\n%s', reply)
         plugins = PluginContainer(self.options.plugins)
-        ctx = plugins.received(reply=reply)
-        reply = ctx.reply
         if len(reply) > 0:
-            r, p = binding.get_reply(self.method, reply)
-            self.last_received(r)
-            if self.options.faults:
-                return p
-            else:
-                return (200, p)
+            reply, result = binding.get_reply(self.method, reply)
+            self.last_received(reply)
         else:
-            if self.options.faults:
-                return None
-            else:
-                return (200, None)
+            result = None
+        ctx = plugins.message.unmarshalled(reply=result)
+        result = ctx.reply
+        if self.options.faults:
+            return result
+        else:
+            return (200, result)
         
     def failed(self, binding, error):
         """

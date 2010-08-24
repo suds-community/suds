@@ -215,7 +215,7 @@ class Schema:
         self.groups = {}
         self.agrps = {}
         plugins = PluginContainer(options.plugins)
-        plugins.loaded(root=root)
+        plugins.document.parsed(root=root)
         if options.doctor is not None:
             options.doctor.examine(root)
         form = self.root.get('elementFormDefault')

@@ -33,6 +33,7 @@ from suds.bindings.multiref import MultiRef
 from suds.xsd.query import TypeQuery, ElementQuery
 from suds.xsd.sxbasic import Element as SchemaElement
 from suds.options import Options
+from suds.plugin import PluginContainer
 from copy import deepcopy 
 
 log = getLogger(__name__)
@@ -142,6 +143,8 @@ class Binding:
         reply = self.replyfilter(reply)
         sax = Parser()
         replyroot = sax.parse(string=reply)
+        plugins = PluginContainer(self.options().plugins)
+        plugins.message.parsed(reply=replyroot)
         soapenv = replyroot.getChild('Envelope')
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild('Body')

@@ -113,6 +113,6 @@ class Options(Skin):
             Definition('retxml', bool, False),
             Definition('autoblend', bool, False),
             Definition('cachingpolicy', int, 0),
-            Definition('plugins', [], (list, tuple)),
+            Definition('plugins', (list, tuple), []),
         ]
         Skin.__init__(self, domain, definitions, kwargs)
