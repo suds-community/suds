@@ -27,6 +27,8 @@ log = getLogger(__name__)
 
 class Document(Element):
     """ simple document """
+    
+    DECL = '<?xml version="1.0" encoding="UTF-8"?>'
 
     def __init__(self, root=None):
         Element.__init__(self, 'document')
@@ -34,18 +36,26 @@ class Document(Element):
             self.append(root)
         
     def root(self):
-        if len(self.children) > 0:
+        if len(self.children):
             return self.children[0]
         else:
             return None
         
+    def str(self):
+        s = []
+        s.append(self.DECL)
+        s.append('\n')
+        s.append(self.root().str())
+        return ''.join(s)
+    
+    def plain(self):
+        s = []
+        s.append(self.DECL)
+        s.append(self.root().plain())
+        return ''.join(s)
+
     def __str__(self):
         return unicode(self).encode('utf-8')
     
     def __unicode__(self):
-        result = '<?xml version="1.0" encoding="UTF-8"?>'
-        root = self.root()
-        if root is not None:
-            result += '\n'
-            result += root.str()
-        return unicode(result)
+        return self.str()

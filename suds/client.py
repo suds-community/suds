@@ -592,14 +592,14 @@ class SoapClient:
         timer.start()
         result = None
         binding = self.method.binding.input
-        msg = binding.get_message(self.method, args, kwargs)
+        soapenv = binding.get_message(self.method, args, kwargs)
         timer.stop()
         metrics.log.debug(
                 "message for '%s' created: %s",
                 self.method.name,
                 timer)
         timer.start()
-        result = self.send(msg)
+        result = self.send(soapenv)
         timer.stop()
         metrics.log.debug(
                 "method '%s' invoked: %s",
@@ -607,11 +607,11 @@ class SoapClient:
                 timer)
         return result
     
-    def send(self, msg):
+    def send(self, soapenv):
         """
         Send soap message.
-        @param msg: A soap message to send.
-        @type msg: basestring
+        @param soapenv: A soap envelope to send.
+        @type soapenv: L{Document}
         @return: The reply to the sent message.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
@@ -620,12 +620,17 @@ class SoapClient:
         binding = self.method.binding.input
         transport = self.options.transport
         retxml = self.options.retxml
-        log.debug('sending to (%s)\nmessage:\n%s', location, msg)
+        prettyxml = self.options.prettyxml
+        log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
         try:
-            self.last_sent(Document(msg))
+            self.last_sent(soapenv)
             plugins = PluginContainer(self.options.plugins)
-            plugins.message.marshalled(envelope=msg.root())
-            soapenv = str(msg)
+            plugins.message.marshalled(envelope=soapenv.root())
+            if prettyxml:
+                soapenv = soapenv.str()
+            else:
+                soapenv = soapenv.plain()
+            soapenv = soapenv.encode('utf-8')
             plugins.message.sending(envelope=soapenv)
             request = Request(location, soapenv)
             request.headers = self.headers()
