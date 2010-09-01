@@ -23,6 +23,7 @@ from suds.sax.parser import Parser
 from suds.transport import Request
 from suds.cache import Cache, NoCache
 from suds.store import DocumentStore
+from suds.plugin import PluginContainer
 from logging import getLogger
 
 
@@ -42,6 +43,7 @@ class Reader:
         @type options: I{Options}
         """
         self.options = options
+        self.plugins = PluginContainer(options.plugins)
 
     def mangle(self, name, x):
         """
@@ -76,6 +78,7 @@ class DocumentReader(Reader):
         if d is None:
             d = self.download(url)
             cache.put(id, d)
+        self.plugins.document.parsed(root=d.root())
         return d
     
     def download(self, url):

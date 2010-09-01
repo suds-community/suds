@@ -182,10 +182,10 @@ class PluginContainer:
     @type ctxclass: dict
     """
     
-    domain = {\
-        'init':InitContext,
-        'document':DocumentContext,
-        'message':MessageContext,
+    domains = {\
+        'init': (InitContext, InitPlugin),
+        'document': (DocumentContext, DocumentPlugin),
+        'message': (MessageContext, MessagePlugin ),
     }
     
     def __init__(self, plugins):
@@ -196,9 +196,14 @@ class PluginContainer:
         self.plugins = plugins
     
     def __getattr__(self, name):
-        ctx = self.domain.get(name)
-        if ctx:
-            return PluginDomain(ctx, self.plugins)
+        domain = self.domains.get(name)
+        if domain:
+            plugins = []
+            ctx, pclass = domain
+            for p in self.plugins:
+                if isinstance(p, pclass):
+                    plugins.append(p)
+            return PluginDomain(ctx, plugins)
         else:
             raise Exception, 'plugin domain (%s), invalid' % name
         
