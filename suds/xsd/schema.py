@@ -22,7 +22,7 @@ Most of the I{value-add} provided by the model is centered around
 tranparent referenced type resolution and targeted denormalization.
 """
 
-from logging import getLogger
+
 import suds.metrics
 from suds import *
 from suds.xsd import *
@@ -33,7 +33,7 @@ from suds.xsd.sxbase import SchemaObject
 from suds.xsd.deplist import DepList
 from suds.sax.element import Element
 from suds.sax import splitPrefix, Namespace
-from suds.plugin import PluginContainer
+from logging import getLogger
 
 log = getLogger(__name__)
 
@@ -214,8 +214,6 @@ class Schema:
         self.attributes = {}
         self.groups = {}
         self.agrps = {}
-        plugins = PluginContainer(options.plugins)
-        plugins.document.parsed(root=root)
         if options.doctor is not None:
             options.doctor.examine(root)
         form = self.root.get('elementFormDefault')
