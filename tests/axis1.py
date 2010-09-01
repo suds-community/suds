@@ -45,9 +45,12 @@ class MyInitPlugin(InitPlugin):
 
     
 class MyDocumentPlugin(DocumentPlugin):
-
+    
     def loaded(self, context):
         print 'PLUGIN (document): loaded: ctx=%s' % context.__dict__
+
+    def parsed(self, context):
+        print 'PLUGIN (document): parsed: ctx=%s' % context.__dict__
 
         
 class MyMessagePlugin(MessagePlugin):
@@ -68,7 +71,10 @@ class MyMessagePlugin(MessagePlugin):
         print 'PLUGIN: (massage): unmarshalled: ctx=%s' % context.__dict__
         
         
-myplugins = (MyInitPlugin(), MyDocumentPlugin(), MyMessagePlugin(),)
+myplugins = (
+    MyInitPlugin(),
+    MyDocumentPlugin(),
+    MyMessagePlugin(),)
 
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)

@@ -44,8 +44,10 @@ class InitContext(Context):
 class DocumentContext(Context):
     """
     The XML document load context.
-    @ivar root: The loaded xsd document root.
-    @type root: L{sax.Element}
+    @ivar url: The URL.
+    @type url: str
+    @ivar document: Either the XML text or the B{parsed} document root.
+    @type document: (str|L{sax.Element})
     """
     pass
 
@@ -101,13 +103,23 @@ class DocumentPlugin(Plugin):
     The base class for suds I{document} plugins.
     """
     
+    def loaded(self, context): 
+        """
+        Suds has loaded a WSDL/XSD document.  Provides the plugin 
+        with an opportunity to inspect/modify the unparsed document. 
+        Called after each WSDL/XSD document is loaded. 
+        @param context: The document context. 
+        @type context: L{DocumentContext} 
+        """
+        pass 
+    
     def parsed(self, context):
         """
         Suds has parsed a WSDL/XSD document.  Provides the plugin
         with an opportunity to inspect/modify the parsed document.
         Called after each WSDL/XSD document is parsed.
         @param context: The document context.
-        @type context: L{LDocumentContext}
+        @type context: L{DocumentContext}
         """
         pass
 
@@ -252,7 +264,7 @@ class Method:
         for plugin in self.domain.plugins:
             try:
                 method = getattr(plugin, self.name, None)
-                if method:
+                if method and callable(method):
                     method(ctx)
             except Exception, pe:
                 log.exception(pe)
