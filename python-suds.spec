@@ -4,7 +4,7 @@ Summary: A python SOAP client
 Name:  python-suds
 Version: 0.4
 Release: 1%{?dist}
-Source0: https://fedorahosted.org/releases/s/u/%{name}/%{name}-%{version}.tar.gz
+Source0: https://fedorahosted.org/releases/s/u/suds/%{name}-%{version}.tar.gz
 License: LGPLv3+
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -15,11 +15,10 @@ Url: https://fedorahosted.org/suds
 
 %description
 The suds project is a python soap web services client lib.  Suds leverages
-python meta programming to provide an intuative API for consuming web
+python meta programming to provide an intuitive API for consuming web
 services.  Objectification of types defined in the WSDL is provided
 without class generation.  Programmers rarely need to read the WSDL since
-services and WSDL based objects can be easily inspected.  Supports
-pluggable soap bindings.
+services and WSDL based objects can be easily inspected.
 
 %prep
 %setup -q
@@ -55,8 +54,18 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
-* Thu Dec 17 2009 jortel <jortel@redhat.com> - 0.4-1
-- 0.4
+* Thu Sep 8 2010 jortel <jortel@redhat.com> - 0.4-1
+- Fix spelling errors in spec description.
+- Fix source0 URL warning.
+- Updated caching to not cache intermediate wsdls.
+- Added DocumentCache which caches verified XML documents as text. User can choose.
+- Added cachingpolicy option to allow user to specify whether to cache XML documents or the WSDL object.
+- Provided for repeating values in reply for message parts consistent with way handled in nested objects.
+- Added charset=utf-8 to stock content-type http header.
+- Added <?xml version="1.0" encoding="UTF-8"?> to outgoing SOAP messages.
+- Detection of faults in successful (http=200) replies and raise WebFault. Search for <soapenv:Fault/>.
+- Add plugins facility. 
+- Fixed Tickets: #251, #313, #314, #334
 
 * Thu Dec 17 2009 jortel <jortel@redhat.com> - 0.3.9-1
 - Bumped python requires to 2.4
