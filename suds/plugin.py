@@ -47,30 +47,18 @@ class DocumentContext(Context):
     @ivar url: The URL.
     @type url: str
     @ivar document: Either the XML text or the B{parsed} document root.
-    @type document: (str|L{sax.Element})
+    @type document: (str|L{sax.element.Element})
     """
     pass
 
-
-class InvokeContext(Context):
-    """
-    The method invocaton context.
-    @ivar method: The name of the method.
-    @type method: str
-    @ivar params: The parameters passed.
-    @type params: list
-    @ivar params: The return object.
-    @type params: object
-    """
         
-        
-class MessageContext(InvokeContext):
+class MessageContext(Context):
     """
     The context for sending the soap envelope.
-    @ivar envelope: The soap envelope I{root} element to be sent.
-    @type envelope: L{sax.Element}
+    @ivar envelope: The soap envelope to be sent.
+    @type envelope: (str|L{sax.element.Element})
     @ivar reply: The reply.
-    @type reply: (str|L{Element}|object)
+    @type reply: (str|L{sax.element.Element}|object)
     """
     pass
 
@@ -250,10 +238,8 @@ class Method:
         """
         @param name: The method name.
         @type name: str
-        @param ctx: A context.
-        @type ctx: L{Context}
-        @param plugins: A list of plugins (targets).
-        @type plugins: list
+        @param domain: A plugin domain.
+        @type domain: L{PluginDomain}
         """
         self.name = name
         self.domain = domain
