@@ -341,7 +341,7 @@ class Timezone:
     @cvar local: The (A) local TZ offset.
     @type local: int
     @cvar patten: The regex patten to match TZ.
-    @type patten: L{re.RegexObject}
+    @type patten: re.Pattern
     """
     
     pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
