@@ -39,7 +39,10 @@ class Attribute(SXAttribute):
         @type aty: The value of wsdl:arrayType.
         """
         SXAttribute.__init__(self, schema, root)
-        self.aty = aty[:-2]
+        if aty.endswith('[]'):
+            self.aty = aty[:-2]
+        else:
+            self.aty = aty
         
     def autoqualified(self):
         aqs = SXAttribute.autoqualified(self)
