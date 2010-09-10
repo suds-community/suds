@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 - Add plugins facility. 
 - Fixed Tickets: #251, #313, #314, #334
 
+* Thu Jul 22 2010 David Malcolm <dmalcolm@redhat.com> - 0.3.9-2
+- Rebuilt for https://fedoraproject.org/wiki/Features/Python_2.7/MassRebuild
+
 * Thu Dec 17 2009 jortel <jortel@redhat.com> - 0.3.9-1
 - Bumped python requires to 2.4
 - Replaced stream-based caching in the transport package with document-based caching.
