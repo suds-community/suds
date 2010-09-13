@@ -30,7 +30,6 @@ from suds.xsd import qualify, Namespace
 from suds.xsd.schema import Schema, SchemaCollection
 from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object, Facade, Metadata
-from suds.plugin import PluginContainer
 from suds.reader import DocumentReader, DefinitionsReader
 from urlparse import urljoin
 import re, soaparray
@@ -210,10 +209,8 @@ class Definitions(WObject):
     def build_schema(self):
         """ Process L{Types} objects and create the schema collection """
         container = SchemaCollection(self)
-        plugins = PluginContainer(self.options.plugins)
         for t in [t for t in self.types if t.local()]:
             for root in t.contents():
-                plugins.document.parsed(url=self.url, document=root)
                 schema = Schema(root, self.url, self.options, container)
                 container.add(schema)
         if not len(container): # empty
