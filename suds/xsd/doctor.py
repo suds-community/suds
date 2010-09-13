@@ -22,7 +22,7 @@ schema(s).
 from logging import getLogger
 from suds.sax import splitPrefix, Namespace
 from suds.sax.element import Element
-from suds.plugin import DocumentPlugin
+from suds.plugin import DocumentPlugin, DocumentContext
 
 log = getLogger(__name__)
 
@@ -208,13 +208,19 @@ class ImportDoctor(Doctor, DocumentPlugin):
         """
         self.imports += imports
         
-    def examine(self, root):
+    def examine(self, node):
         for imp in self.imports:
-            imp.apply(root)
+            imp.apply(node)
 
     def parsed(self, context):
-        root = context.document
-        if Namespace.xsd(root.namespace()):
-            self.examine(root)
-        else:
-            pass
+        node = context.document
+        # xsd root
+        if node.name == 'schema' and Namespace.xsd(node.namespace()):
+            self.examine(node)
+            return
+        # look deeper
+        context = DocumentContext()
+        for child in node:
+            context.document = child
+            self.parsed(context)
+        
