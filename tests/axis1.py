@@ -137,6 +137,20 @@ try:
     print 'addPersion()'
     result = client.service.addPerson(person)
     print '\nreply(\n%s\n)\n' % str(result)
+    
+    #
+    # Async
+    #
+    client.options.nosend=True
+    reply = '<?xml version="1.0" encoding="utf-8"?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Body><ns1:addPersonResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns1="http://basic.suds.fedora.org"><addPersonReturn xsi:type="xsd:string">person (jeff&#x4D2;,ortel) at age 43 with phone numbers (410-555-5138,919-555-4406,205-777-1212, and pets (Chance,) - added.</addPersonReturn></ns1:addPersonResponse></soapenv:Body></soapenv:Envelope>'
+    request = client.service.addPerson(person)
+    result = request.succeeded(reply)
+    error = Object()
+    error.httpcode = '500'
+    client.options.nosend=False
+#    request.failed(error)
+    
+    #
     #
     # create a new name object used to update the person
     #
