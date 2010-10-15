@@ -620,6 +620,7 @@ class SoapClient:
         binding = self.method.binding.input
         transport = self.options.transport
         retxml = self.options.retxml
+        nosend = self.options.nosend
         prettyxml = self.options.prettyxml
         log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
         try:
@@ -631,7 +632,10 @@ class SoapClient:
             else:
                 soapenv = soapenv.plain()
             soapenv = soapenv.encode('utf-8')
-            plugins.message.sending(envelope=soapenv)
+            ctx = plugins.message.sending(envelope=soapenv)
+            soapenv = ctx.envelope
+            if nosend:
+                return RequestContext(self, binding, soapenv)
             request = Request(location, soapenv)
             request.headers = self.headers()
             reply = transport.send(request)
@@ -656,6 +660,8 @@ class SoapClient:
         @rtype: dict
         """
         action = self.method.soap.action
+        if isinstance(action, unicode):
+            action = action.encode('utf-8')
         stock = { 'Content-Type' : 'text/xml; charset=utf-8', 'SOAPAction': action }
         result = dict(stock, **self.options.headers)
         log.debug('headers = %s', result)
@@ -783,3 +789,22 @@ class SimClient(SoapClient):
             return (500, p)
         else:
             return (500, None)
+        
+
+class RequestContext:
+    
+    def __init__(self, client, binding, sent):
+        self.client = client
+        self.binding = binding
+        self.sent = sent
+        
+    def succeeded(self, reply):
+        options = self.client.options
+        plugins = PluginContainer(options.plugins)
+        ctx = plugins.message.received(reply=reply)
+        reply = ctx.reply
+        return self.client.succeeded(self.binding, reply)
+    
+    def failed(self, error):
+        return self.client.failed(self.binding, error)
+        
