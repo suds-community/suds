@@ -792,13 +792,38 @@ class SimClient(SoapClient):
         
 
 class RequestContext:
+    """
+    A request context.
+    Returned when the ''nosend'' options is specified.
+    @ivar client: The suds client.
+    @type client: L{Client}
+    @ivar binding: The binding for this request.
+    @type binding: I{Binding}
+    @ivar envelope: The request soap envelope.
+    @type envelope: str
+    """
     
-    def __init__(self, client, binding, sent):
+    def __init__(self, client, binding, envelope):
+        """
+        @param client: The suds client.
+        @type client: L{Client}
+        @param binding: The binding for this request.
+        @type binding: I{Binding}
+        @param envelope: The request soap envelope.
+        @type envelope: str
+        """
         self.client = client
         self.binding = binding
-        self.sent = sent
+        self.envelope = envelope
         
     def succeeded(self, reply):
+        """
+        Re-entry for processing a successful reply.
+        @param reply: The reply soap envelope.
+        @type reply: str
+        @return: The returned value for the invoked method.
+        @rtype: object 
+        """
         options = self.client.options
         plugins = PluginContainer(options.plugins)
         ctx = plugins.message.received(reply=reply)
@@ -806,5 +831,10 @@ class RequestContext:
         return self.client.succeeded(self.binding, reply)
     
     def failed(self, error):
+        """
+        Re-entry for processing a failure reply.
+        @param error: The error returned by the transport.
+        @type error: A suds I{TransportError}.
+        """
         return self.client.failed(self.binding, error)
         

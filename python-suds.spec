@@ -2,7 +2,7 @@
 
 Summary: A python SOAP client
 Name:  python-suds
-Version: 0.4
+Version: 0.4.1
 Release: 1%{?dist}
 Source0: https://fedorahosted.org/releases/s/u/suds/%{name}-%{version}.tar.gz
 License: LGPLv3+
@@ -54,6 +54,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc README LICENSE
 
 %changelog
+* Thu Oct 15 2010 jortel <jortel@redhat.com> - 0.4.1-1
+- 0.4.1
+
 * Thu Sep 8 2010 jortel <jortel@redhat.com> - 0.4-1
 - Fix spelling errors in spec description.
 - Fix source0 URL warning.
