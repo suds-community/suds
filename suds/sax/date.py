@@ -346,7 +346,7 @@ class Timezone:
     
     pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
     
-    LOCAL = ( 0-time.timezone/60/60 )
+    LOCAL = ( 0-time.timezone/60/60 ) + time.daylight
 
     def __init__(self, offset=None):
         if offset is None:
