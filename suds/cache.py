@@ -244,11 +244,12 @@ class FileCache(Cache):
  
     def clear(self):
         for fn in os.listdir(self.location):
-            if os.path.isdir(fn):
+            path = os.path.join(self.location, fn)
+            if os.path.isdir(path):
                 continue
             if fn.startswith(self.fnprefix):
-                log.debug('deleted: %s', fn)
-                os.remove(os.path.join(self.location, fn))
+                os.remove(path)
+                log.debug('deleted: %s', path)
                 
     def purge(self, id):
         fn = self.__fn(id)
