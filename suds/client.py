@@ -622,6 +622,7 @@ class SoapClient:
         retxml = self.options.retxml
         nosend = self.options.nosend
         prettyxml = self.options.prettyxml
+        timer = metrics.Timer()
         log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
         try:
             self.last_sent(soapenv)
@@ -638,7 +639,10 @@ class SoapClient:
                 return RequestContext(self, binding, soapenv)
             request = Request(location, soapenv)
             request.headers = self.headers()
+            timer.start()
             reply = transport.send(request)
+            timer.stop()
+            metrics.log.debug('waited %s on server reply', timer)
             ctx = plugins.message.received(reply=reply.message)
             reply.message = ctx.reply
             if retxml:
