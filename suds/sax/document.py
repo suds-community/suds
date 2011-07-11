@@ -34,24 +34,43 @@ class Document(Element):
         Element.__init__(self, 'document')
         if root is not None:
             self.append(root)
-        
+
     def root(self):
+        """
+        Get the document root element (can be None)
+        @return: The document root.
+        @rtype: L{Element}
+        """
         if len(self.children):
             return self.children[0]
         else:
             return None
         
     def str(self):
+        """
+        Get a string representation of this XML fragment.
+        @return: A I{pretty} string.
+        @rtype: basestring
+        """
         s = []
         s.append(self.DECL)
-        s.append('\n')
-        s.append(self.root().str())
+        root = self.root()
+        if root is not None:
+            s.append('\n')
+            s.append(root.str())
         return ''.join(s)
     
     def plain(self):
+        """
+        Get a string representation of this XML fragment.
+        @return: A I{plain} string.
+        @rtype: basestring
+        """
         s = []
         s.append(self.DECL)
-        s.append(self.root().plain())
+        root = self.root()
+        if root is not None:
+            s.append(self.root().plain())
         return ''.join(s)
 
     def __str__(self):
