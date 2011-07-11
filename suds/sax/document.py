@@ -70,7 +70,7 @@ class Document(Element):
         s.append(self.DECL)
         root = self.root()
         if root is not None:
-            s.append(self.root().plain())
+            s.append(root.plain())
         return ''.join(s)
 
     def __str__(self):
