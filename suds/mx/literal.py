@@ -145,7 +145,8 @@ class Typed(Core):
         ns = content.type.namespace()
         if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
-            node.addPrefix(ns[0], ns[1])
+            if ns[0]:
+                node.addPrefix(ns[0], ns[1])
         else:
             node = Element(content.tag)
         self.encode(node, content)
