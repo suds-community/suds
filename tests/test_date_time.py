@@ -227,6 +227,7 @@ class TimeTest(TestCase):
 class DateTimeTest(TestCase):
 
     def testSimple(self):
+        Timezone.LOCAL = 0
         ref = dt.datetime(1941, 12, 7, 10, 30, 22)
         s = '%.4d-%.2d-%.2dT%.2d:%.2d:%.2d' \
             % (ref.year,
@@ -254,6 +255,7 @@ class DateTimeTest(TestCase):
         self.assertEqual(t, ref)
         
     def testSimpleWithMicrosecond(self):
+        Timezone.LOCAL = 0
         ref = dt.datetime(1941, 12, 7, 10, 30, 22, 454)
         s = '%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.4d' \
             % (ref.year, 
