@@ -240,6 +240,7 @@ class DateTimeTest(TestCase):
         self.assertEqual(t, ref)
         
     def testOverflow(self):
+        Timezone.LOCAL = -2
         ref = dt.datetime(1, 1, 1, 0, 0, 0)
         s = '%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ' \
             % (ref.year,
