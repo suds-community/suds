@@ -498,10 +498,16 @@ class SchemaObject(object):
         return Iter(self)
     
     def __getitem__(self, index):
+        """Returns a contained schema object referenced by its 0-based index.
+
+        Returns None if such an object does not exist.
+
+        """
         i = 0
         for c in self:
             if i == index:
                 return c
+            i += 1
 
 
 class Iter:
