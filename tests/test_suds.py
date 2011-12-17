@@ -24,8 +24,6 @@ tests get added to it and it acquires more structure.
 
 """
 
-# TODO: See if we can make suds load WSDL from an in-memory buffer to make tests
-# more efficient by avoiding storing the WSDL data in temporary files.
 # TODO: Test accessing a list of types using client.wsdl.schema.types even when
 # there is no wsdl:service/binding/portType tag specified in the WSDL schema.
 
@@ -43,26 +41,27 @@ if __name__ == "__main__":
 import os
 import pytest
 import suds.client
+import suds.store
 import xml.sax
 
 
-def test_empty_invalid_wsdl(tmpdir):
+def test_empty_invalid_wsdl():
     try:
-        client = _client_from_wsdl(tmpdir, "")
+        client = _client_from_wsdl("")
         pytest.fail("Excepted exception xml.sax.SAXParseException not thrown.")
     except xml.sax.SAXParseException as e:
         assert e.getMessage() == "no element found"
 
 
-def test_empty_valid_wsdl(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_empty_valid_wsdl():
+    client = _client_from_wsdl(
         "<?xml version='1.0' encoding='UTF-8'?><root />")
     assert not client.wsdl.services, "No service definitions must be read "  \
         "from an empty WSDL."
 
 
-def test_function_parameters_global_sequence_in_a_sequence(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_function_parameters_global_sequence_in_a_sequence():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -160,8 +159,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[2][1] is service.params[2][0]
 
 
-def test_function_parameters_local_sequence_in_a_sequence(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_function_parameters_local_sequence_in_a_sequence():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -277,8 +276,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert paramIn is not paramOut.x2
 
 
-def test_function_parameters_strings(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_function_parameters_strings():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -369,8 +368,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[2][1] is service.params[2][0]
 
 
-def test_global_enumeration(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_global_enumeration():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -433,8 +432,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert getattr(enum, "Thirty-Two") == "Thirty-Two"
 
 
-def test_global_sequence_in_a_global_sequence(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_global_sequence_in_a_global_sequence():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -522,8 +521,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert sequenceIn.c3 is None
 
 
-def test_global_string_sequence(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_global_string_sequence():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -608,8 +607,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert sequence.c3 == "Ždero"
 
 
-def test_local_sequence_in_a_global_sequence(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_local_sequence_in_a_global_sequence():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -699,8 +698,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert sequenceIn2.s is None
 
 
-def test_no_types(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_no_types():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -736,8 +735,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         client.factory.create("NonExistingType")
 
 
-def test_schema_object_child_access_by_index(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_schema_object_child_access_by_index():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -805,8 +804,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert sequence[3] is None
 
 
-def test_simple_wsdl(tmpdir):
-    client = _client_from_wsdl(tmpdir,
+def test_simple_wsdl():
+    client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -930,48 +929,35 @@ def __assert_dynamic_type(anObject, typename):
         assert type(anObject).__name__ == typename
 
 
-def _client_from_wsdl(tmpdir, wsdl_content):
-    """Constructs a suds Client based on the given WSDL content."""
-    localURL = _prepare_input_file(tmpdir, wsdl_content)
-    return suds.client.Client(localURL)
+def _client_from_wsdl(wsdl_content):
+    """
+    Constructs a non-caching suds Client based on the given WSDL content.
+
+      Stores the content directly inside the suds library internal document
+    store under a hard-coded id to avoid having to load the data from a
+    temporary file.
+
+      Caveats:
+        * All files stored under the same id so each new local file overwrites
+          the previous one.
+        * We need to explicitly disable caching here or otherwise, because we
+          are using the same id for all our local WSDL documents, suds would
+          always reuse the first such local document from its cache.
+
+    """
+    # Idea for an alternative implementation:
+    #   Custom suds.cache.Cache subclass that would know how to access our
+    # locally stored documents or at least not cache them if we are storing
+    # them inside the suds library DocumentStore. Not difficult, allows us to
+    # have per-client instead of global configuration & allows us to support
+    # other cache types but certainly not as short as the current
+    # implementation.
+    testFileId = "whatchamacallit"
+    suds.store.DocumentStore.store[testFileId] = wsdl_content
+    return suds.client.Client("suds://" + testFileId, cache=None)
 
 
 def _first_from_dict(d):
     """Returns the first name/value pair from a dictionary or None if empty."""
     for x in d.items():
         return x[0], x[1]
-
-
-def _local_file_url(file):
-    """Prepares a local file URL for a given path.
-
-      Path needs to be specified using a native Python path string.
-
-    """
-    # TODO: There must be some sort of a generic construct_file_url() function
-    # in Python somewhere that we can use instead of rolling our own.
-    path_elements = []
-    path = os.path.abspath(file)
-    while path:
-        prev_path, trailing_path_element = os.path.split(path)
-        if prev_path == path:
-            path_elements.append(path)
-            break
-        path = prev_path
-        path_elements.append(trailing_path_element)
-    path_elements.append("file://localhost")
-    return "/".join(reversed(path_elements))
-
-
-def _prepare_input_file(tmpdir, content, filename="input.wsdl"):
-    """Prepares a temporary input file with the given content.
-
-    Returns a local file URL identifying the prepared file.
-
-    """
-    file = tmpdir.join(filename)
-    with file.open("wt") as f:
-        f.write(content)
-    #  'file' pylib.LocalFile path object explicitly converted to string to get
-    # a native Python path string required by _local_file_url().
-    return _local_file_url(str(file))
