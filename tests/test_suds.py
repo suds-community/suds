@@ -49,7 +49,7 @@ def test_empty_invalid_wsdl():
     try:
         client = _client_from_wsdl("")
         pytest.fail("Excepted exception xml.sax.SAXParseException not thrown.")
-    except xml.sax.SAXParseException as e:
+    except xml.sax.SAXParseException, e:
         assert e.getMessage() == "no element found"
 
 
