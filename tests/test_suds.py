@@ -735,6 +735,50 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         client.factory.create("NonExistingType")
 
 
+def test_parameter_referencing_missing_element():
+    try:
+        client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:missingElement" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+        pytest.fail("Excepted exception suds.TypeNotFound not thrown.")
+    except suds.TypeNotFound, e:
+        assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
+
+
 def test_schema_object_child_access_by_index():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
