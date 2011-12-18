@@ -155,6 +155,115 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[2][1] is service.params[2][0]
 
 
+def test_function_parameters_local_choice_in_a_sequence():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Elemento">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="x1" type="xsd:string" />
+            <xsd:element name="x2">
+              <xsd:complexType>
+                <xsd:choice>
+                  <xsd:element name="u1" type="xsd:string" />
+                  <xsd:element name="u2" type="xsd:string" />
+                  <xsd:element name="u3" type="xsd:string" />
+                </xsd:choice>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="x3" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:Elemento" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    assert len(client.wsdl.schema.elements) == 1
+    elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
+    assert isinstance(elemento, suds.xsd.sxbasic.Element)
+
+    service = client.sd[0]
+    assert not service.types
+
+    # Method parameters as read from the service definition.
+    assert len(service.params) == 3
+    assert service.params[0][0].name == "x1"
+    assert service.params[0][0].type[0] == "string"
+    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
+    assert service.params[1][0].name == "x2"
+    assert service.params[1][0].type is None
+    assert isinstance(service.params[1][1], suds.xsd.sxbasic.Element)
+    assert service.params[2][0].name == "x3"
+    assert service.params[2][0].type[0] == "string"
+    assert service.params[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert isinstance(service.params[2][1], suds.xsd.sxbuiltin.XString)
+
+    # Method parameters as read from a method object.
+    assert len(service.ports) == 1
+    port, methods = service.ports[0]
+    assert len(methods) == 1
+    method = methods[0]
+    assert len(method) == 2
+    method_name = method[0]
+    assert method_name == "f"
+    method_params = method[1]
+    assert len(method_params) == 3
+    assert method_params[0][0] == "x1"
+    assert method_params[0][1] is service.params[0][0]
+    assert method_params[1][0] == "x2"
+    assert method_params[1][1] is service.params[1][0]
+    assert method_params[2][0] == "x3"
+    assert method_params[2][1] is service.params[2][0]
+
+    # Construct method parameter element object.
+    paramOut = client.factory.create("Elemento")
+    __assert_dynamic_type(paramOut, "Elemento")
+    assert paramOut.x1 is None
+    __assert_dynamic_type(paramOut.x2, "x2")
+    assert not paramOut.x2.__keylist__
+    assert paramOut.x3 is None
+
+    # Construct method parameter objects with a locally defined type.
+    paramIn = client.factory.create("Elemento.x2")
+    __assert_dynamic_type(paramIn, "x2")
+    assert not paramOut.x2.__keylist__
+    assert paramIn is not paramOut.x2
+
+
 def test_function_parameters_local_sequence_in_a_sequence():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
