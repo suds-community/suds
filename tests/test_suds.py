@@ -103,12 +103,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document" />
-      <wsdl:input>
-        <soap:body use="literal" />
-      </wsdl:input>
-      <wsdl:output>
-        <soap:body use="literal" />
-      </wsdl:output>
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
@@ -203,12 +199,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document" />
-      <wsdl:input>
-        <soap:body use="literal" />
-      </wsdl:input>
-      <wsdl:output>
-        <soap:body use="literal" />
-      </wsdl:output>
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
@@ -312,12 +304,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document" />
-      <wsdl:input>
-        <soap:body use="literal" />
-      </wsdl:input>
-      <wsdl:output>
-        <soap:body use="literal" />
-      </wsdl:output>
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
