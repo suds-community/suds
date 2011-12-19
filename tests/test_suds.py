@@ -1061,13 +1061,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 def __assert_dynamic_type(anObject, typename):
     assert anObject.__module__ == suds.sudsobject.__name__
     assert anObject.__metadata__.sxtype.name == typename
-    #   When using dynamically created old style classes (i.e. when the
-    # 'suds.sudsobject.Object' does not inherit from 'object'), their instance
-    # report their type as <type 'instance'>. When using dynamically created
-    # new style classes we can check their name & module.
-    if isinstance(anObject, type):
-        assert type(anObject).__module__ == suds.sudsobject.__name__
-        assert type(anObject).__name__ == typename
+    #   In order to be compatible with old style classes (py2 only) we need to
+    # access the object's class information using its __class__ member and not
+    # the type() function. type() function always returns <type 'instance'> for
+    # old-style class instances while the __class__ member returns the correct
+    # class information for both old and new-style classes.
+    assert anObject.__class__.__module__ == suds.sudsobject.__name__
+    assert anObject.__class__.__name__ == typename
 
 
 def _client_from_wsdl(wsdl_content):
