@@ -151,6 +151,86 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[2][1] is service.params[2][0]
 
 
+def test_function_parameters_local_choice():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Elemento">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="u1" type="xsd:string" />
+            <xsd:element name="u2" type="xsd:string" />
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:Elemento" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    service = client.sd[0]
+    assert not service.types
+
+    # Method parameters as read from the service definition.
+    assert len(service.params) == 2
+    assert service.params[0][0].name == "u1"
+    assert service.params[0][0].type[0] == "string"
+    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
+    assert service.params[1][0].name == "u2"
+    assert service.params[1][0].type[0] == "string"
+    assert service.params[1][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert isinstance(service.params[1][1], suds.xsd.sxbuiltin.XString)
+
+    # Method parameters as read from a method object.
+    assert len(service.ports) == 1
+    port, methods = service.ports[0]
+    assert len(methods) == 1
+    assert len(methods[0]) == 2
+    method_name, method_params = methods[0]
+    assert method_name == "f"
+    assert len(method_params) == 2
+    assert method_params[0][0] == "u1"
+    assert method_params[0][1] is service.params[0][0]
+    assert method_params[1][0] == "u2"
+    assert method_params[1][1] is service.params[1][0]
+
+    # Construct method parameter element object.
+    paramOut = client.factory.create("Elemento")
+    __assert_dynamic_type(paramOut, "Elemento")
+    assert not paramOut.__keylist__
+
+
 def test_function_parameters_local_choice_in_a_sequence():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
