@@ -860,6 +860,79 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
 
 
+def test_resolving_schema_node_types():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="UngaBunga">
+        <xsd:sequence>
+          <xsd:element name="u1" type="xsd:string" />
+          <xsd:element name="u2" type="xsd:string" />
+          <xsd:element name="u3" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="Elemento">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="x1" type="xsd:string" />
+            <xsd:element name="x2" type="UngaBunga" />
+            <xsd:element name="x3">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="a1" type="xsd:string" />
+                  <xsd:element name="a2" type="xsd:string" />
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ElementoTyped" type="UngaBunga" />
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>
+""")
+    schema = client.wsdl.schema
+
+    # Collect references to the test schema element & type nodes.
+    assert len(schema.elements) == 2
+    elemento = schema.elements["Elemento", "my-namespace"]
+    elemento_x2 = elemento.children()[1][0]
+    assert elemento_x2.name == "x2"
+    elemento_x3 = elemento.children()[2][0]
+    assert elemento_x3.name == "x3"
+    elementoTyped = schema.elements["ElementoTyped", "my-namespace"]
+    assert len(schema.types) == 1
+    typo = schema.types["UngaBunga", "my-namespace"]
+    typo_u1 = typo.children()[0][0]
+    assert typo_u1.name == "u1"
+
+    # Resolving top-level locally defined elements.
+    assert elemento.resolve() is elemento
+    assert elementoTyped.resolve() is typo
+    assert typo.resolve() is typo
+
+    # Resolving a subnode referencing a globally defined type.
+    assert elemento_x2.resolve() is typo
+
+    # Resolving a locally defined subnode.
+    assert elemento_x3.resolve() is elemento_x3
+
+    # Resolving a builtin type nodes.
+    assert typo_u1.resolve().__class__ is suds.xsd.sxbuiltin.XString
+    assert typo_u1.resolve(nobuiltin=True) is typo_u1
+    assert elemento_x2.resolve(nobuiltin=True) is typo
+    assert elemento_x3.resolve(nobuiltin=True) is elemento_x3
+
+
 def test_schema_object_child_access_by_index():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
