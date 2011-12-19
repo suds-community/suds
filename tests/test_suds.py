@@ -115,10 +115,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 </wsdl:definitions>
 """)
 
-    assert len(client.wsdl.schema.elements) == 1
-    elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
-    assert isinstance(elemento, suds.xsd.sxbasic.Element)
-
     service = client.sd[0]
     assert len(service.types) == 1
 
@@ -210,10 +206,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:service>
 </wsdl:definitions>
 """)
-
-    assert len(client.wsdl.schema.elements) == 1
-    elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
-    assert isinstance(elemento, suds.xsd.sxbasic.Element)
 
     service = client.sd[0]
     assert not service.types
@@ -320,10 +312,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 </wsdl:definitions>
 """)
 
-    assert len(client.wsdl.schema.elements) == 1
-    elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
-    assert isinstance(elemento, suds.xsd.sxbasic.Element)
-
     service = client.sd[0]
     assert not service.types
 
@@ -424,10 +412,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:service>
 </wsdl:definitions>
 """)
-
-    assert len(client.wsdl.schema.elements) == 1
-    elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
-    assert isinstance(elemento, suds.xsd.sxbasic.Element)
 
     service = client.sd[0]
     assert not service.types
@@ -1056,6 +1040,70 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # TODO: Once we learn more about suds - add the following assertions:
     #   * assert method.input parameters = a (string), b (string).
     #   * assert method.output parameters = c (string).
+
+
+def test_wsdl_schema_content():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="UngaBunga">
+        <xsd:sequence>
+          <xsd:element name="u1" type="xsd:string" />
+          <xsd:element name="u2" type="xsd:string" />
+          <xsd:element name="u3" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Fifi">
+        <xsd:sequence>
+          <xsd:element name="x" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="Elemento">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="x1" type="xsd:string" />
+            <xsd:element name="x2" type="UngaBunga" />
+            <xsd:element name="x3">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="a1" type="xsd:string" />
+                  <xsd:element name="a2" type="xsd:string" />
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>
+""")
+
+    # Elements.
+    assert len(client.wsdl.schema.elements) == 1
+    elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
+    assert isinstance(elemento, suds.xsd.sxbasic.Element)
+
+    with pytest.raises(KeyError):
+        client.wsdl.schema.elements["DoesNotExist", "OMG"]
+
+    # Types.
+    assert len(client.wsdl.schema.types) == 2
+    unga_bunga = client.wsdl.schema.types["UngaBunga", "my-namespace"]
+    assert isinstance(unga_bunga, suds.xsd.sxbasic.Complex)
+    fifi = client.wsdl.schema.types["Fifi", "my-namespace"]
+    assert isinstance(unga_bunga, suds.xsd.sxbasic.Complex)
+
+    with pytest.raises(KeyError):
+        client.wsdl.schema.types["DoesNotExist", "OMG"]
 
 
 def __assert_dynamic_type(anObject, typename):
