@@ -16,12 +16,24 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-import suds
+import os.path
 from setuptools import setup, find_packages
+
+# Load the suds library version information directly into this module without
+# having to import the whole suds library itself. Importing the suds package
+# would have caused problems like the following:
+#   * Forcing the imported package module to be Python 3 compatible without any
+#     lib2to3 fixers first being run on it (since such fixers get run only
+#     later as a part of the setup procedure).
+#   * Making the setup module depend on the package module's dependencies, thus
+#     forcing the user to install them manually (since the setup procedure that
+#     is supposed to install them automatically will not be able to run unless
+#     they are already installed).
+exec(open(os.path.join("suds", "version.py"), "rt").read())
 
 setup(
     name="suds",
-    version=suds.__version__,
+    version=__version__,
     description="Lightweight SOAP client",
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
