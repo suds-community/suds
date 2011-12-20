@@ -160,5 +160,35 @@ class UnicodeMixin(object):
     else:
         __str__ = lambda x: unicode(x).encode('utf-8')
 
+# Compatibility wrappers to convert between bytes and strings.
+if sys.version_info >= (3, 0):
+    def str2bytes(s):
+        if isinstance(s, bytes):
+            return s
+        return s.encode('latin1')
+    def bytes2str(s):
+        if isinstance(s, str):
+            return s
+        return s.decode('latin1')
+else:
+    # For Python 2 bytes and string types are the same.
+    str2bytes = lambda s: s
+    bytes2str = lambda s: s
+
+#   Quick-fix helper function for making some __str__ & __repr__ function
+# implementations originally returning UTF-8 encoded strings portable to Python
+# 3. The original implementation worked in Python 2 but in Python 3 this would
+# return a bytes object which is not an allowed return type for those calls. In
+# Python 3 on the other hand directly returning a unicode string from them is
+# perfectly valid and there is no need for converting those strings to utf-8
+# encoded strings in the first place.
+#   The original implementation classes should most likely be refactored to use
+# unicode for internal representation and convert to encoded bytes only at the
+# last possible moment, e.g. on an explicit __str__/__repr__ call.
+if sys.version_info >= (3, 0):
+    str_to_utf8_in_py2 = lambda str: str
+else:
+    str_to_utf8_in_py2 = lambda str: str.encode('utf-8')
+
 
 import client
