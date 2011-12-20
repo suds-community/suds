@@ -124,7 +124,7 @@ class Factory:
         return subclass(value)
 
 
-class Object:
+class Object(UnicodeMixin):
 
     def __init__(self):
         self.__keylist__ = []
@@ -167,9 +167,6 @@ class Object:
 
     def __repr__(self):
         return str(self)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         return self.__printer__.tostr(self)

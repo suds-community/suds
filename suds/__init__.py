@@ -19,6 +19,8 @@ Suds is a lightweight SOAP python client that provides a
 service proxy for Web Services.
 """
 
+import sys
+
 #
 # Project properties
 #
@@ -145,6 +147,18 @@ class null:
 def objid(obj):
     return obj.__class__.__name__\
         +':'+hex(id(obj))
+
+#
+# Python 3 compatibility
+#
+
+# idea from http://lucumr.pocoo.org/2011/1/22/forwards-compatible-python/
+class UnicodeMixin(object):
+    if sys.version_info >= (3, 0):
+        # for Python 3, __str__ and __unicode__ should be identical
+        __str__ = lambda x: x.__unicode__()
+    else:
+        __str__ = lambda x: unicode(x).encode('utf-8')
 
 
 import client

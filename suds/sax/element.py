@@ -30,7 +30,7 @@ if sys.version_info < (2, 4, 0):
 
 log = getLogger(__name__)
 
-class Element:
+class Element(UnicodeMixin):
     """
     An XML element object.
     @ivar parent: The node containing this attribute
@@ -941,9 +941,6 @@ class Element:
     def __repr__(self):
         return \
             'Element (prefix=%s, name=%s)' % (self.prefix, self.name)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         return self.str()

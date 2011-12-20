@@ -46,7 +46,7 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-class Client(object):
+class Client(UnicodeMixin):
     """
     A lightweight web services client.
     I{(2nd generation)} API.
@@ -186,9 +186,6 @@ class Client(object):
         clone.sd = self.sd
         clone.messages = dict(tx=None, rx=None)
         return clone
-
-    def __str__(self):
-        return unicode(self)
 
     def __unicode__(self):
         s = ['\n']
