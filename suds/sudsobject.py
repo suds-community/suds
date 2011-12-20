@@ -22,7 +22,6 @@ wsdl/xsd defined types.
 
 from logging import getLogger
 from suds import *
-from new import classobj
 
 log = getLogger(__name__)
 
@@ -99,7 +98,7 @@ class Factory:
         key = '.'.join((name, str(bases)))
         subclass = cls.cache.get(key)
         if subclass is None:
-            subclass = classobj(name, bases, dict)
+            subclass = type(name, bases, dict)
             cls.cache[key] = subclass
         return subclass
 
