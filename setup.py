@@ -18,6 +18,7 @@
 
 import os
 import os.path
+import sys
 from setuptools import setup, find_packages
 
 # Setup documentation incorrectly states that it will search for packages
@@ -55,6 +56,10 @@ if script_folder != current_folder:
 #     they are already installed).
 exec(open(os.path.join("suds", "version.py"), "rt").read())
 
+extra = {}
+if sys.version_info >= (3,0):
+    extra['use_2to3'] = True
+
 setup(
     name="suds",
     version=__version__,
@@ -65,4 +70,5 @@ setup(
     maintainer_email="jortel@redhat.com",
     packages=find_packages(exclude=["tests"]),
     url="https://fedorahosted.org/suds",
+    **extra
 )
