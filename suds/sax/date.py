@@ -29,7 +29,7 @@ import re
 log = getLogger(__name__)
 
 
-class Date:
+class Date(UnicodeMixin):
     """
     An XML date object.
     Supported formats:
@@ -103,14 +103,11 @@ class Date:
             log.debug(s, exec_info=True)
             raise ValueError, 'Invalid format "%s"' % s
 
-    def __str__(self):
-        return unicode(self)
-
     def __unicode__(self):
         return self.date.isoformat()
 
 
-class Time:
+class Time(UnicodeMixin):
     """
     An XML time object.
     Supported formats:
@@ -252,9 +249,6 @@ class Time:
             return 0
         raise Exception()
 
-    def __str__(self):
-        return unicode(self)
-
     def __unicode__(self):
         time = self.time.isoformat()
         if self.tz.local:
@@ -312,9 +306,6 @@ class DateTime(Date,Time):
             self.time = d.time()
         except OverflowError:
             log.warn('"%s" caused overflow, not-adjusted', self.datetime)
-
-    def __str__(self):
-        return unicode(self)
 
     def __unicode__(self):
         s = []

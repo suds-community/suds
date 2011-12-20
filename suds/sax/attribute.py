@@ -26,7 +26,7 @@ from suds.sax.text import Text
 
 log = getLogger(__name__)
 
-class Attribute:
+class Attribute(UnicodeMixin):
     """
     An XML attribute object.
     @ivar parent: The node containing this attribute
@@ -166,10 +166,6 @@ class Attribute:
         return \
             'attr (prefix=%s, name=%s, value=(%s))' %\
                 (self.prefix, self.name, self.value)
-
-    def __str__(self):
-        """ get an xml string representation """
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         """ get an xml string representation """

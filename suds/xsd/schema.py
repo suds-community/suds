@@ -38,7 +38,7 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-class SchemaCollection:
+class SchemaCollection(UnicodeMixin):
     """
     A collection of schema objects.  This class is needed because WSDLs
     may contain more then one <schema/> node.
@@ -147,9 +147,6 @@ class SchemaCollection:
     def __len__(self):
         return len(self.children)
 
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
     def __unicode__(self):
         result = ['\nschema collection']
         for s in self.children:
@@ -157,7 +154,7 @@ class SchemaCollection:
         return '\n'.join(result)
 
 
-class Schema:
+class Schema(UnicodeMixin):
     """
     The schema is an objectification of a <schema/> (xsd) definition.
     It provides inspection, lookup and type resolution.
@@ -411,9 +408,6 @@ class Schema:
     def __repr__(self):
         myrep = '<%s tns="%s"/>' % (self.id, self.tns[1])
         return myrep.encode('utf-8')
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         return self.str()

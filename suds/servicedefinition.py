@@ -25,7 +25,7 @@ from suds.sax import Namespace
 
 log = getLogger(__name__)
 
-class ServiceDefinition:
+class ServiceDefinition(UnicodeMixin):
     """
     A service definition provides an object used to generate a textual description
     of a service.
@@ -236,9 +236,6 @@ class ServiceDefinition:
                 s.append(self.xlate(t[0]))
         s.append('\n\n')
         return ''.join(s)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         try:

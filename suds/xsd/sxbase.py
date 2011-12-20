@@ -28,7 +28,7 @@ from suds.sax import Namespace
 log = getLogger(__name__)
 
 
-class SchemaObject(object):
+class SchemaObject(UnicodeMixin):
     """
     A schema object is an extension to object object with
     with schema awareness.
@@ -468,9 +468,6 @@ class SchemaObject(object):
         @rtype: [str,...]
         """
         return ()
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         return unicode(self.str())
