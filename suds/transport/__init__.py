@@ -52,7 +52,7 @@ class Request:
         s.append('URL:%s' % self.url)
         s.append('HEADERS: %s' % self.headers)
         s.append('MESSAGE:')
-        s.append(self.message)
+        s.append(str(self.message))
         return '\n'.join(s)
 
 
@@ -85,7 +85,7 @@ class Reply:
         s.append('CODE: %s' % self.code)
         s.append('HEADERS: %s' % self.headers)
         s.append('MESSAGE:')
-        s.append(self.message)
+        s.append(str(self.message))
         return '\n'.join(s)
 
 
