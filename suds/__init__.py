@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -19,9 +19,6 @@ Suds is a lightweight SOAP python client that provides a
 service proxy for Web Services.
 """
 
-import os
-import sys
-
 #
 # Project properties
 #
@@ -36,19 +33,19 @@ __build__="(beta) R705-20101207"
 class MethodNotFound(Exception):
     def __init__(self, name):
         Exception.__init__(self, "Method not found: '%s'" % name)
-        
+
 class PortNotFound(Exception):
     def __init__(self, name):
         Exception.__init__(self, "Port not found: '%s'" % name)
-        
+
 class ServiceNotFound(Exception):
     def __init__(self, name):
         Exception.__init__(self, "Service not found: '%s'" % name)
-    
+
 class TypeNotFound(Exception):
     def __init__(self, name):
         Exception.__init__(self, "Type not found: '%s'" % tostr(name))
-    
+
 class BuildError(Exception):
     msg = \
         """
@@ -60,7 +57,7 @@ class BuildError(Exception):
         """
     def __init__(self, name, exception):
         Exception.__init__(self, BuildError.msg % (name, exception))
-        
+
 class SoapHeadersNotPermitted(Exception):
     msg = \
         """
@@ -70,7 +67,7 @@ class SoapHeadersNotPermitted(Exception):
         """
     def __init__(self, name):
         Exception.__init__(self, self.msg % name)
-    
+
 class WebFault(Exception):
     def __init__(self, fault, document):
         if hasattr(fault, 'faultstring'):
@@ -86,7 +83,7 @@ class Repr:
     def __init__(self, x):
         self.x = x
     def __str__(self):
-        return repr(self.x)  
+        return repr(self.x)
 
 #
 # Utility
@@ -138,14 +135,14 @@ def tostr(object, encoding=None):
         return unicode(object)
     except:
         return str(object)
-    
+
 class null:
     """
     The I{null} object.
     Used to pass NULL for optional XML nodes.
     """
     pass
-    
+
 def objid(obj):
     return obj.__class__.__name__\
         +':'+hex(id(obj))

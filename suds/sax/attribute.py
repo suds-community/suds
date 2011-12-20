@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -43,12 +43,12 @@ class Attribute:
         @param name: The attribute's name with I{optional} namespace prefix.
         @type name: basestring
         @param value: The attribute's value
-        @type value: basestring 
+        @type value: basestring
         """
         self.parent = None
         self.prefix, self.name = splitPrefix(name)
         self.setValue(value)
-        
+
     def clone(self, parent=None):
         """
         Clone this object.
@@ -60,7 +60,7 @@ class Attribute:
         a = Attribute(self.qname(), self.value)
         a.parent = parent
         return a
-    
+
     def qname(self):
         """
         Get the B{fully} qualified name of this attribute
@@ -71,7 +71,7 @@ class Attribute:
             return self.name
         else:
             return ':'.join((self.prefix, self.name))
-        
+
     def setValue(self, value):
         """
         Set the attributes value
@@ -85,7 +85,7 @@ class Attribute:
         else:
             self.value = Text(value)
         return self
-        
+
     def getValue(self, default=Text('')):
         """
         Get the attributes value with optional default.
@@ -99,7 +99,7 @@ class Attribute:
             return self.value
         else:
             return default
-    
+
     def hasText(self):
         """
         Get whether the attribute has I{text} and that it is not an empty
@@ -108,7 +108,7 @@ class Attribute:
         @rtype: boolean
         """
         return ( self.value is not None and len(self.value) )
-        
+
     def namespace(self):
         """
         Get the attributes namespace.  This may either be the namespace
@@ -120,7 +120,7 @@ class Attribute:
             return Namespace.default
         else:
             return self.resolvePrefix(self.prefix)
-        
+
     def resolvePrefix(self, prefix):
         """
         Resolve the specified prefix to a known namespace.
@@ -133,7 +133,7 @@ class Attribute:
         if self.parent is not None:
             ns = self.parent.resolvePrefix(prefix)
         return ns
-    
+
     def match(self, name=None, ns=None):
         """
         Match by (optional) name and/or (optional) namespace.
@@ -153,14 +153,14 @@ class Attribute:
         else:
             byns = ( self.namespace()[1] == ns[1] )
         return ( byname and byns )
-    
+
     def __eq__(self, rhs):
         """ equals operator """
         return rhs is not None and \
             isinstance(rhs, Attribute) and \
             self.prefix == rhs.name and \
             self.name == rhs.name
-            
+
     def __repr__(self):
         """ get a string representation """
         return \
@@ -170,7 +170,7 @@ class Attribute:
     def __str__(self):
         """ get an xml string representation """
         return unicode(self).encode('utf-8')
-    
+
     def __unicode__(self):
         """ get an xml string representation """
         n = self.qname()
