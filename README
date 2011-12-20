@@ -13,6 +13,76 @@ For details, visit:
 RELEASE-NOTES:
 =================================================
 
+version 0.4.1 (10-15-10)
+  * <undocumented>
+
+version 0.4 (09-08-10)
+  * Fix spelling errors in spec description.
+  * Fix source0 URL warning.
+  * Updated caching to not cache intermediate wsdls.
+  * Added DocumentCache which caches verified XML documents as text. User can
+    choose.
+  * Added cachingpolicy option to allow user to specify whether to cache XML
+    documents or the WSDL object.
+  * Provided for repeating values in reply for message parts consistent with way
+    handled in nested objects.
+  * Added charset=utf-8 to stock content-type http header.
+  * Added <?xml version="1.0" encoding="UTF-8"?> to outgoing SOAP messages.
+  * Detection of faults in successful (http=200) replies and raise WebFault.
+    Search for <soapenv:Fault/>.
+  * Add plugins facility.
+  * Fixed Tickets: #251, #313, #314, #334.
+
+version 0.3.9 (12-17-09)
+  * Bumped python requires to 2.4.
+  * Replaced stream-based caching in the transport package with document-based
+    caching.
+  * Caches pickled Document objects instead of XML text. 2x Faster!
+  * No more SAX parsing exceptions on damaged or incomplete cached files.
+  * Cached WSDL objects. Entire Definitions object including contained Schema
+    object cached via pickle.
+  * Copy of soap encoding schema packaged with suds.
+  * Refactor Transports to use ProxyHandler instead of
+    urllib2.Request.set_proxy().
+  * Added WSSE enhancements <Timestamp/> and <Expires/> support. See: Timestamp
+    token.
+  * Fixed Tickets: #256, #291, #294, #295, #296.
+
+version 0.3.8 (12-09-09)
+  * Includeds Windows NTLM Transport.
+  * Add missing self.messages in Client.clone().
+  * Changed default behavior for WSDL PartElement to be optional.
+  * Add support for services/ports defined without <address/> element in WSDL.
+  * Fix sax.attribute.Element.attrib() to find by name only when ns is not
+    specified; renamed to Element.getAttribute().
+  * Update HttpTransport to pass timeout parameter to urllib2 open() methods
+    when supported by urllib2.
+  * Add null class to pass explicit NULL values for parameters and optional
+    elements.
+  * Soap encoded array (soap-enc:Array) enhancement for rpc/encoded. Arrays
+    passed as python arrays - works like document/literal now. No more using the
+    factory to create the Array. Automatically includes arrayType attribute.
+    E.g. soap-enc:arrayType="Array[2]".
+  * Reintroduced ability to pass complex (objects) using python dict instead of
+    suds object via factory.
+  * Fixed tickets: #84, #261, #262, #263, #265, #266, #278, #280, #282.
+
+version 0.3.7 (10-16-09)
+  * Better soap header support
+  * Added new transport HttpAuthenticated for active (not passive) basic
+    authentication.
+  * New options (prefixes, timeout, retxml).
+  * WSDL processing enhancements.
+  * Expanded builtin XSD type support.
+  * Fixed <xs:include/>.
+  * Better XML date/datetime conversion.
+  * Client.clone() method added for lightweight copy of client object.
+  * XSD processing fixes/enhancements.
+  * Better <simpleType/> by <xs:restriction/> support.
+  * Performance enhancements.
+  * Fixed tickets: #65, #232, #233, #235, #241, #242, #244, #247, #254, #254,
+    #256, #257, #258.
+
 version 0.3.6 (04-31-09):
   * Change hard coded /tmp/suds to tempfile.gettempdir() and create suds/ on
     demand.
