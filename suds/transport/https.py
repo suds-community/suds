@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -34,7 +34,7 @@ class HttpAuthenticated(HttpTransport):
     @ivar pm: The password manager.
     @ivar handler: The authentication handler.
     """
-    
+
     def __init__(self, **kwargs):
         """
         @param kwargs: Keyword arguments.
@@ -54,31 +54,31 @@ class HttpAuthenticated(HttpTransport):
         """
         HttpTransport.__init__(self, **kwargs)
         self.pm = u2.HTTPPasswordMgrWithDefaultRealm()
-        
+
     def open(self, request):
         self.addcredentials(request)
         return  HttpTransport.open(self, request)
-    
+
     def send(self, request):
         self.addcredentials(request)
         return  HttpTransport.send(self, request)
-    
+
     def addcredentials(self, request):
         credentials = self.credentials()
         if not (None in credentials):
             u = credentials[0]
             p = credentials[1]
             self.pm.add_password(None, request.url, u, p)
-    
+
     def credentials(self):
         return (self.options.username, self.options.password)
-    
+
     def u2handlers(self):
             handlers = HttpTransport.u2handlers(self)
             handlers.append(u2.HTTPBasicAuthHandler(self.pm))
             return handlers
-    
-    
+
+
 class WindowsHttpAuthenticated(HttpAuthenticated):
     """
     Provides Windows (NTLM) http authentication.
@@ -86,9 +86,9 @@ class WindowsHttpAuthenticated(HttpAuthenticated):
     @ivar handler: The authentication handler.
     @author: Christopher Bess
     """
-        
+
     def u2handlers(self):
-        # try to import ntlm support  
+        # try to import ntlm support
         try:
             from ntlm import HTTPNtlmAuthHandler
         except ImportError:

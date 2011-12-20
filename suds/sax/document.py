@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -27,7 +27,7 @@ log = getLogger(__name__)
 
 class Document:
     """ An XML Document """
-    
+
     DECL = '<?xml version="1.0" encoding="UTF-8"?>'
 
     def __init__(self, root=None):
@@ -37,7 +37,7 @@ class Document:
         @type root: (L{Element}|str|None)
         """
         self.__root = None
-        self.append(root)    
+        self.append(root)
 
     def root(self):
         """
@@ -46,7 +46,7 @@ class Document:
         @rtype: L{Element}
         """
         return self.__root
-        
+
     def append(self, node):
         """
         Append (set) the document root.
@@ -60,7 +60,7 @@ class Document:
         if isinstance(node, Element):
             self.__root = node
             return
-        
+
     def getChild(self, name, ns=None, default=None):
         """
         Get a child by (optional) name and/or (optional) namespace.
@@ -85,7 +85,7 @@ class Document:
             return self.__root
         else:
             return default
-        
+
     def childAtPath(self, path):
         """
         Get a child at I{path} where I{path} is a (/) separated
@@ -106,7 +106,7 @@ class Document:
             return self.__root.childAtPath(path[1])
         else:
             return self.__root
-        
+
     def childrenAtPath(self, path):
         """
         Get a list of children at I{path} where I{path} is a (/) separated
@@ -127,7 +127,7 @@ class Document:
             return self.__root.childrenAtPath(path[1])
         else:
             return [self.__root,]
-        
+
     def getChildren(self, name=None, ns=None):
         """
         Get a list of children by (optional) name and/or (optional) namespace.
@@ -146,7 +146,7 @@ class Document:
             return []
         else:
             return [matched,]
-        
+
     def str(self):
         """
         Get a string representation of this XML document.
@@ -160,7 +160,7 @@ class Document:
             s.append('\n')
             s.append(root.str())
         return ''.join(s)
-    
+
     def plain(self):
         """
         Get a string representation of this XML document.
@@ -176,6 +176,6 @@ class Document:
 
     def __str__(self):
         return unicode(self).encode('utf-8')
-    
+
     def __unicode__(self):
         return self.str()

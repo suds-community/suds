@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -39,7 +39,7 @@ class RestrictionMatcher:
     """
     def match(self, n):
         return isinstance(n, Restriction)
-    
+
 
 class TypedContent(Content):
     """
@@ -70,7 +70,7 @@ class TypedContent(Content):
         else:
             result = resolved.resolve(nobuiltin)
         return result
-    
+
     def qref(self):
         """
         Get the I{type} qualified reference to the referenced xsd type.
@@ -97,28 +97,28 @@ class Complex(SchemaObject):
     @cvar childtags: A list of valid child node names
     @type childtags: (I{str},...)
     """
-        
+
     def childtags(self):
         return (
-            'attribute', 
-            'attributeGroup', 
-            'sequence', 
-            'all', 
-            'choice', 
+            'attribute',
+            'attributeGroup',
+            'sequence',
+            'all',
+            'choice',
             'complexContent',
-            'simpleContent', 
-            'any', 
+            'simpleContent',
+            'any',
             'group')
 
     def description(self):
         return ('name',)
-    
+
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
                 return True
         return False
-    
+
     def mixed(self):
         for c in self.rawchildren:
             if isinstance(c, SimpleContent) and c.mixed():
@@ -132,14 +132,14 @@ class Group(SchemaObject):
     @cvar childtags: A list of valid child node names
     @type childtags: (I{str},...)
     """
-        
+
     def childtags(self):
         return ('sequence', 'all', 'choice')
-        
+
     def dependencies(self):
         deps = []
         midx = None
-        if self.ref is not None:     
+        if self.ref is not None:
             query = GroupQuery(self.ref)
             g = query.execute(self.schema)
             if g is None:
@@ -148,14 +148,14 @@ class Group(SchemaObject):
             deps.append(g)
             midx = 0
         return (midx, deps)
-    
+
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
 
     def description(self):
         return ('name', 'ref',)
-    
+
 
 class AttributeGroup(SchemaObject):
     """
@@ -163,7 +163,7 @@ class AttributeGroup(SchemaObject):
     @cvar childtags: A list of valid child node names
     @type childtags: (I{str},...)
     """
-        
+
     def childtags(self):
         return ('attribute', 'attributeGroup')
 
@@ -179,14 +179,14 @@ class AttributeGroup(SchemaObject):
             deps.append(ag)
             midx = 0
         return (midx, deps)
-    
+
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
 
     def description(self):
         return ('name', 'ref',)
-    
+
 
 class Simple(SchemaObject):
     """
@@ -195,31 +195,31 @@ class Simple(SchemaObject):
 
     def childtags(self):
         return ('restriction', 'any', 'list',)
-    
+
     def enum(self):
         for child, ancestry in self.children():
             if isinstance(child, Enumeration):
                 return True
         return False
-    
+
     def mixed(self):
         return len(self)
 
     def description(self):
         return ('name',)
-    
+
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
                 return True
         return False
-    
+
     def restriction(self):
         for c in self.rawchildren:
             if c.restriction():
                 return True
         return False
-    
+
 
 class List(SchemaObject):
     """
@@ -231,23 +231,23 @@ class List(SchemaObject):
 
     def description(self):
         return ('name',)
-    
+
     def xslist(self):
         return True
 
-   
+
 class Restriction(SchemaObject):
     """
     Represents an (xsd) schema <xs:restriction/> node
     """
-    
+
     def __init__(self, schema, root):
         SchemaObject.__init__(self, schema, root)
         self.ref = root.get('base')
 
     def childtags(self):
         return ('enumeration', 'attribute', 'attributeGroup')
-    
+
     def dependencies(self):
         deps = []
         midx = None
@@ -261,7 +261,7 @@ class Restriction(SchemaObject):
                 deps.append(super)
                 midx = 0
         return (midx, deps)
-    
+
     def restriction(self):
         return True
 
@@ -269,11 +269,11 @@ class Restriction(SchemaObject):
         SchemaObject.merge(self, other)
         filter = Filter(False, self.rawchildren)
         self.prepend(self.rawchildren, other.rawchildren, filter)
-        
+
     def description(self):
         return ('ref',)
-    
-    
+
+
 class Collection(SchemaObject):
     """
     Represents an (xsd) schema collection node:
@@ -313,16 +313,16 @@ class ComplexContent(SchemaObject):
     """
     Represents an (xsd) schema <xs:complexContent/> node.
     """
-        
+
     def childtags(self):
         return ('attribute', 'attributeGroup', 'extension', 'restriction')
-    
+
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
                 return True
         return False
-    
+
     def restriction(self):
         for c in self.rawchildren:
             if c.restriction():
@@ -334,22 +334,22 @@ class SimpleContent(SchemaObject):
     """
     Represents an (xsd) schema <xs:simpleContent/> node.
     """
-        
+
     def childtags(self):
         return ('extension', 'restriction')
-    
+
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
                 return True
         return False
-    
+
     def restriction(self):
         for c in self.rawchildren:
             if c.restriction():
                 return True
         return False
-    
+
     def mixed(self):
         return len(self)
 
@@ -362,16 +362,16 @@ class Enumeration(Content):
     def __init__(self, schema, root):
         Content.__init__(self, schema, root)
         self.name = root.get('value')
-        
+
     def enum(self):
         return True
 
-    
+
 class Element(TypedContent):
     """
     Represents an (xsd) schema <xs:element/> node.
     """
-    
+
     def __init__(self, schema, root):
         TypedContent.__init__(self, schema, root)
         a = root.get('form')
@@ -381,7 +381,7 @@ class Element(TypedContent):
         if a is not None:
             self.nillable = ( a in ('1', 'true') )
         self.implany()
-            
+
     def implany(self):
         """
         Set the type as any when implicit.
@@ -395,22 +395,22 @@ class Element(TypedContent):
             self.root.isempty():
                 self.type = self.anytype()
         return self
-        
+
     def childtags(self):
         return ('attribute', 'simpleType', 'complexType', 'any',)
-    
+
     def extension(self):
         for c in self.rawchildren:
             if c.extension():
                 return True
         return False
-    
+
     def restriction(self):
         for c in self.rawchildren:
             if c.restriction():
                 return True
         return False
-    
+
     def dependencies(self):
         deps = []
         midx = None
@@ -423,14 +423,14 @@ class Element(TypedContent):
             deps.append(e)
             midx = 0
         return (midx, deps)
-    
+
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
 
     def description(self):
         return ('name', 'ref', 'type')
-        
+
     def anytype(self):
         """ create an xsd:anyType reference """
         p,u = Namespace.xsdns
@@ -445,19 +445,19 @@ class Extension(SchemaObject):
     """
     Represents an (xsd) schema <xs:extension/> node.
     """
-    
+
     def __init__(self, schema, root):
         SchemaObject.__init__(self, schema, root)
         self.ref = root.get('base')
-        
+
     def childtags(self):
         return ('attribute',
-                'attributeGroup', 
-                'sequence', 
-                'all', 
-                'choice', 
+                'attributeGroup',
+                'sequence',
+                'all',
+                'choice',
                 'group')
-        
+
     def dependencies(self):
         deps = []
         midx = None
@@ -476,13 +476,13 @@ class Extension(SchemaObject):
         SchemaObject.merge(self, other)
         filter = Filter(False, self.rawchildren)
         self.prepend(self.rawchildren, other.rawchildren, filter)
-        
+
     def extension(self):
         return ( self.ref is not None )
 
     def description(self):
         return ('ref',)
-    
+
 
 class Import(SchemaObject):
     """
@@ -496,13 +496,13 @@ class Import(SchemaObject):
     @ivar opened: Opened and I{imported} flag.
     @type opened: boolean
     """
-    
+
     locations = {}
-    
+
     @classmethod
     def bind(cls, ns, location=None):
         """
-        Bind a namespace to a schema location (URI).  
+        Bind a namespace to a schema location (URI).
         This is used for imports that don't specify a schemaLocation.
         @param ns: A namespace-uri.
         @type ns: str
@@ -513,7 +513,7 @@ class Import(SchemaObject):
         if location is None:
             location = ns
         cls.locations[ns] = location
-    
+
     def __init__(self, schema, root):
         SchemaObject.__init__(self, schema, root)
         self.ns = (None, root.get('namespace'))
@@ -521,7 +521,7 @@ class Import(SchemaObject):
         if self.location is None:
             self.location = self.locations.get(self.ns[1])
         self.opened = False
-        
+
     def open(self, options):
         """
         Open and import the refrenced schema.
@@ -542,7 +542,7 @@ class Import(SchemaObject):
                 result = self.download(options)
         log.debug('imported:\n%s', result)
         return result
-    
+
     def locate(self):
         """ find the schema locally """
         if self.ns[1] == self.schema.tns[1]:
@@ -565,10 +565,10 @@ class Import(SchemaObject):
             msg = 'imported schema (%s) at (%s), failed' % (self.ns[1], url)
             log.error('%s, %s', self.id, msg, exc_info=True)
             raise Exception(msg)
- 
+
     def description(self):
         return ('ns', 'location')
-    
+
 
 class Include(SchemaObject):
     """
@@ -578,16 +578,16 @@ class Include(SchemaObject):
     @ivar opened: Opened and I{imported} flag.
     @type opened: boolean
     """
-    
+
     locations = {}
-    
+
     def __init__(self, schema, root):
         SchemaObject.__init__(self, schema, root)
         self.location = root.get('schemaLocation')
         if self.location is None:
             self.location = self.locations.get(self.ns[1])
         self.opened = False
-        
+
     def open(self, options):
         """
         Open and include the refrenced schema.
@@ -620,7 +620,7 @@ class Include(SchemaObject):
             msg = 'include schema at (%s), failed' % url
             log.error('%s, %s', self.id, msg, exc_info=True)
             raise Exception(msg)
-        
+
     def __applytns(self, root):
         """ make sure included schema has same tns. """
         TNS = 'targetNamespace'
@@ -631,12 +631,12 @@ class Include(SchemaObject):
         else:
             if self.schema.tns[1] != tns:
                 raise Exception, '%s mismatch' % TNS
-                
- 
+
+
     def description(self):
         return ('location')
 
-   
+
 class Attribute(TypedContent):
     """
     Represents an (xsd) <attribute/> node
@@ -645,10 +645,10 @@ class Attribute(TypedContent):
     def __init__(self, schema, root):
         TypedContent.__init__(self, schema, root)
         self.use = root.get('use', default='')
-        
+
     def childtags(self):
         return ('restriction',)
-        
+
     def isattr(self):
         return True
 
@@ -659,7 +659,7 @@ class Attribute(TypedContent):
         @rtype: str
         """
         return self.root.get('default', default='')
-    
+
     def optional(self):
         return ( self.use != 'required' )
 
@@ -675,7 +675,7 @@ class Attribute(TypedContent):
             deps.append(a)
             midx = 0
         return (midx, deps)
-    
+
     def description(self):
         return ('name', 'ref', 'type')
 
@@ -690,17 +690,17 @@ class Any(Content):
         root.set('note', 'synthesized (any) child')
         child = Any(self.schema, root)
         return (child, [])
-    
+
     def get_attribute(self, name):
         root = self.root.clone()
         root.set('note', 'synthesized (any) attribute')
         attribute = Any(self.schema, root)
         return (attribute, [])
-    
+
     def any(self):
         return True
-    
-    
+
+
 class Factory:
     """
     @cvar tags: A factory to create object objects based on tag.
@@ -710,10 +710,10 @@ class Factory:
     tags =\
     {
         'import' : Import,
-        'include' : Include, 
+        'include' : Include,
         'complexType' : Complex,
         'group' : Group,
-        'attributeGroup' : AttributeGroup, 
+        'attributeGroup' : AttributeGroup,
         'simpleType' : Simple,
         'list' : List,
         'element' : Element,
@@ -728,7 +728,7 @@ class Factory:
         'extension' : Extension,
         'any' : Any,
     }
-    
+
     @classmethod
     def maptag(cls, tag, fn):
         """
@@ -739,7 +739,7 @@ class Factory:
         @type fn: fn|class.
         """
         cls.tags[tag] = fn
-    
+
     @classmethod
     def create(cls, root, schema):
         """
@@ -749,7 +749,7 @@ class Factory:
         @param schema: A schema object.
         @type schema: L{schema.Schema}
         @return: The created object.
-        @rtype: L{SchemaObject} 
+        @rtype: L{SchemaObject}
         """
         fn = cls.tags.get(root.name)
         if fn is not None:
@@ -778,7 +778,7 @@ class Factory:
                 c = cls.build(node, schema, child.childtags())
                 child.rawchildren = c
         return children
-    
+
     @classmethod
     def collate(cls, children):
         imports = []
@@ -808,7 +808,7 @@ class Factory:
             children.remove(i)
         return (children, imports, attributes, elements, types, groups, agrps)
 
-    
+
 
 
 #######################################################

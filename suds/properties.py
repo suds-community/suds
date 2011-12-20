@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -58,7 +58,7 @@ class Link(object):
         self.validate(a, b)
         a.links.append(pB)
         b.links.append(pA)
-            
+
     def validate(self, pA, pB):
         """
         Validate that the two properties may be linked.
@@ -89,7 +89,7 @@ class Link(object):
             if k in kA:
                 raise Exception, 'Duplicate key %s found' % k
         return self
-            
+
     def teardown(self):
         """
         Teardown the link.
@@ -116,7 +116,7 @@ class Endpoint(object):
     def __init__(self, link, target):
         self.link = link
         self.target = target
-        
+
     def teardown(self):
         return self.link.teardown()
 
@@ -155,7 +155,7 @@ class Definition:
         self.classes = classes
         self.default = default
         self.linker = linker
-        
+
     def nvl(self, value=None):
         """
         Convert the I{value} into the default when I{None}.
@@ -168,7 +168,7 @@ class Definition:
             return self.default
         else:
             return value
-        
+
     def validate(self, value):
         """
         Validate the I{value} is of the correct class.
@@ -182,11 +182,11 @@ class Definition:
             not isinstance(value, self.classes):
                 msg = '"%s" must be: %s' % (self.name, self.classes)
                 raise AttributeError,msg
-                    
-            
+
+
     def __repr__(self):
         return '%s: %s' % (self.name, str(self))
-            
+
     def __str__(self):
         s = []
         if len(self.classes):
@@ -210,7 +210,7 @@ class Properties:
         a network of properties.
     @type links: [L{Property},..]
     @ivar defined: A dict of property values.
-    @type defined: dict 
+    @type defined: dict
     """
     def __init__(self, domain, definitions, kwargs):
         """
@@ -219,7 +219,7 @@ class Properties:
         @param definitions: A table of property definitions.
         @type definitions: {name: L{Definition}}
         @param kwargs: A list of property name/values to set.
-        @type kwargs: dict  
+        @type kwargs: dict
         """
         self.definitions = {}
         for d in definitions:
@@ -230,7 +230,7 @@ class Properties:
         self.modified = set()
         self.prime()
         self.update(kwargs)
-        
+
     def definition(self, name):
         """
         Get the definition for the property I{name}.
@@ -244,7 +244,7 @@ class Properties:
         if d is None:
             raise AttributeError(name)
         return d
-    
+
     def update(self, other):
         """
         Update the property values as specified by keyword/value.
@@ -258,7 +258,7 @@ class Properties:
         for n,v in other.items():
             self.set(n, v)
         return self
-    
+
     def notset(self, name):
         """
         Get whether a property has never been set by I{name}.
@@ -268,7 +268,7 @@ class Properties:
         @rtype: bool
         """
         self.provider(name).__notset(name)
-            
+
     def set(self, name, value):
         """
         Set the I{value} of a property by I{name}.
@@ -283,7 +283,7 @@ class Properties:
         """
         self.provider(name).__set(name, value)
         return self
-    
+
     def unset(self, name):
         """
         Unset a property by I{name}.
@@ -294,7 +294,7 @@ class Properties:
         """
         self.provider(name).__set(name, None)
         return self
-            
+
     def get(self, name, *df):
         """
         Get the value of a property by I{name}.
@@ -304,13 +304,13 @@ class Properties:
             is not set
         @type df: [1].
         @return: The stored value, or I{df[0]} if not set.
-        @rtype: any 
+        @rtype: any
         """
         return self.provider(name).__get(name, *df)
-    
+
     def link(self, other):
         """
-        Link (associate) this object with anI{other} properties object 
+        Link (associate) this object with anI{other} properties object
         to create a network of properties.  Links are bidirectional.
         @param other: The object to link.
         @type other: L{Properties}
@@ -334,7 +334,7 @@ class Properties:
             if p in others:
                 p.teardown()
         return self
-    
+
     def provider(self, name, history=None):
         """
         Find the provider of the property by I{name}.
@@ -362,7 +362,7 @@ class Properties:
         if len(history):
             return None
         return self
-    
+
     def keys(self, history=None):
         """
         Get the set of I{all} property names.
@@ -383,7 +383,7 @@ class Properties:
             keys.update(x.keys(history))
         history.remove(self)
         return keys
-    
+
     def domains(self, history=None):
         """
         Get the set of I{all} domain names.
@@ -404,7 +404,7 @@ class Properties:
             domains.update(x.domains(history))
         history.remove(self)
         return domains
- 
+
     def prime(self):
         """
         Prime the stored values based on default values
@@ -415,10 +415,10 @@ class Properties:
         for d in self.definitions.values():
             self.defined[d.name] = d.default
         return self
-    
+
     def __notset(self, name):
         return not (name in self.modified)
-    
+
     def __set(self, name, value):
         d = self.definition(name)
         d.validate(value)
@@ -427,14 +427,14 @@ class Properties:
         self.defined[name] = value
         self.modified.add(name)
         d.linker.updated(self, prev, value)
-        
+
     def __get(self, name, *df):
         d = self.definition(name)
         value = self.defined.get(name)
         if value == d.default and len(df):
             value = df[0]
         return value
-            
+
     def str(self, history):
         s = []
         s.append('Definitions:')
@@ -450,10 +450,10 @@ class Properties:
                 s.append(x.str(history))
             history.remove(self)
         return '\n'.join(s)
-            
+
     def __repr__(self):
         return str(self)
-            
+
     def __str__(self):
         return self.str([])
 
@@ -466,36 +466,36 @@ class Skin(object):
     """
     def __init__(self, domain, definitions, kwargs):
         self.__pts__ = Properties(domain, definitions, kwargs)
-        
+
     def __setattr__(self, name, value):
         builtin = name.startswith('__') and name.endswith('__')
         if builtin:
             self.__dict__[name] = value
             return
         self.__pts__.set(name, value)
-        
+
     def __getattr__(self, name):
         return self.__pts__.get(name)
-    
+
     def __repr__(self):
         return str(self)
-    
+
     def __str__(self):
         return str(self.__pts__)
-    
-    
+
+
 class Unskin(object):
     def __new__(self, *args, **kwargs):
         return args[0].__pts__
-    
-    
+
+
 class Inspector:
     """
     Wrapper inspector.
     """
     def __init__(self, options):
         self.properties = options.__pts__
-        
+
     def get(self, name, *df):
         """
         Get the value of a property by I{name}.
@@ -505,7 +505,7 @@ class Inspector:
             is not set
         @type df: [1].
         @return: The stored value, or I{df[0]} if not set.
-        @rtype: any 
+        @rtype: any
         """
         return self.properties.get(name, *df)
 
@@ -521,7 +521,7 @@ class Inspector:
 
     def link(self, other):
         """
-        Link (associate) this object with anI{other} properties object 
+        Link (associate) this object with anI{other} properties object
         to create a network of properties.  Links are bidirectional.
         @param other: The object to link.
         @type other: L{Properties}
@@ -530,7 +530,7 @@ class Inspector:
         """
         p = other.__pts__
         return self.properties.link(p)
-    
+
     def unlink(self, other):
         """
         Unlink (disassociate) the specified properties object.
