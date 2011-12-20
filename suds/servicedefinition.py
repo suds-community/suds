@@ -144,8 +144,7 @@ class ServiceDefinition(UnicodeMixin):
             if t in self.types: continue
             item = (t, t)
             self.types.append(item)
-        tc = lambda x,y: cmp(x[0].name, y[0].name)
-        self.types.sort(cmp=tc)
+        self.types.sort(key=lambda x: x[0].name)
 
     def nextprefix(self):
         """
