@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -43,14 +43,14 @@ class Typed(Core):
     @ivar resolver: A schema type resolver.
     @type resolver: L{NodeResolver}
     """
-    
+
     def __init__(self, schema):
         """
         @param schema: A schema object.
         @type schema: L{xsd.schema.Schema}
         """
         self.resolver = NodeResolver(schema)
-        
+
     def process(self, node, type):
         """
         Process an object graph representation of the xml L{node}.
@@ -68,7 +68,7 @@ class Typed(Core):
     def reset(self):
         log.debug('reset')
         self.resolver.reset()
-    
+
     def start(self, content):
         #
         # Resolve to the schema type; build an object and setup metadata.
@@ -91,18 +91,18 @@ class Typed(Core):
         content.data = Factory.object(cls_name)
         md = content.data.__metadata__
         md.sxtype = real
-        
+
     def end(self, content):
         self.resolver.pop()
-        
+
     def unbounded(self, content):
         return content.type.unbounded()
-    
+
     def nillable(self, content):
         resolved = content.type.resolve()
         return ( content.type.nillable or \
             (resolved.builtin() and resolved.nillable ) )
-    
+
     def append_attribute(self, name, value, content):
         """
         Append an attribute name/value into L{Content.data}.
@@ -119,7 +119,7 @@ class Typed(Core):
         else:
             value = self.translated(value, type)
         Core.append_attribute(self, name, value, content)
-    
+
     def append_text(self, content):
         """
         Append text nodes into L{Content.data}
@@ -131,7 +131,7 @@ class Typed(Core):
         Core.append_text(self, content)
         known = self.resolver.top().resolved
         content.text = self.translated(content.text, known)
-            
+
     def translated(self, value, type):
         """ translate using the schema type """
         if value is not None:

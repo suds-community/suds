@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -35,7 +35,7 @@ class Core:
     The abstract XML I{node} unmarshaller.  This class provides the
     I{core} unmarshalling functionality.
     """
-        
+
     def process(self, content):
         """
         Process an object graph representation of the xml I{node}.
@@ -46,7 +46,7 @@ class Core:
         """
         self.reset()
         return self.append(content)
-    
+
     def append(self, content):
         """
         Process the specified node and convert the XML document into
@@ -64,14 +64,14 @@ class Core:
         self.append_text(content)
         self.end(content)
         return self.postprocess(content)
-            
+
     def postprocess(self, content):
         """
         Perform final processing of the resulting data structure as follows:
           - Mixed values (children and text) will have a result of the I{content.node}.
           - Simi-simple values (attributes, no-children and text) will have a result of a
              property object.
-          - Simple values (no-attributes, no-children with text nodes) will have a string 
+          - Simple values (no-attributes, no-children with text nodes) will have a string
              result equal to the value of the content.node.getText().
         @param content: The current content being unmarshalled.
         @type content: L{Content}
@@ -101,7 +101,7 @@ class Core:
             return Text(content.text, lang=lang)
         else:
             return content.text
-    
+
     def append_attributes(self, content):
         """
         Append attribute nodes into L{Content.data}.
@@ -114,7 +114,7 @@ class Core:
             name = attr.name
             value = attr.value
             self.append_attribute(name, value, content)
-            
+
     def append_attribute(self, name, value, content):
         """
         Append an attribute name/value into L{Content.data}.
@@ -128,7 +128,7 @@ class Core:
         key = name
         key = '_%s' % reserved.get(key, key)
         setattr(content.data, key, value)
-            
+
     def append_children(self, content):
         """
         Append child nodes into L{Content.data}
@@ -153,7 +153,7 @@ class Core:
                     setattr(content.data, key, [cval,])
             else:
                 setattr(content.data, key, cval)
-    
+
     def append_text(self, content):
         """
         Append text nodes into L{Content.data}
@@ -162,7 +162,7 @@ class Core:
         """
         if content.node.hasText():
             content.text = content.node.getText()
-        
+
     def reset(self):
         pass
 
@@ -176,7 +176,7 @@ class Core:
         @rtype: L{Object}
         """
         content.data = Factory.object(content.node.name)
-    
+
     def end(self, content):
         """
         Processing on I{node} has ended.
@@ -184,7 +184,7 @@ class Core:
         @type content: L{Content}
         """
         pass
-    
+
     def bounded(self, content):
         """
         Get whether the content is bounded (not a list).
@@ -194,7 +194,7 @@ class Core:
         @rtype: boolean
         '"""
         return ( not self.unbounded(content) )
-    
+
     def unbounded(self, content):
         """
         Get whether the object is unbounded (a list).
@@ -204,7 +204,7 @@ class Core:
         @rtype: boolean
         '"""
         return False
-    
+
     def nillable(self, content):
         """
         Get whether the object is nillable.

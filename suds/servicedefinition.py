@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -25,7 +25,7 @@ from suds.sax import Namespace
 
 log = getLogger(__name__)
 
-class ServiceDefinition:
+class ServiceDefinition(UnicodeMixin):
     """
     A service definition provides an object used to generate a textual description
     of a service.
@@ -38,9 +38,9 @@ class ServiceDefinition:
     @ivar prefixes: A list of remapped prefixes.
     @type prefixes: [(prefix,uri),..]
     @ivar types: A list of type definitions
-    @type types: [I{Type},..] 
+    @type types: [I{Type},..]
     """
-    
+
     def __init__(self, wsdl, service):
         """
         @param wsdl: A wsdl object
@@ -59,7 +59,7 @@ class ServiceDefinition:
         self.publictypes()
         self.getprefixes()
         self.pushprefixes()
-    
+
     def pushprefixes(self):
         """
         Add our prefixes to the wsdl so that when users invoke methods
@@ -87,7 +87,7 @@ class ServiceDefinition:
                 metrics.log.debug("method '%s' created: %s", m.name, timer)
             p[1].sort()
         timer.stop()
-            
+
     def findport(self, port):
         """
         Find and return a port tuple for the specified port.
@@ -102,7 +102,7 @@ class ServiceDefinition:
         p = (port, [])
         self.ports.append(p)
         return p
-            
+
     def getprefixes(self):
         """
         Add prefixes foreach namespace referenced by parameter types.
@@ -127,7 +127,7 @@ class ServiceDefinition:
             p = self.nextprefix()
             ns = (p, u)
             self.prefixes.append(ns)
-            
+
     def paramtypes(self):
         """ get all parameter types """
         for m in [p[1] for p in self.ports]:
@@ -136,7 +136,7 @@ class ServiceDefinition:
                     if pd[1] in self.params: continue
                     item = (pd[1], pd[1].resolve())
                     self.params.append(item)
-                    
+
     def publictypes(self):
         """ get all public types """
         for t in self.wsdl.schema.types.values():
@@ -144,9 +144,8 @@ class ServiceDefinition:
             if t in self.types: continue
             item = (t, t)
             self.types.append(item)
-        tc = lambda x,y: cmp(x[0].name, y[0].name)
-        self.types.sort(cmp=tc)
-        
+        self.types.sort(key=lambda x: x[0].name)
+
     def nextprefix(self):
         """
         Get the next available prefix.  This means a prefix starting with 'ns' with
@@ -160,7 +159,7 @@ class ServiceDefinition:
             if p not in used:
                 return p
         raise Exception('prefixes exhausted')
-    
+
     def getprefix(self, u):
         """
         Get the prefix for the specified namespace (uri)
@@ -174,7 +173,7 @@ class ServiceDefinition:
         for ns in self.prefixes:
             if u == ns[1]: return ns[0]
         raise Exception('ns (%s) not mapped'  % u)
-    
+
     def xlate(self, type):
         """
         Get a (namespace) translated I{qualified} name for specified type.
@@ -192,7 +191,7 @@ class ServiceDefinition:
             return name
         prefix = self.getprefix(ns[1])
         return ':'.join((prefix, name))
-        
+
     def description(self):
         """
         Get a textual description of the service for which this object represents.
@@ -236,10 +235,7 @@ class ServiceDefinition:
                 s.append(self.xlate(t[0]))
         s.append('\n\n')
         return ''.join(s)
-    
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-        
+
     def __unicode__(self):
         try:
             return self.description()
