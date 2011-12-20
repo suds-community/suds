@@ -19,6 +19,59 @@ again.
     * Epydocs: http://jortel.fedorapeople.org/suds/doc
 
 
+RELEASE NOTES:
+=================================================
+
+version 0.4.1 jurko 1 (2011-12-22)
+    * Based on revision 711 from the original suds Python library development
+      project's Subversion repository. Last officially packaged & released suds
+      Python library version - 0.4.1.
+    * Supported Python versions.
+        * Basic sources prepared for Python 2.x.
+        * For using Python 3 the sources first processed by the Python 2to3 tool
+          during the setup procedure.
+        * Tested with.
+            * Python 2.7.1 on Windows XP, x86.
+            * Python 3.2.2 on Windows XP, x86.
+        * Intended to work with Python 2.4+.
+    * Added Python 3 support.
+        * Based on patches integrated from a Mercurial patch queue maintained by
+          Bernhard Leiner at
+          'https://bitbucket.org/bernh/suds-python-3-patches'.
+            * Last collected patch series commit:
+              '96ffba978d5c74df28846b4273252cf1f94f7c78'.
+        * Original sources compatible with Python 2. Automated conversion to
+          Python 3 sources during setup.
+    * Made suds work with operations taking choice parameters.
+        * Based on a patch by michaelgruenewald & bennetb01 attached to ticket
+          #342 on the original suds project issue tracker
+          ('http://fedorahosted.org/suds/ticket/342'). Comments listed related
+          to that ticket seem to indicate that there may be additional problems
+          with this patch but so far we have not encountered any.
+    * Fixed the DateTimeTest.testOverflow test to work correctly in all
+      timezones.
+        * This test would fail if run directly when run on a computer with a
+          positive timezone time adjustment while it would not fail when run
+          together with all the other tests in this module since some other test
+          would leave behind a nonpositive timezone adjustment setting. Now the
+          test explicitly sets its own timezone time adjustment to a negative
+          value.
+        * Fixes a bug referenced in the original suds project issue tracker as
+          ticket #422 ('http://fedorahosted.org/suds/ticket/422').
+    * Corrected accessing suds.xsd.sxbase.SchemaObject subitems by index.
+        * Fixes a bug referenced in the original suds project issue tracker as
+          ticket #420 ('http://fedorahosted.org/suds/ticket/420').
+    * Internal code & project data cleanup.
+        * Extracted version information into a separate module.
+        * Added missing release notes for the original suds Python library
+          project.
+        * Ported unit tests to the pytest testing framework.
+        * Cleaned up project tests.
+            * Separated standalone tests from those requiring an external web
+              service.
+            * Added additional unit tests.
+
+
 ORIGINAL SUDS LIBRARY RELEASE NOTES:
 =================================================
 
