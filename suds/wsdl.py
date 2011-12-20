@@ -32,7 +32,8 @@ from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object, Facade, Metadata
 from suds.reader import DocumentReader, DefinitionsReader
 from urlparse import urljoin
-import re, soaparray
+import re
+import soaparray
 
 log = getLogger(__name__)
 
