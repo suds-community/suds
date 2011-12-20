@@ -17,15 +17,14 @@
 # written by: Jurko Gospodnetiæ ( jurko.gospodnetic@pke.hr )
 
 """
-General pytest based automated suds Python library unit tests.
+General suds Python library unit tests.
+
+Implemented using the 'pytest' testing framework.
 
 This whole module should be refactored into more specialized modules as more
 tests get added to it and it acquires more structure.
 
 """
-
-# TODO: Test accessing a list of types using client.wsdl.schema.types even when
-# there is no wsdl:service/binding/portType tag specified in the WSDL schema.
 
 if __name__ == "__main__":
     try:
