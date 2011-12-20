@@ -94,7 +94,8 @@ class Factory:
     def subclass(cls, name, bases, dict={}):
         if not isinstance(bases, tuple):
             bases = (bases,)
-        name = name.encode('utf-8')
+        # name is type unicode in python 2 -> not accepted by the type()
+        name = str(name)
         key = '.'.join((name, str(bases)))
         subclass = cls.cache.get(key)
         if subclass is None:

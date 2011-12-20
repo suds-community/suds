@@ -484,7 +484,7 @@ class SchemaObject(UnicodeMixin):
             s.append(' %s="%s"' % (n, v))
         s.append(' />')
         myrep = ''.join(s)
-        return myrep.encode('utf-8')
+        return str_to_utf8_in_py2(myrep)
 
     def __len__(self):
         n = 0

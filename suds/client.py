@@ -613,7 +613,7 @@ class SoapClient:
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         result = None
-        location = self.location()
+        location = suds.bytes2str(self.location())
         binding = self.method.binding.input
         transport = self.options.transport
         retxml = self.options.retxml
