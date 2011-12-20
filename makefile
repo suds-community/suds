@@ -20,6 +20,8 @@ SPEC = $(PKG).spec
 SETUP = setup.py
 DOCTAR = suds-docs.tar.gz
 FEDORAPEOPLE = jortel@fedorapeople.org
+PYTHON3 = python3
+PYTHON2TO3 = python3-2to3
 
 all : rpm docs
 
@@ -55,6 +57,13 @@ docs :
 pdf :
 	epydoc -vo doc --pdf `find suds -name \*.py`
 	mv doc/api.pdf doc/sudsapi.pdf
+
+py3testenv :
+	$(PYTHON3) setup.py build
+	rm -rf build/lib/tests
+	mkdir -p build/lib/tests
+	cp -r tests/* build/lib/tests
+	$(PYTHON2TO3) build/lib/tests -w -n 
 
 clean :
 	rm -rf dist
