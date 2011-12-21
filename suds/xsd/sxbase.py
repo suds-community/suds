@@ -15,8 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The I{sxbase} module provides I{base} classes that represent
-schema objects.
+The I{sxbase} module provides I{base} classes representing schema objects.
 """
 
 from logging import getLogger
@@ -36,10 +35,10 @@ class SchemaObject(UnicodeMixin):
     @type root: L{Element}
     @ivar schema: The schema containing this object.
     @type schema: L{schema.Schema}
-    @ivar form_qualified: A flag that inidcates that @elementFormDefault
+    @ivar form_qualified: A flag that indicates that @elementFormDefault
         has a value of I{qualified}.
     @type form_qualified: boolean
-    @ivar nillable: A flag that inidcates that @nillable
+    @ivar nillable: A flag that indicates that @nillable
         has a value of I{true}.
     @type nillable: boolean
     @ivar default: The default value.
@@ -343,8 +342,8 @@ class SchemaObject(UnicodeMixin):
 
     def dependencies(self):
         """
-        Get a list of dependancies for dereferencing.
-        @return: A merge dependancy index and a list of dependancies.
+        Get a list of dependencies for dereferencing.
+        @return: A merge dependency index and a list of dependencies.
         @rtype: (int, [L{SchemaObject},...])
         """
         return (None, [])
@@ -361,9 +360,9 @@ class SchemaObject(UnicodeMixin):
     def qualify(self):
         """
         Convert attribute values, that are references to other
-        objects, into I{qref}.  Qualfied using default document namespace.
-        Since many wsdls are written improperly: when the document does
-        not define a default namespace, the schema target namespace is used
+        objects, into I{qref}.  Qualified using the default document namespace.
+        Since many WSDLs are written improperly: when the document does
+        not define its default namespace, the schema target namespace is used
         to qualify references.
         """
         defns = self.root.defaultNamespace()
@@ -402,7 +401,7 @@ class SchemaObject(UnicodeMixin):
 
     def content(self, collection=None, filter=Filter(), history=None):
         """
-        Get a I{flattened} list of this nodes contents.
+        Get a I{flattened} list of this node's contents.
         @param collection: A list to fill.
         @type collection: list
         @param filter: A filter used to constrain the result.
@@ -464,7 +463,7 @@ class SchemaObject(UnicodeMixin):
     def description(self):
         """
         Get the names used for str() and repr() description.
-        @return:  A dictionary of relavent attributes.
+        @return:  A dictionary of relevant attributes.
         @rtype: [str,...]
         """
         return ()
@@ -604,7 +603,7 @@ class Iter:
 
 class XBuiltin(SchemaObject):
     """
-    Represents an (xsd) schema <xs:*/> node
+    Represents an (xsd) schema <xs:*/> node.
     """
 
     def __init__(self, schema, name):
@@ -637,7 +636,7 @@ class Content(SchemaObject):
 
 class NodeFinder:
     """
-    Find nodes based on flexable criteria.  The I{matcher} is
+    Find nodes based on flexable criteria.  The I{matcher}
     may be any object that implements a match(n) method.
     @ivar matcher: An object used as criteria for match.
     @type matcher: I{any}.match(n)

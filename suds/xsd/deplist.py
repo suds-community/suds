@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The I{depsolve} module defines a class for performing dependancy solving.
+The I{depsolve} module defines a class for performing dependency solving.
 """
 
 from logging import getLogger
@@ -26,7 +26,7 @@ log = getLogger(__name__)
 
 class DepList:
     """
-    Dependancy solving list.
+    Dependency solving list.
     Items are tuples: (object, (deps,))
     @ivar raw: The raw (unsorted) items.
     @type raw: list
@@ -65,7 +65,7 @@ class DepList:
 
     def sort(self):
         """
-        Sort the list based on dependancies.
+        Sort the list based on dependencies.
         @return: The sorted items.
         @rtype: list
         """

@@ -43,7 +43,7 @@ class ServiceDefinition(UnicodeMixin):
 
     def __init__(self, wsdl, service):
         """
-        @param wsdl: A wsdl object
+        @param wsdl: A WSDL object
         @type wsdl: L{Definitions}
         @param service: A service B{name}.
         @type service: str
@@ -62,18 +62,18 @@ class ServiceDefinition(UnicodeMixin):
 
     def pushprefixes(self):
         """
-        Add our prefixes to the wsdl so that when users invoke methods
-        and reference the prefixes, the will resolve properly.
+        Add our prefixes to the WSDL so that when users invoke methods
+        and reference the prefixes, they will resolve properly.
         """
         for ns in self.prefixes:
             self.wsdl.root.addPrefix(ns[0], ns[1])
 
     def addports(self):
         """
-        Look through the list of service ports and construct a list of tuples where
-        each tuple is used to describe a port and it's list of methods as:
-        (port, [method]).  Each method is tuple: (name, [pdef,..] where each pdef is
-        a tuple: (param-name, type).
+        Look through the list of service ports and construct a list of tuples
+        where each tuple is used to describe a port and its list of methods as:
+        (port, [method]).  Each method is a tuple: (name, [pdef,..]) where each
+        pdef is a tuple: (param-name, type).
         """
         timer = metrics.Timer()
         timer.start()
@@ -104,9 +104,7 @@ class ServiceDefinition(UnicodeMixin):
         return p
 
     def getprefixes(self):
-        """
-        Add prefixes foreach namespace referenced by parameter types.
-        """
+        """Add prefixes for each namespace referenced by parameter types."""
         namespaces = []
         for l in (self.params, self.types):
             for t,r in l:
@@ -129,7 +127,7 @@ class ServiceDefinition(UnicodeMixin):
             self.prefixes.append(ns)
 
     def paramtypes(self):
-        """ get all parameter types """
+        """Get all parameter types."""
         for m in [p[1] for p in self.ports]:
             for p in [p[1] for p in m]:
                 for pd in p:
@@ -138,7 +136,7 @@ class ServiceDefinition(UnicodeMixin):
                     self.params.append(item)
 
     def publictypes(self):
-        """ get all public types """
+        """Get all public types."""
         for t in self.wsdl.schema.types.values():
             if t in self.params: continue
             if t in self.types: continue
@@ -149,8 +147,8 @@ class ServiceDefinition(UnicodeMixin):
     def nextprefix(self):
         """
         Get the next available prefix.  This means a prefix starting with 'ns' with
-        a number appended as (ns0, ns1, ..) that is not already defined on the
-        wsdl document.
+        a number appended as (ns0, ns1, ..) that is not already defined in the
+        WSDL document.
         """
         used = [ns[0] for ns in self.prefixes]
         used += [ns[0] for ns in self.wsdl.root.nsprefixes.items()]
@@ -162,8 +160,8 @@ class ServiceDefinition(UnicodeMixin):
 
     def getprefix(self, u):
         """
-        Get the prefix for the specified namespace (uri)
-        @param u: A namespace uri.
+        Get the prefix for the specified namespace (URI)
+        @param u: A namespace URI.
         @type u: str
         @return: The namspace.
         @rtype: (prefix, uri).

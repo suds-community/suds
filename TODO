@@ -15,20 +15,22 @@ PRIORETIZED:
 (+)           repository at BitBucket and accessible from
 (+)           'https://bitbucket.org/bernh/suds-python-3-patches'.
 (+)             * Already documented in HACKING.
-
-    * (Jurko) Minor stylistic changes & typo corrections.
-        * Code.
-            * 'tranparent' --> 'transparent'.
-            * 'if  tns' --> 'if tns'.
-            * 'docuemnt' --> 'document'.
-            * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
-              'list')'.
-            * 'Qualfied' --> 'Qualified'.
-            * 'Resolveds' --> 'Resolves'.
-            * 'describe a port and it's list of methods' --> 'describe a port
-              and its list of methods'.
-            * 'dependancies' --> 'dependencies'.
-            * 'imcoming' --> 'incoming'.
+(+) * (Jurko) Minor stylistic changes & typo corrections.
+(+)     * Code.
+(+)         * 'tranparent' --> 'transparent'.
+(+)         * 'if  tns' --> 'if tns'.
+(+)         * 'docuemnt' --> 'document'.
+(+)         * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
+(+)           'list')'.
+(+)             * And other unnecessary trailing tuple commas.
+(+)         * 'Qualfied' --> 'Qualified'.
+(+)         * 'Resolveds' --> 'Resolves'.
+(+)         * 'describe a port and it's list of methods' --> 'describe a port
+(+)           and its list of methods'.
+(+)         * 'dependancies' --> 'dependencies'.
+(+)         * 'imcoming' --> 'incoming'.
+(+)         * 'relavent' --> 'relevant'.
+(+)         * 'indicat' --> 'inidcat'.
 
     * (Jurko) Prepare for the initial forked project release.
         * Research release procedure.

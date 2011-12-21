@@ -62,12 +62,12 @@ class DocumentReader(Reader):
 
     def open(self, url):
         """
-        Open an XML document at the specified I{url}.
+        Open an XML document at the specified I{URL}.
         First, the document attempted to be retrieved from
         the I{object cache}.  If not found, it is downloaded and
         parsed using the SAX parser.  The result is added to the
         cache for the next open().
-        @param url: A document url.
+        @param url: A document URL.
         @type url: str.
         @return: The specified XML document.
         @rtype: I{Document}
@@ -83,10 +83,10 @@ class DocumentReader(Reader):
 
     def download(self, url):
         """
-        Download the docuemnt.
-        @param url: A document url.
+        Download the document.
+        @param url: A document URL.
         @type url: str.
-        @return: A file pointer to the docuemnt.
+        @return: A file pointer to the document.
         @rtype: file-like
         """
         store = DocumentStore()
@@ -134,13 +134,13 @@ class DefinitionsReader(Reader):
 
     def open(self, url):
         """
-        Open a WSDL at the specified I{url}.
+        Open a WSDL at the specified I{URL}.
         First, the WSDL attempted to be retrieved from
         the I{object cache}.  After unpickled from the cache, the
         I{options} attribute is restored.
         If not found, it is downloaded and instantiated using the
         I{fn} constructor and added to the cache for the next open().
-        @param url: A WSDL url.
+        @param url: A WSDL URL.
         @type url: str.
         @return: The WSDL object.
         @rtype: I{Definitions}

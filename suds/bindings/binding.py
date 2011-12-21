@@ -43,8 +43,8 @@ envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
 
 class Binding:
     """
-    The soap binding class used to process outgoing and imcoming
-    soap messages per the WSDL port binding.
+    The SOAP binding class used to process outgoing and incoming SOAP messages
+    per the WSDL port binding.
     @cvar replyfilter: The reply filter function.
     @type replyfilter: (lambda s,r: r)
     @ivar wsdl: The wsdl.
@@ -103,8 +103,8 @@ class Binding:
 
     def get_message(self, method, args, kwargs):
         """
-        Get the soap message for the specified method, args and soapheaders.
-        This is the entry point for creating the outbound soap message.
+        Get a SOAP message for the specified method, args and SOAP headers.
+        This is the entry point for creating an outbound SOAP message.
         @param method: The method being invoked.
         @type method: I{service.Method}
         @param args: A list of args for the method invoked.

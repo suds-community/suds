@@ -54,8 +54,8 @@ class DocumentContext(Context):
 
 class MessageContext(Context):
     """
-    The context for sending the soap envelope.
-    @ivar envelope: The soap envelope to be sent.
+    The context for sending the SOAP envelope.
+    @ivar envelope: The SOAP envelope to be sent.
     @type envelope: (str|L{sax.element.Element})
     @ivar reply: The reply.
     @type reply: (str|L{sax.element.Element}|object)
@@ -114,7 +114,7 @@ class DocumentPlugin(Plugin):
 
 class MessagePlugin(Plugin):
     """
-    The base class for suds I{soap message} plugins.
+    The base class for suds I{SOAP message} plugins.
     """
 
     def marshalled(self, context):
@@ -123,14 +123,14 @@ class MessagePlugin(Plugin):
         Provides the plugin with the opportunity to inspect/modify
         the envelope Document before it is sent.
         @param context: The send context.
-            The I{envelope} is the envelope docuemnt.
+            The I{envelope} is the envelope document.
         @type context: L{MessageContext}
         """
         pass
 
     def sending(self, context):
         """
-        Suds will send the specified soap envelope.
+        Suds will send the specified SOAP envelope.
         Provides the plugin with the opportunity to inspect/modify
         the message text it is sent.
         @param context: The send context.

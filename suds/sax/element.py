@@ -709,7 +709,7 @@ class Element(UnicodeMixin):
         """
         Set this node to I{nil} as defined by having an
         attribute I{xsi:nil}=I{flag}.
-        @param flag: A flag inidcating how I{xsi:nil} will be set.
+        @param flag: A flag indicating how I{xsi:nil} will be set.
         @type flag: boolean
         @return: self
         @rtype: L{Element}
