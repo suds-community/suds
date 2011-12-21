@@ -1,0 +1,50 @@
+GENERAL DEVELOPMENT NOTES:
+=================================================
+
+    * Testing.
+        * 'pytest' testing framework needed to run unit tests.
+        * To run the tests using Python 3 first process them and the rest of the
+          library sources using the Python 2to3 conversion tool.
+
+    * Base sources should remain Python 2.x compatible. Since the original
+      project states aiming for Python 2.4 compatibility we should do so as
+      well.
+
+    * Python 3 related patches applicable to the original suds development
+      project.
+        * Should be first be added to the 'Python 3 support' branch and then
+          merged back to the trunk from there.
+        * Should be kept synchronized with the ones found in the Mercurial patch
+          queue hosted at 'https://bitbucket.org/bernh/suds-python-3-patches'.
+
+
+TOP-LEVEL FILES & FOLDERS:
+=================================================
+
+    * '.hg/', '.hgignore', '.hgtags'.
+        * Mercurial version control related data.
+
+    * 'build/', 'dist/', 'suds.egg-info/'.
+        * Folders created during project setup procedure (build + install).
+
+    * 'suds/'.
+        * Basic project source code.
+
+    * 'tests/'.
+        * Project test code.
+
+    * '.project', '.pydevproject', 'makefile', 'python-suds.spec', 'sdist'.
+        * Original suds library development project's development environment
+          configuration & scripts as used by the original developer.
+
+    * 'HACKING', 'LICENSE', 'README'.
+        * Internal project documentation.
+
+    * 'setup.cfg'.
+        * Basic project Python configuration.
+
+    * 'setup.py'.
+        * Standard Python project setup script.
+            * Use 'setup.py --help' for more details.
+            * 'setup.py build' for building the project.
+            * 'setup.py install' for builing & installing the project.
