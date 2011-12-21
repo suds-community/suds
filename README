@@ -18,6 +18,8 @@ again.
     * Documentation: https://fedorahosted.org/suds/wiki/Documentation
     * Epydocs: http://jortel.fedorapeople.org/suds/doc
 
+  For development notes see the HACKING document included in the distribution.
+
 
 RELEASE NOTES:
 =================================================
@@ -70,6 +72,7 @@ version 0.4.1 jurko 1 (2011-12-22)
             * Separated standalone tests from those requiring an external web
               service.
             * Added additional unit tests.
+        * Added development related documentation - HACKING.
 
 
 ORIGINAL SUDS LIBRARY RELEASE NOTES:
