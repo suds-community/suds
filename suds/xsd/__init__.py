@@ -14,13 +14,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-"""
-The I{schema} module provides a intelligent representation of
-an XSD schema.  The I{raw} model is the XML tree and the I{model}
-is the denormalized, objectified and intelligent view of the schema.
-Most of the I{value-add} provided by the model is centered around
-tranparent referenced type resolution and targeted denormalization.
-"""
 
 from logging import getLogger
 from suds import *
