@@ -5,15 +5,41 @@ PRIORETIZED:
 
 (+) * (Jurko) Prepare for the initial forked project release.
 (+)     * Add todo list.
+(+)     * Document how to access this forked project's development sources &
+(+)       released files.
+(+)         * Jurko's Mercurial repository hosted at BitBucket and accessible
+(+)           from 'https://bitbucket.org/jurko/suds'.
+(+)             * Already documented in README.
+(+)             * Add more details to HACKING.
+(+)         * Suds library Python 3 patches hosted in a Mercurial patch queue
+(+)           repository at BitBucket and accessible from
+(+)           'https://bitbucket.org/bernh/suds-python-3-patches'.
+(+)             * Already documented in HACKING.
+
+    * (Jurko) Minor stylistic changes & typo corrections.
+        * Code.
+            * 'tranparent' --> 'transparent'.
+            * 'if  tns' --> 'if tns'.
+            * 'docuemnt' --> 'document'.
+            * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
+              'list')'.
+            * 'Qualfied' --> 'Qualified'.
+            * 'Resolveds' --> 'Resolves'.
+            * 'describe a port and it's list of methods' --> 'describe a port
+              and its list of methods'.
+            * 'dependancies' --> 'dependencies'.
+            * 'imcoming' --> 'incoming'.
 
     * (Jurko) Prepare for the initial forked project release.
+        * Research release procedure.
+            * How to prepare a source distribution package.
+            * How to upload the prepared distribution packages.
+                * BitBucket.
+                * PyPI.
         * Document how to access this forked project's development sources &
           released files.
-            * Jurko's Mercurial repository hosted at BitBucket and accessible
-              from 'https://bitbucket.org/jurko/suds'.
-            * Suds library Python 3 patches hosted in a Mercurial patch queue
-              repository at BitBucket and accessible from
-              'https://bitbucket.org/bernh/suds-python-3-patches'.
+            * Released project packages accessible from PyPI.
+            * Installing the project using distribute or pip.
         * Document release procedure.
             * Version identification.
                 * Use '(development)' suffix for non-release builds.
@@ -39,20 +65,6 @@ PRIORETIZED:
         * When 's' is used, all of its subelements should be used independent of
           whether they are None or not.
         * Add related test.
-
-    * (Jurko) Minor stylistic changes & typo corrections.
-        * Code.
-            * 'tranparent' --> 'transparent'.
-            * 'if  tns' --> 'if tns'.
-            * 'docuemnt' --> 'document'.
-            * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
-              'list')'.
-            * 'Qualfied' --> 'Qualified'.
-            * 'Resolveds' --> 'Resolves'.
-            * 'describe a port and it's list of methods' --> 'describe a port
-              and its list of methods'.
-            * 'dependancies' --> 'dependencies'.
-            * 'imcoming' --> 'incoming'.
 
     * (Jurko) Prepare '0.4.1 jurko 1' release.
         * Tag in Hg.
