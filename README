@@ -248,7 +248,7 @@ version 0.3 (2008-09-30)
     addition, provides for multiple services to define the *same* method and
     suds will handle it properly.  See section 'SERVICES WITH MULTIPLE PORTS:'.
   * Add support for multi-document document/literal soap binding style. See
-    section 'MULTI-DOCUMENT Docuemnt/Literal:'.
+    section 'MULTI-DOCUMENT Document/Literal:'.
   * Add support for (xs:group, xs:attributeGroup) tags.
   * Add Client.last_sent() and Client.last_received().
 

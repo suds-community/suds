@@ -69,7 +69,7 @@ class Resolver:
 
 class PathResolver(Resolver):
     """
-    Resolveds the definition object for the schema type located at the specified path.
+    Resolves the definition object for the schema type located at a given path.
     The path may contain (.) dot notation to specify nested types.
     @ivar wsdl: A wsdl object.
     @type wsdl: L{wsdl.Definitions}
@@ -138,7 +138,7 @@ class PathResolver(Resolver):
 
     def branch(self, root, parts):
         """
-        Traverse the path until the leaf is reached.
+        Traverse the path until a leaf is reached.
         @param parts: A list of path parts.
         @type parts: [str,..]
         @param root: The root.
@@ -292,7 +292,7 @@ class TreeResolver(Resolver):
         return len(self.stack)
 
     def getchild(self, name, parent):
-        """ get a child by name """
+        """Get a child by name."""
         log.debug('searching parent (%s) for (%s)', Repr(parent), name)
         if name.startswith('@'):
             return parent.get_attribute(name[1:])
@@ -368,7 +368,7 @@ class NodeResolver(TreeResolver):
         return result
 
     def query(self, name, node):
-        """ blindly query the schema by name """
+        """Blindly query the schema by name."""
         log.debug('searching schema for (%s)', name)
         qref = qualify(name, node, node.namespace())
         query = BlindQuery(qref)
@@ -376,7 +376,7 @@ class NodeResolver(TreeResolver):
         return (result, [])
 
     def known(self, node):
-        """ resolve type referenced by @xsi:type """
+        """Resolve type referenced by @xsi:type."""
         ref = node.get('type', Namespace.xsins)
         if ref is None:
             return None
@@ -436,7 +436,7 @@ class GraphResolver(TreeResolver):
         return result
 
     def query(self, name):
-        """ blindly query the schema by name """
+        """Blindly query the schema by name."""
         log.debug('searching schema for (%s)', name)
         schema = self.schema
         wsdl = self.wsdl()
@@ -449,7 +449,7 @@ class GraphResolver(TreeResolver):
         return (result, [])
 
     def wsdl(self):
-        """ get the wsdl """
+        """Get the wsdl."""
         container = self.schema.container
         if container is None:
             return None
@@ -457,7 +457,7 @@ class GraphResolver(TreeResolver):
             return container.wsdl
 
     def known(self, object):
-        """ get the type specified in the object's metadata """
+        """Get the type specified in the object's metadata."""
         try:
             md = object.__metadata__
             known = md.sxtype

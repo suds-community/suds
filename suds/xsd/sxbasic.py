@@ -75,7 +75,7 @@ class TypedContent(Content):
         """
         Get the I{type} qualified reference to the referenced xsd type.
         This method takes into account simple types defined through
-        restriction with are detected by determining that self is simple
+        restriction which are detected by determining that self is simple
         (len=0) and by finding a restriction child.
         @return: The I{type} qualified reference.
         @rtype: qref
@@ -154,7 +154,7 @@ class Group(SchemaObject):
         self.rawchildren = other.rawchildren
 
     def description(self):
-        return ('name', 'ref',)
+        return ('name', 'ref')
 
 
 class AttributeGroup(SchemaObject):
@@ -185,16 +185,16 @@ class AttributeGroup(SchemaObject):
         self.rawchildren = other.rawchildren
 
     def description(self):
-        return ('name', 'ref',)
+        return ('name', 'ref')
 
 
 class Simple(SchemaObject):
     """
-    Represents an (xsd) schema <xs:simpleType/> node
+    Represents an (xsd) schema <xs:simpleType/> node.
     """
 
     def childtags(self):
-        return ('restriction', 'any', 'list',)
+        return ('restriction', 'any', 'list')
 
     def enum(self):
         for child, ancestry in self.children():
@@ -223,7 +223,7 @@ class Simple(SchemaObject):
 
 class List(SchemaObject):
     """
-    Represents an (xsd) schema <xs:list/> node
+    Represents an (xsd) schema <xs:list/> node.
     """
 
     def childtags(self):
@@ -238,7 +238,7 @@ class List(SchemaObject):
 
 class Restriction(SchemaObject):
     """
-    Represents an (xsd) schema <xs:restriction/> node
+    Represents an (xsd) schema <xs:restriction/> node.
     """
 
     def __init__(self, schema, root):
@@ -356,7 +356,7 @@ class SimpleContent(SchemaObject):
 
 class Enumeration(Content):
     """
-    Represents an (xsd) schema <xs:enumeration/> node
+    Represents an (xsd) schema <xs:enumeration/> node.
     """
 
     def __init__(self, schema, root):
@@ -397,7 +397,7 @@ class Element(TypedContent):
         return self
 
     def childtags(self):
-        return ('attribute', 'simpleType', 'complexType', 'any',)
+        return ('attribute', 'simpleType', 'complexType', 'any')
 
     def extension(self):
         for c in self.rawchildren:
@@ -486,7 +486,7 @@ class Extension(SchemaObject):
 
 class Import(SchemaObject):
     """
-    Represents an (xsd) schema <xs:import/> node
+    Represents an (xsd) schema <xs:import/> node.
     @cvar locations: A dictionary of namespace locations.
     @type locations: dict
     @ivar ns: The imported namespace.
@@ -572,7 +572,7 @@ class Import(SchemaObject):
 
 class Include(SchemaObject):
     """
-    Represents an (xsd) schema <xs:include/> node
+    Represents an (xsd) schema <xs:include/> node.
     @ivar location: The (optional) location.
     @type location: namespace-uri
     @ivar opened: Opened and I{imported} flag.
@@ -639,7 +639,7 @@ class Include(SchemaObject):
 
 class Attribute(TypedContent):
     """
-    Represents an (xsd) <attribute/> node
+    Represents an (xsd) <attribute/> node.
     """
 
     def __init__(self, schema, root):
@@ -682,7 +682,7 @@ class Attribute(TypedContent):
 
 class Any(Content):
     """
-    Represents an (xsd) <any/> node
+    Represents an (xsd) <any/> node.
     """
 
     def get_child(self, name):
@@ -807,8 +807,6 @@ class Factory:
         for i in imports:
             children.remove(i)
         return (children, imports, attributes, elements, types, groups, agrps)
-
-
 
 
 #######################################################
