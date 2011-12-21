@@ -1,6 +1,11 @@
 GENERAL DEVELOPMENT NOTES:
 =================================================
 
+    * Project development should be tracked in the TODO file.
+        * Exact formatting is not important as long as its contect is kept
+          formatted consistently.
+        * Done tasks should be marked as such and not deleted.
+
     * Testing.
         * 'pytest' testing framework needed to run unit tests.
         * To run the tests using Python 3 first process them and the rest of the
@@ -37,7 +42,7 @@ TOP-LEVEL FILES & FOLDERS:
         * Original suds library development project's development environment
           configuration & scripts as used by the original developer.
 
-    * 'HACKING', 'LICENSE', 'README'.
+    * 'HACKING', 'LICENSE', 'README', 'TODO'.
         * Internal project documentation.
 
     * 'setup.cfg'.
