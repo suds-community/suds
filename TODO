@@ -1,0 +1,124 @@
+PRIORETIZED:
+=================================================
+
+(21.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Add todo list.
+
+    * (Jurko) Prepare for the initial forked project release.
+        * Document how to access this forked project's development sources &
+          released files.
+            * Jurko's Mercurial repository hosted at BitBucket and accessible
+              from 'https://bitbucket.org/jurko/suds'.
+            * Suds library Python 3 patches hosted in a Mercurial patch queue
+              repository at BitBucket and accessible from
+              'https://bitbucket.org/bernh/suds-python-3-patches'.
+        * Document release procedure.
+            * Version identification.
+                * Use '(development)' suffix for non-release builds.
+                * Format 'base-suds-version jurko #', e.g. '0.4.1 jurko 1'.
+            * Download package at the project site.
+            * PyPI.
+            * Tag in Hg.
+
+    * (Jurko) Constructing a SOAP request containing data stored in a sequence
+      inside a choice.
+        * Test scenario (syntax not precise).
+            <choice>
+                <element "a" - string />
+                <element "s">
+                    <sequence>
+                        <element "s1" - string />
+                        <element "s2" - string />
+                    </sequence>
+                </element>
+            </choice>
+        * When 's' is None and 'a' is not - 'a' should be used.
+        * When 'a' is None and 's' is not - 's' should be used.
+        * When 's' is used, all of its subelements should be used independent of
+          whether they are None or not.
+        * Add related test.
+
+    * (Jurko) Minor stylistic changes & typo corrections.
+        * Code.
+            * 'tranparent' --> 'transparent'.
+            * 'if  tns' --> 'if tns'.
+            * 'docuemnt' --> 'document'.
+            * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
+              'list')'.
+            * 'Qualfied' --> 'Qualified'.
+            * 'Resolveds' --> 'Resolves'.
+            * 'describe a port and it's list of methods' --> 'describe a port
+              and its list of methods'.
+            * 'dependancies' --> 'dependencies'.
+            * 'imcoming' --> 'incoming'.
+
+    * (Jurko) Prepare '0.4.1 jurko 1' release.
+        * Tag in Hg.
+        * Download package at the project site.
+        * PyPI.
+
+
+NON PRIORETIZED:
+=================================================
+
+    * Make it simpler to run Py3 tests.
+        * There should be no need for installing suds to a global location
+          similar to how this is not needed when running Py2 tests.
+            * When done, update related HACKING notes.
+
+    * Generate suds Python library documentation (epydoc).
+        * Research.
+            * HTML.
+            * PDF.
+        * Decide how to generate & distribute this documentation.
+        * Update project HACKING notes to note the external software required
+          for generating the documentation.
+        * Update release procedure to include releasing the documentation.
+
+    * Research.
+        * Test how optional elements under a choice work.
+            * There are some comments & an additional patch related to this at
+              'https://fedorahosted.org/suds/ticket/342'.
+        * Research default values.
+            * What they actually mean.
+            * How elements with default values inside a choice structure should
+              be handled.
+        * See what the suds.sudsobjects.Facade class is for.
+
+    * Prepare additional test cases.
+        * Prepared SOAP operation invocation requests.
+            * With choice parameters.
+
+    * 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__() functions
+      should not raise an AttributeError.
+
+    * 'suds.xsd.xsbasic.Enumeration' objects should list their value in their
+      string representation.
+
+    * Printing out a list of function parameters should not print an additional
+      trailing comma after the last parameter.
+
+    * Document suds.xsd.sxbasic.TypedContent.resolve().
+        * Research the base class resolve() behaviour as well.
+        * Returns the same XSD node when the node does not have an explicitly
+          specified external type.
+        * When called for an XSD node with an explicitly specified external type
+          returns that type's XSD node.
+
+    * Proces ideas collected from external projects using suds.
+        * Alternative choice implementation that would not automatically expand
+          all choice function parameters but instead take some more generic
+          'choice' object parameter.
+            * This object would then know which of its data members is
+              'currently specified'.
+        * See whether the Marshaller class should know about choice elements and
+          not add XML nodes for elements with the value 'None' if they are
+          contained directly inside a choice.
+        * See if the class 'suds.xsd.sxbasic.Complex' function sequence() should
+          return True if any of its direct children (or possibly its only child)
+          is a sequence node.
+        * Typo corrections for the original project web site.
+            * 'docuemnt' --> 'document'.
+            * 'becuase' --> 'because'.
