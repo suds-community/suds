@@ -1,6 +1,9 @@
 GENERAL DEVELOPMENT NOTES:
 =================================================
 
+    * Project's sources accessible from a Mercurial version control repository
+      hosted by BitBucket at 'https://bitbucket.org/jurko/suds'.
+
     * Project development should be tracked in the TODO file.
         * Exact formatting is not important as long as its contect is kept
           formatted consistently.
