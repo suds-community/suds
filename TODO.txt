@@ -92,24 +92,23 @@ PRIORETIZED:
 (+)             * Bump up the forked project version counter.
 (+)             * Add back the '(development)' suffix.
 (+)     * Commit all local changes.
-
-    * (Jurko) Constructing a SOAP request containing data stored in a sequence
-      inside a choice.
-        * Test scenario (syntax not precise).
-            <choice>
-                <element "a" - string />
-                <element "s">
-                    <sequence>
-                        <element "s1" - string />
-                        <element "s2" - string />
-                    </sequence>
-                </element>
-            </choice>
-        * When 's' is None and 'a' is not - 'a' should be used.
-        * When 'a' is None and 's' is not - 's' should be used.
-        * When 's' is used, all of its subelements should be used independent of
-          whether they are None or not.
-        * Add related test.
+(+) * (Jurko) Constructing a SOAP request containing data stored in a sequence
+(+)   inside a choice.
+(+)     * Test scenario (syntax not precise).
+(+)         <choice>
+(+)             <element "a" - string />
+(+)             <element "s">
+(+)                 <sequence>
+(+)                     <element "s1" - string />
+(+)                     <element "s2" - string />
+(+)                 </sequence>
+(+)             </element>
+(+)         </choice>
+(+)     * When 's' is None and 'a' is not - 'a' should be used.
+(+)     * When 'a' is None and 's' is not - 's' should be used.
+(+)     * When 's' is used, all of its subelements should be used independent of
+(+)       whether they are None or not.
+(+)     * Add related test.
 
     * (Jurko) Prepare '0.4.1 jurko 1' release.
         * Follow the documented release procedure.
@@ -122,6 +121,63 @@ PRIORETIZED:
 
 NON PRIORETIZED:
 =================================================
+
+    * Fix getting a suds.client object's string representation when the client
+      is initialized with the following WSDL. Calling 'str(client)' reports
+      'IndexError: list index out of range'.
+        * WSDL.
+            <?xml version='1.0' encoding='UTF-8'?>
+            <wsdl:definitions targetNamespace="my-namespace"
+            xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+            xmlns:ns="my-namespace"
+            xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+              <wsdl:types>
+                <xsd:schema targetNamespace="my-namespace"
+                elementFormDefault="qualified"
+                attributeFormDefault="unqualified"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <xsd:element name="Elemento">
+                    <xsd:complexType>
+                      <xsd:sequence>
+                        <xsd:element name="x1" type="xsd:string" />
+                        <xsd:element name="x2">
+                          <xsd:complexType>
+                            <xsd:choice>
+                              <xsd:element name="u1" type="xsd:string" />
+                              <xsd:element name="u2" type="xsd:string" />
+                              <xsd:element name="u3" type="xsd:string" />
+                            </xsd:choice>
+                          </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="x3" type="xsd:string" />
+                      </xsd:sequence>
+                    </xsd:complexType>
+                  </xsd:element>
+                </xsd:schema>
+              </wsdl:types>
+              <wsdl:message name="fRequestMessage">
+                <wsdl:part name="parameters" element="ns:Elemento" />
+              </wsdl:message>
+              <wsdl:portType name="dummyPortType">
+                <wsdl:operation name="f">
+                  <wsdl:input message="ns:fRequestMessage" />
+                </wsdl:operation>
+              </wsdl:portType>
+              <wsdl:binding name="dummy" type="ns:dummyPortType">
+                <soap:binding style="document"
+                transport="http://schemas.xmlsoap.org/soap/http" />
+                <wsdl:operation name="f">
+                  <soap:operation soapAction="f" style="document" />
+                  <wsdl:input><soap:body use="literal" /></wsdl:input>
+                  <wsdl:output><soap:body use="literal" /></wsdl:output>
+                </wsdl:operation>
+              </wsdl:binding>
+              <wsdl:service name="dummy">
+                <wsdl:port name="dummy" binding="ns:dummy">
+                  <soap:address location="https://localhost/dummy" />
+                </wsdl:port>
+              </wsdl:service>
+            </wsdl:definitions>
 
     * Make it simpler to run Py3 tests.
         * There should be no need for installing suds to a global location

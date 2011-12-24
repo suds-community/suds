@@ -444,6 +444,179 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert paramIn is not paramOut.x2
 
 
+def test_function_parameters_sequence_in_a_choice():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Choice">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a1" type="xsd:string" />
+            <xsd:element name="sequence">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="e1" type="xsd:string" />
+                  <xsd:element name="e2" type="xsd:string" />
+                  <xsd:element name="e3" type="xsd:string" />
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="a2" type="xsd:string" />
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:Choice" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    # Input #1.
+    request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
+    assert request.str() == """<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Choice>
+         <ns0:a1>Wackadoodle</ns0:a1>
+      </ns0:Choice>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+
+    # Input #2.
+    param = client.factory.create("Choice.sequence")
+    param.e2 = "Wackadoodle"
+    request = _construct_SOAP_request(client, 'f', sequence=param)
+    assert request.str() == """<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Choice>
+         <ns0:sequence>
+            <ns0:e1/>
+            <ns0:e2>Wackadoodle</ns0:e2>
+            <ns0:e3/>
+         </ns0:sequence>
+      </ns0:Choice>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+
+
+def test_function_parameters_sequence_in_a_choice_in_a_sequence():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="External">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="choice">
+              <xsd:complexType>
+                <xsd:choice>
+                  <xsd:element name="a1" type="xsd:string" />
+                  <xsd:element name="sequence">
+                    <xsd:complexType>
+                      <xsd:sequence>
+                        <xsd:element name="e1" type="xsd:string" />
+                        <xsd:element name="e2" type="xsd:string" />
+                        <xsd:element name="e3" type="xsd:string" />
+                      </xsd:sequence>
+                    </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="a2" type="xsd:string" />
+                </xsd:choice>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:External" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    # Construct input parameters.
+    param = client.factory.create("External.choice")
+    param.sequence = client.factory.create("External.choice.sequence")
+    param.sequence.e2 = "Wackadoodle"
+
+    # Construct a SOAP request containing our input parameters.
+    request = _construct_SOAP_request(client, 'f', param)
+    assert request.str() == """<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:External>
+         <ns0:choice>
+            <ns0:sequence>
+               <ns0:e1/>
+               <ns0:e2>Wackadoodle</ns0:e2>
+               <ns0:e3/>
+            </ns0:sequence>
+         </ns0:choice>
+      </ns0:External>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+
+
 def test_function_parameters_strings():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
@@ -1296,6 +1469,18 @@ def _client_from_wsdl(wsdl_content):
     testFileId = "whatchamacallit"
     suds.store.DocumentStore.store[testFileId] = wsdl_content
     return suds.client.Client("suds://" + testFileId, cache=None)
+
+
+def _construct_SOAP_request(client, operation_name, *args, **kwargs):
+    """
+    Returns a SOAP request for a given web service operation invocation.
+
+      To make the test case code calling this function simpler, assumes we want
+    to call the operation on the given client's first service & port.
+
+    """
+    method = client.wsdl.services[0].ports[0].methods[operation_name]
+    return method.binding.input.get_message(method, args, kwargs)
 
 
 def _first_from_dict(d):
