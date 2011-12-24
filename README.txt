@@ -49,7 +49,7 @@ INSTALLATION:
 RELEASE NOTES:
 =================================================
 
-version 0.4.1 jurko 1 (2011-12-22)
+version 0.4.1 jurko 1 (2011-12-24)
     * Based on revision 711 from the original suds Python library development
       project's Subversion repository. Last officially packaged & released suds
       Python library version - 0.4.1.
