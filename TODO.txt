@@ -179,15 +179,15 @@ PRIORETIZED:
 (+)     * Add a test.
 (+)     * Fix.
 (+)     * Plan preparing a patched release.
+(+) * (Jurko) Prepare the '0.4.1 jurko 2' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
 
-    * (Jurko) Prepare the '0.4.1 jurko 2' release.
-        * Update release notes.
-        * Follow the documented release procedure.
-            * Update version information.
-            * Tag in Hg.
-            * Upload the source package.
-                * Project site.
-                * PyPI.
 
 NON PRIORETIZED:
 =================================================
