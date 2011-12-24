@@ -61,8 +61,8 @@ version 0.4.1 jurko 2 (2011-12-24)
             * Python 2.7.1 on Windows XP, x86.
             * Python 3.2.2 on Windows XP, x86.
         * Intended to work with Python 2.4+.
-    * Fixed a bug causing converting a suds.client.Client object to a string
-      to fail & raise an IndexError exception.
+    * Fixed a bug causing converting a suds.client.Client object to a string to
+      fail & raise an IndexError exception.
         * Changed the way suds.client.Client to-string conversion outputs build
           info. This fixes a bug in the original '0.4.1 jurko 1' forked project
           release causing printing out a suds.client.Client object to raise an
