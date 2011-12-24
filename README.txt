@@ -49,6 +49,26 @@ INSTALLATION:
 RELEASE NOTES:
 =================================================
 
+version 0.4.1 jurko 2 (2011-12-24)
+    * Based on revision 711 from the original suds Python library development
+      project's Subversion repository. Last officially packaged & released suds
+      Python library version - 0.4.1.
+    * Supported Python versions.
+        * Basic sources prepared for Python 2.x.
+        * For using Python 3 the sources first processed by the Python 2to3 tool
+          during the setup procedure.
+        * Tested with.
+            * Python 2.7.1 on Windows XP, x86.
+            * Python 3.2.2 on Windows XP, x86.
+        * Intended to work with Python 2.4+.
+    * Fixed a bug causing converting a suds.client.Client object to a string
+      to fail & raise an IndexError exception.
+        * Changed the way suds.client.Client to-string conversion outputs build
+          info. This fixes a bug in the original '0.4.1 jurko 1' forked project
+          release causing printing out a suds.client.Client object to raise an
+          exception due to the code in question making some undocumented
+          assumptions on how the build information string should be formatted.
+
 version 0.4.1 jurko 1 (2011-12-24)
     * Based on revision 711 from the original suds Python library development
       project's Subversion repository. Last officially packaged & released suds
@@ -99,6 +119,9 @@ version 0.4.1 jurko 1 (2011-12-24)
             * Added additional unit tests.
         * Added development related documentation - HACKING.txt.
         * Setup procedure cleaned up a bit.
+    * Known defects.
+        * Converting a suds.client.Client object to a string fails & raises an
+          IndexError exception.
 
 
 ORIGINAL SUDS LIBRARY RELEASE NOTES:
