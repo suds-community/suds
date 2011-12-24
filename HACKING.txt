@@ -72,6 +72,8 @@ TOP-LEVEL FILES & FOLDERS:
 RELEASE PROCEDURE:
 =================================================
 
+    * Document the release correctly in 'README.txt'.
+
     * Version identification.
         * Remove the '(development)' suffix for official release builds.
         * Format '<base-suds-version> jurko #'.
