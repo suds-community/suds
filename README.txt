@@ -2,7 +2,7 @@ OVERVIEW:
 =================================================
 
   "Suds" is a lightweight SOAP-based web service client for Python licensed
-under LGPL (see the LICENSE file included in the distribution).
+under LGPL (see the LICENSE.txt file included in the distribution).
 
   This is hopefully just a temporary fork of the original suds Python library
 project created because the original project development seems to have stalled.
@@ -11,14 +11,39 @@ again.
 
   Forked project information:
     * Project site: https://bitbucket.org/jurko/suds
-    * Epydocs documentation: needs to be built from sources.
+    * Epydocs documentation: needs to be built from sources
+    * Official releases can be downloaded from:
+        * PyPI - 'http://pypi.python.org/pypi/suds-jurko'
+        * BitBucket - 'https://bitbucket.org/jurko/suds/downloads'
 
   Original suds Python library development project information:
     * Project site: https://fedorahosted.org/suds
     * Documentation: https://fedorahosted.org/suds/wiki/Documentation
     * Epydocs: http://jortel.fedorapeople.org/suds/doc
 
-  For development notes see the HACKING document included in the distribution.
+  For development notes see the HACKING.txt document included in the
+distribution.
+
+
+INSTALLATION:
+=================================================
+
+  Standard Python installation.
+
+  Here are the basic instructions for 3 different installation methods:
+
+  Using pip:
+    * Have the pip package installed.
+    * Run 'pip install suds-jurko'.
+
+  Using easy-install:
+    * Have the 'distribute' package installed.
+    * Run 'easy_install suds-jurko'.
+
+  From sources:
+    * Unpack the source package somewhere.
+    * Run 'python setup.py install' from the source distribution's top level
+      folder.
 
 
 RELEASE NOTES:
@@ -72,7 +97,8 @@ version 0.4.1 jurko 1 (2011-12-22)
             * Separated standalone tests from those requiring an external web
               service.
             * Added additional unit tests.
-        * Added development related documentation - HACKING.
+        * Added development related documentation - HACKING.txt.
+        * Setup procedure cleaned up a bit.
 
 
 ORIGINAL SUDS LIBRARY RELEASE NOTES:
