@@ -226,7 +226,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct method parameter element object.
     paramOut = client.factory.create("Elemento")
-    __assert_dynamic_type(paramOut, "Elemento")
+    _assert_dynamic_type(paramOut, "Elemento")
     assert not paramOut.__keylist__
 
 
@@ -322,15 +322,15 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct method parameter element object.
     paramOut = client.factory.create("Elemento")
-    __assert_dynamic_type(paramOut, "Elemento")
+    _assert_dynamic_type(paramOut, "Elemento")
     assert paramOut.x1 is None
-    __assert_dynamic_type(paramOut.x2, "x2")
+    _assert_dynamic_type(paramOut.x2, "x2")
     assert not paramOut.x2.__keylist__
     assert paramOut.x3 is None
 
     # Construct method parameter objects with a locally defined type.
     paramIn = client.factory.create("Elemento.x2")
-    __assert_dynamic_type(paramIn, "x2")
+    _assert_dynamic_type(paramIn, "x2")
     assert not paramOut.x2.__keylist__
     assert paramIn is not paramOut.x2
 
@@ -427,9 +427,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct method parameter element object.
     paramOut = client.factory.create("Elemento")
-    __assert_dynamic_type(paramOut, "Elemento")
+    _assert_dynamic_type(paramOut, "Elemento")
     assert paramOut.x1 is None
-    __assert_dynamic_type(paramOut.x2, "x2")
+    _assert_dynamic_type(paramOut.x2, "x2")
     assert paramOut.x2.u1 is None
     assert paramOut.x2.u2 is None
     assert paramOut.x2.u3 is None
@@ -437,7 +437,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct method parameter objects with a locally defined type.
     paramIn = client.factory.create("Elemento.x2")
-    __assert_dynamic_type(paramIn, "x2")
+    _assert_dynamic_type(paramIn, "x2")
     assert paramIn.u1 is None
     assert paramIn.u2 is None
     assert paramIn.u3 is None
@@ -842,12 +842,12 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert children[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
 
     sequenceOut = client.factory.create("Wackadoodle")
-    __assert_dynamic_type(sequenceOut, "Wackadoodle")
+    _assert_dynamic_type(sequenceOut, "Wackadoodle")
     assert sequenceOut.__metadata__.sxtype is aTypeOut
     assert sequenceOut.x1 is None
     sequenceIn = sequenceOut.x2
     assert sequenceOut.x3 is None
-    __assert_dynamic_type(sequenceIn, "Oklahoma")
+    _assert_dynamic_type(sequenceIn, "Oklahoma")
     assert sequenceIn.__metadata__.sxtype is aTypeIn
     assert sequenceIn.c1 is None
     assert sequenceIn.c2 is None
@@ -1017,12 +1017,12 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert aTypeIn1.rawchildren[0].namespace() is namespace1
 
     sequenceOut = client.factory.create("Wackadoodle")
-    __assert_dynamic_type(sequenceOut, "Wackadoodle")
+    _assert_dynamic_type(sequenceOut, "Wackadoodle")
     assert sequenceOut.__metadata__.sxtype is aTypeOut
     sequenceIn1 = sequenceOut.x1
     sequenceIn2 = sequenceOut.x2
-    __assert_dynamic_type(sequenceIn1, "x1")
-    __assert_dynamic_type(sequenceIn2, "x2")
+    _assert_dynamic_type(sequenceIn1, "x1")
+    _assert_dynamic_type(sequenceIn2, "x2")
     assert sequenceIn1.__metadata__.sxtype is aTypeIn1
     assert sequenceIn2.__metadata__.sxtype is aTypeIn2
     assert sequenceIn1.c1 is None
@@ -1431,7 +1431,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         client.wsdl.schema.types["DoesNotExist", "OMG"]
 
 
-def __assert_dynamic_type(anObject, typename):
+def _assert_dynamic_type(anObject, typename):
     assert anObject.__module__ == suds.sudsobject.__name__
     assert anObject.__metadata__.sxtype.name == typename
     #   In order to be compatible with old style classes (py2 only) we need to
