@@ -109,14 +109,13 @@ PRIORETIZED:
 (+)     * When 's' is used, all of its subelements should be used independent of
 (+)       whether they are None or not.
 (+)     * Add related test.
-
-    * (Jurko) Prepare '0.4.1 jurko 1' release.
-        * Follow the documented release procedure.
-            * Update version information.
-            * Tag in Hg.
-            * Upload the source package.
-                * Project site.
-                * PyPI.
+(+) * (Jurko) Prepare the '0.4.1 jurko 1' release.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
 
 
 NON PRIORETIZED:
