@@ -44,6 +44,12 @@ import suds.store
 import xml.sax
 
 
+def test_converting_client_to_a_string_must_not_raise_an_exception():
+    client = _client_from_wsdl(
+        "<?xml version='1.0' encoding='UTF-8'?><root />")
+    str(client)
+
+
 def test_empty_invalid_wsdl():
     try:
         client = _client_from_wsdl("")
