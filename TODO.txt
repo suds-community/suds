@@ -32,23 +32,66 @@ PRIORETIZED:
 (+)         * 'relavent' --> 'relevant'.
 (+)         * 'indicat' --> 'inidcat'.
 
-    * (Jurko) Prepare for the initial forked project release.
-        * Research release procedure.
-            * How to prepare a source distribution package.
-            * How to upload the prepared distribution packages.
-                * BitBucket.
-                * PyPI.
-        * Document how to access this forked project's development sources &
-          released files.
-            * Released project packages accessible from PyPI.
-            * Installing the project using distribute or pip.
-        * Document release procedure.
-            * Version identification.
-                * Use '(development)' suffix for non-release builds.
-                * Format 'base-suds-version jurko #', e.g. '0.4.1 jurko 1'.
-            * Download package at the project site.
-            * PyPI.
-            * Tag in Hg.
+(22.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Rename top level project documentation files to use the .txt extension
+(+)       to make them friendlier to Windows users.
+(+)     * Research release procedure.
+(+)         * Open PyPI account.
+(+)         * How to prepare a source distribution package.
+(+)             * Change author information.
+(+)             * Include tests.
+(+)             * Include all the top-level documentation files.
+(+)                 * 'README'.
+(+)                 * 'LICENSE'.
+(+)                 * 'HACKING'.
+(+)                 * 'TODO'.
+(+)             * Note the original project author in the package description.
+(+)             * Include correct license information.
+(+)             * See what the difference between author and maintainer
+(+)               information is and where it can be seen.
+(+)         * Try using 'setuptools_hg' to simplify specifying the project
+(+)           sources.
+(+)             * Failed when used under Python 3.
+(+)         * How to upload the prepared distribution packages.
+(+)             * Should upload a source distribution only.
+
+(23.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Research release procedure.
+(+)         * How to upload the prepared distribution packages.
+(+)             * PyPI.
+
+(24.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Research release procedure.
+(+)         * How to upload the prepared distribution packages.
+(+)             * BitBucket.
+(+)         * Document the project's official download URL.
+(+)     * Document how to access this forked project's development sources &
+(+)       released files.
+(+)         * Released project packages accessible from PyPI & BitBucket.
+(+)         * Installing the project using distribute or pip.
+(+)     * Document release procedure.
+(+)         * Version identification.
+(+)             * Remove the '(development)' suffix for official release builds.
+(+)             * Format '<base-suds-version> jurko #', e.g. '0.4.1 jurko 1'.
+(+)         * Tag in Hg.
+(+)             * Name the tag like 'release-<version-info>', e.g.
+(+)               'release-0.4.1 jurko 1'.
+(+)         * Prepare official releases based only on tagged commits.
+(+)             * Prepare source distribution package, register the new release
+(+)               at PyPI and upload the prepared source package.
+(+)                 * Run 'setup.py sdist register upload'.
+(+)             * Upload the prepared source package to the project site.
+(+)             * Archive the prepared source release locally if needed.
+(+)         * Next development version identification.
+(+)             * Bump up the forked project version counter.
+(+)             * Add back the '(development)' suffix.
+(+)     * Commit all local changes.
 
     * (Jurko) Constructing a SOAP request containing data stored in a sequence
       inside a choice.
@@ -69,9 +112,12 @@ PRIORETIZED:
         * Add related test.
 
     * (Jurko) Prepare '0.4.1 jurko 1' release.
-        * Tag in Hg.
-        * Download package at the project site.
-        * PyPI.
+        * Follow the documented release procedure.
+            * Update version information.
+            * Tag in Hg.
+            * Upload the source package.
+                * Project site.
+                * PyPI.
 
 
 NON PRIORETIZED:
@@ -95,11 +141,25 @@ NON PRIORETIZED:
         * Test how optional elements under a choice work.
             * There are some comments & an additional patch related to this at
               'https://fedorahosted.org/suds/ticket/342'.
-        * Research default values.
+        * Default element values.
             * What they actually mean.
             * How elements with default values inside a choice structure should
               be handled.
         * See what the suds.sudsobjects.Facade class is for.
+        * How to implement test cases requiring a test web service.
+        * See how to connect to a web service through a Proxy server requiring
+          NTLM authentication.
+            * There are some projects seen on the net implementing a NTLM
+              authentication handler for urllib.
+            * Testing this will require implementing a proxy server requiring
+              NTLM authentication and a web service or at least a web service
+              requiring NTML authentication.
+        * Using pylint.
+
+    * Implement an urllib connection handler allowing connecting using HTTPS
+      with client authentication.
+        * Prepare a test (will require a test web service).
+        * Implement.
 
     * Prepare additional test cases.
         * Prepared SOAP operation invocation requests.

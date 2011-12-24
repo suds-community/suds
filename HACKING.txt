@@ -4,7 +4,7 @@ GENERAL DEVELOPMENT NOTES:
     * Project's sources accessible from a Mercurial version control repository
       hosted by BitBucket at 'https://bitbucket.org/jurko/suds'.
 
-    * Project development should be tracked in the TODO file.
+    * Project development should be tracked in the TODO.txt file.
         * Exact formatting is not important as long as its contect is kept
           formatted consistently.
         * Done tasks should be marked as such and not deleted.
@@ -32,7 +32,7 @@ TOP-LEVEL FILES & FOLDERS:
     * '.hg/', '.hgignore', '.hgtags'.
         * Mercurial version control related data.
 
-    * 'build/', 'dist/', 'suds.egg-info/'.
+    * 'build/', 'dist/', 'suds_jurko.egg-info/'.
         * Folders created during project setup procedure (build + install).
 
     * 'suds/'.
@@ -45,7 +45,13 @@ TOP-LEVEL FILES & FOLDERS:
         * Original suds library development project's development environment
           configuration & scripts as used by the original developer.
 
-    * 'HACKING', 'LICENSE', 'README', 'TODO'.
+    * 'MANIFEST.in'.
+        * Build system configuration file listing the files to be included in
+          the project's source distribution packages in addition to those
+          automatically added to those packages by the used package preparation
+          system.
+
+    * 'HACKING.txt', 'LICENSE.txt', 'README.txt', 'TODO.txt'.
         * Internal project documentation.
 
     * 'setup.cfg'.
@@ -55,4 +61,40 @@ TOP-LEVEL FILES & FOLDERS:
         * Standard Python project setup script.
             * Use 'setup.py --help' for more details.
             * 'setup.py build' for building the project.
+            * 'setup.py develop' for preparing the development environment
+              (adding the project folder to the Python module search path).
             * 'setup.py install' for builing & installing the project.
+            * 'setup.py register' for registering a project release at PyPI.
+            * 'setup.py sdist' for preparing a source distribution.
+            * 'setup.py upload' for uploading prepared packages to PyPI.
+
+
+RELEASE PROCEDURE:
+=================================================
+
+    * Version identification.
+        * Remove the '(development)' suffix for official release builds.
+        * Format '<base-suds-version> jurko #'.
+            * E.g. '0.4.1 jurko 1'.
+
+    * Tag in Hg.
+        * Name the tag like 'release-<version-info>'.
+            * E.g. 'release-0.4.1 jurko 1'.
+
+    * Prepare official releases based only on tagged commits.
+        * Note.
+            * Official releases should always be prepared based on tagged
+              revisions with no local changes in the used sandbox.
+        * Prepare source distribution packages (both .zip & .tar.bz2 formats),
+          register the new release at PyPI and upload the prepared source
+          packages.
+            * Run 'setup.py sdist register upload'.
+        * Upload the prepared source package to the project site.
+            * Use the BitBucket project web interface.
+        * Optionally archive the prepared source package locally.
+
+    * Next development version identification.
+        * Bump up the forked project version counter.
+        * Add back the '(development)' suffix.
+
+    * Notify whomever the new release might concern.
