@@ -38,7 +38,10 @@ if __name__ == "__main__":
 
 
 import os
+import re
+
 import pytest
+
 import suds.client
 import suds.store
 import xml.sax
@@ -63,6 +66,56 @@ def test_empty_valid_wsdl():
         "<?xml version='1.0' encoding='UTF-8'?><root />")
     assert not client.wsdl.services, "No service definitions must be read "  \
         "from an empty WSDL."
+
+
+def test_enumeration_type_string_should_contain_its_value():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:simpleType name="AAA">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="One" />
+          <xsd:enumeration value="Two" />
+          <xsd:enumeration value="Thirty-Two" />
+        </xsd:restriction>
+      </xsd:simpleType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:portType name="dummyPortType">
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+    enumeration_data = client.wsdl.schema.types["AAA", "my-namespace"]
+    # Legend:
+    #   eX - enumeration element.
+    #   aX - ancestry for the enumeration element.
+    (e1, a1), (e2, a2), (e3, a3) = enumeration_data
+    assert isinstance(e1, suds.xsd.sxbasic.Enumeration)
+    assert isinstance(e2, suds.xsd.sxbasic.Enumeration)
+    assert isinstance(e3, suds.xsd.sxbasic.Enumeration)
+    assert e1.name == "One"
+    assert e2.name == "Two"
+    assert e3.name == "Thirty-Two"
+    assert re.match('<Enumeration:0x[0-9a-f]+ name="One" />$', e1.str())
+    assert re.match('<Enumeration:0x[0-9a-f]+ name="Two" />$', e2.str())
+    assert re.match('<Enumeration:0x[0-9a-f]+ name="Thirty-Two" />$', e3.str())
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
