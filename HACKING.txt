@@ -17,6 +17,8 @@ GENERAL DEVELOPMENT NOTES:
     * Base sources should remain Python 2.x compatible. Since the original
       project states aiming for Python 2.4 compatibility we should do so as
       well.
+        * Compatibility notes.
+            * 'with' statement first introduced in Python 2.5.
 
     * Python 3 related patches applicable to the original suds development
       project.

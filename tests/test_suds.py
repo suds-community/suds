@@ -934,8 +934,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     getattr(sequence, "c1")
     getattr(sequence, "c2")
     getattr(sequence, "c3")
-    with pytest.raises(AttributeError):
-        getattr(sequence, "nonExistingChild")
+    pytest.raises(AttributeError, getattr, sequence, "nonExistingChild")
     assert sequence.c1 is None
     assert sequence.c2 is None
     assert sequence.c3 is None
@@ -1070,8 +1069,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert not client.wsdl.schema.types
     assert not service.types
 
-    with pytest.raises(suds.TypeNotFound):
-        client.factory.create("NonExistingType")
+    pytest.raises(suds.TypeNotFound, client.factory.create, "NonExistingType")
 
 
 def test_parameter_referencing_missing_element():
@@ -1423,8 +1421,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     elemento = client.wsdl.schema.elements["Elemento", "my-namespace"]
     assert isinstance(elemento, suds.xsd.sxbasic.Element)
 
-    with pytest.raises(KeyError):
-        client.wsdl.schema.elements["DoesNotExist", "OMG"]
+    pytest.raises(KeyError, client.wsdl.schema.elements.__getitem__,
+        ("DoesNotExist", "OMG"))
 
     # Types.
     assert len(client.wsdl.schema.types) == 2
@@ -1433,8 +1431,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     fifi = client.wsdl.schema.types["Fifi", "my-namespace"]
     assert isinstance(unga_bunga, suds.xsd.sxbasic.Complex)
 
-    with pytest.raises(KeyError):
-        client.wsdl.schema.types["DoesNotExist", "OMG"]
+    pytest.raises(KeyError, client.wsdl.schema.types.__getitem__,
+        ("DoesNotExist", "OMG"))
 
 
 def _assert_dynamic_type(anObject, typename):
