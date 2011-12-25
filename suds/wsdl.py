@@ -16,7 +16,7 @@
 
 """
 The I{wsdl} module provides an objectification of the WSDL.
-The primary class is I{Definitions} as it represends the root element
+The primary class is I{Definitions} as it represents the root element
 found in the document.
 """
 
@@ -44,7 +44,7 @@ soap12ns = (None, 'http://schemas.xmlsoap.org/wsdl/soap12/')
 
 class WObject(Object):
     """
-    Base object for wsdl types.
+    Base object for WSDL types.
     @ivar root: The XML I{root} element.
     @type root: L{Element}
     """
@@ -97,8 +97,8 @@ class NamedObject(WObject):
 
 class Definitions(WObject):
     """
-    Represents the I{root} container of the WSDL objects as defined
-    by <wsdl:definitions/>
+    I{root} container for all the WSDL objects as defined by
+    <wsdl:definitions/>
     @ivar id: The object id.
     @type id: str
     @ivar options: An options dictionary.
@@ -132,7 +132,7 @@ class Definitions(WObject):
         @param options: An options dictionary.
         @type options: L{options.Options}
         """
-        log.debug('reading wsdl at: %s ...', url)
+        log.debug('reading WSDL at: %s ...', url)
         reader = DocumentReader(options)
         d = reader.open(url)
         root = d.root()
@@ -161,7 +161,7 @@ class Definitions(WObject):
         self.set_wrapped()
         for s in self.services:
             self.add_methods(s)
-        log.debug("wsdl at '%s' loaded:\n%s", url, self)
+        log.debug("WSDL at '%s' loaded:\n%s", url, self)
 
     def mktns(self, root):
         """ Get/create the target namespace """
@@ -322,7 +322,7 @@ class Import(WObject):
         raise Exception('document at "%s" is unknown' % url)
 
     def import_definitions(self, definitions, d):
-        """ import/merge wsdl definitions """
+        """ import/merge WSDL definitions """
         definitions.types += d.types
         definitions.messages.update(d.messages)
         definitions.port_types.update(d.port_types)
@@ -549,7 +549,7 @@ class Binding(NamedObject):
         sr = self.soaproot()
         if sr is None:
             self.soap = None
-            log.debug('binding: "%s" not a soap binding', self.name)
+            log.debug('binding: "%s" not a SOAP binding', self.name)
             return
         soap = Facade('soap')
         self.soap = soap
@@ -559,7 +559,7 @@ class Binding(NamedObject):
     def soaproot(self):
         """ get the soap:binding """
         for ns in (soapns, soap12ns):
-            sr =  self.root.getChild('binding', ns=ns)
+            sr = self.root.getChild('binding', ns=ns)
             if sr is not None:
                 return sr
         return None
@@ -651,7 +651,7 @@ class Binding(NamedObject):
     def resolve(self, definitions):
         """
         Resolve named references to other WSDL objects.  This includes
-        cross-linking information (from) the portType (to) the I{soap}
+        cross-linking information (from) the portType (to) the I{SOAP}
         protocol information on the binding for each operation.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
@@ -677,7 +677,7 @@ class Binding(NamedObject):
 
     def resolvesoapbody(self, definitions, op):
         """
-        Resolve soap body I{message} parts by
+        Resolve SOAP body I{message} parts by
         cross-referencing with operation defined in port type.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
@@ -710,7 +710,7 @@ class Binding(NamedObject):
 
     def resolveheaders(self, definitions, op):
         """
-        Resolve soap header I{message} references.
+        Resolve SOAP header I{message} references.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         @param op: An I{operation} object.
@@ -735,8 +735,8 @@ class Binding(NamedObject):
 
     def resolvefaults(self, definitions, op):
         """
-        Resolve soap fault I{message} references by
-        cross-referencing with operation defined in port type.
+        Resolve SOAP fault I{message} references by
+        cross-referencing with operations defined in the port type.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         @param op: An I{operation} object.
@@ -782,7 +782,7 @@ class Port(NamedObject):
     @type service: L{Service}
     @ivar binding: A binding name.
     @type binding: str
-    @ivar location: The service location (url).
+    @ivar location: The service location (URL).
     @type location: str
     """
 
@@ -853,9 +853,9 @@ class Service(NamedObject):
 
     def setlocation(self, url, names=None):
         """
-        Override the invocation location (url) for service method.
-        @param url: A url location.
-        @type url: A url.
+        Override the invocation location (URL) for service method.
+        @param url: A URL location.
+        @type url: A URL.
         @param names:  A list of method names.  None=ALL
         @type names: [str,..]
         """
@@ -867,7 +867,7 @@ class Service(NamedObject):
     def resolve(self, definitions):
         """
         Resolve named references to other WSDL objects.
-        Ports without soap bindings are discarded.
+        Ports without SOAP bindings are discarded.
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
@@ -878,7 +878,7 @@ class Service(NamedObject):
             if binding is None:
                 raise Exception("binding '%s', not-found" % p.binding)
             if binding.soap is None:
-                log.debug('binding "%s" - not a soap, discarded', binding.name)
+                log.debug('binding "%s" - not a SOAP binding, discarded', binding.name)
                 continue
             p.binding = binding
             filtered.append(p)

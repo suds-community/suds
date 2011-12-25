@@ -29,8 +29,7 @@ log = getLogger(__name__)
 
 class SchemaObject(UnicodeMixin):
     """
-    A schema object is an extension to object object with
-    with schema awareness.
+    A schema object is an extension to object with schema awareness.
     @ivar root: The XML root element.
     @type root: L{Element}
     @ivar schema: The schema containing this object.
@@ -50,7 +49,7 @@ class SchemaObject(UnicodeMixin):
     @classmethod
     def prepend(cls, d, s, filter=Filter()):
         """
-        Prepend schema object's from B{s}ource list to
+        Prepend schema objects from B{s}ource list to
         the B{d}estination list while applying the filter.
         @param d: The destination list.
         @type d: list
@@ -68,7 +67,7 @@ class SchemaObject(UnicodeMixin):
     @classmethod
     def append(cls, d, s, filter=Filter()):
         """
-        Append schema object's from B{s}ource list to
+        Append schema objects from B{s}ource list to
         the B{d}estination list while applying the filter.
         @param d: The destination list.
         @type d: list
@@ -85,7 +84,7 @@ class SchemaObject(UnicodeMixin):
         """
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
-        @param root: The xml root node.
+        @param root: The XML root node.
         @type root: L{Element}
         """
         self.schema = schema
@@ -133,7 +132,7 @@ class SchemaObject(UnicodeMixin):
 
     def get_attribute(self, name):
         """
-        Get (find) a I{non-attribute} attribute by name.
+        Get (find) an attribute by name.
         @param name: A attribute name.
         @type name: str
         @return: A tuple: the requested (attribute, ancestry).
@@ -159,7 +158,7 @@ class SchemaObject(UnicodeMixin):
 
     def namespace(self, prefix=None):
         """
-        Get this properties namespace
+        Get this property's namespace.
         @param prefix: The default prefix.
         @type prefix: str
         @return: The schema's target namespace
@@ -175,7 +174,7 @@ class SchemaObject(UnicodeMixin):
 
     def unbounded(self):
         """
-        Get whether this node is unbounded I{(a collection)}
+        Get whether this node is unbounded I{(a collection)}.
         @return: True if unbounded, else False.
         @rtype: boolean
         """
@@ -209,9 +208,9 @@ class SchemaObject(UnicodeMixin):
 
     def resolve(self, nobuiltin=False):
         """
-        Resolve and return the nodes true self.
-        @param nobuiltin: Flag indicates that resolution must
-            not continue to include xsd builtins.
+        Resolve and return the node's true self.
+        @param nobuiltin: Flag indicating whether the resolution should
+            not continue to include XSD builtins.
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
         """
@@ -219,7 +218,7 @@ class SchemaObject(UnicodeMixin):
 
     def sequence(self):
         """
-        Get whether this is an <xs:sequence/>
+        Get whether this is a <xs:sequence/>.
         @return: True if <xs:sequence/>, else False
         @rtype: boolean
         """
@@ -227,7 +226,7 @@ class SchemaObject(UnicodeMixin):
 
     def xslist(self):
         """
-        Get whether this is an <xs:list/>
+        Get whether this is a <xs:list/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -235,7 +234,7 @@ class SchemaObject(UnicodeMixin):
 
     def all(self):
         """
-        Get whether this is an <xs:all/>
+        Get whether this is an <xs:all/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -243,7 +242,7 @@ class SchemaObject(UnicodeMixin):
 
     def choice(self):
         """
-        Get whether this is n <xs:choice/>
+        Get whether this is a <xs:choice/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -251,7 +250,7 @@ class SchemaObject(UnicodeMixin):
 
     def any(self):
         """
-        Get whether this is an <xs:any/>
+        Get whether this is an <xs:any/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -326,7 +325,7 @@ class SchemaObject(UnicodeMixin):
 
     def translate(self, value, topython=True):
         """
-        Translate a value (type) to/from a python type.
+        Translate a value (type) to/from a Python type.
         @param value: A value to translate.
         @return: The converted I{language} type.
         """
@@ -390,7 +389,7 @@ class SchemaObject(UnicodeMixin):
                   'default',
                   'type',
                   'nillable',
-                  'form_qualified',):
+                  'form_qualified'):
             if getattr(self, n) is not None:
                 continue
             v = getattr(other, n)
@@ -508,9 +507,9 @@ class SchemaObject(UnicodeMixin):
 
 class Iter:
     """
-    The content iterator - used to iterate the L{Content} children.  The iterator
-    provides a I{view} of the children that is free of container elements
-    such as <sequence/> and <choice/>.
+    The content iterator - used to iterate the L{Content} children.  The
+    iterator provides a I{view} of the children that is free of container
+    elements such as <sequence/> and <choice/>.
     @ivar stack: A stack used to control nesting.
     @type stack: list
     """
@@ -603,7 +602,7 @@ class Iter:
 
 class XBuiltin(SchemaObject):
     """
-    Represents an (xsd) schema <xs:*/> node.
+    Represents an (XSD) schema <xs:*/> node.
     """
 
     def __init__(self, schema, name):
