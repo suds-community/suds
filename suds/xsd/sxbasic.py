@@ -363,6 +363,9 @@ class Enumeration(Content):
         Content.__init__(self, schema, root)
         self.name = root.get('value')
 
+    def description(self):
+        return ('name', )
+
     def enum(self):
         return True
 

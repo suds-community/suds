@@ -197,6 +197,11 @@ PRIORETIZED:
 (+)           to be changed.
 (+)     * Prepare test.
 (+)     * Update code.
+(+) * (Jurko) 'suds.xsd.xsbasic.Enumeration' objects should list their value in
+(+)   their string representation.
+(+)     * Research.
+(+)     * Prepare test.
+(+)     * Update code.
 
 
 NON PRIORETIZED:
@@ -246,9 +251,6 @@ NON PRIORETIZED:
 
     * 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__() functions
       should not raise an AttributeError.
-
-    * 'suds.xsd.xsbasic.Enumeration' objects should list their value in their
-      string representation.
 
     * Document suds.xsd.sxbasic.TypedContent.resolve().
         * Research the base class resolve() behaviour as well.
