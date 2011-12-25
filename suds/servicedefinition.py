@@ -216,11 +216,8 @@ class ServiceDefinition(UnicodeMixin):
                 s.append(indent(4))
                 sig.append(m[0])
                 sig.append('(')
-                for p in m[1]:
-                    sig.append(self.xlate(p[1]))
-                    sig.append(' ')
-                    sig.append(p[0])
-                    sig.append(', ')
+                sig.append(', '.join("%s %s" % (self.xlate(p[1]), p[0]) for p
+                    in m[1]))
                 sig.append(')')
                 try:
                     s.append(''.join(sig))

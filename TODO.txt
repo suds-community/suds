@@ -188,6 +188,16 @@ PRIORETIZED:
 (+)             * Project site.
 (+)             * PyPI.
 
+(25.12.2011.)
+
+(+) * (Jurko) Printing out a list of function parameters should not print an
+(+)   additional trailing comma after the last parameter.
+(+)     * Research.
+(+)         * suds.servicedefinition.ServiceDescription.description() code needs
+(+)           to be changed.
+(+)     * Prepare test.
+(+)     * Update code.
+
 
 NON PRIORETIZED:
 =================================================
@@ -216,8 +226,8 @@ NON PRIORETIZED:
               be handled.
         * See what the suds.sudsobjects.Facade class is for.
         * How to implement test cases requiring a test web service.
-        * See how to connect to a web service through a Proxy server requiring
-          NTLM authentication.
+        * See how to connect to a web service via a Proxy server requiring NTLM
+          authentication.
             * There are some projects seen on the net implementing a NTLM
               authentication handler for urllib.
             * Testing this will require implementing a proxy server requiring
@@ -239,9 +249,6 @@ NON PRIORETIZED:
 
     * 'suds.xsd.xsbasic.Enumeration' objects should list their value in their
       string representation.
-
-    * Printing out a list of function parameters should not print an additional
-      trailing comma after the last parameter.
 
     * Document suds.xsd.sxbasic.TypedContent.resolve().
         * Research the base class resolve() behaviour as well.
