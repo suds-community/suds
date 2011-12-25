@@ -47,9 +47,9 @@ class Binding:
     per the WSDL port binding.
     @cvar replyfilter: The reply filter function.
     @type replyfilter: (lambda s,r: r)
-    @ivar wsdl: The wsdl.
+    @ivar wsdl: The WSDL.
     @type wsdl: L{suds.wsdl.Definitions}
-    @ivar schema: The collective schema contained within the wsdl.
+    @ivar schema: The collective schema contained within the WSDL.
     @type schema: L{xsd.schema.Schema}
     @ivar options: A dictionary options.
     @type options: L{Options}
@@ -59,7 +59,7 @@ class Binding:
 
     def __init__(self, wsdl):
         """
-        @param wsdl: A wsdl.
+        @param wsdl: A WSDL.
         @type wsdl: L{wsdl.Definitions}
         """
         self.wsdl = wsdl
@@ -94,7 +94,7 @@ class Binding:
         """
         Get parameter definitions.
         Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
-        @param method: A servic emethod.
+        @param method: A service method.
         @type method: I{service.Method}
         @return: A collection of parameter definitions
         @rtype: [I{pdef},..]
@@ -111,7 +111,7 @@ class Binding:
         @type args: list
         @param kwargs: Named (keyword) args for the method invoked.
         @type kwargs: dict
-        @return: The soap envelope.
+        @return: The SOAP envelope.
         @rtype: L{Document}
         """
 
@@ -129,15 +129,16 @@ class Binding:
 
     def get_reply(self, method, reply):
         """
-        Process the I{reply} for the specified I{method} by sax parsing the I{reply}
-        and then unmarshalling into python object(s).
+        Process the I{reply} for the specified I{method} by sax parsing the
+        I{reply} and then unmarshalling into Python object(s).
         @param method: The name of the invoked method.
         @type method: str
-        @param reply: The reply XML received after invoking the specified method.
+        @param reply: The reply XML received after invoking the specified
+            method.
         @type reply: str
-        @return: The unmarshalled reply.  The returned value is an L{Object} for a
-            I{list} depending on whether the service returns a single object or a
-            collection.
+        @return: The unmarshalled reply.  The returned value is an L{Object}
+            for a I{list} depending on whether the service returns a single
+            object or a collection.
         @rtype: tuple ( L{Element}, L{Object} )
         """
         reply = self.replyfilter(reply)
@@ -168,8 +169,8 @@ class Binding:
 
     def detect_fault(self, body):
         """
-        Detect I{hidden} soapenv:Fault element in the soap body.
-        @param body: The soap envelope body.
+        Detect I{hidden} soapenv:Fault element in the SOAP body.
+        @param body: The SOAP envelope body.
         @type body: L{Element}
         @raise WebFault: When found.
         """
@@ -245,10 +246,10 @@ class Binding:
 
     def get_fault(self, reply):
         """
-        Extract the fault from the specified soap reply.  If I{faults} is True, an
+        Extract the fault from the specified SOAP reply.  If I{faults} is True, an
         exception is raised.  Otherwise, the I{unmarshalled} fault L{Object} is
         returned.  This method is called when the server raises a I{web fault}.
-        @param reply: A soap reply message.
+        @param reply: A SOAP reply message.
         @type reply: str
         @return: A fault object.
         @rtype: tuple ( L{Element}, L{Object} )
@@ -310,12 +311,12 @@ class Binding:
 
     def envelope(self, header, body):
         """
-        Build the B{<Envelope/>} for an soap outbound message.
-        @param header: The soap message B{header}.
+        Build the B{<Envelope/>} for a SOAP outbound message.
+        @param header: The SOAP message B{header}.
         @type header: L{Element}
-        @param body: The soap message B{body}.
+        @param body: The SOAP message B{body}.
         @type body: L{Element}
-        @return: The soap envelope containing the body and header.
+        @return: The SOAP envelope containing the body and header.
         @rtype: L{Element}
         """
         env = Element('Envelope', ns=envns)
@@ -326,10 +327,10 @@ class Binding:
 
     def header(self, content):
         """
-        Build the B{<Body/>} for an soap outbound message.
+        Build the B{<Body/>} for a SOAP outbound message.
         @param content: The header content.
         @type content: L{Element}
-        @return: the soap body fragment.
+        @return: the SOAP body fragment.
         @rtype: L{Element}
         """
         header = Element('Header', ns=envns)
@@ -338,24 +339,24 @@ class Binding:
 
     def bodycontent(self, method, args, kwargs):
         """
-        Get the content for the soap I{body} node.
+        Get the content for the SOAP I{body} node.
         @param method: A service method.
         @type method: I{service.Method}
         @param args: method parameter values
         @type args: list
         @param kwargs: Named (keyword) args for the method invoked.
         @type kwargs: dict
-        @return: The xml content for the <body/>
+        @return: The XML content for the <body/>
         @rtype: [L{Element},..]
         """
         raise Exception, 'not implemented'
 
     def headercontent(self, method):
         """
-        Get the content for the soap I{Header} node.
+        Get the content for the SOAP I{Header} node.
         @param method: A service method.
         @type method: I{service.Method}
-        @return: The xml content for the <body/>
+        @return: The XML content for the <body/>
         @rtype: [L{Element},..]
         """
         n = 0
@@ -396,19 +397,19 @@ class Binding:
         Get the reply body content.
         @param method: A service method.
         @type method: I{service.Method}
-        @param body: The soap body
+        @param body: The SOAP body.
         @type body: L{Element}
-        @return: the body content
+        @return: The body content.
         @rtype: [L{Element},...]
         """
         raise Exception, 'not implemented'
 
     def body(self, content):
         """
-        Build the B{<Body/>} for an soap outbound message.
+        Build the B{<Body/>} for a SOAP outbound message.
         @param content: The body content.
         @type content: L{Element}
-        @return: the soap body fragment.
+        @return: The SOAP body fragment.
         @rtype: L{Element}
         """
         body = Element('Body', ns=envns)

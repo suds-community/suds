@@ -73,7 +73,7 @@ class TypedContent(Content):
 
     def qref(self):
         """
-        Get the I{type} qualified reference to the referenced xsd type.
+        Get the I{type} qualified reference to the referenced XSD type.
         This method takes into account simple types defined through
         restriction which are detected by determining that self is simple
         (len=0) and by finding a restriction child.
@@ -93,8 +93,8 @@ class TypedContent(Content):
 
 class Complex(SchemaObject):
     """
-    Represents an (xsd) schema <xs:complexType/> node.
-    @cvar childtags: A list of valid child node names
+    Represents an (XSD) schema <xs:complexType/> node.
+    @cvar childtags: A list of valid child node names.
     @type childtags: (I{str},...)
     """
 
@@ -128,8 +128,8 @@ class Complex(SchemaObject):
 
 class Group(SchemaObject):
     """
-    Represents an (xsd) schema <xs:group/> node.
-    @cvar childtags: A list of valid child node names
+    Represents an (XSD) schema <xs:group/> node.
+    @cvar childtags: A list of valid child node names.
     @type childtags: (I{str},...)
     """
 
@@ -159,8 +159,8 @@ class Group(SchemaObject):
 
 class AttributeGroup(SchemaObject):
     """
-    Represents an (xsd) schema <xs:attributeGroup/> node.
-    @cvar childtags: A list of valid child node names
+    Represents an (XSD) schema <xs:attributeGroup/> node.
+    @cvar childtags: A list of valid child node names.
     @type childtags: (I{str},...)
     """
 
@@ -190,7 +190,7 @@ class AttributeGroup(SchemaObject):
 
 class Simple(SchemaObject):
     """
-    Represents an (xsd) schema <xs:simpleType/> node.
+    Represents an (XSD) schema <xs:simpleType/> node.
     """
 
     def childtags(self):
@@ -223,7 +223,7 @@ class Simple(SchemaObject):
 
 class List(SchemaObject):
     """
-    Represents an (xsd) schema <xs:list/> node.
+    Represents an (XSD) schema <xs:list/> node.
     """
 
     def childtags(self):
@@ -238,7 +238,7 @@ class List(SchemaObject):
 
 class Restriction(SchemaObject):
     """
-    Represents an (xsd) schema <xs:restriction/> node.
+    Represents an (XSD) schema <xs:restriction/> node.
     """
 
     def __init__(self, schema, root):
@@ -276,7 +276,7 @@ class Restriction(SchemaObject):
 
 class Collection(SchemaObject):
     """
-    Represents an (xsd) schema collection node:
+    Represents an (XSD) schema collection node:
         - sequence
         - choice
         - all
@@ -288,7 +288,7 @@ class Collection(SchemaObject):
 
 class Sequence(Collection):
     """
-    Represents an (xsd) schema <xs:sequence/> node.
+    Represents an (XSD) schema <xs:sequence/> node.
     """
     def sequence(self):
         return True
@@ -296,14 +296,14 @@ class Sequence(Collection):
 
 class All(Collection):
     """
-    Represents an (xsd) schema <xs:all/> node.
+    Represents an (XSD) schema <xs:all/> node.
     """
     def all(self):
         return True
 
 class Choice(Collection):
     """
-    Represents an (xsd) schema <xs:choice/> node.
+    Represents an (XSD) schema <xs:choice/> node.
     """
     def choice(self):
         return True
@@ -311,7 +311,7 @@ class Choice(Collection):
 
 class ComplexContent(SchemaObject):
     """
-    Represents an (xsd) schema <xs:complexContent/> node.
+    Represents an (XSD) schema <xs:complexContent/> node.
     """
 
     def childtags(self):
@@ -332,7 +332,7 @@ class ComplexContent(SchemaObject):
 
 class SimpleContent(SchemaObject):
     """
-    Represents an (xsd) schema <xs:simpleContent/> node.
+    Represents an (XSD) schema <xs:simpleContent/> node.
     """
 
     def childtags(self):
@@ -356,7 +356,7 @@ class SimpleContent(SchemaObject):
 
 class Enumeration(Content):
     """
-    Represents an (xsd) schema <xs:enumeration/> node.
+    Represents an (XSD) schema <xs:enumeration/> node.
     """
 
     def __init__(self, schema, root):
@@ -372,7 +372,7 @@ class Enumeration(Content):
 
 class Element(TypedContent):
     """
-    Represents an (xsd) schema <xs:element/> node.
+    Represents an (XSD) schema <xs:element/> node.
     """
 
     def __init__(self, schema, root):
@@ -446,7 +446,7 @@ class Element(TypedContent):
 
 class Extension(SchemaObject):
     """
-    Represents an (xsd) schema <xs:extension/> node.
+    Represents an (XSD) schema <xs:extension/> node.
     """
 
     def __init__(self, schema, root):
@@ -489,7 +489,7 @@ class Extension(SchemaObject):
 
 class Import(SchemaObject):
     """
-    Represents an (xsd) schema <xs:import/> node.
+    Represents an (XSD) schema <xs:import/> node.
     @cvar locations: A dictionary of namespace locations.
     @type locations: dict
     @ivar ns: The imported namespace.
@@ -575,7 +575,7 @@ class Import(SchemaObject):
 
 class Include(SchemaObject):
     """
-    Represents an (xsd) schema <xs:include/> node.
+    Represents an (XSD) schema <xs:include/> node.
     @ivar location: The (optional) location.
     @type location: namespace-uri
     @ivar opened: Opened and I{imported} flag.
@@ -642,7 +642,7 @@ class Include(SchemaObject):
 
 class Attribute(TypedContent):
     """
-    Represents an (xsd) <attribute/> node.
+    Represents an (XSD) <attribute/> node.
     """
 
     def __init__(self, schema, root):
@@ -685,7 +685,7 @@ class Attribute(TypedContent):
 
 class Any(Content):
     """
-    Represents an (xsd) <any/> node.
+    Represents an (XSD) <any/> node.
     """
 
     def get_child(self, name):
@@ -736,7 +736,7 @@ class Factory:
     def maptag(cls, tag, fn):
         """
         Map (override) tag => I{class} mapping.
-        @param tag: An xsd tag name.
+        @param tag: An XSD tag name.
         @type tag: str
         @param fn: A function or class.
         @type fn: fn|class.
