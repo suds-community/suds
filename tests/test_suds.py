@@ -47,10 +47,57 @@ import suds.store
 import xml.sax
 
 
-def test_converting_client_to_a_string_must_not_raise_an_exception():
+def test_converting_client_to_string_must_not_raise_an_exception():
     client = _client_from_wsdl(
         "<?xml version='1.0' encoding='UTF-8'?><root />")
     str(client)
+
+
+def test_converting_metadata_to_string():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="AAA">
+        <xsd:sequence>
+          <xsd:element name="u1" type="xsd:string" />
+          <xsd:element name="u2" type="xsd:string" />
+          <xsd:element name="u3" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:portType name="dummyPortType">
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+    # Metadata with empty content.
+    metadata = client.wsdl.__metadata__
+    assert len(metadata) == 0
+    assert "<empty>" == str(metadata)
+
+    # Metadata with non-empty content.
+    metadata = client.factory.create("AAA").__metadata__
+    assert len(metadata) == 2
+    metadata_string = str(metadata)
+    assert re.search(" sxtype = ", metadata_string)
+    assert re.search(" ordering\[\] = ", metadata_string)
 
 
 def test_empty_invalid_wsdl():

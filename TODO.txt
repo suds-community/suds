@@ -202,6 +202,14 @@ PRIORETIZED:
 (+)     * Research.
 (+)     * Prepare test.
 (+)     * Update code.
+(+) * (Jurko) 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__()
+(+)   functions should not raise an AttributeError.
+(+)     * Research.
+(+)         * There should be no need to access a 'suds.sudsobject.Metadata'
+(+)           object's __metadata__ member as done for 'suds.sudsobjects.Facade'
+(+)           class instances.
+(+)     * Prepare test.
+(+)     * Update code.
 
 
 NON PRIORETIZED:
@@ -248,9 +256,6 @@ NON PRIORETIZED:
     * Prepare additional test cases.
         * Prepared SOAP operation invocation requests.
             * With choice parameters.
-
-    * 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__() functions
-      should not raise an AttributeError.
 
     * Document suds.xsd.sxbasic.TypedContent.resolve().
         * Research the base class resolve() behaviour as well.
