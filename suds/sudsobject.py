@@ -282,7 +282,6 @@ class Printer:
         """ print complex using the specified indent (n) and newline (nl). """
         s = []
         cls = d.__class__
-        md = d.__metadata__
         if d in h:
             s.append('(')
             s.append(cls.__name__)
@@ -296,7 +295,7 @@ class Printer:
         if cls != Object:
             s.append('(')
             if isinstance(d, Facade):
-                s.append(md.facade)
+                s.append(d.__metadata__.facade)
             else:
                 s.append(cls.__name__)
             s.append(')')
