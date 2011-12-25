@@ -331,7 +331,9 @@ class Import(WObject):
     def import_schema(self, definitions, d):
         """ import schema as <types/> content """
         if not len(definitions.types):
-            types = Types.create(definitions)
+            root = Element('types', ns=wsdlns)
+            definitions.root.insert(root)
+            types = Types(root, definitions)
             definitions.types.append(types)
         else:
             types = definitions.types[-1]
@@ -346,12 +348,6 @@ class Types(WObject):
     """
     Represents <types><schema/></types>.
     """
-
-    @classmethod
-    def create(cls, definitions):
-        root = Element('types', ns=wsdlns)
-        definitions.root.insert(root)
-        return Types(root, definitions)
 
     def __init__(self, root, definitions):
         """
