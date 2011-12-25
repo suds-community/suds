@@ -49,12 +49,10 @@ class WObject(Object):
     @type root: L{Element}
     """
 
-    def __init__(self, root, definitions=None):
+    def __init__(self, root):
         """
         @param root: An XML root element.
         @type root: L{Element}
-        @param definitions: A definitions object.
-        @type definitions: L{Definitions}
         """
         Object.__init__(self)
         self.root = root
@@ -88,7 +86,7 @@ class NamedObject(WObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        WObject.__init__(self, root, definitions)
+        WObject.__init__(self, root)
         self.name = root.get('name')
         self.qname = (self.name, definitions.tns[1])
         pmd = self.__metadata__.__print__
@@ -298,7 +296,7 @@ class Import(WObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        WObject.__init__(self, root, definitions)
+        WObject.__init__(self, root)
         self.location = root.get('location')
         self.ns = root.get('namespace')
         self.imported = None
@@ -362,7 +360,7 @@ class Types(WObject):
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
         """
-        WObject.__init__(self, root, definitions)
+        WObject.__init__(self, root)
         self.definitions = definitions
 
     def contents(self):
