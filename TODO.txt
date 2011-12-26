@@ -225,12 +225,32 @@ PRIORETIZED:
 (+)           explicitly specified external type.
 (+)         * When called for an XSD node with an explicitly specified external
 (+)           type returns that type's XSD node.
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Research WSDL structure related to the resolving type references.
+(+)         * 'type'.
+(+)         * 'ref'.
+(+)     * Prepare additional resolve() tests.
+(+)         * 'ref'.
+(+)             * Valid.
+(+)             * Recursive.
+(+)             * Invalid.
+(+)         * References to nodes referencing other nodes.
+(+)             * There seems to be no way to do this in WSDL so seems no
+(+)               reason to keep the complicated and potentially buggy
+(+)               recursive resolve() implementation.
+(+)     * Refactor the resolve() implementation to remove recursion.
+(+)         * Todo items obsoleted by this refactoring.
+(+)             * Prevent possible endless resolve() loops due to resolve()
+(+)               directly or indirectly returning the same TypedContent
+(+)               instance.
 
     * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
         * Refactor to cache the final resolved type instead of a possibly only
-          partially resolved one.
-        * Prevent possible endless resolve() loops due to resolve() directly or
-          indirectly returning the same TypedContent instance.
+          partially resolved one when resolving without allowing resolving to
+          builtin types.
+            * Research.
+            * Prepare test.
+            * Update code.
 
 
 NON PRIORETIZED:
@@ -268,6 +288,10 @@ NON PRIORETIZED:
               'https://fedorahosted.org/suds/ticket/342'.
         * Default element values.
             * What they actually mean.
+                * From from 'http://www.w3.org/TR/xmlschema-0'.
+                    * If the element does not appear it is not provided; if it
+                      does appear and it is empty, its value is the specified
+                      default value; otherwise its value is that given.
             * How elements with default values inside a choice structure should
               be handled.
         * See what the suds.sudsobjects.Facade class is for.

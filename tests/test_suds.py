@@ -1363,7 +1363,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
 
 
-def test_resolving_schema_node_types():
+def test_schema_node_resolve():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
@@ -1375,7 +1375,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-      <xsd:complexType name="UngaBunga">
+      <xsd:complexType name="Typo">
         <xsd:sequence>
           <xsd:element name="u1" type="xsd:string" />
           <xsd:element name="u2" type="xsd:string" />
@@ -1386,7 +1386,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="x1" type="xsd:string" />
-            <xsd:element name="x2" type="UngaBunga" />
+            <xsd:element name="x2" type="Typo" />
             <xsd:element name="x3">
               <xsd:complexType>
                 <xsd:sequence>
@@ -1398,14 +1398,20 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
-      <xsd:element name="ElementoTyped" type="UngaBunga" />
+      <xsd:element name="ElementoTyped" type="Typo" />
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
 """)
     schema = client.wsdl.schema
 
-    # Collect references to the test schema element & type nodes.
+    # Collect references to the test schema type nodes.
+    assert len(schema.types) == 1
+    typo = schema.types["Typo", "my-namespace"]
+    typo_u1 = typo.children()[0][0]
+    assert typo_u1.name == "u1"
+
+    # Collect references to the test schema element nodes.
     assert len(schema.elements) == 2
     elemento = schema.elements["Elemento", "my-namespace"]
     elemento_x2 = elemento.children()[1][0]
@@ -1413,15 +1419,15 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     elemento_x3 = elemento.children()[2][0]
     assert elemento_x3.name == "x3"
     elementoTyped = schema.elements["ElementoTyped", "my-namespace"]
-    assert len(schema.types) == 1
-    typo = schema.types["UngaBunga", "my-namespace"]
-    typo_u1 = typo.children()[0][0]
-    assert typo_u1.name == "u1"
 
-    # Resolving top-level locally defined elements.
-    assert elemento.resolve() is elemento
-    assert elementoTyped.resolve() is typo
+    # Resolving top-level locally defined non-content nodes.
     assert typo.resolve() is typo
+
+    # Resolving a correctly typed top-level locally typed element.
+    assert elemento.resolve() is elemento
+
+    # Resolving top-level globally typed elements.
+    assert elementoTyped.resolve() is typo
 
     # Resolving a subnode referencing a globally defined type.
     assert elemento_x2.resolve() is typo
@@ -1429,11 +1435,116 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Resolving a locally defined subnode.
     assert elemento_x3.resolve() is elemento_x3
 
-    # Resolving a builtin type nodes.
+    # Resolving builtin type nodes.
     assert typo_u1.resolve().__class__ is suds.xsd.sxbuiltin.XString
     assert typo_u1.resolve(nobuiltin=True) is typo_u1
     assert elemento_x2.resolve(nobuiltin=True) is typo
     assert elemento_x3.resolve(nobuiltin=True) is elemento_x3
+
+
+def test_schema_node_resolve__invalid_type():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Elemento1" type="Elemento1" />
+      <xsd:element name="Elemento2" type="Elemento1" />
+      <xsd:element name="Elemento3" type="XXX" />
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>
+""")
+    schema = client.wsdl.schema
+    assert len(schema.elements) == 3
+    elemento1 = schema.elements["Elemento1", "my-namespace"]
+    elemento2 = schema.elements["Elemento2", "my-namespace"]
+    elemento3 = schema.elements["Elemento3", "my-namespace"]
+    pytest.raises(suds.TypeNotFound, elemento1.resolve)
+    pytest.raises(suds.TypeNotFound, elemento2.resolve)
+    pytest.raises(suds.TypeNotFound, elemento3.resolve)
+
+
+def test_schema_node_resolve__references():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="Typo">
+        <xsd:sequence>
+          <xsd:element name="u1" type="xsd:string" />
+          <xsd:element name="u2" type="xsd:string" />
+          <xsd:element name="u3" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="ElementoTyped" type="Typo" />
+      <xsd:element name="ElementoTyped11" ref="ElementoTyped" />
+      <xsd:element name="ElementoTyped12" ref="ElementoTyped11" />
+      <xsd:element name="ElementoTyped13" ref="ElementoTyped12" />
+      <xsd:element name="ElementoTyped21" ref="ElementoTyped" />
+      <xsd:element name="ElementoTyped22" ref="ElementoTyped21" />
+      <xsd:element name="ElementoTyped23" ref="ElementoTyped22" />
+      <xsd:element name="ElementoTypedX" ref="ElementoTypedX" />
+      <xsd:element name="ElementoTypedX1" ref="ElementoTypedX2" />
+      <xsd:element name="ElementoTypedX2" ref="ElementoTypedX1" />
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>
+""")
+    schema = client.wsdl.schema
+
+    # Collect references to the test schema element & type nodes.
+    assert len(schema.types) == 1
+    typo = schema.types["Typo", "my-namespace"]
+    assert len(schema.elements) == 10
+    elementoTyped = schema.elements["ElementoTyped", "my-namespace"]
+    elementoTyped11 = schema.elements["ElementoTyped11", "my-namespace"]
+    elementoTyped12 = schema.elements["ElementoTyped12", "my-namespace"]
+    elementoTyped13 = schema.elements["ElementoTyped13", "my-namespace"]
+    elementoTyped21 = schema.elements["ElementoTyped21", "my-namespace"]
+    elementoTyped22 = schema.elements["ElementoTyped22", "my-namespace"]
+    elementoTyped23 = schema.elements["ElementoTyped23", "my-namespace"]
+    elementoTypedX = schema.elements["ElementoTypedX", "my-namespace"]
+    elementoTypedX1 = schema.elements["ElementoTypedX1", "my-namespace"]
+    elementoTypedX2 = schema.elements["ElementoTypedX2", "my-namespace"]
+
+    #   For referenced element node chains try resolving their nodes in both
+    # directions and try resolving them twice to try and avoid any internal
+    # resolve result caching that might cause some resursive resolution branch
+    # to not get taken.
+    #   Note that these assertions are actually redundant since inter-element
+    # references get processed and referenced type information merged back into
+    # the referencee when the schema information is loaded so no recursion is
+    # needed here in the first place. The tests should still be left in place
+    # and pass to serve as a safeguard in case this reference processing gets
+    # changed in the future.
+    assert elementoTyped11.resolve() is typo
+    assert elementoTyped11.resolve() is typo
+    assert elementoTyped13.resolve() is typo
+    assert elementoTyped13.resolve() is typo
+
+    assert elementoTyped23.resolve() is typo
+    assert elementoTyped23.resolve() is typo
+    assert elementoTyped21.resolve() is typo
+    assert elementoTyped21.resolve() is typo
+
+    # Recursive element references.
+    assert elementoTypedX.resolve() is elementoTypedX
+    assert elementoTypedX1.resolve() is elementoTypedX1
+    assert elementoTypedX2.resolve() is elementoTypedX2
 
 
 def test_schema_object_child_access_by_index():
