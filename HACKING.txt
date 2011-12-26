@@ -20,12 +20,46 @@ GENERAL DEVELOPMENT NOTES:
         * Compatibility notes.
             * 'with' statement first introduced in Python 2.5.
 
-    * Python 3 related patches applicable to the original suds development
-      project.
+    * Handling Python 3 related patches applicable to the original suds
+      development project.
         * Should be first be added to the 'Python 3 support' branch and then
           merged back to the trunk from there.
         * Should be kept synchronized with the ones found in the Mercurial patch
           queue hosted at 'https://bitbucket.org/bernh/suds-python-3-patches'.
+
+    * External documentation.
+        * SOAP standards.
+            * 'http://www.w3.org/TR/soap'.
+            * Version 1.1.
+                * 'http://www.w3.org/TR/2000/NOTE-SOAP-20000508'.
+            * Version 1.2.
+                * Part0: Primer.
+                    * 'http://www.w3.org/TR/2007/REC-soap12-part0-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-part0-20070427-errata.html'
+                * Part1: Messaging Framework.
+                    * 'http://www.w3.org/TR/2007/REC-soap12-part1-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-part1-20070427-errata.html'.
+                * Part2: Adjuncts.
+                    * 'http://www.w3.org/TR/2007/REC-soap12-part2-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-part2-20070427-errata.html'.
+                * Specification Assertions and Test Collection.
+                    * 'http://www.w3.org/TR/2007/
+                      REC-soap12-testcollection-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-testcollection-20070427-errata.html'.
+        * WSDL 1.1 standard.
+            * 'http://www.w3.org/TR/wsdl'.
+        * XML Schema standard.
+            * Part 0: Primer Second Edition: 'http://www.w3.org/TR/xmlschema-0'.
+                * Non-normative document intended to provide an easily readable
+                  description of the XML Schema facilities, and is oriented
+                  towards quickly understanding how to create schemas using the
+                  XML Schema language.
+            * Part 1: Structures: 'http://www.w3.org/TR/xmlschema-1'.
+            * Part 2: Datatypes: 'http://www.w3.org/TR/xmlschema-2'.
 
 
 TOP-LEVEL FILES & FOLDERS:
