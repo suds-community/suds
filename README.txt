@@ -13,8 +13,8 @@ again.
     * Project site: https://bitbucket.org/jurko/suds
     * Epydocs documentation: needs to be built from sources
     * Official releases can be downloaded from:
-        * PyPI - 'http://pypi.python.org/pypi/suds-jurko'
-        * BitBucket - 'https://bitbucket.org/jurko/suds/downloads'
+        * PyPI - http://pypi.python.org/pypi/suds-jurko
+        * BitBucket - https://bitbucket.org/jurko/suds/downloads
 
   Original suds Python library development project information:
     * Project site: https://fedorahosted.org/suds
