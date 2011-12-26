@@ -1437,9 +1437,59 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Resolving builtin type nodes.
     assert typo_u1.resolve().__class__ is suds.xsd.sxbuiltin.XString
+    assert typo_u1.resolve(nobuiltin=False).__class__ is  \
+        suds.xsd.sxbuiltin.XString
     assert typo_u1.resolve(nobuiltin=True) is typo_u1
     assert elemento_x2.resolve(nobuiltin=True) is typo
     assert elemento_x3.resolve(nobuiltin=True) is elemento_x3
+
+
+def test_schema_node_resolve__nobuiltin_caching():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Elemento1" type="xsd:string" />
+      <xsd:element name="Elemento2" type="xsd:string" />
+      <xsd:element name="Elemento3" type="xsd:string" />
+      <xsd:element name="Elemento4" type="xsd:string" />
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>
+""")
+    schema = client.wsdl.schema
+
+    # Collect references to the test schema element nodes.
+    assert len(schema.elements) == 4
+    e1 = schema.elements["Elemento1", "my-namespace"]
+    e2 = schema.elements["Elemento2", "my-namespace"]
+    e3 = schema.elements["Elemento3", "my-namespace"]
+    e4 = schema.elements["Elemento4", "my-namespace"]
+
+    #   Repeating the same resolve() call twice makes sure that the first call
+    # does not cache an incorrect value, thus causing the second call to return
+    # an incorrect result.
+
+    assert e1.resolve().__class__ is suds.xsd.sxbuiltin.XString
+    assert e1.resolve().__class__ is suds.xsd.sxbuiltin.XString
+
+    assert e2.resolve(nobuiltin=True) is e2
+    assert e2.resolve(nobuiltin=True) is e2
+
+    assert e3.resolve().__class__ is suds.xsd.sxbuiltin.XString
+    assert e3.resolve(nobuiltin=True) is e3
+    assert e3.resolve(nobuiltin=True) is e3
+
+    assert e4.resolve(nobuiltin=True) is e4
+    assert e4.resolve().__class__ is suds.xsd.sxbuiltin.XString
+    assert e4.resolve().__class__ is suds.xsd.sxbuiltin.XString
 
 
 def test_schema_node_resolve__invalid_type():
