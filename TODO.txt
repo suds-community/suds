@@ -250,9 +250,10 @@ PRIORETIZED:
 (+)         * Research.
 (+)         * Prepare test.
 (+)         * Update code.
-
-    * (Jurko) Check and remove the splitPrefix import from suds.xsd.sxbasic and
-      other modules if it is no longer needed.
+(+) * (Jurko) Check and remove detected potential unused imports if they are no
+(+)   longer needed.
+(+)     * splitPrefix.
+(+)     * DefinitionsReader.
 
 
 NON PRIORETIZED:

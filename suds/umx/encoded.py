@@ -22,7 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.umx import *
 from suds.umx.typed import Typed
-from suds.sax import splitPrefix, Namespace
+from suds.sax import Namespace
 
 log = getLogger(__name__)
 
