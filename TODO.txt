@@ -243,14 +243,16 @@ PRIORETIZED:
 (+)             * Prevent possible endless resolve() loops due to resolve()
 (+)               directly or indirectly returning the same TypedContent
 (+)               instance.
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Refactor to cache the final resolved type instead of a possibly only
+(+)       partially resolved one when resolving without allowing resolving to
+(+)       builtin types.
+(+)         * Research.
+(+)         * Prepare test.
+(+)         * Update code.
 
-    * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
-        * Refactor to cache the final resolved type instead of a possibly only
-          partially resolved one when resolving without allowing resolving to
-          builtin types.
-            * Research.
-            * Prepare test.
-            * Update code.
+    * (Jurko) Check and remove the splitPrefix import from suds.xsd.sxbasic and
+      other modules if it is no longer needed.
 
 
 NON PRIORETIZED:

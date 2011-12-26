@@ -61,17 +61,30 @@ class TypedContent(Content):
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
         """
-        # Implementation note:
-        #   Note that there is no need for a recursive implementation here
-        # since a node can reference an external type node but there is no way
-        # using WSDL to then make that type node actually be a reference to a
-        # different type node.
-        qref = self.qref()
-        if qref is None:
-            return self
         cached = self.resolved_cache.get(nobuiltin)
         if cached is not None:
             return cached
+        resolved = self.__resolve_type(nobuiltin)
+        self.resolved_cache[nobuiltin] = resolved
+        return resolved
+
+    def __resolve_type(self, nobuiltin=False):
+        """
+        Private resolve() worker without any result caching.
+        @param nobuiltin: Flag indicating whether resolving to XSD builtin
+            types should not be allowed.
+        @return: The resolved (true) type.
+        @rtype: L{SchemaObject}
+
+        Implementation note:
+          Note that there is no need for a recursive implementation here since
+        a node can reference an external type node but there is no way using
+        WSDL to then make that type node actually be a reference to a different
+        type node.
+        """
+        qref = self.qref()
+        if qref is None:
+            return self
         query = TypeQuery(qref)
         query.history = [self]
         log.debug('%s, resolving: %s\n using:%s', self.id, qref, query)
@@ -79,11 +92,9 @@ class TypedContent(Content):
         if resolved is None:
             log.debug(self.schema)
             raise TypeNotFound(qref)
-        self.resolved_cache[nobuiltin] = resolved
-        result = resolved
         if resolved.builtin() and nobuiltin:
-            result = self
-        return result
+            return self
+        return resolved
 
     def qref(self):
         """
