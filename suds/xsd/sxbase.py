@@ -207,9 +207,12 @@ class SchemaObject(UnicodeMixin):
 
     def resolve(self, nobuiltin=False):
         """
-        Resolve and return the node's true self.
-        @param nobuiltin: Flag indicating whether the resolution should
-            not continue to include XSD builtins.
+        Resolve the node's type reference and return the referenced type node.
+
+        Only schema objects that actually support 'having a type' custom
+        implement this interface while others simply resolve as themselves.
+        @param nobuiltin: Flag indicating whether resolving to an external XSD
+            builtin type should not be allowed.
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
         """
