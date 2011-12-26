@@ -220,17 +220,17 @@ PRIORETIZED:
 (+)         * 'resolve()' related caching.
 (+)     * Clean up the SchemaObject resolve() implementations.
 (+)         * Caching not needed in TypedContent base classes.
+(+)     * Document.
+(+)         * Returns the same XSD node when the node does not have an
+(+)           explicitly specified external type.
+(+)         * When called for an XSD node with an explicitly specified external
+(+)           type returns that type's XSD node.
 
     * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
         * Refactor to cache the final resolved type instead of a possibly only
           partially resolved one.
         * Prevent possible endless resolve() loops due to resolve() directly or
           indirectly returning the same TypedContent instance.
-        * Document.
-            * Returns the same XSD node when the node does not have an
-              explicitly specified external type.
-            * When called for an XSD node with an explicitly specified external
-              type returns that type's XSD node.
 
 
 NON PRIORETIZED:

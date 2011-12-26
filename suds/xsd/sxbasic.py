@@ -51,6 +51,17 @@ class TypedContent(Content):
         self.resolved_cache = {}
 
     def resolve(self, nobuiltin=False):
+        """
+        Resolve the node's type reference and return the referenced type node.
+
+        Returns self if the type is defined locally, e.g. as a <complexType>
+        subnode. Otherwise recursively resolves and returns the referenced
+        external node.
+        @param nobuiltin: Flag indicating whether resolving to XSD builtin
+            types should not be allowed.
+        @return: The resolved (true) type.
+        @rtype: L{SchemaObject}
+        """
         qref = self.qref()
         if qref is None:
             return self
