@@ -211,9 +211,42 @@ PRIORETIZED:
 (+)     * Prepare test.
 (+)     * Update code.
 
+(26.12.2011.)
+
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Research.
+(+)         * Base class resolve() behaviour.
+(+)         * Other resolve() functions in suds.
+(+)         * 'resolve()' related caching.
+(+)     * Clean up the SchemaObject resolve() implementations.
+(+)         * Caching not needed in TypedContent base classes.
+
+    * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+        * Refactor to cache the final resolved type instead of a possibly only
+          partially resolved one.
+        * Prevent possible endless resolve() loops due to resolve() directly or
+          indirectly returning the same TypedContent instance.
+        * Document.
+            * Returns the same XSD node when the node does not have an
+              explicitly specified external type.
+            * When called for an XSD node with an explicitly specified external
+              type returns that type's XSD node.
+
 
 NON PRIORETIZED:
 =================================================
+
+    * Look into what the 'suds.null' class.
+        * Research.
+            * See sources (grep for 'null'), old release notes (README.txt) and
+              commit messages.
+            * What it is for,
+            * Whether it can be replaced with None.
+            * If it serves some purpose see if it should be used for identifying
+              missing 'choice' structure members.
+
+    * Look into suds.xsd.sxbase.SchemaObject.unbounded(). It seems to return
+      True even when the object is bounded with a max value greater than 1.
 
     * Make it simpler to run Py3 tests.
         * There should be no need for installing suds to a global location
@@ -257,13 +290,6 @@ NON PRIORETIZED:
         * Prepared SOAP operation invocation requests.
             * With choice parameters.
 
-    * Document suds.xsd.sxbasic.TypedContent.resolve().
-        * Research the base class resolve() behaviour as well.
-        * Returns the same XSD node when the node does not have an explicitly
-          specified external type.
-        * When called for an XSD node with an explicitly specified external type
-          returns that type's XSD node.
-
     * Proces ideas collected from external projects using suds.
         * Alternative choice implementation that would not automatically expand
           all choice function parameters but instead take some more generic
@@ -273,9 +299,11 @@ NON PRIORETIZED:
         * See whether the Marshaller class should know about choice elements and
           not add XML nodes for elements with the value 'None' if they are
           contained directly inside a choice.
+            * For some more background information on this see Marshaller
+              related release notes & commit messages inherited from the
+              original 'suds' development project.
         * See if the class 'suds.xsd.sxbasic.Complex' function sequence() should
-          return True if any of its direct children (or possibly its only child)
-          is a sequence node.
+          return True if its only child is a sequence node.
         * Typo corrections for the original project web site.
             * 'docuemnt' --> 'document'.
             * 'becuase' --> 'because'.

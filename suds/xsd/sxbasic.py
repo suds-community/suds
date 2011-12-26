@@ -45,12 +45,16 @@ class TypedContent(Content):
     """
     Represents any I{typed} content.
     """
+
+    def __init__(self, *args, **kwargs):
+        Content.__init__(self, *args, **kwargs)
+        self.resolved_cache = {}
+
     def resolve(self, nobuiltin=False):
         qref = self.qref()
         if qref is None:
             return self
-        key = 'resolved:nb=%s' % nobuiltin
-        cached = self.cache.get(key)
+        cached = self.resolved_cache.get(nobuiltin)
         if cached is not None:
             return cached
         result = self
@@ -61,7 +65,7 @@ class TypedContent(Content):
         if resolved is None:
             log.debug(self.schema)
             raise TypeNotFound(qref)
-        self.cache[key] = resolved
+        self.resolved_cache[nobuiltin] = resolved
         if resolved.builtin():
             if nobuiltin:
                 result = self
