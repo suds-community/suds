@@ -100,7 +100,6 @@ class SchemaObject(UnicodeMixin):
         self.nillable = False
         self.default = root.get('default')
         self.rawchildren = []
-        self.cache = {}
 
     def attributes(self, filter=Filter()):
         """
@@ -214,7 +213,7 @@ class SchemaObject(UnicodeMixin):
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
         """
-        return self.cache.get(nobuiltin, self)
+        return self
 
     def sequence(self):
         """
@@ -620,9 +619,6 @@ class XBuiltin(SchemaObject):
 
     def builtin(self):
         return True
-
-    def resolve(self, nobuiltin=False):
-        return self
 
 
 class Content(SchemaObject):
