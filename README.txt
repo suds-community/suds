@@ -49,6 +49,29 @@ INSTALLATION:
 RELEASE NOTES:
 =================================================
 
+version 0.4.1 jurko 3 (2011-12-26)
+    * Based on revision 711 from the original suds Python library development
+      project's Subversion repository. Last officially packaged & released suds
+      Python library version - 0.4.1.
+    * Supported Python versions.
+        * Basic sources prepared for Python 2.x.
+        * For using Python 3 the sources first processed by the Python 2to3 tool
+          during the setup procedure.
+        * Tested with.
+            * Python 2.7.1 on Windows XP, x86.
+            * Python 3.2.2 on Windows XP, x86.
+        * Intended to work with Python 2.4+.
+    * Operation parameter specification string no longer includes a trailing
+      comma.
+    * suds.xsd.xsbasic.Enumeration objects now list their value in their string
+      representation.
+    * 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__() functions
+      no longer raise an AttributeError when the object is not empty.
+    * Fixed a bug with suds.xsd.sxbasic.TypedContent.resolve() returning an
+      incorrect type when called twice on the same node referencing a builtin
+      type with the parameter nobuiltin=True.
+    * Added more test cases.
+
 version 0.4.1 jurko 2 (2011-12-24)
     * Based on revision 711 from the original suds Python library development
       project's Subversion repository. Last officially packaged & released suds

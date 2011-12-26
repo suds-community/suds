@@ -243,7 +243,6 @@ PRIORETIZED:
 (+)             * Prevent possible endless resolve() loops due to resolve()
 (+)               directly or indirectly returning the same TypedContent
 (+)               instance.
-(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
 (+)     * Refactor to cache the final resolved type instead of a possibly only
 (+)       partially resolved one when resolving without allowing resolving to
 (+)       builtin types.
@@ -254,6 +253,14 @@ PRIORETIZED:
 (+)   longer needed.
 (+)     * splitPrefix.
 (+)     * DefinitionsReader.
+(+) * (Jurko) Prepare the '0.4.1 jurko 3' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
 
 
 NON PRIORETIZED:
