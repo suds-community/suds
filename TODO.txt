@@ -273,18 +273,27 @@ PRIORETIZED:
 (+)         * 'unbounded'.
 (+)     * Update code - rename unbounded to multi_occurrence.
 
+(27.12.2011.)
+
+(+) * (Jurko) Get calling a web service operation taking no parameters to work
+(+)   correctly.
+(+)     * Research.
+(+)         * Seems to work fine. The original problem triggering this task
+(+)           seems to have been caused by an invalid WSDL.
+(+)     * Add a task to add more detailed test cases for this.
+
 
 NON PRIORETIZED:
 =================================================
 
-    * Look into what the 'suds.null' class.
+    * Look into the 'suds.null' class.
         * Research.
             * See sources (grep for 'null'), old release notes (README.txt) and
               commit messages.
             * What it is for,
             * Whether it can be replaced with None.
             * If it serves some purpose see if it should be used for identifying
-              missing 'choice' structure members.
+              missing 'choice' structure members as well.
 
     * Make it simpler to run Py3 tests.
         * There should be no need for installing suds to a global location
@@ -331,6 +340,9 @@ NON PRIORETIZED:
     * Prepare additional test cases.
         * Prepared SOAP operation invocation requests.
             * With choice parameters.
+        * Calling a web service operation with no parameters.
+            * RPC binding style.
+            * Document binding style.
 
     * Proces ideas collected from external projects using suds.
         * Alternative choice implementation that would not automatically expand
