@@ -157,7 +157,7 @@ class Binding:
             result = self.replycomposite(rtypes, nodes)
             return (replyroot, result)
         if len(rtypes) == 1:
-            if rtypes[0].unbounded():
+            if rtypes[0].multi_occurrence():
                 result = self.replylist(rtypes[0], nodes)
                 return (replyroot, result)
             if len(nodes):
@@ -231,7 +231,7 @@ class Binding:
             sobject = unmarshaller.process(node, resolved)
             value = getattr(composite, tag, None)
             if value is None:
-                if rt.unbounded():
+                if rt.multi_occurrence():
                     value = []
                     setattr(composite, tag, value)
                     value.append(sobject)

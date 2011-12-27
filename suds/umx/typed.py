@@ -95,8 +95,8 @@ class Typed(Core):
     def end(self, content):
         self.resolver.pop()
 
-    def unbounded(self, content):
-        return content.type.unbounded()
+    def multi_occurrence(self, content):
+        return content.type.multi_occurrence()
 
     def nillable(self, content):
         resolved = content.type.resolve()

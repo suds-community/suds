@@ -1363,6 +1363,95 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
 
 
+def test_schema_node_occurrences():
+    client = _client_from_wsdl(
+"""<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+"""
+    + _element_node_xml("AnElement1")
+    + _element_node_xml("AnElement2", min=1)
+    + _element_node_xml("AnElement3", max=1)
+
+    + _element_node_xml("AnOptionalElement1", min=0)
+    + _element_node_xml("AnOptionalElement2", min=0, max=1)
+
+    + _element_node_xml("Array_0_2", min=0, max=2)
+    + _element_node_xml("Array_0_999", min=0, max=999)
+    + _element_node_xml("Array_0_X", min=0, max="unbounded")
+
+    + _element_node_xml("Array_x_2", max=2)
+    + _element_node_xml("Array_x_999", max=999)
+    + _element_node_xml("Array_x_X", max="unbounded")
+
+    + _element_node_xml("Array_1_2", min=1, max=2)
+    + _element_node_xml("Array_1_999", min=1, max=999)
+    + _element_node_xml("Array_1_X", min=1, max="unbounded")
+
+    + _element_node_xml("Array_5_5", min=5, max=5)
+    + _element_node_xml("Array_5_999", min=5, max=999)
+    + _element_node_xml("Array_5_X", min=5, max="unbounded")
++ """
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>
+""")
+    schema = client.wsdl.schema
+
+    def a(schema, name, min=None, max=None):
+        element = schema.elements[name, "my-namespace"]
+
+        if min is None:
+            assert element.min is None
+            min = 1
+        else:
+            assert str(min) == element.min
+        if max is None:
+            assert element.max is None
+            max = 1
+        else:
+            assert str(max) == element.max
+
+        expected_optional = min == 0
+        assert expected_optional == element.optional()
+
+        expected_required = not expected_optional
+        assert expected_required == element.required()
+
+        expected_multi_occurrence = (max == "unbounded") or (max > 1)
+        assert expected_multi_occurrence == element.multi_occurrence()
+
+    a(schema, "AnElement1")
+    a(schema, "AnElement2", min=1)
+    a(schema, "AnElement3", max=1)
+
+    a(schema, "AnOptionalElement1", min=0)
+    a(schema, "AnOptionalElement2", min=0, max=1)
+
+    a(schema, "Array_0_2", min=0, max=2)
+    a(schema, "Array_0_999", min=0, max=999)
+    a(schema, "Array_0_X", min=0, max="unbounded")
+
+    a(schema, "Array_x_2", max=2)
+    a(schema, "Array_x_999", max=999)
+    a(schema, "Array_x_X", max="unbounded")
+
+    a(schema, "Array_1_2", min=1, max=2)
+    a(schema, "Array_1_999", min=1, max=999)
+    a(schema, "Array_1_X", min=1, max="unbounded")
+
+    a(schema, "Array_5_5", min=5, max=5)
+    a(schema, "Array_5_999", min=5, max=999)
+    a(schema, "Array_5_X", min=5, max="unbounded")
+
+
 def test_schema_node_resolve():
     client = _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
@@ -1893,6 +1982,19 @@ def _construct_SOAP_request(client, operation_name, *args, **kwargs):
     """
     method = client.wsdl.services[0].ports[0].methods[operation_name]
     return method.binding.input.get_message(method, args, kwargs)
+
+
+def _element_node_xml(name, min=None, max=None):
+    s = []
+    s.append('      <xsd:element name="')
+    s.append(name)
+    s.append('" type="xsd:string" ')
+    if min is not None:
+        s.append('minOccurs="{}" '.format(min))
+    if max is not None:
+        s.append('maxOccurs="{}" '.format(max))
+    s.append('/>\n')
+    return ''.join(s)
 
 
 def _first_from_dict(d):

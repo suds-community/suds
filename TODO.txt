@@ -261,6 +261,17 @@ PRIORETIZED:
 (+)         * Upload the source package.
 (+)             * Project site.
 (+)             * PyPI.
+(+) * (Jurko) Look into suds.xsd.sxbase.SchemaObject.unbounded(). It seems to
+(+)   return True even when the object is bounded with a max value greater than
+(+)   1.
+(+)     * Research.
+(+)     * Add tests.
+(+)         * 'min'.
+(+)         * 'max'.
+(+)         * 'optional'.
+(+)         * 'required'.
+(+)         * 'unbounded'.
+(+)     * Update code - rename unbounded to multi_occurrence.
 
 
 NON PRIORETIZED:
@@ -274,9 +285,6 @@ NON PRIORETIZED:
             * Whether it can be replaced with None.
             * If it serves some purpose see if it should be used for identifying
               missing 'choice' structure members.
-
-    * Look into suds.xsd.sxbase.SchemaObject.unbounded(). It seems to return
-      True even when the object is bounded with a max value greater than 1.
 
     * Make it simpler to run Py3 tests.
         * There should be no need for installing suds to a global location

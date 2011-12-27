@@ -182,7 +182,7 @@ class ServiceDefinition(UnicodeMixin):
         """
         resolved = type.resolve()
         name = resolved.name
-        if type.unbounded():
+        if type.multi_occurrence():
             name += '[]'
         ns = resolved.namespace()
         if ns[1] == self.wsdl.tns[1]:

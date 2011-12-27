@@ -171,19 +171,18 @@ class SchemaObject(UnicodeMixin):
     def default_namespace(self):
         return self.root.defaultNamespace()
 
-    def unbounded(self):
+    def multi_occurrence(self):
         """
-        Get whether this node is unbounded I{(a collection)}.
-        @return: True if unbounded, else False.
+        Get whether the node has multiple occurrences, i.e. is a I{collection}.
+        @return: True if it has, False if it has 1 occurrence at most.
         @rtype: boolean
         """
         max = self.max
         if max is None:
-            max = '1'
+            return False
         if max.isdigit():
-            return (int(max) > 1)
-        else:
-            return ( max == 'unbounded' )
+            return int(max) > 1
+        return max == 'unbounded'
 
     def optional(self):
         """
