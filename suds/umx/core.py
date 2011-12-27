@@ -146,7 +146,7 @@ class Core:
                 else:
                     setattr(content.data, key, [v, cval])
                 continue
-            if self.unbounded(cont):
+            if self.multi_occurrence(cont):
                 if cval is None:
                     setattr(content.data, key, [])
                 else:
@@ -185,22 +185,22 @@ class Core:
         """
         pass
 
-    def bounded(self, content):
+    def single_occurrence(self, content):
         """
-        Get whether the content is bounded (not a list).
+        Get whether the content has at most a single occurrence (not a list).
         @param content: The current content being unmarshalled.
         @type content: L{Content}
-        @return: True if bounded, else False
+        @return: True if content has at most a single occurrence, else False.
         @rtype: boolean
         '"""
-        return ( not self.unbounded(content) )
+        return not self.multi_occurrence(content)
 
-    def unbounded(self, content):
+    def multi_occurrence(self, content):
         """
-        Get whether the object is unbounded (a list).
+        Get whether the content has more than one occurrence (a list).
         @param content: The current content being unmarshalled.
         @type content: L{Content}
-        @return: True if unbounded, else False
+        @return: True if content has more than one occurrence, else False.
         @rtype: boolean
         '"""
         return False

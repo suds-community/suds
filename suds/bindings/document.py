@@ -104,7 +104,7 @@ class Document(Binding):
         #
         # Expand list parameters into individual parameters
         # each with the type information.  This is because in document
-        # arrays are simply unbounded elements.
+        # arrays are simply multi-occurrence elements.
         #
         if isinstance(object, (list, tuple)):
             tags = []
