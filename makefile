@@ -20,6 +20,7 @@ SPEC = $(PKG).spec
 SETUP = setup.py
 DOCTAR = suds-docs.tar.gz
 FEDORAPEOPLE = jortel@fedorapeople.org
+BUILDROOT = ~/rpmbuild
 
 all : rpm docs
 
@@ -29,10 +30,10 @@ dist : clean
 	./sdist python
 
 rpm : dist
-	cp dist/$(PKG)*.gz /usr/src/redhat/SOURCES
+	cp dist/$(PKG)*.gz $(BUILDROOT)/SOURCES
 	rpmbuild -ba $(SPEC)
-	cp /usr/src/redhat/RPMS/noarch/$(PKG)*.rpm dist
-	cp /usr/src/redhat/SRPMS/$(PKG)*.rpm dist
+	cp $(BUILDROOT)/RPMS/noarch/$(PKG)*.rpm dist
+	cp $(BUILDROOT)/SRPMS/$(PKG)*.rpm dist
 	rpmlint -i dist/$(PKG)*.rpm
 
 release : rpm rdocs
@@ -61,10 +62,10 @@ clean :
 	rm -rf build
 	rm -rf doc
 	rm -rf *.egg-info
-	rm -rf /usr/src/redhat/BUILD/$(PKG)*
-	rm -rf /usr/src/redhat/RPMS/noarch/$(PKG)*
-	rm -rf /usr/src/redhat/SOURCES/$(PKG)*
-	rm -rf /usr/src/redhat/SRPMS/$(PKG)*
+	rm -rf $(BUILDROOT)/BUILD/$(PKG)*
+	rm -rf $(BUILDROOT)/RPMS/noarch/$(PKG)*
+	rm -rf $(BUILDROOT)/SOURCES/$(PKG)*
+	rm -rf $(BUILDROOT)/SRPMS/$(PKG)*
 	find . -name "*.pyc" -exec rm -f {} \;
 	find . -name "*~" -exec rm -f {} \;
 
