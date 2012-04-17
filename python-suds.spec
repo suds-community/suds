@@ -208,6 +208,6 @@ rm -rf $RPM_BUILD_ROOT
   provides for multiple services to define the *same* method and suds will
   handle it properly.  See section 'SERVICES WITH MULTIPLE PORTS:'
 - Add support for multi-document document/literal soap binding style.
-  See section 'MULTI-DOCUMENT Docuemnt/Literal:'
+  See section 'MULTI-DOCUMENT Document/Literal:'
 - Add support for (xs:group, xs:attributeGroup) tags.
 - Add Client.last_sent() and Client.last_received().

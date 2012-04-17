@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -14,13 +14,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-"""
-The I{schema} module provides a intelligent representation of
-an XSD schema.  The I{raw} model is the XML tree and the I{model}
-is the denormalized, objectified and intelligent view of the schema.
-Most of the I{value-add} provided by the model is centered around
-tranparent referenced type resolution and targeted denormalization.
-"""
 
 from logging import getLogger
 from suds import *
@@ -83,4 +76,3 @@ class Filter:
         else:
             result = ( x not in self.items )
         return result
-

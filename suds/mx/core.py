@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -61,7 +61,7 @@ class Core:
         else:
             self.append(document, content)
         return document.root()
-    
+
     def append(self, parent, content):
         """
         Append the specified L{content} to the I{parent}.
@@ -90,7 +90,7 @@ class Core:
         @rtype: L{Element}
         """
         return Element(content.tag)
-    
+
     def start(self, content):
         """
         Appending this content has started.
@@ -100,7 +100,7 @@ class Core:
         @rtype: boolean
         """
         return True
-    
+
     def suspend(self, content):
         """
         Appending this content has suspended.
@@ -108,7 +108,7 @@ class Core:
         @type content: L{Content}
         """
         pass
-    
+
     def resume(self, content):
         """
         Appending this content has resumed.
@@ -126,7 +126,7 @@ class Core:
         @type content: L{Content}
         """
         pass
-    
+
     def setnil(self, node, content):
         """
         Set the value of the I{node} to nill.
@@ -147,7 +147,7 @@ class Core:
         @return: The default.
         """
         pass
-    
+
     def optional(self, content):
         """
         Get whether the specified content is optional.
@@ -155,4 +155,3 @@ class Core:
         @type content: L{Content}
         """
         return False
-
