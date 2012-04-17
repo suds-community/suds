@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -24,9 +24,8 @@ sys.path.append('../../')
 
 import logging
 import traceback as tb
-import suds.metrics as metrics
 from tests import *
-from suds import null, WebFault
+from suds import WebFault
 from suds.client import Client
 
 
@@ -41,14 +40,14 @@ logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
-    print '\n________________________________________________________________\n' 
+    print '\n________________________________________________________________\n'
     print 'Test @ ( %s ) %d' % (url, errors)
 
 
 def rhqTest():
-    
+
     global errors
-    
+
     url = 'http://localhost.localdomain:7080/rhq-rhq-enterprise-server-ejb3/WebservicesManagerBean?wsdl'
     start(url)
     client = Client(url)
@@ -93,7 +92,7 @@ def rhqTest():
         person.phone.append(phoneB)
         person.pet.append(dog)
         person.pet.append(cat)
-        print person       
+        print person
         #
         # addPerson()
         #
@@ -124,7 +123,7 @@ def rhqTest():
         errors += 1
         print e
         tb.print_exc()
-  
+
     try:
         print "echo('this is cool')"
         result = client.service.echo('this is cool')
@@ -140,7 +139,7 @@ def rhqTest():
         errors += 1
         print e
         tb.print_exc()
-        
+
     try:
         print 'hello()'
         result = client.service.hello()
@@ -180,7 +179,7 @@ def rhqTest():
         errors += 1
         print e
         tb.print_exc()
-    
+
     try:
         s = 'hello'
         for n in range(0, 3):
@@ -198,9 +197,9 @@ def rhqTest():
         errors += 1
         print e
         tb.print_exc()
-    
+
     try:
-        print 'testExceptions()' 
+        print 'testExceptions()'
         result = client.service.testExceptions()
         print '\nreply( %s )\n' % tostr(result)
         raise Exception('Fault expected and not raised')
@@ -213,7 +212,7 @@ def rhqTest():
         print e
         tb.print_exc()
 
-        
+
 if __name__ == '__main__':
     errors = 0
     rhqTest()
