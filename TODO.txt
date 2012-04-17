@@ -282,6 +282,25 @@ PRIORETIZED:
 (+)           seems to have been caused by an invalid WSDL.
 (+)     * Add a task to add more detailed test cases for this.
 
+(17.04.2012.)
+
+(+) * (Jurko) Merge upstream changes from the original suds development
+(+)   repository.
+(+) * (Jurko) Update embedded author values so they do not include non-ASCII
+(+)   characters causing problems with the 'distribute' based setup procedure
+(+)   which erroneously assumes they have been prepared using the user's local
+(+)   code-page.
+
+    * (Jurko) Process received pull requests on BitBucket.
+
+    * (Jurko) Prepare the '0.4.1 jurko 3' release.
+        * Update release notes.
+        * Follow the documented release procedure.
+            * Update version information.
+            * Tag in Hg.
+            * Upload the source package.
+                * Project site.
+                * PyPI.
 
 NON PRIORETIZED:
 =================================================

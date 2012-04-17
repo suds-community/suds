@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: cp1250 -*-
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
@@ -120,9 +119,17 @@ setup(
     packages=find_packages(exclude=packages_excluded_from_build),
 
     # 'maintainer' will be listed as the distribution package author.
+    # Warning: Due to a 'distribute' package defect when used with Python 3
+    # (verified using 'distribute' package version 0.6.25), given strings must
+    # be given using ASCII characters only. This is needed because 'distribute'
+    # stores the strings by doing a simple write to a PKG-INFO file opened as a
+    # 'default text file' thus attempting to encode the given characters using
+    # the user's default system code-page, e.g. typically CP1250 on eastern
+    # European Windows, CP1252 on western European Windows, UTF-8 on Linux or
+    # any other.
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
-    maintainer="Jurko Gospodnetiæ",
+    maintainer="Jurko Gospodnetic",
     maintainer_email="jurko.gospodnetic@pke.hr",
 
     #   See PEP-301 for the classifier specification. For a complete list of
