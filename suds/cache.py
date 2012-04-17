@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -50,7 +50,7 @@ class Cache:
         @rtype: any
         """
         raise Exception('not-implemented')
-    
+
     def getf(self, id):
         """
         Get a object from the cache by ID.
@@ -60,7 +60,7 @@ class Cache:
         @rtype: any
         """
         raise Exception('not-implemented')
-    
+
     def put(self, id, object):
         """
         Put a object into the cache.
@@ -70,7 +70,7 @@ class Cache:
         @type object: any
         """
         raise Exception('not-implemented')
-    
+
     def putf(self, id, fp):
         """
         Write a fp into the cache.
@@ -80,33 +80,33 @@ class Cache:
         @type fp: file-like object.
         """
         raise Exception('not-implemented')
-    
+
     def purge(self, id):
         """
         Purge a object from the cache by id.
         @param id: A object ID.
-        @type id: str        
+        @type id: str
         """
         raise Exception('not-implemented')
-    
+
     def clear(self):
         """
         Clear all objects from the cache.
         """
         raise Exception('not-implemented')
-    
+
 
 class NoCache(Cache):
     """
     The passthru object cache.
     """
-    
+
     def get(self, id):
         return None
-    
+
     def getf(self, id):
         return None
-    
+
     def put(self, id, object):
         pass
 
@@ -127,7 +127,7 @@ class FileCache(Cache):
     """
     fnprefix = 'suds'
     units = ('months', 'weeks', 'days', 'hours', 'minutes', 'seconds')
-    
+
     def __init__(self, location=None, **duration):
         """
         @param location: The directory for the cached files.
@@ -143,7 +143,7 @@ class FileCache(Cache):
         self.duration = (None, 0)
         self.setduration(**duration)
         self.checkversion()
-        
+
     def fnsuffix(self):
         """
         Get the file name suffix
@@ -151,10 +151,10 @@ class FileCache(Cache):
         @rtype: str
         """
         return 'gcf'
-        
+
     def setduration(self, **duration):
         """
-        Set the caching duration which defines how long the 
+        Set the caching duration which defines how long the
         file will be cached.
         @param duration: The cached file duration which defines how
             long the file will be cached.  A duration=0 means forever.
@@ -167,7 +167,7 @@ class FileCache(Cache):
                 raise Exception('must be: %s' % str(self.units))
             self.duration = arg
         return self
-    
+
     def setlocation(self, location):
         """
         Set the location (directory) for the cached files.
@@ -175,7 +175,7 @@ class FileCache(Cache):
         @type location: str
         """
         self.location = location
-            
+
     def mktmp(self):
         """
         Make the I{location} directory if it doesn't already exits.
@@ -186,7 +186,7 @@ class FileCache(Cache):
         except:
             log.debug(self.location, exc_info=1)
         return self
-    
+
     def put(self, id, bfr):
         try:
             fn = self.__fn(id)
@@ -197,7 +197,7 @@ class FileCache(Cache):
         except:
             log.debug(id, exc_info=1)
             return bfr
-        
+
     def putf(self, id, fp):
         try:
             fn = self.__fn(id)
@@ -209,7 +209,7 @@ class FileCache(Cache):
         except:
             log.debug(id, exc_info=1)
             return fp
-        
+
     def get(self, id):
         try:
             f = self.getf(id)
@@ -218,7 +218,7 @@ class FileCache(Cache):
             return bfr
         except:
             pass
-    
+
     def getf(self, id):
         try:
             fn = self.__fn(id)
@@ -241,7 +241,7 @@ class FileCache(Cache):
         if expired < dt.now():
             log.debug('%s expired, deleted', fn)
             os.remove(fn)
- 
+
     def clear(self):
         for fn in os.listdir(self.location):
             path = os.path.join(self.location, fn)
@@ -250,25 +250,25 @@ class FileCache(Cache):
             if fn.startswith(self.fnprefix):
                 os.remove(path)
                 log.debug('deleted: %s', path)
-                
+
     def purge(self, id):
         fn = self.__fn(id)
         try:
             os.remove(fn)
         except:
             pass
-                
+
     def open(self, fn, *args):
         """
         Open the cache file making sure the directory is created.
         """
         self.mktmp()
         return open(fn, *args)
-    
+
     def checkversion(self):
         path = os.path.join(self.location, 'version')
         try:
-            
+
             f = self.open(path)
             version = f.read()
             f.close()
@@ -278,23 +278,23 @@ class FileCache(Cache):
             self.clear()
             f = self.open(path, 'w')
             f.write(suds.__version__)
-            f.close()        
-    
+            f.close()
+
     def __fn(self, id):
         name = id
         suffix = self.fnsuffix()
         fn = '%s-%s.%s' % (self.fnprefix, name, suffix)
         return os.path.join(self.location, fn)
-    
-    
+
+
 class DocumentCache(FileCache):
     """
     Provides xml document caching.
     """
-    
+
     def fnsuffix(self):
         return 'xml'
-    
+
     def get(self, id):
         try:
             fp = FileCache.getf(self, id)
@@ -304,7 +304,7 @@ class DocumentCache(FileCache):
             return p.parse(fp)
         except:
             FileCache.purge(self, id)
-    
+
     def put(self, id, object):
         if isinstance(object, Element):
             FileCache.put(self, id, str(object))
@@ -318,10 +318,10 @@ class ObjectCache(FileCache):
     @type protocol: int
     """
     protocol = 2
-    
+
     def fnsuffix(self):
         return 'px'
-    
+
     def get(self, id):
         try:
             fp = FileCache.getf(self, id)
@@ -331,7 +331,7 @@ class ObjectCache(FileCache):
                 return pickle.load(fp)
         except:
             FileCache.purge(self, id)
-    
+
     def put(self, id, object):
         bfr = pickle.dumps(object, self.protocol)
         FileCache.put(self, id, bfr)
