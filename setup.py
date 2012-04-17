@@ -100,8 +100,8 @@ packages_excluded_from_build = []
 
 #   We generally do not want the tests package or any of its subpackages
 # included in our non-source package builds (source distribution content gets
-# specified separately by the MANIFEST.ini configuration file). Comment out the
-# following line to include the test code anyway, e.g. if you want to run
+# specified separately via the MANIFEST.ini configuration file). Comment out
+# the following line to include the test code anyway, e.g. if you want to run
 # Python 3 based tests from the package build folder.
 packages_excluded_from_build += ["tests", "tests.*"]
 
