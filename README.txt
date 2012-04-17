@@ -33,7 +33,7 @@ INSTALLATION:
   Here are the basic instructions for 3 different installation methods:
 
   Using pip:
-    * Have the pip package installed.
+    * Have the 'pip' package installed.
     * Run 'pip install suds-jurko'.
 
   Using easy-install:
