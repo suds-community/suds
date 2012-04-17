@@ -49,6 +49,28 @@ INSTALLATION:
 RELEASE NOTES:
 =================================================
 
+version 0.4.1 jurko 4 (2012-04-17)
+    * Based on revision 712 from the original suds Python library development
+      project's Subversion repository. Last officially packaged & released suds
+      Python library version - 0.4.1.
+    * Supported Python versions.
+        * Basic sources prepared for Python 2.x.
+        * For using Python 3 the sources first processed by the Python 2to3 tool
+          during the setup procedure.
+        * Tested with.
+            * Python 2.7.1 on Windows XP, x64.
+            * Python 3.2.2 on Windows XP, x64.
+        * Intended to work with Python 2.4+.
+    * Cleaned up how the distribution package maintainer name string is
+      specified so it does not contain characters causing the setup procedure to
+      fail when run using Python 3+ on systems using CP1250 or UTF-8 as their
+      default code-page.
+    * Internal cleanup - renamed bounded to single_occurrence and unbounded to
+      multi_occurrence.
+        * Original term unbounded meant that its object has more than one
+          occurrence while its name inferred that 'it has no upper limit on its
+          number of occurrences'.
+
 version 0.4.1 jurko 3 (2011-12-26)
     * Based on revision 711 from the original suds Python library development
       project's Subversion repository. Last officially packaged & released suds
