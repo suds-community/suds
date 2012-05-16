@@ -73,9 +73,9 @@ if sys.version_info >= (3,0):
 #   Wrap long_description at 72 characters since PKG-INFO package distribution
 # metadata file stores this text with an 8 space indentation.
 long_description = """
----------------------------------------
-Lightweight SOAP client (Jurko's fork).
----------------------------------------
+----------------------------------------------------------
+Lightweight SOAP client (Phillip's fork of Jurko's fork).
+----------------------------------------------------------
 
   Based on the original 'suds' project by Jeff Ortel (jortel at redhat
 dot com) hosted at 'https://fedorahosted.org/suds'.
@@ -90,9 +90,9 @@ again.
 
 """
 
-package_name = "suds-jurko"
+package_name = "suds"
 version_tag = pkg_resources.safe_version(__version__)
-project_url = "https://bitbucket.org/jurko/suds"
+project_url = "https://bitbucket.org/palday/suds"
 base_download_url = project_url + "/downloads"
 download_distribution_name = "{}-{}.tar.bz2".format(package_name, version_tag)
 download_url = "{}/{}".format(base_download_url, download_distribution_name)
@@ -129,8 +129,8 @@ setup(
     # any other.
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
-    maintainer="Jurko Gospodnetic",
-    maintainer_email="jurko.gospodnetic@pke.hr",
+    maintainer="Phillip Alday",
+    maintainer_email="phillip.alday@staff.uni-marburg.de",
 
     #   See PEP-301 for the classifier specification. For a complete list of
     # available classifiers see

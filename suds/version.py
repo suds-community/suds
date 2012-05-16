@@ -22,5 +22,5 @@ See the setup.py script for more detailed information.
 
 """
 
-__version__ = "0.4.1 jurko 5 (development)"
-__build__ = ""
+__version__ = "0.4.2"
+__build__ = "palday 1 (development)"
