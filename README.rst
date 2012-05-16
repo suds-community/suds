@@ -1,4 +1,4 @@
-OVERVIEW:
+Overview    
 =================================================
 
 "Suds" is a lightweight SOAP-based web service client for Python licensed 
@@ -31,7 +31,7 @@ For development notes see the HACKING.txt document included in the
 distribution.
 
 
-INSTALLATION:
+Installation
 =================================================
 
 Standard Python installation.
@@ -54,7 +54,7 @@ Here are the basic instructions for 3 different installation methods:
      * Run ``python setup.py install`` from the source distribution's top level folder.
 
 
-RELEASE NOTES:
+Release Notes
 =================================================
 
 version 0.4.2 palday 1 (2012-04-16)
@@ -220,7 +220,7 @@ version 0.4.1 jurko 1 (2011-12-24)
           ``IndexError`` exception.
 
 
-ORIGINAL SUDS LIBRARY RELEASE NOTES:
+Original Suds Library Release Notes
 =================================================
 
 version 0.4.1 (2010-10-15)
