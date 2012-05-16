@@ -108,7 +108,7 @@ packages_excluded_from_build += ["tests", "tests.*"]
 setup(
     name=package_name,
     version=__version__,
-    description="Lightweight SOAP client (Jurko's fork)",
+    description="Lightweight SOAP client (Phillip's fork of Jurko's fork)",
     long_description=long_description,
     keywords=["SOAP", "web", "service", "client"],
     url=project_url,
