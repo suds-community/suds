@@ -46,11 +46,11 @@ Here are the basic instructions for 3 different installation methods:
 
   #. Using pip:
   
-     * Currently not support: see above notes on PyPI.
+     * Currently not supported: see above notes on PyPI.
  
   #. Using easy-install: 
 
-     * Currently not support: see above notes on PyPI.
+     * Currently not supported: see above notes on PyPI.
 
   #. From sources:
 
