@@ -4,12 +4,11 @@ Overview
 "Suds" is a lightweight SOAP-based web service client for Python licensed 
 under LGPL (see the LICENSE.txt file included in the distribution).
 
-This is hopefully just a temporary fork (of a fork of a fork) of the original suds Python library
-project created because the original project development seems to have stalled.
-Should be reintegrated back into the original project if it ever gets revived
-again.  
-There seem to be a few of us forking off each other to fix things we find in our
-own use of suds with Python 3. 
+This is hopefully just a temporary fork (of a fork of a fork) of the original 
+suds Python library project created because the original project development 
+seems to have stalled. Should be reintegrated back into the original project 
+if it ever gets revived again. There seem to be a few of us forking off each 
+other to fix things we find in our own use of suds with Python 3. 
 
   * Forked project information:
    
@@ -17,9 +16,16 @@ own use of suds with Python 3.
     * Epydocs documentation: needs to be built from sources
     * Official releases can be downloaded from:
    
-        * PyPI - (To come)
         * BitBucket - https://bitbucket.org/palday/suds/downloads
-    * Forked from `jurko <https://bitbucket.org/jurko/suds>`_
+        * PyPI - Not available: ``suds`` is already taken and a major point of 
+          this fork was making sure that dependency resolution works correctly 
+          for scripts that only have ``install_requires=['suds']`` 
+          in ``setup.py``. If you can tell me a quick and easy way to fix such
+          scripts, I will post that here in the README and make the source 
+          availalable on PyPI.
+        
+    * Forked from `jurko <https://bitbucket.org/jurko/suds>`_, who forked it 
+      from the original suds library.
   
   * Original suds Python library development project information:
    
@@ -40,13 +46,11 @@ Here are the basic instructions for 3 different installation methods:
 
   #. Using pip:
   
-     * Have the ``pip`` package installed.
-     * Run ``pip install suds-palday``.
+     * Currently not support: see above notes on PyPI.
  
   #. Using easy-install: 
 
-     * Have the ``distribute`` package installed.
-     * Run ``easy_install suds-palday``.
+     * Currently not support: see above notes on PyPI.
 
   #. From sources:
 
