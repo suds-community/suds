@@ -4,19 +4,25 @@ OVERVIEW:
 "Suds" is a lightweight SOAP-based web service client for Python licensed 
 under LGPL (see the LICENSE.txt file included in the distribution).
 
-This is hopefully just a temporary fork of the original suds Python library
+This is hopefully just a temporary fork (of a fork of a fork) of the original suds Python library
 project created because the original project development seems to have stalled.
 Should be reintegrated back into the original project if it ever gets revived
-again.
+again.  
+There seem to be a few of us forking off each other to fix things we find in our
+own use of suds with Python 3. 
 
-  -Forked project information:
+  * Forked project information:
+   
     * Project site: https://bitbucket.org/palday/suds
     * Epydocs documentation: needs to be built from sources
     * Official releases can be downloaded from:
+   
         * PyPI - (To come)
         * BitBucket - https://bitbucket.org/palday/suds/downloads
-
-  -Original suds Python library development project information:
+    * Forked from `jurko <https://bitbucket.org/jurko/suds>`_
+  
+  * Original suds Python library development project information:
+   
     * Project site: https://fedorahosted.org/suds
     * Documentation: https://fedorahosted.org/suds/wiki/Documentation
     * Epydocs: http://jortel.fedorapeople.org/suds/doc
@@ -32,17 +38,20 @@ Standard Python installation.
 
 Here are the basic instructions for 3 different installation methods:
 
-  -Using pip:
-    * Have the 'pip' package installed.
-    * Run 'pip install suds'.
+  #. Using pip:
+  
+     * Have the ``pip`` package installed.
+     * Run ``pip install suds-palday``.
+ 
+  #. Using easy-install: 
 
-  -Using easy-install:
-    * Have the 'distribute' package installed.
-    * Run 'easy_install suds'.
+     * Have the ``distribute`` package installed.
+     * Run ``easy_install suds-palday``.
 
-  -From sources:
-    * Unpack the source package somewhere.
-    * Run 'python setup.py install' from the source distribution's top level folder.
+  #. From sources:
+
+     * Unpack the source package somewhere.
+     * Run ``python setup.py install`` from the source distribution's top level folder.
 
 
 RELEASE NOTES:
@@ -51,7 +60,8 @@ RELEASE NOTES:
 version 0.4.2 palday 1 (2012-04-16)
 
     * Fixed an issue with http authentication related to the difference between bytes and str in Python 3.
-    * Changed some version information so that the suds dependency is reliably recognized by other installers. 
+    * Changed some version information so that the suds dependency is reliably recognized by other installers.
+    * Replaced ``jurko`` build tags by ``palday`` and moved it from the ``__version__`` field to the ``__build__`` field.  
 
 version 0.4.1 jurko 4 (2012-04-17)
 
@@ -101,11 +111,12 @@ version 0.4.1 jurko 3 (2011-12-26)
       comma.
     * suds.xsd.xsbasic.Enumeration objects now list their value in their string
       representation.
-    * 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__() functions
+    * ``suds.sudsobject.Metadata`` 
+      ``__unicode__()`` / ``__str__()`` / ``__repr__()`` functions
       no longer raise an AttributeError when the object is not empty.
     * Fixed a bug with suds.xsd.sxbasic.TypedContent.resolve() returning an
       incorrect type when called twice on the same node referencing a builtin
-      type with the parameter nobuiltin=True.
+      type with the parameter ``nobuiltin=True``.
     * Added more test cases.
 
 version 0.4.1 jurko 2 (2011-12-24)
@@ -125,11 +136,12 @@ version 0.4.1 jurko 2 (2011-12-24)
 
         * Intended to work with Python 2.4+.
         
-    * Fixed a bug causing converting a suds.client.Client object to a string to fail & raise an IndexError exception.
+    * Fixed a bug causing converting a ``suds.client.Client`` object to a string to 
+      fail & raise an ``IndexError`` exception.
 
-        * Changed the way suds.client.Client to-string conversion outputs build
-          info. This fixes a bug in the original '0.4.1 jurko 1' forked project
-          release causing printing out a suds.client.Client object to raise an
+        * Changed the way ``suds.client.Client`` to-string conversion outputs build
+          info. This fixes a bug in the original ``0.4.1 jurko 1`` forked project
+          release causing printing out a ``suds.client.Client`` object to raise an
           exception due to the code in question making some undocumented
           assumptions on how the build information string should be formatted.
 
@@ -153,9 +165,11 @@ version 0.4.1 jurko 1 (2011-12-24)
     * Added Python 3 support:
 
         * Based on patches integrated from a Mercurial patch queue maintained by
-          Bernhard Leiner at 'https://bitbucket.org/bernh/suds-python-3-patches'.
+          `Bernhard Leiner <https://bitbucket.org/bernh/suds-python-3-patches>`_.
             
-            * Last collected patch series commit: '96ffba978d5c74df28846b4273252cf1f94f7c78'.
+            * Last collected patch series commit::
+                
+                96ffba978d5c74df28846b4273252cf1f94f7c78
         
         * Original sources compatible with Python 2. Automated conversion to
           Python 3 sources during setup.
@@ -163,12 +177,12 @@ version 0.4.1 jurko 1 (2011-12-24)
     * Made suds work with operations taking choice parameters.
         
         * Based on a patch by michaelgruenewald & bennetb01 attached to ticket
-          #342 on the original suds project issue tracker
-          ('http://fedorahosted.org/suds/ticket/342'). Comments listed related
+          on the original suds project issue tracker 
+          `#342 <http://fedorahosted.org/suds/ticket/342>`_. Comments listed related
           to that ticket seem to indicate that there may be additional problems
           with this patch but so far we have not encountered any.
     
-    * Fixed the DateTimeTest.testOverflow test to work correctly in all
+    * Fixed the ``DateTimeTest.testOverflow`` test to work correctly in all
       timezones.
        
         * This test would fail if run directly when run on a computer with a
@@ -178,12 +192,12 @@ version 0.4.1 jurko 1 (2011-12-24)
           test explicitly sets its own timezone time adjustment to a negative
           value.
         * Fixes a bug referenced in the original suds project issue tracker as
-          ticket #422 ('http://fedorahosted.org/suds/ticket/422').
+          ticket `#422 <http://fedorahosted.org/suds/ticket/422>`_.
     
     * Corrected accessing suds.xsd.sxbase.SchemaObject subitems by index.
     
         * Fixes a bug referenced in the original suds project issue tracker as
-          ticket #420 ('http://fedorahosted.org/suds/ticket/420').
+          ticket '#420 <http://fedorahosted.org/suds/ticket/420>`_
     
     * Internal code & project data cleanup.
     
@@ -197,13 +211,13 @@ version 0.4.1 jurko 1 (2011-12-24)
               service.
             * Added additional unit tests.
     
-        * Added development related documentation - HACKING.txt.
+        * Added development related documentation - ``HACKING.txt``.
         * Setup procedure cleaned up a bit.
     
     * Known defects.
     
         * Converting a suds.client.Client object to a string fails & raises an
-          IndexError exception.
+          ``IndexError`` exception.
 
 
 ORIGINAL SUDS LIBRARY RELEASE NOTES:
