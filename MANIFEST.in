@@ -1,0 +1,21 @@
+#   Additional files to be included in the source distribution package (created
+# by running 'setup.py sdist'). Theoretically we could avoid having to manually
+# maintain this list by using a setuptools plugin that would automatically
+# include all files under Mercurial version control, but the setuptools_hg we
+# tried out did not work correctly with Python 3.
+
+# Top level project files.
+include .hgignore
+include .hgtags
+include .project
+include .pydevproject
+include HACKING.txt
+include LICENSE.txt
+include makefile
+include python-suds.spec
+include README.txt
+include sdist
+include TODO.txt
+
+# Test scripts explicitly not included in non-source distribution packages.
+recursive-include tests *.py
