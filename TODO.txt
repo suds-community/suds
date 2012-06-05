@@ -1,0 +1,380 @@
+PRIORETIZED:
+=================================================
+
+(21.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Add todo list.
+(+)     * Document how to access this forked project's development sources &
+(+)       released files.
+(+)         * Jurko's Mercurial repository hosted at BitBucket and accessible
+(+)           from 'https://bitbucket.org/jurko/suds'.
+(+)             * Already documented in README.
+(+)             * Add more details to HACKING.
+(+)         * Suds library Python 3 patches hosted in a Mercurial patch queue
+(+)           repository at BitBucket and accessible from
+(+)           'https://bitbucket.org/bernh/suds-python-3-patches'.
+(+)             * Already documented in HACKING.
+(+) * (Jurko) Minor stylistic changes & typo corrections.
+(+)     * Code.
+(+)         * 'tranparent' --> 'transparent'.
+(+)         * 'if  tns' --> 'if tns'.
+(+)         * 'docuemnt' --> 'document'.
+(+)         * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
+(+)           'list')'.
+(+)             * And other unnecessary trailing tuple commas.
+(+)         * 'Qualfied' --> 'Qualified'.
+(+)         * 'Resolveds' --> 'Resolves'.
+(+)         * 'describe a port and it's list of methods' --> 'describe a port
+(+)           and its list of methods'.
+(+)         * 'dependancies' --> 'dependencies'.
+(+)         * 'imcoming' --> 'incoming'.
+(+)         * 'relavent' --> 'relevant'.
+(+)         * 'indicat' --> 'inidcat'.
+
+(22.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Rename top level project documentation files to use the .txt extension
+(+)       to make them friendlier to Windows users.
+(+)     * Research release procedure.
+(+)         * Open PyPI account.
+(+)         * How to prepare a source distribution package.
+(+)             * Change author information.
+(+)             * Include tests.
+(+)             * Include all the top-level documentation files.
+(+)                 * 'README'.
+(+)                 * 'LICENSE'.
+(+)                 * 'HACKING'.
+(+)                 * 'TODO'.
+(+)             * Note the original project author in the package description.
+(+)             * Include correct license information.
+(+)             * See what the difference between author and maintainer
+(+)               information is and where it can be seen.
+(+)         * Try using 'setuptools_hg' to simplify specifying the project
+(+)           sources.
+(+)             * Failed when used under Python 3.
+(+)         * How to upload the prepared distribution packages.
+(+)             * Should upload a source distribution only.
+
+(23.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Research release procedure.
+(+)         * How to upload the prepared distribution packages.
+(+)             * PyPI.
+
+(24.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Research release procedure.
+(+)         * How to upload the prepared distribution packages.
+(+)             * BitBucket.
+(+)         * Document the project's official download URL.
+(+)     * Document how to access this forked project's development sources &
+(+)       released files.
+(+)         * Released project packages accessible from PyPI & BitBucket.
+(+)         * Installing the project using distribute or pip.
+(+)     * Document release procedure.
+(+)         * Version identification.
+(+)             * Remove the '(development)' suffix for official release builds.
+(+)             * Format '<base-suds-version> jurko #', e.g. '0.4.1 jurko 1'.
+(+)         * Tag in Hg.
+(+)             * Name the tag like 'release-<version-info>', e.g.
+(+)               'release-0.4.1 jurko 1'.
+(+)         * Prepare official releases based only on tagged commits.
+(+)             * Prepare source distribution package, register the new release
+(+)               at PyPI and upload the prepared source package.
+(+)                 * Run 'setup.py sdist register upload'.
+(+)             * Upload the prepared source package to the project site.
+(+)             * Archive the prepared source release locally if needed.
+(+)         * Next development version identification.
+(+)             * Bump up the forked project version counter.
+(+)             * Add back the '(development)' suffix.
+(+)     * Commit all local changes.
+(+) * (Jurko) Constructing a SOAP request containing data stored in a sequence
+(+)   inside a choice.
+(+)     * Test scenario (syntax not precise).
+(+)         <choice>
+(+)             <element "a" - string />
+(+)             <element "s">
+(+)                 <sequence>
+(+)                     <element "s1" - string />
+(+)                     <element "s2" - string />
+(+)                 </sequence>
+(+)             </element>
+(+)         </choice>
+(+)     * When 's' is None and 'a' is not - 'a' should be used.
+(+)     * When 'a' is None and 's' is not - 's' should be used.
+(+)     * When 's' is used, all of its subelements should be used independent of
+(+)       whether they are None or not.
+(+)     * Add related test.
+(+) * (Jurko) Prepare the '0.4.1 jurko 1' release.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+(+) * (Jurko) Fix getting a suds.client object's string representation when the
+(+)   client is initialized with the following WSDL. Calling 'str(client)'
+(+)   reports 'IndexError: list index out of range'.
+(+)     * WSDL.
+(+)         <?xml version='1.0' encoding='UTF-8'?>
+(+)         <wsdl:definitions targetNamespace="my-namespace"
+(+)         xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+(+)         xmlns:ns="my-namespace"
+(+)         xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+(+)           <wsdl:types>
+(+)             <xsd:schema targetNamespace="my-namespace"
+(+)             elementFormDefault="qualified"
+(+)             attributeFormDefault="unqualified"
+(+)             xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+(+)               <xsd:element name="Elemento">
+(+)                 <xsd:complexType>
+(+)                   <xsd:sequence>
+(+)                     <xsd:element name="x1" type="xsd:string" />
+(+)                     <xsd:element name="x2">
+(+)                       <xsd:complexType>
+(+)                         <xsd:choice>
+(+)                           <xsd:element name="u1" type="xsd:string" />
+(+)                           <xsd:element name="u2" type="xsd:string" />
+(+)                           <xsd:element name="u3" type="xsd:string" />
+(+)                         </xsd:choice>
+(+)                       </xsd:complexType>
+(+)                     </xsd:element>
+(+)                     <xsd:element name="x3" type="xsd:string" />
+(+)                   </xsd:sequence>
+(+)                 </xsd:complexType>
+(+)               </xsd:element>
+(+)             </xsd:schema>
+(+)           </wsdl:types>
+(+)           <wsdl:message name="fRequestMessage">
+(+)             <wsdl:part name="parameters" element="ns:Elemento" />
+(+)           </wsdl:message>
+(+)           <wsdl:portType name="dummyPortType">
+(+)             <wsdl:operation name="f">
+(+)               <wsdl:input message="ns:fRequestMessage" />
+(+)             </wsdl:operation>
+(+)           </wsdl:portType>
+(+)           <wsdl:binding name="dummy" type="ns:dummyPortType">
+(+)             <soap:binding style="document"
+(+)             transport="http://schemas.xmlsoap.org/soap/http" />
+(+)             <wsdl:operation name="f">
+(+)               <soap:operation soapAction="f" style="document" />
+(+)               <wsdl:input><soap:body use="literal" /></wsdl:input>
+(+)               <wsdl:output><soap:body use="literal" /></wsdl:output>
+(+)             </wsdl:operation>
+(+)           </wsdl:binding>
+(+)           <wsdl:service name="dummy">
+(+)             <wsdl:port name="dummy" binding="ns:dummy">
+(+)               <soap:address location="https://localhost/dummy" />
+(+)             </wsdl:port>
+(+)           </wsdl:service>
+(+)         </wsdl:definitions>
+(+)     * Research.
+(+)         * Caused by undocumented suds.client.Client behaviour - it was
+(+)           expecting a specifically formatted suds.__build__ string which was
+(+)           not the case with the forked project release.
+(+)     * Add a test.
+(+)     * Fix.
+(+)     * Plan preparing a patched release.
+(+) * (Jurko) Prepare the '0.4.1 jurko 2' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+
+(25.12.2011.)
+
+(+) * (Jurko) Printing out a list of function parameters should not print an
+(+)   additional trailing comma after the last parameter.
+(+)     * Research.
+(+)         * suds.servicedefinition.ServiceDescription.description() code needs
+(+)           to be changed.
+(+)     * Prepare test.
+(+)     * Update code.
+(+) * (Jurko) 'suds.xsd.xsbasic.Enumeration' objects should list their value in
+(+)   their string representation.
+(+)     * Research.
+(+)     * Prepare test.
+(+)     * Update code.
+(+) * (Jurko) 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__()
+(+)   functions should not raise an AttributeError.
+(+)     * Research.
+(+)         * There should be no need to access a 'suds.sudsobject.Metadata'
+(+)           object's __metadata__ member as done for 'suds.sudsobjects.Facade'
+(+)           class instances.
+(+)     * Prepare test.
+(+)     * Update code.
+
+(26.12.2011.)
+
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Research.
+(+)         * Base class resolve() behaviour.
+(+)         * Other resolve() functions in suds.
+(+)         * 'resolve()' related caching.
+(+)     * Clean up the SchemaObject resolve() implementations.
+(+)         * Caching not needed in TypedContent base classes.
+(+)     * Document.
+(+)         * Returns the same XSD node when the node does not have an
+(+)           explicitly specified external type.
+(+)         * When called for an XSD node with an explicitly specified external
+(+)           type returns that type's XSD node.
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Research WSDL structure related to the resolving type references.
+(+)         * 'type'.
+(+)         * 'ref'.
+(+)     * Prepare additional resolve() tests.
+(+)         * 'ref'.
+(+)             * Valid.
+(+)             * Recursive.
+(+)             * Invalid.
+(+)         * References to nodes referencing other nodes.
+(+)             * There seems to be no way to do this in WSDL so seems no
+(+)               reason to keep the complicated and potentially buggy
+(+)               recursive resolve() implementation.
+(+)     * Refactor the resolve() implementation to remove recursion.
+(+)         * Todo items obsoleted by this refactoring.
+(+)             * Prevent possible endless resolve() loops due to resolve()
+(+)               directly or indirectly returning the same TypedContent
+(+)               instance.
+(+)     * Refactor to cache the final resolved type instead of a possibly only
+(+)       partially resolved one when resolving without allowing resolving to
+(+)       builtin types.
+(+)         * Research.
+(+)         * Prepare test.
+(+)         * Update code.
+(+) * (Jurko) Check and remove detected potential unused imports if they are no
+(+)   longer needed.
+(+)     * splitPrefix.
+(+)     * DefinitionsReader.
+(+) * (Jurko) Prepare the '0.4.1 jurko 3' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+(+) * (Jurko) Look into suds.xsd.sxbase.SchemaObject.unbounded(). It seems to
+(+)   return True even when the object is bounded with a max value greater than
+(+)   1.
+(+)     * Research.
+(+)     * Add tests.
+(+)         * 'min'.
+(+)         * 'max'.
+(+)         * 'optional'.
+(+)         * 'required'.
+(+)         * 'unbounded'.
+(+)     * Update code - rename unbounded to multi_occurrence.
+
+(27.12.2011.)
+
+(+) * (Jurko) Get calling a web service operation taking no parameters to work
+(+)   correctly.
+(+)     * Research.
+(+)         * Seems to work fine. The original problem triggering this task
+(+)           seems to have been caused by an invalid WSDL.
+(+)     * Add a task to add more detailed test cases for this.
+
+(17.04.2012.)
+
+(+) * (Jurko) Merge upstream changes from the original suds development
+(+)   repository.
+(+) * (Jurko) Update embedded author values so they do not include non-ASCII
+(+)   characters causing problems with the 'distribute' based setup procedure
+(+)   which erroneously assumes they have been prepared using the user's local
+(+)   code-page.
+(+) * (Jurko) Process received pull requests on BitBucket.
+(+) * (Jurko) Prepare the '0.4.1 jurko 4' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+
+NON PRIORETIZED:
+=================================================
+
+    * Look into the 'suds.null' class.
+        * Research.
+            * See sources (grep for 'null'), old release notes (README.txt) and
+              commit messages.
+            * What it is for,
+            * Whether it can be replaced with None.
+            * If it serves some purpose see if it should be used for identifying
+              missing 'choice' structure members as well.
+
+    * Make it simpler to run Py3 tests.
+        * There should be no need for installing suds to a global location
+          similar to how this is not needed when running Py2 tests.
+            * When done, update related HACKING notes.
+
+    * Generate suds Python library documentation (epydoc).
+        * Research.
+            * HTML.
+            * PDF.
+        * Decide how to generate & distribute this documentation.
+        * Update project HACKING notes to note the external software required
+          for generating the documentation.
+        * Update release procedure to include releasing the documentation.
+
+    * Research.
+        * Test how optional elements under a choice work.
+            * There are some comments & an additional patch related to this at
+              'https://fedorahosted.org/suds/ticket/342'.
+        * Default element values.
+            * What they actually mean.
+                * From from 'http://www.w3.org/TR/xmlschema-0'.
+                    * If the element does not appear it is not provided; if it
+                      does appear and it is empty, its value is the specified
+                      default value; otherwise its value is that given.
+            * How elements with default values inside a choice structure should
+              be handled.
+        * See what the suds.sudsobjects.Facade class is for.
+        * How to implement test cases requiring a test web service.
+        * See how to connect to a web service via a Proxy server requiring NTLM
+          authentication.
+            * There are some projects seen on the net implementing a NTLM
+              authentication handler for urllib.
+            * Testing this will require implementing a proxy server requiring
+              NTLM authentication and a web service or at least a web service
+              requiring NTML authentication.
+        * Using pylint.
+
+    * Implement an urllib connection handler allowing connecting using HTTPS
+      with client authentication.
+        * Prepare a test (will require a test web service).
+        * Implement.
+
+    * Prepare additional test cases.
+        * Prepared SOAP operation invocation requests.
+            * With choice parameters.
+        * Calling a web service operation with no parameters.
+            * RPC binding style.
+            * Document binding style.
+
+    * Proces ideas collected from external projects using suds.
+        * Alternative choice implementation that would not automatically expand
+          all choice function parameters but instead take some more generic
+          'choice' object parameter.
+            * This object would then know which of its data members is
+              'currently specified'.
+        * See whether the Marshaller class should know about choice elements and
+          not add XML nodes for elements with the value 'None' if they are
+          contained directly inside a choice.
+            * For some more background information on this see Marshaller
+              related release notes & commit messages inherited from the
+              original 'suds' development project.
+        * See if the class 'suds.xsd.sxbasic.Complex' function sequence() should
+          return True if its only child is a sequence node.
+        * Typo corrections for the original project web site.
+            * 'docuemnt' --> 'document'.
+            * 'becuase' --> 'because'.
