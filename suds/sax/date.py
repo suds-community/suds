@@ -326,6 +326,14 @@ class UTC(DateTime):
         self.tz.local = 0
 
 
+def get_local_timezone(tz):
+    """
+    Returns the local timezone offset based on local timezone and DST status.
+    """
+    offset_minutes = time.altzone if time.localtime().tm_isdst else time.timezone
+    return 0 - offset_minutes/60/60
+
+
 class Timezone:
     """
     Timezone object used to do TZ conversions
@@ -337,11 +345,11 @@ class Timezone:
 
     pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
 
-    LOCAL = ( 0-time.timezone/60/60 ) + time.daylight
+    LOCAL = get_local_timezone
 
     def __init__(self, offset=None):
         if offset is None:
-            offset = self.LOCAL
+            offset = Timezone.LOCAL(self)
         self.local = offset
 
     @classmethod
