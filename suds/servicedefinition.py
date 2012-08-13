@@ -25,6 +25,8 @@ from suds.sax import Namespace
 from logging import getLogger
 log = getLogger(__name__)
 
+# class DefinitionException(SudsException):
+#     pass
 
 class ServiceDefinition(UnicodeMixin):
     """
@@ -123,9 +125,12 @@ class ServiceDefinition(UnicodeMixin):
         i = 0
         namespaces.sort()
         for u in namespaces:
-            p = self.nextprefix()
-            ns = (p, u)
-            self.prefixes.append(ns)
+            try:
+                p = self.getprefix(u)
+            except Exception as e:
+                p = self.nextprefix()
+                ns = (p, u)
+                self.prefixes.append(ns)
 
     def paramtypes(self):
         """Get all parameter types."""
@@ -169,9 +174,11 @@ class ServiceDefinition(UnicodeMixin):
         """
         for ns in Namespace.all:
             if u == ns[1]: return ns[0]
+        for ns in self.wsdl.root.nsprefixes.items():
+            if u == ns[1]: return ns[0]
         for ns in self.prefixes:
             if u == ns[1]: return ns[0]
-        raise Exception('ns (%s) not mapped'  % u)
+        raise DefinitionException('ns (%s) not mapped'  % u)
 
     def xlate(self, type):
         """
