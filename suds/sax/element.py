@@ -49,6 +49,8 @@ class Element(UnicodeMixin):
 
     """
 
+    __slots__ = ('expns', 'nsprefixes', 'attributes', 'text', 'parent', 'children', 'prefix', 'name', 'charbuffer')
+
     matcher = {
         "eq": lambda a, b: a == b,
         "startswith": lambda a, b: a.startswith(b),

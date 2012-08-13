@@ -38,6 +38,8 @@ class Attribute(UnicodeMixin):
 
     """
 
+    __slots__ = ('parent', 'prefix', 'name', 'text', 'value')
+
     def __init__(self, name, value=None):
         """
         @param name: The attribute's name with I{optional} namespace prefix.
