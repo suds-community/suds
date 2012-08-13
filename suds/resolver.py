@@ -378,8 +378,24 @@ class NodeResolver(TreeResolver):
         if ref is None:
             return None
         qref = qualify(ref, node, node.namespace())
-        query = BlindQuery(qref)
-        return query.execute(self.schema)
+
+        # Originally, this always created a BlindQuery for the qref name so
+        # that the schema was always searched. We assume that the schema does
+        # not change while unserializing and cache the query results here.
+
+        try:
+            lookup_cache = self.schema.NodeResolver__known_cache
+        except AttributeError:
+            lookup_cache = self.schema.NodeResolver__known_cache = {}
+
+        try:
+            return lookup_cache[qref]
+        except KeyError:
+            query = BlindQuery(qref)
+            r = query.execute(self.schema)
+            if r is not None:
+                lookup_cache[qref] = r
+            return r
 
 
 class GraphResolver(TreeResolver):
