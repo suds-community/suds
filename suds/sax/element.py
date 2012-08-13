@@ -552,12 +552,13 @@ class Element(UnicodeMixin):
         @rtype: (I{prefix}, I{URI})
 
         """
+        if prefix in self.specialprefixes:
+            return prefix, self.specialprefixes[prefix]
+
         n = self
         while n is not None:
             if prefix in n.nsprefixes:
                 return prefix, n.nsprefixes[prefix]
-            if prefix in self.specialprefixes:
-                return prefix, self.specialprefixes[prefix]
             n = n.parent
         return default
 
