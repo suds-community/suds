@@ -72,7 +72,7 @@ class SoapHeadersNotPermitted(Exception):
 class WebFault(Exception):
     def __init__(self, fault, document):
         if hasattr(fault, 'faultstring'):
-            Exception.__init__(self, "Server raised fault: '%s'" % fault.faultstring)
+            Exception.__init__(self, smart_str("Server raised fault: '%s'" % fault.faultstring))
         self.fault = fault
         self.document = document
 
@@ -89,6 +89,29 @@ class Repr:
 #
 # Utility
 #
+
+def smart_str(s, encoding='utf-8', errors='strict'):
+    """
+    Returns a bytestring version of 's', encoded as specified in 'encoding'.
+
+    Taken from django.
+    """
+    if not isinstance(s, basestring):
+        try:
+            return str(s)
+        except UnicodeEncodeError:
+            if isinstance(s, Exception):
+                # An Exception subclass containing non-ASCII data that does not
+                # know how to print itself properly. We should not raise a
+                # further exception.
+                return ' '.join([smart_str(arg, encoding, errors) for arg in s]
+                    )
+            return unicode(s).encode(encoding, errors)
+    if isinstance(s, unicode):
+        return s.encode(encoding, errors)
+    if s and encoding != 'utf-8':
+        return s.decode('utf-8', errors).encode(encoding, errors)
+    return s
 
 def tostr(object, encoding=None):
     """ get a unicode safe string representation of an object """
