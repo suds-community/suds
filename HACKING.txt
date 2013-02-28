@@ -1,0 +1,138 @@
+GENERAL DEVELOPMENT NOTES:
+=================================================
+
+    * Project's sources accessible from a Mercurial version control repository
+      hosted by BitBucket at 'https://bitbucket.org/jurko/suds'.
+
+    * Project development should be tracked in the TODO.txt file.
+        * Exact formatting is not important as long as its contect is kept
+          formatted consistently.
+        * Done tasks should be marked as such and not deleted.
+
+    * Testing.
+        * 'pytest' testing framework needed to run unit tests.
+        * To run the tests using Python 3 first process them and the rest of the
+          library sources using the Python 2to3 conversion tool.
+
+    * Base sources should remain Python 2.x compatible. Since the original
+      project states aiming for Python 2.4 compatibility we should do so as
+      well.
+        * Compatibility notes.
+            * 'with' statement first introduced in Python 2.5.
+
+    * Handling Python 3 related patches applicable to the original suds
+      development project.
+        * Should be first be added to the 'Python 3 support' branch and then
+          merged back to the trunk from there.
+        * Should be kept synchronized with the ones found in the Mercurial patch
+          queue hosted at 'https://bitbucket.org/bernh/suds-python-3-patches'.
+
+    * External documentation.
+        * SOAP standards.
+            * 'http://www.w3.org/TR/soap'.
+            * Version 1.1.
+                * 'http://www.w3.org/TR/2000/NOTE-SOAP-20000508'.
+            * Version 1.2.
+                * Part0: Primer.
+                    * 'http://www.w3.org/TR/2007/REC-soap12-part0-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-part0-20070427-errata.html'
+                * Part1: Messaging Framework.
+                    * 'http://www.w3.org/TR/2007/REC-soap12-part1-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-part1-20070427-errata.html'.
+                * Part2: Adjuncts.
+                    * 'http://www.w3.org/TR/2007/REC-soap12-part2-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-part2-20070427-errata.html'.
+                * Specification Assertions and Test Collection.
+                    * 'http://www.w3.org/TR/2007/
+                      REC-soap12-testcollection-20070427'.
+                    * Errata: 'http://www.w3.org/2007/04/
+                      REC-soap12-testcollection-20070427-errata.html'.
+        * WSDL 1.1 standard.
+            * 'http://www.w3.org/TR/wsdl'.
+        * XML Schema standard.
+            * Part 0: Primer Second Edition: 'http://www.w3.org/TR/xmlschema-0'.
+                * Non-normative document intended to provide an easily readable
+                  description of the XML Schema facilities, and is oriented
+                  towards quickly understanding how to create schemas using the
+                  XML Schema language.
+            * Part 1: Structures: 'http://www.w3.org/TR/xmlschema-1'.
+            * Part 2: Datatypes: 'http://www.w3.org/TR/xmlschema-2'.
+
+
+TOP-LEVEL FILES & FOLDERS:
+=================================================
+
+    * '.hg/', '.hgignore', '.hgtags'.
+        * Mercurial version control related data.
+
+    * 'build/', 'dist/', 'suds_jurko.egg-info/'.
+        * Folders created during project setup procedure (build + install).
+
+    * 'suds/'.
+        * Basic project source code.
+
+    * 'tests/'.
+        * Project test code.
+
+    * '.project', '.pydevproject', 'makefile', 'python-suds.spec', 'sdist'.
+        * Original suds library development project's development environment
+          configuration & scripts as used by the original developer.
+
+    * 'MANIFEST.in'.
+        * Build system configuration file listing the files to be included in
+          the project's source distribution packages in addition to those
+          automatically added to those packages by the used package preparation
+          system.
+
+    * 'HACKING.txt', 'LICENSE.txt', 'README.txt', 'TODO.txt'.
+        * Internal project documentation.
+
+    * 'setup.cfg'.
+        * Basic project Python configuration.
+
+    * 'setup.py'.
+        * Standard Python project setup script.
+            * Use 'setup.py --help' for more details.
+            * 'setup.py build' for building the project.
+            * 'setup.py develop' for preparing the development environment
+              (adding the project folder to the Python module search path).
+            * 'setup.py install' for builing & installing the project.
+            * 'setup.py register' for registering a project release at PyPI.
+            * 'setup.py sdist' for preparing a source distribution.
+            * 'setup.py upload' for uploading prepared packages to PyPI.
+
+
+RELEASE PROCEDURE:
+=================================================
+
+    * Document the release correctly in 'README.txt'.
+
+    * Version identification.
+        * Remove the '(development)' suffix for official release builds.
+        * Format '<base-suds-version> jurko #'.
+            * E.g. '0.4.1 jurko 1'.
+
+    * Tag in Hg.
+        * Name the tag like 'release-<version-info>'.
+            * E.g. 'release-0.4.1 jurko 1'.
+
+    * Prepare official releases based only on tagged commits.
+        * Note.
+            * Official releases should always be prepared based on tagged
+              revisions with no local changes in the used sandbox.
+        * Prepare source distribution packages (both .zip & .tar.bz2 formats),
+          register the new release at PyPI and upload the prepared source
+          packages.
+            * Run 'setup.py sdist register upload'.
+        * Upload the prepared source package to the project site.
+            * Use the BitBucket project web interface.
+        * Optionally archive the prepared source package locally.
+
+    * Next development version identification.
+        * Bump up the forked project version counter.
+        * Add back the '(development)' suffix.
+
+    * Notify whomever the new release might concern.
