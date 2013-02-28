@@ -23,6 +23,23 @@ import sys
 import pkg_resources
 from setuptools import setup, find_packages
 
+
+def read_python_code(filename):
+    "Returns the given Python source file's compiled content."
+    file = open(filename, "rt")
+    try:
+        source = file.read()
+    finally:
+        file.close()
+    #   Python 2.6 and below did not support passing strings to exec() &
+    # compile() functions containing line separators other than '\n'. To
+    # support them we need to manually make sure such line endings get
+    # converted even on platforms where this is not handled by native text file
+    # read operations.
+    source = source.replace("\r\n", "\n").replace("\r", "\n")
+    return compile(source, filename, "exec")
+
+
 # Setup documentation incorrectly states that it will search for packages
 # relative to the setup script folder by default when in fact it will search
 # for them relative to the current working folder. It seems avoiding this
@@ -56,7 +73,11 @@ if script_folder != current_folder:
 #     forcing the user to install them manually (since the setup procedure that
 #     is supposed to install them automatically will not be able to run unless
 #     they are already installed).
-exec(open(os.path.join("suds", "version.py"), "rt").read())
+#   We execute explicitly compiled source code instead of having the exec()
+# function compile it to get a better error messages. If we used exec() on the
+# source code directly, the source file would have been listed as just
+# '<string>'.
+exec(read_python_code(os.path.join("suds", "version.py")))
 
 extra = {}
 if sys.version_info >= (3,0):
