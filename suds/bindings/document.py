@@ -68,7 +68,7 @@ class Document(Binding):
             #     how they would be affected by this change.
             #   * If caller actually wishes to pass an empty choice parameter he
             #     can specify its value explicitly as an empty string.
-            if pd[2] and value is None:
+            if len(pd) > 2 and pd[2] and value is None:
                 continue
             p = self.mkparam(method, pd, value)
             if p is None:
