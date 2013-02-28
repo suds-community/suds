@@ -189,10 +189,10 @@ class Client(UnicodeMixin):
 
     def __unicode__(self):
         s = ['\n']
-        build = suds.__build__.split()
         s.append('Suds ( https://fedorahosted.org/suds/ )')
         s.append('  version: %s' % suds.__version__)
-        s.append(' %s  build: %s' % (build[0], build[1]))
+        if ( suds.__build__ ):
+            s.append('  build: %s' % suds.__build__)
         for sd in self.sd:
             s.append('\n\n%s' % unicode(sd))
         return ''.join(s)

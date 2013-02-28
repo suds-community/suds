@@ -15,11 +15,11 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The I{schema} module provides a intelligent representation of
+The I{schema} module provides an intelligent representation of
 an XSD schema.  The I{raw} model is the XML tree and the I{model}
 is the denormalized, objectified and intelligent view of the schema.
 Most of the I{value-add} provided by the model is centered around
-tranparent referenced type resolution and targeted denormalization.
+transparent referenced type resolution and targeted denormalization.
 """
 
 
@@ -109,7 +109,7 @@ class SchemaCollection(UnicodeMixin):
         for s in self.children:
             for ns in namespaces:
                 tns = s.root.get('targetNamespace')
-                if  tns == ns:
+                if tns == ns:
                     continue
                 for imp in s.root.getChildren('import'):
                     if imp.get('namespace') == ns:

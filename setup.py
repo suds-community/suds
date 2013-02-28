@@ -19,6 +19,8 @@
 import os
 import os.path
 import sys
+
+import pkg_resources
 from setuptools import setup, find_packages
 
 # Setup documentation incorrectly states that it will search for packages
@@ -58,7 +60,7 @@ exec(open(os.path.join("suds", "version.py"), "rt").read())
 
 extra = {}
 if sys.version_info >= (3,0):
-    extra['use_2to3'] = True
+    extra["use_2to3"] = True
 
     #   Teach Python's urllib lib2to3 fixer that the old urllib2.__version__
     # data member is now stored in the urllib.request module.
@@ -68,15 +70,93 @@ if sys.version_info >= (3,0):
             x[1].append("__version__")
             break;
 
+#   Wrap long_description at 72 characters since PKG-INFO package distribution
+# metadata file stores this text with an 8 space indentation.
+long_description = """
+---------------------------------------
+Lightweight SOAP client (Jurko's fork).
+---------------------------------------
+
+  Based on the original 'suds' project by Jeff Ortel (jortel at redhat
+dot com) hosted at 'https://fedorahosted.org/suds'.
+
+  'Suds' is a lightweight SOAP-based web service client for Python licensed
+under LGPL (see the LICENSE.txt file included in the distribution).
+
+  This is hopefully just a temporary fork of the original suds Python library
+project created because the original project development seems to have stalled.
+Should be reintegrated back into the original project if it ever gets revived
+again.
+
+"""
+
+package_name = "suds-jurko"
+version_tag = pkg_resources.safe_version(__version__)
+project_url = "https://bitbucket.org/jurko/suds"
+base_download_url = project_url + "/downloads"
+download_distribution_name = "{}-{}.tar.bz2".format(package_name, version_tag)
+download_url = "{}/{}".format(base_download_url, download_distribution_name)
+packages_excluded_from_build = []
+
+#   We generally do not want the tests package or any of its subpackages
+# included in our non-source package builds (source distribution content gets
+# specified separately via the MANIFEST.ini configuration file). Comment out
+# the following line to include the test code anyway, e.g. if you want to run
+# Python 3 based tests from the package build folder.
+packages_excluded_from_build += ["tests", "tests.*"]
+
 setup(
-    name="suds",
+    name=package_name,
     version=__version__,
-    description="Lightweight SOAP client",
+    description="Lightweight SOAP client (Jurko's fork)",
+    long_description=long_description,
+    keywords=["SOAP", "web", "service", "client"],
+    url=project_url,
+    download_url=download_url,
+    obsoletes=["suds"],
+    setup_requires=["distribute"],
+    tests_require=["pytest"],
+    packages=find_packages(exclude=packages_excluded_from_build),
+
+    # 'maintainer' will be listed as the distribution package author.
+    # Warning: Due to a 'distribute' package defect when used with Python 3
+    # (verified using 'distribute' package version 0.6.25), given strings must
+    # be given using ASCII characters only. This is needed because 'distribute'
+    # stores the strings by doing a simple write to a PKG-INFO file opened as a
+    # 'default text file' thus attempting to encode the given characters using
+    # the user's default system code-page, e.g. typically CP1250 on eastern
+    # European Windows, CP1252 on western European Windows, UTF-8 on Linux or
+    # any other.
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
-    maintainer="Jeff Ortel",
-    maintainer_email="jortel@redhat.com",
-    packages=find_packages(exclude=["tests"]),
-    url="https://fedorahosted.org/suds",
+    maintainer="Jurko Gospodnetic",
+    maintainer_email="jurko.gospodnetic@pke.hr",
+
+    #   See PEP-301 for the classifier specification. For a complete list of
+    # available classifiers see
+    # 'http://pypi.python.org/pypi?%3Aaction=list_classifiers'.
+    classifiers=["Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: "
+            "GNU Library or Lesser General Public License (LGPL)",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.4",
+        "Programming Language :: Python :: 2.5",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.0",
+        "Programming Language :: Python :: 3.1",
+        "Programming Language :: Python :: 3.2",
+        "Topic :: Internet"],
+
+    #   PEP-314 states that if possible license & plaform should be specified
+    # using 'classifiers'.
+    license="(specified using classifiers)",
+    platforms=["(specified using classifiers)"],
+
     **extra
 )

@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 #
-# This test requires installation or visability to my local axis(1) server.
+# This test requires installation or visibility to my local axis(1) server.
 #
 
 import sys
@@ -43,45 +43,46 @@ class MyInitPlugin(InitPlugin):
     def initialized(self, context):
         print 'PLUGIN (init): initialized: ctx=%s' % context.__dict__
 
-    
+
 class MyDocumentPlugin(DocumentPlugin):
-    
+
     def loaded(self, context):
         print 'PLUGIN (document): loaded: ctx=%s' % context.__dict__
 
     def parsed(self, context):
         print 'PLUGIN (document): parsed: ctx=%s' % context.__dict__
 
-        
+
 class MyMessagePlugin(MessagePlugin):
-        
+
     def marshalled(self, context):
         print 'PLUGIN (message): marshalled: ctx=%s' % context.__dict__
-    
+
     def sending(self, context):
         print 'PLUGIN (message): sending: ctx=%s' % context.__dict__
 
     def received(self, context):
         print 'PLUGIN (message): received: ctx=%s' % context.__dict__
-        
+
     def parsed(self, context):
         print 'PLUGIN (message): parsed: ctx=%s' % context.__dict__
-        
+
     def unmarshalled(self, context):
         print 'PLUGIN: (massage): unmarshalled: ctx=%s' % context.__dict__
-        
-        
+
+
 myplugins = (
     MyInitPlugin(),
     MyDocumentPlugin(),
-    MyMessagePlugin(),)
+    MyMessagePlugin(),
+)
 
 
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def start(url):
     global errors
-    print '\n________________________________________________________________\n' 
+    print '\n________________________________________________________________\n'
     print 'Test @ ( %s )\nerrors = %d\n' % (url, errors)
 
 try:
@@ -137,7 +138,7 @@ try:
     print 'addPersion()'
     result = client.service.addPerson(person)
     print '\nreply(\n%s\n)\n' % str(result)
-    
+
     #
     # Async
     #
@@ -149,7 +150,7 @@ try:
     error.httpcode = '500'
     client.options.nosend=False
 #    request.failed(error)
-    
+
     #
     #
     # create a new name object used to update the person
@@ -182,7 +183,7 @@ except Exception, e:
     errors += 1
     print e
     tb.print_exc()
-    
+
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
@@ -245,7 +246,7 @@ except Exception, e:
     errors += 1
     print e
     tb.print_exc()
-    
+
 try:
     print "echo(' this is cool ')"
     result = client.service.echo('this is cool')
@@ -261,7 +262,7 @@ except Exception, e:
     errors += 1
     print e
     tb.print_exc()
-    
+
 try:
     print 'hello()'
     result = client.service.hello()
@@ -326,7 +327,7 @@ except Exception, e:
     tb.print_exc()
 
 try:
-    print 'testExceptions()' 
+    print 'testExceptions()'
     result = client.service.throwException()
     print '\nreply( %s )\n' % tostr(result)
     raise Exception('Fault expected and not raised')
@@ -353,5 +354,5 @@ except Exception, e:
     errors += 1
     print e
     tb.print_exc()
-    
+
 print '\nFinished: errors=%d' % errors

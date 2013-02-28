@@ -15,7 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Suds is a lightweight SOAP python client that provides a
+Suds is a lightweight SOAP Python client that provides a
 service proxy for Web Services.
 """
 
@@ -50,7 +50,7 @@ class TypeNotFound(Exception):
 class BuildError(Exception):
     msg = \
         """
-        An error occured while building a instance of (%s).  As a result
+        An error occured while building an instance of (%s).  As a result
         the object you requested could not be constructed.  It is recommended
         that you construct the type manually using a Suds object.
         Please open a ticket with a description of this error.
@@ -152,10 +152,10 @@ def objid(obj):
 # Python 3 compatibility
 #
 
-# idea from http://lucumr.pocoo.org/2011/1/22/forwards-compatible-python/
+# Idea from 'http://lucumr.pocoo.org/2011/1/22/forwards-compatible-python'.
 class UnicodeMixin(object):
     if sys.version_info >= (3, 0):
-        # for Python 3, __str__ and __unicode__ should be identical
+        # For Python 3, __str__() and __unicode__() should be identical.
         __str__ = lambda x: x.__unicode__()
     else:
         __str__ = lambda x: unicode(x).encode('utf-8')

@@ -3,7 +3,7 @@ syntax: regexp
 # Root folders - 'setup.py install' artifacts.
 ^build/
 ^dist/
-^suds\.egg-info/
+^[^/]+.egg-info/
 
 # Precompiled Python modules.
 /__pycache__$

@@ -30,7 +30,7 @@ class Text(unicode):
     @ivar escaped: The (optional) XML special character escaped flag.
     @type escaped: bool
     """
-    __slots__ = ('lang', 'escaped',)
+    __slots__ = ('lang', 'escaped')
 
     @classmethod
     def __valid(cls, *args):

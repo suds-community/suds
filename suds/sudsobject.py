@@ -132,7 +132,7 @@ class Object(UnicodeMixin):
         self.__metadata__ = Metadata()
 
     def __setattr__(self, name, value):
-        builtin =  name.startswith('__') and name.endswith('__')
+        builtin = name.startswith('__') and name.endswith('__')
         if not builtin and \
             name not in self.__keylist__:
             self.__keylist__.append(name)
@@ -141,7 +141,7 @@ class Object(UnicodeMixin):
     def __delattr__(self, name):
         try:
             del self.__dict__[name]
-            builtin =  name.startswith('__') and name.endswith('__')
+            builtin = name.startswith('__') and name.endswith('__')
             if not builtin:
                 self.__keylist__.remove(name)
         except:
@@ -282,7 +282,6 @@ class Printer:
         """ print complex using the specified indent (n) and newline (nl). """
         s = []
         cls = d.__class__
-        md = d.__metadata__
         if d in h:
             s.append('(')
             s.append(cls.__name__)
@@ -296,7 +295,7 @@ class Printer:
         if cls != Object:
             s.append('(')
             if isinstance(d, Facade):
-                s.append(md.facade)
+                s.append(d.__metadata__.facade)
             else:
                 s.append(cls.__name__)
             s.append(')')

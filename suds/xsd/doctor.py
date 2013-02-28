@@ -20,7 +20,7 @@ schema(s).
 """
 
 from logging import getLogger
-from suds.sax import splitPrefix, Namespace
+from suds.sax import Namespace
 from suds.sax.element import Element
 from suds.plugin import DocumentPlugin, DocumentContext
 

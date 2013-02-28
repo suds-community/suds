@@ -15,8 +15,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The I{sxbase} module provides I{base} classes that represent
-schema objects.
+The I{sxbase} module provides I{base} classes representing schema objects.
 """
 
 from logging import getLogger
@@ -30,16 +29,15 @@ log = getLogger(__name__)
 
 class SchemaObject(UnicodeMixin):
     """
-    A schema object is an extension to object object with
-    with schema awareness.
+    A schema object is an extension to object with schema awareness.
     @ivar root: The XML root element.
     @type root: L{Element}
     @ivar schema: The schema containing this object.
     @type schema: L{schema.Schema}
-    @ivar form_qualified: A flag that inidcates that @elementFormDefault
+    @ivar form_qualified: A flag that indicates that @elementFormDefault
         has a value of I{qualified}.
     @type form_qualified: boolean
-    @ivar nillable: A flag that inidcates that @nillable
+    @ivar nillable: A flag that indicates that @nillable
         has a value of I{true}.
     @type nillable: boolean
     @ivar default: The default value.
@@ -51,7 +49,7 @@ class SchemaObject(UnicodeMixin):
     @classmethod
     def prepend(cls, d, s, filter=Filter()):
         """
-        Prepend schema object's from B{s}ource list to
+        Prepend schema objects from B{s}ource list to
         the B{d}estination list while applying the filter.
         @param d: The destination list.
         @type d: list
@@ -69,7 +67,7 @@ class SchemaObject(UnicodeMixin):
     @classmethod
     def append(cls, d, s, filter=Filter()):
         """
-        Append schema object's from B{s}ource list to
+        Append schema objects from B{s}ource list to
         the B{d}estination list while applying the filter.
         @param d: The destination list.
         @type d: list
@@ -86,7 +84,7 @@ class SchemaObject(UnicodeMixin):
         """
         @param schema: The containing schema.
         @type schema: L{schema.Schema}
-        @param root: The xml root node.
+        @param root: The XML root node.
         @type root: L{Element}
         """
         self.schema = schema
@@ -102,7 +100,6 @@ class SchemaObject(UnicodeMixin):
         self.nillable = False
         self.default = root.get('default')
         self.rawchildren = []
-        self.cache = {}
 
     def attributes(self, filter=Filter()):
         """
@@ -134,7 +131,7 @@ class SchemaObject(UnicodeMixin):
 
     def get_attribute(self, name):
         """
-        Get (find) a I{non-attribute} attribute by name.
+        Get (find) an attribute by name.
         @param name: A attribute name.
         @type name: str
         @return: A tuple: the requested (attribute, ancestry).
@@ -160,7 +157,7 @@ class SchemaObject(UnicodeMixin):
 
     def namespace(self, prefix=None):
         """
-        Get this properties namespace
+        Get this property's namespace.
         @param prefix: The default prefix.
         @type prefix: str
         @return: The schema's target namespace
@@ -174,19 +171,18 @@ class SchemaObject(UnicodeMixin):
     def default_namespace(self):
         return self.root.defaultNamespace()
 
-    def unbounded(self):
+    def multi_occurrence(self):
         """
-        Get whether this node is unbounded I{(a collection)}
-        @return: True if unbounded, else False.
+        Get whether the node has multiple occurrences, i.e. is a I{collection}.
+        @return: True if it has, False if it has 1 occurrence at most.
         @rtype: boolean
         """
         max = self.max
         if max is None:
-            max = '1'
+            return False
         if max.isdigit():
-            return (int(max) > 1)
-        else:
-            return ( max == 'unbounded' )
+            return int(max) > 1
+        return max == 'unbounded'
 
     def optional(self):
         """
@@ -210,17 +206,20 @@ class SchemaObject(UnicodeMixin):
 
     def resolve(self, nobuiltin=False):
         """
-        Resolve and return the nodes true self.
-        @param nobuiltin: Flag indicates that resolution must
-            not continue to include xsd builtins.
+        Resolve the node's type reference and return the referenced type node.
+
+        Only schema objects that actually support 'having a type' custom
+        implement this interface while others simply resolve as themselves.
+        @param nobuiltin: Flag indicating whether resolving to an external XSD
+            builtin type should not be allowed.
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
         """
-        return self.cache.get(nobuiltin, self)
+        return self
 
     def sequence(self):
         """
-        Get whether this is an <xs:sequence/>
+        Get whether this is a <xs:sequence/>.
         @return: True if <xs:sequence/>, else False
         @rtype: boolean
         """
@@ -228,7 +227,7 @@ class SchemaObject(UnicodeMixin):
 
     def xslist(self):
         """
-        Get whether this is an <xs:list/>
+        Get whether this is a <xs:list/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -236,7 +235,7 @@ class SchemaObject(UnicodeMixin):
 
     def all(self):
         """
-        Get whether this is an <xs:all/>
+        Get whether this is an <xs:all/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -244,7 +243,7 @@ class SchemaObject(UnicodeMixin):
 
     def choice(self):
         """
-        Get whether this is n <xs:choice/>
+        Get whether this is a <xs:choice/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -252,7 +251,7 @@ class SchemaObject(UnicodeMixin):
 
     def any(self):
         """
-        Get whether this is an <xs:any/>
+        Get whether this is an <xs:any/>.
         @return: True if any, else False
         @rtype: boolean
         """
@@ -327,7 +326,7 @@ class SchemaObject(UnicodeMixin):
 
     def translate(self, value, topython=True):
         """
-        Translate a value (type) to/from a python type.
+        Translate a value (type) to/from a Python type.
         @param value: A value to translate.
         @return: The converted I{language} type.
         """
@@ -343,8 +342,8 @@ class SchemaObject(UnicodeMixin):
 
     def dependencies(self):
         """
-        Get a list of dependancies for dereferencing.
-        @return: A merge dependancy index and a list of dependancies.
+        Get a list of dependencies for dereferencing.
+        @return: A merge dependency index and a list of dependencies.
         @rtype: (int, [L{SchemaObject},...])
         """
         return (None, [])
@@ -361,9 +360,9 @@ class SchemaObject(UnicodeMixin):
     def qualify(self):
         """
         Convert attribute values, that are references to other
-        objects, into I{qref}.  Qualfied using default document namespace.
-        Since many wsdls are written improperly: when the document does
-        not define a default namespace, the schema target namespace is used
+        objects, into I{qref}.  Qualified using the default document namespace.
+        Since many WSDLs are written improperly: when the document does
+        not define its default namespace, the schema target namespace is used
         to qualify references.
         """
         defns = self.root.defaultNamespace()
@@ -391,7 +390,7 @@ class SchemaObject(UnicodeMixin):
                   'default',
                   'type',
                   'nillable',
-                  'form_qualified',):
+                  'form_qualified'):
             if getattr(self, n) is not None:
                 continue
             v = getattr(other, n)
@@ -402,7 +401,7 @@ class SchemaObject(UnicodeMixin):
 
     def content(self, collection=None, filter=Filter(), history=None):
         """
-        Get a I{flattened} list of this nodes contents.
+        Get a I{flattened} list of this node's contents.
         @param collection: A list to fill.
         @type collection: list
         @param filter: A filter used to constrain the result.
@@ -464,7 +463,7 @@ class SchemaObject(UnicodeMixin):
     def description(self):
         """
         Get the names used for str() and repr() description.
-        @return:  A dictionary of relavent attributes.
+        @return:  A dictionary of relevant attributes.
         @rtype: [str,...]
         """
         return ()
@@ -509,9 +508,9 @@ class SchemaObject(UnicodeMixin):
 
 class Iter:
     """
-    The content iterator - used to iterate the L{Content} children.  The iterator
-    provides a I{view} of the children that is free of container elements
-    such as <sequence/> and <choice/>.
+    The content iterator - used to iterate the L{Content} children.  The
+    iterator provides a I{view} of the children that is free of container
+    elements such as <sequence/> and <choice/>.
     @ivar stack: A stack used to control nesting.
     @type stack: list
     """
@@ -604,7 +603,7 @@ class Iter:
 
 class XBuiltin(SchemaObject):
     """
-    Represents an (xsd) schema <xs:*/> node
+    Represents an (XSD) schema <xs:*/> node.
     """
 
     def __init__(self, schema, name):
@@ -623,9 +622,6 @@ class XBuiltin(SchemaObject):
     def builtin(self):
         return True
 
-    def resolve(self, nobuiltin=False):
-        return self
-
 
 class Content(SchemaObject):
     """
@@ -637,7 +633,7 @@ class Content(SchemaObject):
 
 class NodeFinder:
     """
-    Find nodes based on flexable criteria.  The I{matcher} is
+    Find nodes based on flexable criteria.  The I{matcher}
     may be any object that implements a match(n) method.
     @ivar matcher: An object used as criteria for match.
     @type matcher: I{any}.match(n)
