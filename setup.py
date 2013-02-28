@@ -59,8 +59,8 @@ if script_folder != current_folder:
     print("ERROR: Suds library setup script needs to be run from the folder "
         "containing it.")
     print()
-    print("Current folder: {}".format(current_folder))
-    print("Script folder: {}".format(script_folder))
+    print("Current folder: %s" % current_folder)
+    print("Script folder: %s" % script_folder)
     sys.exit(-2)
 
 # Load the suds library version information directly into this module without
@@ -115,8 +115,8 @@ package_name = "suds-jurko"
 version_tag = pkg_resources.safe_version(__version__)
 project_url = "https://bitbucket.org/jurko/suds"
 base_download_url = project_url + "/downloads"
-download_distribution_name = "{}-{}.tar.bz2".format(package_name, version_tag)
-download_url = "{}/{}".format(base_download_url, download_distribution_name)
+download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
+download_url = "%s/%s" % (base_download_url, download_distribution_name)
 packages_excluded_from_build = []
 
 #   We generally do not want the tests package or any of its subpackages
