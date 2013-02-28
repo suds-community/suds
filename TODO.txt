@@ -303,6 +303,15 @@ PRIORETIZED:
 NON PRIORETIZED:
 =================================================
 
+    * FileCache class fixes.
+        * Remove incorrectly created cache files, e.g. if it gets created but
+          then writing to it fails.
+        * Make sure reading a cache file does not crash the whole Python
+          interpreter process.
+            * Encountered when trying to read an empty cache file using a debug
+              Python version 3.2.3 on Windows 7 - triggered an internal Python
+              assertion failure.
+
     * Look into the 'suds.null' class.
         * Research.
             * See sources (grep for 'null'), old release notes (README.txt) and
