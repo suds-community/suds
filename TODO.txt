@@ -300,17 +300,21 @@ PRIORETIZED:
 (+)             * Project site.
 (+)             * PyPI.
 
-(28.03.2013.)
+(28.02.2013.)
 
 (+) * (Jurko) Merge changes prepared by Juraj Ivanèiæ.
 (+)     * Update the original Hg repository containing Python 3 related fixes.
 (+) * (Jurko) Process received pull requests.
 
-(01.04.2013.)
+(01.03.2013.)
+
+(+) * (Jurko) Sync with external related repositories.
+(+)     * 'https://bitbucket.org/palday/suds'.
+
+(02.03.2013.)
 
     * (Jurko) Sync with external related repositories.
         * 'https://bitbucket.org/blarghmatey/suds-blarghmatey'.
-        * 'https://bitbucket.org/palday/suds'.
         
 
 NON PRIORETIZED:
