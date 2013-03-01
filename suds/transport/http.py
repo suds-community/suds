@@ -182,8 +182,16 @@ class HttpAuthenticated(HttpTransport):
     def addcredentials(self, request):
         credentials = self.credentials()
         if not (None in credentials):
-            encoded = base64.encodestring(':'.join(credentials))
-            basic = 'Basic %s' % encoded[:-1]
+            credentials = ':'.join(credentials)
+            # Bytes and strings are different in Python 3 than in Python 2.x.
+            if sys.version_info < (3,0):
+                encoded = base64.encodestring(credentials)
+                # There is an extra terminal \n in Python 2.x.
+                basic = 'Basic %s' % encoded[:-1]
+            else:
+                encodedBytes = base64.urlsafe_b64encode(credentials.encode())
+                encodedString = encoded.decode()
+                basic = 'Basic %s' % encodedString
             request.headers['Authorization'] = basic
 
     def credentials(self):
