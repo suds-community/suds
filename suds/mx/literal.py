@@ -90,7 +90,7 @@ class Typed(Core):
             if isinstance(content.value, Object):
                 known = self.resolver.known(content.value)
                 if known is None:
-                    log.debug('object has no type information', content.value)
+                    log.debug('object %s has no type information', content.value)
                     known = content.type
             frame = Frame(content.type, resolved=known)
             self.resolver.push(frame)
