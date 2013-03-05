@@ -1,4 +1,4 @@
-ï»¿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
@@ -1039,10 +1039,10 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert sequence.c2 is None
     assert sequence.c3 is None
     sequence.c1 = "Pero"
-    sequence.c3 = "Ždero"
+    sequence.c3 = "Zdero"
     assert sequence.c1 == "Pero"
     assert sequence.c2 is None
-    assert sequence.c3 == "Ždero"
+    assert sequence.c3 == "Zdero"
 
 
 def test_local_sequence_in_a_global_sequence():
