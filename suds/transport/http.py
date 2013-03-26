@@ -77,8 +77,10 @@ class HttpTransport(Transport):
             log.debug('sending:\n%s', request)
             fp = self.u2open(u2request)
             self.getcookies(fp, u2request)
-            headers = (fp.headers.dict if sys.version_info < (3, 0) 
-                       else fp.headers)
+            if sys.version_info < (3, 0):
+                headers = fp.headers.dict
+            else:
+                headers = fp.headers
             result = Reply(200, headers, fp.read())
             log.debug('received:\n%s', result)
         except urllib2.HTTPError, e:
