@@ -160,9 +160,12 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert e1.name == "One"
     assert e2.name == "Two"
     assert e3.name == "Thirty-Two"
-    assert re.match('<Enumeration:0x[0-9a-f]+ name="One" />$', e1.str())
-    assert re.match('<Enumeration:0x[0-9a-f]+ name="Two" />$', e2.str())
-    assert re.match('<Enumeration:0x[0-9a-f]+ name="Thirty-Two" />$', e3.str())
+    #   Python 3 output does not include a trailing L after long integer
+    # output, while Python 2 does. For example: 0x12345678 is output as
+    # 0x12345678L in Python 2 and simply as 0x12345678 in Python 3.
+    assert re.match('<Enumeration:0x[0-9a-f]+L? name="One" />$', e1.str())
+    assert re.match('<Enumeration:0x[0-9a-f]+L? name="Two" />$', e2.str())
+    assert re.match('<Enumeration:0x[0-9a-f]+L? name="Thirty-Two" />$', e3.str())
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
