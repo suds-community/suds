@@ -276,7 +276,7 @@ class FileCache(Cache):
                 raise Exception()
         except:
             self.clear()
-            f = self.open(path, 'wb')
+            f = self.open(path, 'w')
             f.write(suds.__version__)
             f.close()
 
