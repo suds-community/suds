@@ -18,15 +18,17 @@
 Contains classes for basic HTTP transport implementations.
 """
 
-import urllib2
-import base64
-import socket
-import sys
 from suds.transport import *
 from suds.properties import Unskin
 from urlparse import urlparse
 from cookielib import CookieJar
 from logging import getLogger
+
+import base64
+import httplib
+import socket
+import sys
+import urllib2
 
 log = getLogger(__name__)
 
@@ -81,10 +83,10 @@ class HttpTransport(Transport):
                 headers = fp.headers.dict
             else:
                 headers = fp.headers
-            result = Reply(200, headers, fp.read())
+            result = Reply(httplib.OK, headers, fp.read())
             log.debug('received:\n%s', result)
         except urllib2.HTTPError, e:
-            if e.code in (202, 204):
+            if e.code in (httplib.ACCEPTED, httplib.NO_CONTENT):
                 result = None
             else:
                 raise TransportError(e.msg, e.code, e.fp)
