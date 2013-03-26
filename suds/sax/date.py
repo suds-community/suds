@@ -330,7 +330,10 @@ def get_local_timezone(tz):
     """
     Returns the local timezone offset based on local timezone and DST status.
     """
-    offset_minutes = time.altzone if time.localtime().tm_isdst else time.timezone
+    if time.localtime().tm_isdst:
+        offset_minutes = time.altzone
+    else:
+        offset_minutes = time.timezone
     return 0 - offset_minutes/60/60
 
 

@@ -32,11 +32,12 @@ if __name__ == "__main__":
         pytest.main(["--pyargs", __file__])
     except ImportError:
         print("'py.test' unit testing framework not available. Can not run "
-            "'{}' directly as a script.".format(__file__))
+            "'%s' directly as a script." % (__file__,))
     import sys
     sys.exit(-2)
 
 
+import suds
 import suds.client
 import suds.store
 
@@ -1851,7 +1852,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     method_name, method = _first_from_dict(port.methods)
     assert method_name == "f"
     assert method.name == "f"
-    assert method.location == b"https://localhost/dummy"
+    assert method.location == suds.str2bytes("https://localhost/dummy")
 
     # Methods (from service definition, for format specifications see the
     # suds.ServiceDefinition.addports() docstring).
@@ -1993,9 +1994,9 @@ def _element_node_xml(name, min=None, max=None):
     s.append(name)
     s.append('" type="xsd:string" ')
     if min is not None:
-        s.append('minOccurs="{}" '.format(min))
+        s.append('minOccurs="%s" ' % (min,))
     if max is not None:
-        s.append('maxOccurs="{}" '.format(max))
+        s.append('maxOccurs="%s" ' % (max,))
     s.append('/>\n')
     return ''.join(s)
 
