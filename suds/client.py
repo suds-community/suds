@@ -19,6 +19,21 @@ The I{2nd generation} service proxy provides access to web services.
 See I{README.txt}
 """
 
+# Implementation note: [SOAP errors and HTTP status code]
+#
+# SOAP standard states that SOAP errors must be accompanied by HTTP status code
+# 500 - internal server error:
+#
+# From SOAP 1.1 Specification:
+#   In case of a SOAP error while processing the request, the SOAP HTTP server
+# MUST issue an HTTP 500 "Internal Server Error" response and include a SOAP
+# message in the response containing a SOAP Fault element (see section 4.4)
+# indicating the SOAP processing error.
+#
+# From WS-I Basic profile:
+#   An INSTANCE MUST use a "500 Internal Server Error" HTTP status code if the
+# response message is a SOAP Fault.
+
 import suds
 import suds.metrics as metrics
 from cookielib import CookieJar
@@ -42,6 +57,8 @@ from urlparse import urlparse
 from copy import deepcopy
 from suds.plugin import PluginContainer
 from logging import getLogger
+
+import httplib
 
 log = getLogger(__name__)
 
@@ -534,7 +551,7 @@ class Method:
             try:
                 return client.invoke(args, kwargs)
             except WebFault, e:
-                return (500, e)
+                return (httplib.INTERNAL_SERVER_ERROR, e)
         else:
             return client.invoke(args, kwargs)
 
@@ -647,7 +664,7 @@ class SoapClient:
             else:
                 result = self.succeeded(binding, reply.message)
         except TransportError, e:
-            if e.httpcode in (202,204):
+            if e.httpcode in (httplib.ACCEPTED, httplib.NO_CONTENT):
                 result = None
             else:
                 log.error(self.last_sent())
@@ -690,7 +707,7 @@ class SoapClient:
         result = ctx.reply
         if self.options.faults:
             return result
-        return (200, result)
+        return (httplib.OK, result)
 
     def failed(self, binding, error):
         """
@@ -703,7 +720,9 @@ class SoapClient:
         status, reason = (error.httpcode, tostr(error))
         reply = error.fp.read()
         log.debug('http failed:\n%s', reply)
-        if status == 500:
+        #   See implementation note 'SOAP errors and HTTP status code' for more
+        # detailed information on the returned HTTP status code.
+        if status == httplib.INTERNAL_SERVER_ERROR:
             if len(reply) > 0:
                 r, p = binding.get_fault(reply)
                 self.last_received(r)
@@ -782,11 +801,13 @@ class SimClient(SoapClient):
         """ simulate the (fault) reply """
         binding = self.method.binding.output
         if self.options.faults:
-            r, p = binding.get_fault(reply)
+            r, reason = binding.get_fault(reply)
             self.last_received(r)
-            return (500, p)
         else:
-            return (500, None)
+            reason = None
+        #   See implementation note 'SOAP errors and HTTP status code' for more
+        # detailed information on the returned HTTP status code.
+        return (httplib.INTERNAL_SERVER_ERROR, reason)
 
 
 class RequestContext:
