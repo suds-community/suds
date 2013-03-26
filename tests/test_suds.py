@@ -37,13 +37,13 @@ if __name__ == "__main__":
     sys.exit(-2)
 
 
-import os
-import re
+import suds.client
+import suds.store
 
 import pytest
 
-import suds.client
-import suds.store
+import os
+import re
 import xml.sax
 
 
@@ -102,7 +102,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_empty_invalid_wsdl():
     try:
-        client = _client_from_wsdl("")
+        _client_from_wsdl("")
         pytest.fail("Excepted exception xml.sax.SAXParseException not thrown.")
     except xml.sax.SAXParseException, e:
         assert e.getMessage() == "no element found"
@@ -1321,7 +1321,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_parameter_referencing_missing_element():
     try:
-        client = _client_from_wsdl(
+        _client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"

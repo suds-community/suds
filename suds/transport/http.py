@@ -84,7 +84,7 @@ class HttpTransport(Transport):
             result = Reply(200, headers, fp.read())
             log.debug('received:\n%s', result)
         except urllib2.HTTPError, e:
-            if e.code in (202,204):
+            if e.code in (202, 204):
                 result = None
             else:
                 raise TransportError(e.msg, e.code, e.fp)

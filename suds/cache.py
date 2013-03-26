@@ -268,7 +268,6 @@ class FileCache(Cache):
     def checkversion(self):
         path = os.path.join(self.location, 'version')
         try:
-
             f = self.open(path)
             version = f.read()
             f.close()

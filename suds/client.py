@@ -663,7 +663,7 @@ class SoapClient:
         action = self.method.soap.action
         if isinstance(action, unicode):
             action = action.encode('utf-8')
-        stock = { 'Content-Type' : 'text/xml; charset=utf-8', 'SOAPAction': action }
+        stock = {'Content-Type':'text/xml; charset=utf-8', 'SOAPAction':action}
         result = dict(stock, **self.options.headers)
         log.debug('headers = %s', result)
         return result
@@ -690,8 +690,7 @@ class SoapClient:
         result = ctx.reply
         if self.options.faults:
             return result
-        else:
-            return (200, result)
+        return (200, result)
 
     def failed(self, binding, error):
         """
@@ -709,12 +708,10 @@ class SoapClient:
                 r, p = binding.get_fault(reply)
                 self.last_received(r)
                 return (status, p)
-            else:
-                return (status, None)
+            return (status, None)
         if self.options.faults:
             raise Exception((status, reason))
-        else:
-            return (status, None)
+        return (status, None)
 
     def location(self):
         p = Unskin(self.options)
