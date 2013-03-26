@@ -108,7 +108,7 @@ class UsernameToken(Token):
     @type username: str
     @ivar password: A password.
     @type password: str
-    @ivar nonce: A set of bytes to prevent reply attacks.
+    @ivar nonce: A set of bytes to prevent replay attacks.
     @type nonce: str
     @ivar created: The token created.
     @type created: L{datetime}
@@ -129,8 +129,8 @@ class UsernameToken(Token):
 
     def setnonce(self, text=None):
         """
-        Set I{nonce} which is arbitraty set of bytes to prevent
-        reply attacks.
+        Set I{nonce} which is an arbitrary set of bytes to prevent replay
+        attacks.
         @param text: The nonce text value.
             Generated when I{None}.
         @type text: str

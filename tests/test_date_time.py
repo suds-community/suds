@@ -32,10 +32,11 @@ if __name__ == "__main__":
     sys.exit(-2)
 
 
-import datetime
 from suds.sax.date import Timezone
 import suds.xsd.sxbuiltin
 import tests
+
+import datetime
 
 tests.setup_logging()
 
@@ -44,9 +45,11 @@ class Date(suds.xsd.sxbuiltin.XDate):
     def __init__(self):
         pass
 
+
 class Time(suds.xsd.sxbuiltin.XTime):
     def __init__(self):
         pass
+
 
 class DateTime(suds.xsd.sxbuiltin.XDateTime):
     def __init__(self):
@@ -54,7 +57,6 @@ class DateTime(suds.xsd.sxbuiltin.XDateTime):
 
 
 class TestDate:
-
     def testSimple(self):
         ref = datetime.date(1941, 12, 7)
         s = '%.4d-%.2d-%.2d' % (ref.year, ref.month, ref.day)
@@ -86,7 +88,6 @@ class TestDate:
 
 
 class TestTime:
-
     def testSimple(self):
         ref = datetime.time(10, 30, 22)
         s = '%.2d:%.2d:%.2d' % (ref.hour, ref.minute, ref.second)
@@ -242,7 +243,6 @@ class TestTime:
 
 
 class TestDateTime:
-
     def testSimple(self):
         Timezone.LOCAL = lambda tz: 0
         ref = datetime.datetime(1941, 12, 7, 10, 30, 22)

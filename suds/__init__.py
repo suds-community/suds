@@ -48,8 +48,7 @@ class TypeNotFound(Exception):
         Exception.__init__(self, "Type not found: '%s'" % tostr(name))
 
 class BuildError(Exception):
-    msg = \
-        """
+    msg = """
         An error occured while building an instance of (%s).  As a result
         the object you requested could not be constructed.  It is recommended
         that you construct the type manually using a Suds object.
@@ -60,8 +59,7 @@ class BuildError(Exception):
         Exception.__init__(self, BuildError.msg % (name, exception))
 
 class SoapHeadersNotPermitted(Exception):
-    msg = \
-        """
+    msg = """
         Method (%s) was invoked with SOAP headers.  The WSDL does not
         define SOAP headers for this method.  Retry without the soapheaders
         keyword argument.
@@ -72,7 +70,8 @@ class SoapHeadersNotPermitted(Exception):
 class WebFault(Exception):
     def __init__(self, fault, document):
         if hasattr(fault, 'faultstring'):
-            Exception.__init__(self, smart_str("Server raised fault: '%s'" % fault.faultstring))
+            Exception.__init__(self, smart_str("Server raised fault: '%s'" %
+                fault.faultstring))
         self.fault = fault
         self.document = document
 

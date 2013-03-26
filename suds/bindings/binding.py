@@ -137,7 +137,7 @@ class Binding:
             method.
         @type reply: str
         @return: The unmarshalled reply.  The returned value is an L{Object}
-            for a I{list} depending on whether the service returns a single
+            or a I{list} depending on whether the service returns a single
             object or a collection.
         @rtype: tuple ( L{Element}, L{Object} )
         """
@@ -182,7 +182,6 @@ class Binding:
         if self.options().faults:
             raise WebFault(p, fault)
         return self
-
 
     def replylist(self, rt, nodes):
         """
@@ -245,10 +244,12 @@ class Binding:
         return composite
 
     def get_fault(self, reply):
-        """
-        Extract the fault from the specified SOAP reply.  If I{faults} is True, an
-        exception is raised.  Otherwise, the I{unmarshalled} fault L{Object} is
-        returned.  This method is called when the server raises a I{web fault}.
+        """Extract fault information from the specified SOAP reply.
+        
+          If I{faults} is True, an exception is raised. Otherwise, the
+        I{unmarshalled} fault L{Object} is returned. This method is called when
+        the server raises a I{web fault}.
+
         @param reply: A SOAP reply message.
         @type reply: str
         @return: A fault object.
