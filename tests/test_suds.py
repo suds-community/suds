@@ -1948,7 +1948,7 @@ def _assert_dynamic_type(anObject, typename):
     assert anObject.__class__.__name__ == typename
 
 
-def _client_from_wsdl(wsdl_content):
+def _client_from_wsdl(wsdl_content, *args, **kwargs):
     """
     Constructs a non-caching suds Client based on the given WSDL content.
 
@@ -1973,7 +1973,8 @@ def _client_from_wsdl(wsdl_content):
     # implementation.
     testFileId = "whatchamacallit"
     suds.store.DocumentStore.store[testFileId] = wsdl_content
-    return suds.client.Client("suds://" + testFileId, cache=None)
+    kwargs["cache"] = None
+    return suds.client.Client("suds://" + testFileId, *args, **kwargs)
 
 
 def _construct_SOAP_request(client, operation_name, *args, **kwargs):
