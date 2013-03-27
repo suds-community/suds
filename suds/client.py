@@ -631,7 +631,7 @@ class SoapClient:
         """
         result = None
         location = suds.bytes2str(self.location())
-        binding = self.method.binding.input
+        output_binding = self.method.binding.output
         transport = self.options.transport
         retxml = self.options.retxml
         nosend = self.options.nosend
@@ -650,7 +650,7 @@ class SoapClient:
             ctx = plugins.message.sending(envelope=soapenv)
             soapenv = ctx.envelope
             if nosend:
-                return RequestContext(self, binding, soapenv)
+                return RequestContext(self, output_binding, soapenv)
             request = Request(location, soapenv)
             request.headers = self.headers()
             timer.start()
@@ -662,13 +662,13 @@ class SoapClient:
             if retxml:
                 result = reply.message
             else:
-                result = self.succeeded(binding, reply.message)
+                result = self.succeeded(output_binding, reply.message)
         except TransportError, e:
             if e.httpcode in (httplib.ACCEPTED, httplib.NO_CONTENT):
                 result = None
             else:
                 log.error(self.last_sent())
-                result = self.failed(binding, e)
+                result = self.failed(output_binding, e)
         return result
 
     def headers(self):
@@ -791,17 +791,26 @@ class SimClient(SoapClient):
 
     def __reply(self, reply, args, kwargs):
         """ simulate the reply """
-        binding = self.method.binding.input
-        msg = binding.get_message(self.method, args, kwargs)
+        msg = self.method.binding.input.get_message(self.method, args, kwargs)
         log.debug('inject (simulated) send message:\n%s', msg)
-        binding = self.method.binding.output
-        return self.succeeded(binding, reply)
+        return self.succeeded(self.method.binding.output, reply)
 
     def __fault(self, reply):
         """ simulate the (fault) reply """
-        binding = self.method.binding.output
         if self.options.faults:
-            r, reason = binding.get_fault(reply)
+            # (todo)
+            #   It does not really matter whether we choose the input or the
+            # output binding object here. The get_fault() method is the same
+            # for both. In fact, consider refactoring the whole 'binding' class
+            # as it seems to couple together two separate problem domains:
+            #   1. processing generic SOAP response XML structure, e.g. the
+            #      <Fault> element.
+            #   2. method specific binding details, e.g. for document/literal,
+            #      rpc/literal & rpc.encoded.
+            #   The first part is independent of any 'method' and user should
+            # not be forced to choose some 'fake method' to access it.
+            #                                 (todo) (27.03.2013.) (Jurko)
+            r, reason = self.method.binding.output.get_fault(reply)
             self.last_received(r)
         else:
             reason = None
