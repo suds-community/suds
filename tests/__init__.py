@@ -14,8 +14,41 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+import suds.client
+import suds.store
+
 import sys
 import logging
+
+
+def client_from_wsdl(wsdl_content, *args, **kwargs):
+    """
+    Constructs a non-caching suds Client based on the given WSDL content.
+
+      Stores the content directly inside the suds library internal document
+    store under a hard-coded id to avoid having to load the data from a
+    temporary file.
+
+      Caveats:
+        * All files stored under the same id so each new local file overwrites
+          the previous one.
+        * We need to explicitly disable caching here or otherwise, because we
+          are using the same id for all our local WSDL documents, suds would
+          always reuse the first such local document from its cache.
+
+    """
+    # Idea for an alternative implementation:
+    #   Custom suds.cache.Cache subclass that would know how to access our
+    # locally stored documents or at least not cache them if we are storing
+    # them inside the suds library DocumentStore. Not difficult, allows us to
+    # have per-client instead of global configuration & allows us to support
+    # other cache types but certainly not as short as the current
+    # implementation.
+    testFileId = "whatchamacallit"
+    suds.store.DocumentStore.store[testFileId] = wsdl_content
+    kwargs["cache"] = None
+    return suds.client.Client("suds://" + testFileId, *args, **kwargs)
+
 
 def setup_logging():
     if sys.version_info < (2, 5):
