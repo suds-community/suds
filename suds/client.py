@@ -49,6 +49,7 @@ from suds.sax.parser import Parser
 from suds.servicedefinition import ServiceDefinition
 from suds.transport import TransportError, Request
 from suds.transport.https import HttpAuthenticated
+from suds.umx.basic import Basic as UmxBasic
 from suds.wsdl import Definitions
 from sudsobject import Factory as InstFactory
 from sudsobject import Object
@@ -655,6 +656,27 @@ class SoapClient:
             return reply.message
         return self.succeeded(output_binding, reply.message)
 
+    def get_fault(self, reply):
+        """Extract fault information from the specified SOAP reply.
+
+          If I{faults} is True, an exception is raised. Otherwise, the
+        I{unmarshalled} fault L{Object} is returned. This method is called when
+        the server raises a I{web fault}.
+
+        @param reply: A SOAP reply message.
+        @type reply: str
+        @return: A fault object.
+        @rtype: tuple ( L{Element}, L{Object} )
+        """
+        faultroot = Parser().parse(string=reply)
+        soapenv = faultroot.getChild('Envelope')
+        soapbody = soapenv.getChild('Body')
+        fault = soapbody.getChild('Fault')
+        p = UmxBasic().process(fault)
+        if self.options().faults:
+            raise WebFault(p, faultroot)
+        return (faultroot, p.detail)
+
     def headers(self):
         """
         Get HTTP headers or the HTTP/HTTPS request.
@@ -708,7 +730,7 @@ class SoapClient:
         # detailed information on the returned HTTP status code.
         if status == httplib.INTERNAL_SERVER_ERROR:
             if len(reply) > 0:
-                r, p = binding.get_fault(reply)
+                r, p = self.get_fault(reply)
                 self.last_received(r)
                 return (status, p)
             return (status, None)
@@ -781,19 +803,7 @@ class SimClient(SoapClient):
     def __fault(self, reply):
         """ simulate the (fault) reply """
         if self.options.faults:
-            # (todo)
-            #   It does not really matter whether we choose the input or the
-            # output binding object here. The get_fault() method is the same
-            # for both. In fact, consider refactoring the whole 'binding' class
-            # as it seems to couple together two separate problem domains:
-            #   1. processing generic SOAP response XML structure, e.g. the
-            #      <Fault> element.
-            #   2. method specific binding details, e.g. for document/literal,
-            #      rpc/literal & rpc.encoded.
-            #   The first part is independent of any 'method' and user should
-            # not be forced to choose some 'fake method' to access it.
-            #                                 (todo) (27.03.2013.) (Jurko)
-            r, reason = self.method.binding.output.get_fault(reply)
+            r, reason = self.get_fault(reply)
             self.last_received(r)
         else:
             reason = None

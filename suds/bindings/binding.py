@@ -232,27 +232,6 @@ class Binding:
                 value.append(sobject)
         return composite
 
-    def get_fault(self, reply):
-        """Extract fault information from the specified SOAP reply.
-        
-          If I{faults} is True, an exception is raised. Otherwise, the
-        I{unmarshalled} fault L{Object} is returned. This method is called when
-        the server raises a I{web fault}.
-
-        @param reply: A SOAP reply message.
-        @type reply: str
-        @return: A fault object.
-        @rtype: tuple ( L{Element}, L{Object} )
-        """
-        faultroot = Parser().parse(string=reply)
-        soapenv = faultroot.getChild('Envelope')
-        soapbody = soapenv.getChild('Body')
-        fault = soapbody.getChild('Fault')
-        p = UmxBasic().process(fault)
-        if self.options().faults:
-            raise WebFault(p, faultroot)
-        return (faultroot, p.detail)
-
     def mkparam(self, method, pdef, object):
         """
         Builds a parameter for the specified I{method} using the parameter
