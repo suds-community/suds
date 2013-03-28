@@ -19,23 +19,9 @@ The I{2nd generation} service proxy provides access to web services.
 See I{README.txt}
 """
 
-# Implementation note: [SOAP errors and HTTP status code]
-#
-# SOAP standard states that SOAP errors must be accompanied by HTTP status code
-# 500 - internal server error:
-#
-# From SOAP 1.1 Specification:
-#   In case of a SOAP error while processing the request, the SOAP HTTP server
-# MUST issue an HTTP 500 "Internal Server Error" response and include a SOAP
-# message in the response containing a SOAP Fault element (see section 4.4)
-# indicating the SOAP processing error.
-#
-# From WS-I Basic profile:
-#   An INSTANCE MUST use a "500 Internal Server Error" HTTP status code if the
-# response message is a SOAP Fault.
-
 import suds
 from suds import *
+import suds.bindings.binding
 from suds.builder import Builder
 from suds.cache import ObjectCache
 import suds.metrics as metrics
@@ -546,8 +532,7 @@ class Method:
         """ get soap client class """
         if SimClient.simulation(kwargs):
             return SimClient
-        else:
-            return SoapClient
+        return SoapClient
 
 
 class SoapClient:
@@ -607,7 +592,6 @@ class SoapClient:
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         location = suds.bytes2str(self.location())
-        output_binding = self.method.binding.output
         log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
         original_soapenv = soapenv
         plugins = PluginContainer(self.options.plugins)
@@ -620,7 +604,7 @@ class SoapClient:
         ctx = plugins.message.sending(envelope=soapenv)
         soapenv = ctx.envelope
         if self.options.nosend:
-            return RequestContext(self, output_binding, soapenv)
+            return RequestContext(self, soapenv, original_soapenv)
         request = Request(location, soapenv)
         request.headers = self.headers()
         try:
@@ -630,36 +614,101 @@ class SoapClient:
             timer.stop()
             metrics.log.debug('waited %s on server reply', timer)
         except TransportError, e:
-            if e.httpcode in (httplib.ACCEPTED, httplib.NO_CONTENT):
-                return
-            log.error(original_soapenv)
-            return self.failed(output_binding, e)
-        ctx = plugins.message.received(reply=reply.message)
-        reply.message = ctx.reply
-        if self.options.retxml:
-            return reply.message
-        return self.succeeded(output_binding, reply.message)
+            content = error.fp and error.fp.read() or ''
+            return process_reply(reply=content, status=error.httpcode,
+                description=tostr(error), original_soapenv=original_soapenv)
+        return process_reply(reply=reply.message,
+            original_soapenv=original_soapenv)
 
-    def get_fault(self, reply):
+    def process_reply(self, reply, status=None, description=None,
+        original_soapenv=None):
+        if status is None:
+            status = httplib.OK
+        if status in (httplib.ACCEPTED, httplib.NO_CONTENT):
+            return
+        failed = True
+        try:
+            if status == httplib.OK:
+                log.debug('HTTP succeeded:\n%s', reply)
+            else:
+                log.debug('HTTP failed - %d - %s:\n%s', status, description,
+                    reply)
+
+            # (todo)
+            #   Consider whether and how to allow plugins to handle error,
+            # httplib.ACCEPTED & httplib.NO_CONTENT replies as well as
+            # successful ones.
+            #                                 (todo) (27.03.2013.) (Jurko)
+            plugins = PluginContainer(self.options.plugins)
+            ctx = plugins.message.received(reply=reply)
+            reply = ctx.reply
+
+            # SOAP standard states that SOAP errors must be accompanied by HTTP
+            # status code 500 - internal server error:
+            #
+            # From SOAP 1.1 Specification:
+            #   In case of a SOAP error while processing the request, the SOAP
+            # HTTP server MUST issue an HTTP 500 "Internal Server Error"
+            # response and include a SOAP message in the response containing a
+            # SOAP Fault element (see section 4.4) indicating the SOAP
+            # processing error.
+            #
+            # From WS-I Basic profile:
+            #   An INSTANCE MUST use a "500 Internal Server Error" HTTP status
+            # code if the response message is a SOAP Fault.
+            replyroot = None
+            if status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
+                replyroot = _parse(reply)
+                plugins.message.parsed(reply=replyroot)
+                fault = self.get_fault(replyroot)
+                if fault:
+                    if status != httplib.INTERNAL_SERVER_ERROR:
+                        log.warn("Web service reported a SOAP processing "
+                            "fault using an unexpected HTTP status code %d. "
+                            "Reporting as an internal server error.", status)
+                    if self.options.faults:
+                        raise WebFault(fault, replyroot)
+                    return (httplib.INTERNAL_SERVER_ERROR, fault)
+            if status != httplib.OK:
+                if self.options.faults:
+                    # (todo)
+                    #   Use a more specific exception class here.
+                    #                         (27.03.2013.) (Jurko)
+                    raise Exception((status, description))
+                return (status, description)
+
+            if self.options.retxml:
+                failed = False
+                return reply
+
+            result = replyroot and self.method.binding.output.get_reply(
+                self.method, replyroot)
+            ctx = plugins.message.unmarshalled(reply=result)
+            result = ctx.reply
+            failed = False
+            if self.options.faults:
+                return result
+            return (httplib.OK, result)
+        finally:
+            if failed and original_soapenv:
+                log.error(original_soapenv)
+
+    def get_fault(self, replyroot):
         """Extract fault information from the specified SOAP reply.
 
-          If I{faults} is True, an exception is raised. Otherwise, the
-        I{unmarshalled} fault L{Object} is returned. This method is called when
-        the server raises a I{web fault}.
+          Returns an I{unmarshalled} fault L{Object} or None in case the given
+        XML document does not contain the SOAP <Fault> element.
 
-        @param reply: A SOAP reply message.
-        @type reply: str
+        @param replyroot: A SOAP reply message root XML element or None.
+        @type replyroot: L{Element}
         @return: A fault object.
-        @rtype: tuple ( L{Element}, L{Object} )
+        @rtype: L{Object}
         """
-        faultroot = Parser().parse(string=reply)
-        soapenv = faultroot.getChild('Envelope')
-        soapbody = soapenv.getChild('Body')
-        fault = soapbody.getChild('Fault')
-        p = UmxBasic().process(fault)
-        if self.options().faults:
-            raise WebFault(p, faultroot)
-        return (faultroot, p.detail)
+        envns = suds.bindings.binding.envns
+        soapenv = replyroot and replyroot.getChild('Envelope', envns)
+        soapbody = soapenv and soapenv.getChild('Body', envns)
+        fault = soapbody and soapbody.getChild('Fault', envns)
+        return fault is not None and UmxBasic().process(fault)
 
     def headers(self):
         """
@@ -674,51 +723,6 @@ class SoapClient:
         result = dict(stock, **self.options.headers)
         log.debug('headers = %s', result)
         return result
-
-    def succeeded(self, binding, reply):
-        """
-        Request succeeded, process the reply
-        @param binding: The binding to be used to process the reply.
-        @type binding: L{bindings.binding.Binding}
-        @param reply: The raw reply text.
-        @type reply: str
-        @return: The method result.
-        @rtype: I{builtin}, L{Object}
-        @raise WebFault: On server.
-        """
-        log.debug('http succeeded:\n%s', reply)
-        plugins = PluginContainer(self.options.plugins)
-        if len(reply) > 0:
-            reply, result = binding.get_reply(self.method, reply)
-        else:
-            result = None
-        ctx = plugins.message.unmarshalled(reply=result)
-        result = ctx.reply
-        if self.options.faults:
-            return result
-        return (httplib.OK, result)
-
-    def failed(self, binding, error):
-        """
-        Request failed, process reply based on reason
-        @param binding: The binding to be used to process the reply.
-        @type binding: L{suds.bindings.binding.Binding}
-        @param error: The http error message
-        @type error: L{transport.TransportError}
-        """
-        status, reason = (error.httpcode, tostr(error))
-        reply = error.fp.read()
-        log.debug('http failed:\n%s', reply)
-        #   See implementation note 'SOAP errors and HTTP status code' for more
-        # detailed information on the returned HTTP status code.
-        if status == httplib.INTERNAL_SERVER_ERROR:
-            if len(reply) > 0:
-                r, p = self.get_fault(reply)
-                return (status, p)
-            return (status, None)
-        if self.options.faults:
-            raise Exception((status, reason))
-        return (status, None)
 
     def location(self):
         return Unskin(self.options).get('location', self.method.location)
@@ -748,78 +752,75 @@ class SimClient(SoapClient):
         """
         simulation = kwargs[self.injkey]
         msg = simulation.get('msg')
-        reply = simulation.get('reply')
-        fault = simulation.get('fault')
-        if msg is None:
-            if reply is not None:
-                return self.__reply(reply, args, kwargs)
-            if fault is not None:
-                return self.__fault(fault)
-            raise Exception('(reply|fault) expected when msg=None')
-        sax = Parser()
-        msg = sax.parse(string=msg)
-        return self.send(msg)
-
-    def __reply(self, reply, args, kwargs):
-        """ simulate the reply """
+        if msg is not None:
+            return self.send(_parse(msg))
         msg = self.method.binding.input.get_message(self.method, args, kwargs)
         log.debug('inject (simulated) send message:\n%s', msg)
-        return self.succeeded(self.method.binding.output, reply)
-
-    def __fault(self, reply):
-        """ simulate the (fault) reply """
-        if self.options.faults:
-            r, reason = self.get_fault(reply)
-        else:
-            reason = None
-        #   See implementation note 'SOAP errors and HTTP status code' for more
-        # detailed information on the returned HTTP status code.
-        return (httplib.INTERNAL_SERVER_ERROR, reason)
+        reply = simulation.get('reply')
+        if reply is not None:
+            status = simulation.get('status')
+            description=simulation.get('description')
+            if description is None:
+                description = 'injected reply'
+            return self.process_reply(reply=reply, status=status,
+                description=description, original_soapenv=msg)
+        raise Exception('reply or msg injection parameter expected');
 
 
 class RequestContext:
     """
     A request context.
-    Returned when the ''nosend'' options is specified.
+    Returned when the ''nosend'' options is specified. Allows the caller to
+    take care of sending the request himself and simply return the reply data
+    for further processing.
     @ivar client: The suds client.
     @type client: L{Client}
-    @ivar binding: The binding for this request.
-    @type binding: I{Binding}
-    @ivar envelope: The request soap envelope.
+    @ivar envelope: The request SOAP envelope.
     @type envelope: str
+    @ivar original_envelope: The original request SOAP envelope before plugin
+                             processing.
+    @type original_envelope: str
     """
 
-    def __init__(self, client, binding, envelope):
+    def __init__(self, client, envelope, original_envelope):
         """
         @param client: The suds client.
         @type client: L{Client}
-        @param binding: The binding for this request.
-        @type binding: I{Binding}
-        @param envelope: The request soap envelope.
+        @param envelope: The request SOAP envelope.
         @type envelope: str
+        @param original_envelope: The original request SOAP envelope before
+                                  plugin processing.
+        @type original_envelope: str
         """
         self.client = client
-        self.binding = binding
         self.envelope = envelope
+        self.original_envelope = original_envelope
 
-    def succeeded(self, reply):
+    def process_reply(self, reply, status=None, description=None):
         """
         Re-entry for processing a successful reply.
-        @param reply: The reply soap envelope.
+        @param reply: The reply SOAP envelope.
         @type reply: str
+        @param status: The HTTP status code
+        @type status: int
+        @param description: Additional status description.
+        @type description: str
         @return: The returned value for the invoked method.
-        @rtype: object
+        @return: The result of the method invocation.
+        @rtype: I{builtin}|I{subclass of} L{Object}
         """
-        options = self.client.options
-        plugins = PluginContainer(options.plugins)
-        ctx = plugins.message.received(reply=reply)
-        reply = ctx.reply
-        return self.client.succeeded(self.binding, reply)
+        return self.client.process_reply(reply=reply, status=status,
+            description=description, original_soapenv=self.original_envelope)
 
-    def failed(self, error):
-        """
-        Re-entry for processing a failure reply.
-        @param error: The error returned by the transport.
-        @type error: A suds I{TransportError}.
-        """
-        return self.client.failed(self.binding, error)
+
+def _parse(string):
+    """
+    Parses the given XML document content and returns the resulting root XML
+    element node. Returns None if the given XML content is empty.
+    @param string: XML document content to parse.
+    @type string: str
+    @return: Resulting root XML element node or None.
+    @rtype: L{Element}
+    """
+    if len(string) > 0:
+        return Parser().parse(string=string)

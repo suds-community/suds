@@ -21,13 +21,11 @@ Provides classes for (WS) SOAP bindings.
 from logging import getLogger
 from suds import *
 from suds.sax import Namespace
-from suds.sax.parser import Parser
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sudsobject import Factory, Object
 from suds.mx import Content
 from suds.mx.literal import Literal as MxLiteral
-from suds.umx.basic import Basic as UmxBasic
 from suds.umx.typed import Typed as UmxTyped
 from suds.bindings.multiref import MultiRef
 from suds.xsd.query import TypeQuery, ElementQuery
@@ -120,57 +118,35 @@ class Binding:
             env.refitPrefixes()
         return Document(env)
 
-    def get_reply(self, method, reply):
+    def get_reply(self, method, replyroot):
         """
-        Process the I{reply} for the specified I{method} by sax parsing the
-        I{reply} and then unmarshalling into Python object(s).
+        Process the I{reply} for the specified I{method} by unmarshalling it
+        into into Python object(s).
         @param method: The name of the invoked method.
         @type method: str
-        @param reply: The reply XML received after invoking the specified
-            method.
-        @type reply: str
-        @return: The unmarshalled reply.  The returned value is an L{Object}
-            or a I{list} depending on whether the service returns a single
-            object or a collection.
-        @rtype: tuple ( L{Element}, L{Object} )
+        @param replyroot: The reply XML root node received after invoking the
+            specified method.
+        @type reply: L{Element}
+        @return: The unmarshalled reply.  The returned value is an L{Object} or
+            a I{list} depending on whether the service returns a single object
+            or a collection.
+        @rtype: L{Object} or I{list}
         """
-        replyroot = Parser().parse(string=reply)
-        plugins = PluginContainer(self.options().plugins)
-        plugins.message.parsed(reply=replyroot)
-        soapenv = replyroot.getChild('Envelope')
+        soapenv = replyroot.getChild('Envelope', envns)
         soapenv.promotePrefixes()
-        soapbody = soapenv.getChild('Body')
-        self.detect_fault(soapbody)
+        soapbody = soapenv.getChild('Body', envns)
         soapbody = self.multiref.process(soapbody)
         nodes = self.replycontent(method, soapbody)
         rtypes = self.returned_types(method)
         if len(rtypes) > 1:
-            result = self.replycomposite(rtypes, nodes)
-            return (replyroot, result)
-        if len(rtypes) == 1:
-            if rtypes[0].multi_occurrence():
-                result = self.replylist(rtypes[0], nodes)
-                return (replyroot, result)
-            if len(nodes):
-                resolved = rtypes[0].resolve(nobuiltin=True)
-                result = self.unmarshaller().process(nodes[0], resolved)
-                return (replyroot, result)
-        return (replyroot, None)
-
-    def detect_fault(self, body):
-        """
-        Detect I{hidden} soapenv:Fault element in the SOAP body.
-        @param body: The SOAP envelope body.
-        @type body: L{Element}
-        @raise WebFault: When found.
-        """
-        fault = body.getChild('Fault', envns)
-        if fault is None:
+            return self.replycomposite(rtypes, nodes)
+        if len(rtypes) == 0:
             return
-        p = UmxBasic().process(fault)
-        if self.options().faults:
-            raise WebFault(p, fault)
-        return self
+        if rtypes[0].multi_occurrence():
+            return self.replylist(rtypes[0], nodes)
+        if len(nodes):
+            resolved = rtypes[0].resolve(nobuiltin=True)
+            return self.unmarshaller().process(nodes[0], resolved)
 
     def replylist(self, rt, nodes):
         """
