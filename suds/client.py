@@ -35,30 +35,29 @@ See I{README.txt}
 # response message is a SOAP Fault.
 
 import suds
-import suds.metrics as metrics
-from cookielib import CookieJar
 from suds import *
-from suds.reader import DefinitionsReader
-from suds.transport import TransportError, Request
-from suds.transport.https import HttpAuthenticated
-from suds.servicedefinition import ServiceDefinition
-from suds import sudsobject
-from sudsobject import Factory as InstFactory
-from sudsobject import Object
-from suds.resolver import PathResolver
 from suds.builder import Builder
-from suds.wsdl import Definitions
 from suds.cache import ObjectCache
+import suds.metrics as metrics
+from suds.options import Options
+from suds.plugin import PluginContainer
+from suds.properties import Unskin
+from suds.reader import DefinitionsReader
+from suds.resolver import PathResolver
 from suds.sax.document import Document
 from suds.sax.parser import Parser
-from suds.options import Options
-from suds.properties import Unskin
-from urlparse import urlparse
-from copy import deepcopy
-from suds.plugin import PluginContainer
-from logging import getLogger
+from suds.servicedefinition import ServiceDefinition
+from suds.transport import TransportError, Request
+from suds.transport.https import HttpAuthenticated
+from suds.wsdl import Definitions
+from sudsobject import Factory as InstFactory
+from sudsobject import Object
 
+from cookielib import CookieJar
+from copy import deepcopy
 import httplib
+from logging import getLogger
+from urlparse import urlparse
 
 log = getLogger(__name__)
 
@@ -547,13 +546,12 @@ class Method:
         """
         clientclass = self.clientclass(kwargs)
         client = clientclass(self.client, self.method)
-        if not self.faults():
-            try:
-                return client.invoke(args, kwargs)
-            except WebFault, e:
-                return (httplib.INTERNAL_SERVER_ERROR, e)
-        else:
+        try:
             return client.invoke(args, kwargs)
+        except WebFault, e:
+            if self.faults():
+                raise
+            return (httplib.INTERNAL_SERVER_ERROR, e)
 
     def faults(self):
         """ get faults option """
@@ -604,21 +602,15 @@ class SoapClient:
         """
         timer = metrics.Timer()
         timer.start()
-        result = None
         binding = self.method.binding.input
         soapenv = binding.get_message(self.method, args, kwargs)
         timer.stop()
-        metrics.log.debug(
-                "message for '%s' created: %s",
-                self.method.name,
-                timer)
+        metrics.log.debug("message for '%s' created: %s", self.method.name,
+            timer)
         timer.start()
         result = self.send(soapenv)
         timer.stop()
-        metrics.log.debug(
-                "method '%s' invoked: %s",
-                self.method.name,
-                timer)
+        metrics.log.debug("method '%s' invoked: %s", self.method.name, timer)
         return result
 
     def send(self, soapenv):
@@ -631,29 +623,25 @@ class SoapClient:
         """
         location = suds.bytes2str(self.location())
         output_binding = self.method.binding.output
-        transport = self.options.transport
-        retxml = self.options.retxml
-        nosend = self.options.nosend
-        prettyxml = self.options.prettyxml
         log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
         self.last_sent(soapenv)
         plugins = PluginContainer(self.options.plugins)
         plugins.message.marshalled(envelope=soapenv.root())
-        if prettyxml:
+        if self.options.prettyxml:
             soapenv = soapenv.str()
         else:
             soapenv = soapenv.plain()
         soapenv = soapenv.encode('utf-8')
         ctx = plugins.message.sending(envelope=soapenv)
         soapenv = ctx.envelope
-        if nosend:
+        if self.options.nosend:
             return RequestContext(self, output_binding, soapenv)
         request = Request(location, soapenv)
         request.headers = self.headers()
         try:
             timer = metrics.Timer()
             timer.start()
-            reply = transport.send(request)
+            reply = self.options.transport.send(request)
             timer.stop()
             metrics.log.debug('waited %s on server reply', timer)
         except TransportError, e:
@@ -663,13 +651,13 @@ class SoapClient:
             return self.failed(output_binding, e)
         ctx = plugins.message.received(reply=reply.message)
         reply.message = ctx.reply
-        if retxml:
+        if self.options.retxml:
             return reply.message
         return self.succeeded(output_binding, reply.message)
 
     def headers(self):
         """
-        Get http headers or the http/https request.
+        Get HTTP headers or the HTTP/HTTPS request.
         @return: A dictionary of header/values.
         @rtype: dict
         """
@@ -729,8 +717,7 @@ class SoapClient:
         return (status, None)
 
     def location(self):
-        p = Unskin(self.options)
-        return p.get('location', self.method.location)
+        return Unskin(self.options).get('location', self.method.location)
 
     def last_sent(self, d=None):
         key = 'tx'
