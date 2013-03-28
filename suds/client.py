@@ -165,22 +165,6 @@ class Client(UnicodeMixin):
         if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
 
-    def last_sent(self):
-        """
-        Get last sent I{soap} message.
-        @return: The last sent I{soap} message.
-        @rtype: L{Document}
-        """
-        return self.messages.get('tx')
-
-    def last_received(self):
-        """
-        Get last received I{soap} message.
-        @return: The last received I{soap} message.
-        @rtype: L{Document}
-        """
-        return self.messages.get('rx')
-
     def clone(self):
         """
         Get a shallow clone of this object.
@@ -625,7 +609,7 @@ class SoapClient:
         location = suds.bytes2str(self.location())
         output_binding = self.method.binding.output
         log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
-        self.last_sent(soapenv)
+        original_soapenv = soapenv
         plugins = PluginContainer(self.options.plugins)
         plugins.message.marshalled(envelope=soapenv.root())
         if self.options.prettyxml:
@@ -648,7 +632,7 @@ class SoapClient:
         except TransportError, e:
             if e.httpcode in (httplib.ACCEPTED, httplib.NO_CONTENT):
                 return
-            log.error(self.last_sent())
+            log.error(original_soapenv)
             return self.failed(output_binding, e)
         ctx = plugins.message.received(reply=reply.message)
         reply.message = ctx.reply
@@ -706,7 +690,6 @@ class SoapClient:
         plugins = PluginContainer(self.options.plugins)
         if len(reply) > 0:
             reply, result = binding.get_reply(self.method, reply)
-            self.last_received(reply)
         else:
             result = None
         ctx = plugins.message.unmarshalled(reply=result)
@@ -731,7 +714,6 @@ class SoapClient:
         if status == httplib.INTERNAL_SERVER_ERROR:
             if len(reply) > 0:
                 r, p = self.get_fault(reply)
-                self.last_received(r)
                 return (status, p)
             return (status, None)
         if self.options.faults:
@@ -740,22 +722,6 @@ class SoapClient:
 
     def location(self):
         return Unskin(self.options).get('location', self.method.location)
-
-    def last_sent(self, d=None):
-        key = 'tx'
-        messages = self.client.messages
-        if d is None:
-            return messages.get(key)
-        else:
-            messages[key] = d
-
-    def last_received(self, d=None):
-        key = 'rx'
-        messages = self.client.messages
-        if d is None:
-            return messages.get(key)
-        else:
-            messages[key] = d
 
 
 class SimClient(SoapClient):
@@ -804,7 +770,6 @@ class SimClient(SoapClient):
         """ simulate the (fault) reply """
         if self.options.faults:
             r, reason = self.get_fault(reply)
-            self.last_received(r)
         else:
             reason = None
         #   See implementation note 'SOAP errors and HTTP status code' for more
