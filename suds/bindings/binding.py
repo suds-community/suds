@@ -142,8 +142,7 @@ class Binding:
         @rtype: tuple ( L{Element}, L{Object} )
         """
         reply = self.replyfilter(reply)
-        sax = Parser()
-        replyroot = sax.parse(string=reply)
+        replyroot = Parser().parse(string=reply)
         plugins = PluginContainer(self.options().plugins)
         plugins.message.parsed(reply=replyroot)
         soapenv = replyroot.getChild('Envelope')
@@ -161,9 +160,8 @@ class Binding:
                 result = self.replylist(rtypes[0], nodes)
                 return (replyroot, result)
             if len(nodes):
-                unmarshaller = self.unmarshaller()
                 resolved = rtypes[0].resolve(nobuiltin=True)
-                result = unmarshaller.process(nodes[0], resolved)
+                result = self.unmarshaller().process(nodes[0], resolved)
                 return (replyroot, result)
         return (replyroot, None)
 
@@ -185,8 +183,8 @@ class Binding:
 
     def replylist(self, rt, nodes):
         """
-        Construct a I{list} reply.  This mehod is called when it has been detected
-        that the reply is a list.
+        Construct a I{list} reply. This mehod is called when it has been
+        detected that the reply is a list.
         @param rt: The return I{type}.
         @type rt: L{suds.xsd.sxbase.SchemaObject}
         @param nodes: A collection of XML nodes.
@@ -204,7 +202,7 @@ class Binding:
 
     def replycomposite(self, rtypes, nodes):
         """
-        Construct a I{composite} reply.  This method is called when it has been
+        Construct a I{composite} reply. This method is called when it has been
         detected that the reply has multiple root nodes.
         @param rtypes: A list of known return I{types}.
         @type rtypes: [L{suds.xsd.sxbase.SchemaObject},...]
@@ -256,8 +254,7 @@ class Binding:
         @rtype: tuple ( L{Element}, L{Object} )
         """
         reply = self.replyfilter(reply)
-        sax = Parser()
-        faultroot = sax.parse(string=reply)
+        faultroot = Parser().parse(string=reply)
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
@@ -419,8 +416,8 @@ class Binding:
 
     def bodypart_types(self, method, input=True):
         """
-        Get a list of I{parameter definitions} (pdef) defined for the specified method.
-        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
+        Get a list of I{parameter definitions} (pdef) defined for the specified
+        method. Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject}).
         @param method: A service method.
         @type method: I{service.Method}
         @param input: Defines input/output message.
@@ -454,8 +451,8 @@ class Binding:
 
     def headpart_types(self, method, input=True):
         """
-        Get a list of I{parameter definitions} (pdef) defined for the specified method.
-        Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject})
+        Get a list of I{parameter definitions} (pdef) defined for the specified
+        method. Each I{pdef} is a tuple (I{name}, L{xsd.sxbase.SchemaObject}).
         @param method: A service method.
         @type method: I{service.Method}
         @param input: Defines input/output message.
