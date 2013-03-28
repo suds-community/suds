@@ -45,8 +45,6 @@ class Binding:
     """
     The SOAP binding class used to process outgoing and incoming SOAP messages
     per the WSDL port binding.
-    @cvar replyfilter: The reply filter function.
-    @type replyfilter: (lambda s,r: r)
     @ivar wsdl: The WSDL.
     @type wsdl: L{suds.wsdl.Definitions}
     @ivar schema: The collective schema contained within the WSDL.
@@ -54,8 +52,6 @@ class Binding:
     @ivar options: A dictionary options.
     @type options: L{Options}
     """
-
-    replyfilter = (lambda s,r: r)
 
     def __init__(self, wsdl):
         """
@@ -141,7 +137,6 @@ class Binding:
             object or a collection.
         @rtype: tuple ( L{Element}, L{Object} )
         """
-        reply = self.replyfilter(reply)
         replyroot = Parser().parse(string=reply)
         plugins = PluginContainer(self.options().plugins)
         plugins.message.parsed(reply=replyroot)
@@ -253,7 +248,6 @@ class Binding:
         @return: A fault object.
         @rtype: tuple ( L{Element}, L{Object} )
         """
-        reply = self.replyfilter(reply)
         faultroot = Parser().parse(string=reply)
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
