@@ -86,13 +86,10 @@ class Encoded(RPC):
     def marshaller(self):
         return MxEncoded(self.schema())
 
-    def unmarshaller(self, typed=True):
+    def unmarshaller(self):
         """
-        Get the appropriate XML decoder.
-        @return: Either the (basic|typed) unmarshaller.
+        Get the appropriate schema based XML decoder.
+        @return: Typed unmarshaller.
         @rtype: L{UmxTyped}
         """
-        if typed:
-            return UmxEncoded(self.schema())
-        else:
-            return RPC.unmarshaller(self, typed)
+        return UmxEncoded(self.schema())

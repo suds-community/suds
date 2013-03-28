@@ -67,16 +67,13 @@ class Binding:
     def options(self):
         return self.wsdl.options
 
-    def unmarshaller(self, typed=True):
+    def unmarshaller(self):
         """
-        Get the appropriate XML decoder.
-        @return: Either the (basic|typed) unmarshaller.
+        Get the appropriate schema based XML decoder.
+        @return: Typed unmarshaller.
         @rtype: L{UmxTyped}
         """
-        if typed:
-            return UmxTyped(self.schema())
-        else:
-            return UmxBasic()
+        return UmxTyped(self.schema())
 
     def marshaller(self):
         """
@@ -170,8 +167,7 @@ class Binding:
         fault = body.getChild('Fault', envns)
         if fault is None:
             return
-        unmarshaller = self.unmarshaller(False)
-        p = unmarshaller.process(fault)
+        p = UmxBasic().process(fault)
         if self.options().faults:
             raise WebFault(p, fault)
         return self
@@ -252,8 +248,7 @@ class Binding:
         soapenv = faultroot.getChild('Envelope')
         soapbody = soapenv.getChild('Body')
         fault = soapbody.getChild('Fault')
-        unmarshaller = self.unmarshaller(False)
-        p = unmarshaller.process(fault)
+        p = UmxBasic().process(fault)
         if self.options().faults:
             raise WebFault(p, faultroot)
         return (faultroot, p.detail)
