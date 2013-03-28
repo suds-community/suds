@@ -95,6 +95,36 @@ def test_empty_reply():
     assert reason == 'kwack'
 
 
+def test_fault_reply_with_unicode_faultstring():
+    unicode_string = "€ Jurko Gospodnetić ČĆŽŠĐčćžšđ"
+    fault_xml = """\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <env:Fault>
+      <faultcode>env:Client</faultcode>
+      <faultstring>%s</faultstring>
+    </env:Fault>
+  </env:Body>
+</env:Envelope>
+""" % unicode_string
+    client = tests.client_from_wsdl(_wsdl__simple, faults=True)
+    try:
+        client.service.f(__inject=dict(reply=fault_xml,
+            status=httplib.INTERNAL_SERVER_ERROR))
+    except suds.WebFault, e:
+        e.fault.faultstring = unicode_string
+        assert e.document.__class__ is suds.sax.document.Document
+    else:
+        pytest.fail("Expected WebFault exception not raised.")
+
+    client = tests.client_from_wsdl(_wsdl__simple, faults=False)
+    status, fault = client.service.f(__inject=dict(reply=fault_xml,
+        status=httplib.INTERNAL_SERVER_ERROR))
+    assert status == httplib.INTERNAL_SERVER_ERROR
+    assert fault.faultstring == unicode_string
+
+
 def test_invalid_fault_namespace():
     fault_xml = """\
 <?xml version="1.0"?>
