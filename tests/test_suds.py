@@ -40,6 +40,7 @@ if __name__ == "__main__":
 import suds
 import suds.client
 import suds.store
+import tests
 
 import pytest
 
@@ -49,13 +50,13 @@ import xml.sax
 
 
 def test_converting_client_to_string_must_not_raise_an_exception():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
         "<?xml version='1.0' encoding='UTF-8'?><root />")
     str(client)
 
 
 def test_converting_metadata_to_string():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -103,21 +104,21 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_empty_invalid_wsdl():
     try:
-        _client_from_wsdl("")
+        tests.client_from_wsdl("")
         pytest.fail("Excepted exception xml.sax.SAXParseException not thrown.")
     except xml.sax.SAXParseException, e:
         assert e.getMessage() == "no element found"
 
 
 def test_empty_valid_wsdl():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
         "<?xml version='1.0' encoding='UTF-8'?><root />")
     assert not client.wsdl.services, "No service definitions must be read "  \
         "from an empty WSDL."
 
 
 def test_enumeration_type_string_should_contain_its_value():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -170,7 +171,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -261,7 +262,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_choice():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -341,7 +342,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_choice_in_a_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -446,7 +447,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_sequence_in_a_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -555,7 +556,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_sequence_in_a_choice():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -642,7 +643,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_sequence_in_a_choice_in_a_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -728,7 +729,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_strings():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -812,7 +813,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_enumeration():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -876,7 +877,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_sequence_in_a_global_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -965,7 +966,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_string_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1050,7 +1051,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_local_sequence_in_a_global_sequence():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1141,7 +1142,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__0():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1188,7 +1189,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__1():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1237,7 +1238,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__3():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1288,7 +1289,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_types():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1325,7 +1326,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_parameter_referencing_missing_element():
     try:
-        _client_from_wsdl(
+        tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1368,7 +1369,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_occurrences():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1457,7 +1458,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1538,7 +1539,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__nobuiltin_caching():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1586,7 +1587,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__invalid_type():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1615,7 +1616,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__references():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1691,7 +1692,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_object_child_access_by_index():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1760,7 +1761,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_simple_wsdl():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1873,7 +1874,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_wsdl_schema_content():
-    client = _client_from_wsdl(
+    client = tests.client_from_wsdl(
 """<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1946,35 +1947,6 @@ def _assert_dynamic_type(anObject, typename):
     # class information for both old and new-style classes.
     assert anObject.__class__.__module__ == suds.sudsobject.__name__
     assert anObject.__class__.__name__ == typename
-
-
-def _client_from_wsdl(wsdl_content, *args, **kwargs):
-    """
-    Constructs a non-caching suds Client based on the given WSDL content.
-
-      Stores the content directly inside the suds library internal document
-    store under a hard-coded id to avoid having to load the data from a
-    temporary file.
-
-      Caveats:
-        * All files stored under the same id so each new local file overwrites
-          the previous one.
-        * We need to explicitly disable caching here or otherwise, because we
-          are using the same id for all our local WSDL documents, suds would
-          always reuse the first such local document from its cache.
-
-    """
-    # Idea for an alternative implementation:
-    #   Custom suds.cache.Cache subclass that would know how to access our
-    # locally stored documents or at least not cache them if we are storing
-    # them inside the suds library DocumentStore. Not difficult, allows us to
-    # have per-client instead of global configuration & allows us to support
-    # other cache types but certainly not as short as the current
-    # implementation.
-    testFileId = "whatchamacallit"
-    suds.store.DocumentStore.store[testFileId] = wsdl_content
-    kwargs["cache"] = None
-    return suds.client.Client("suds://" + testFileId, *args, **kwargs)
 
 
 def _construct_SOAP_request(client, operation_name, *args, **kwargs):
