@@ -105,9 +105,10 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 def test_empty_invalid_wsdl():
     try:
         tests.client_from_wsdl("")
-        pytest.fail("Excepted exception xml.sax.SAXParseException not thrown.")
     except xml.sax.SAXParseException, e:
         assert e.getMessage() == "no element found"
+    else:
+        pytest.fail("Expected exception xml.sax.SAXParseException not raised.")
 
 
 def test_empty_valid_wsdl():
@@ -1363,9 +1364,10 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:service>
 </wsdl:definitions>
 """)
-        pytest.fail("Excepted exception suds.TypeNotFound not thrown.")
     except suds.TypeNotFound, e:
         assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
+    else:
+        pytest.fail("Expected exception suds.TypeNotFound not raised.")
 
 
 def test_schema_node_occurrences():
