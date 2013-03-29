@@ -18,12 +18,11 @@
 Provides classes for (WS) SOAP bindings.
 """
 
-from logging import getLogger
 from suds import *
 from suds.sax import Namespace
 from suds.sax.document import Document
 from suds.sax.element import Element
-from suds.sudsobject import Factory, Object
+from suds.sudsobject import Factory
 from suds.mx import Content
 from suds.mx.literal import Literal as MxLiteral
 from suds.umx.typed import Typed as UmxTyped
@@ -32,7 +31,9 @@ from suds.xsd.query import TypeQuery, ElementQuery
 from suds.xsd.sxbasic import Element as SchemaElement
 from suds.options import Options
 from suds.plugin import PluginContainer
+
 from copy import deepcopy
+from logging import getLogger
 
 log = getLogger(__name__)
 
@@ -222,11 +223,8 @@ class Binding:
         @rtype: L{Element}
         """
         marshaller = self.marshaller()
-        content = \
-            Content(tag=pdef[0],
-                    value=object,
-                    type=pdef[1],
-                    real=pdef[1].resolve())
+        content = Content(tag=pdef[0], value=object, type=pdef[1],
+            real=pdef[1].resolve())
         return marshaller.process(content)
 
     def mkheader(self, method, hdef, object):
@@ -476,5 +474,4 @@ class PartElement(SchemaElement):
     def resolve(self, nobuiltin=False):
         if nobuiltin and self.__resolved.builtin():
             return self
-        else:
-            return self.__resolved
+        return self.__resolved

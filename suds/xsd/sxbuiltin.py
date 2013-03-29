@@ -19,13 +19,13 @@ The I{sxbuiltin} module provides classes that represent
 XSD I{builtin} schema objects.
 """
 
-from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.sax.date import *
 from suds.xsd.sxbase import XBuiltin
-import datetime as dt
 
+import datetime as dt
+from logging import getLogger
 
 log = getLogger(__name__)
 
@@ -48,7 +48,7 @@ class XAny(XBuiltin):
 
     def get_child(self, name):
         child = XAny(self.schema, name)
-        return (child, [])
+        return child, []
 
     def any(self):
         return True
@@ -59,22 +59,17 @@ class XBoolean(XBuiltin):
     Represents an (xsd) boolean builtin type.
     """
 
-    translation = (
-        { '1':True,'true':True,'0':False,'false':False },
-        { True:'true',1:'true',False:'false',0:'false' },
-    )
+    translation = ({'1':True, 'true':True, '0':False, 'false':False},
+        {True:'true', 1:'true', False:'false', 0:'false'})
 
     def translate(self, value, topython=True):
         if topython:
             if isinstance(value, basestring):
                 return XBoolean.translation[0].get(value)
-            else:
-                return None
         else:
-            if isinstance(value, (bool,int)):
+            if isinstance(value, (bool, int)):
                 return XBoolean.translation[1].get(value)
-            else:
-                return value
+            return value
 
 
 class XInteger(XBuiltin):
@@ -86,13 +81,11 @@ class XInteger(XBuiltin):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return int(value)
-            else:
-                return None
         else:
             if isinstance(value, int):
                 return str(value)
-            else:
-                return value
+            return value
+
 
 class XLong(XBuiltin):
     """
@@ -103,13 +96,10 @@ class XLong(XBuiltin):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return long(value)
-            else:
-                return None
         else:
-            if isinstance(value, (int,long)):
+            if isinstance(value, (int, long)):
                 return str(value)
-            else:
-                return value
+            return value
 
 
 class XFloat(XBuiltin):
@@ -121,13 +111,10 @@ class XFloat(XBuiltin):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return float(value)
-            else:
-                return None
         else:
             if isinstance(value, float):
                 return str(value)
-            else:
-                return value
+            return value
 
 
 class XDate(XBuiltin):
@@ -139,13 +126,10 @@ class XDate(XBuiltin):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return Date(value).date
-            else:
-                return None
         else:
             if isinstance(value, dt.date):
                 return str(Date(value))
-            else:
-                return value
+            return value
 
 
 class XTime(XBuiltin):
@@ -157,13 +141,10 @@ class XTime(XBuiltin):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return Time(value).time
-            else:
-                return None
         else:
             if isinstance(value, dt.date):
                 return str(Time(value))
-            else:
-                return value
+            return value
 
 
 class XDateTime(XBuiltin):
@@ -175,13 +156,10 @@ class XDateTime(XBuiltin):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return DateTime(value).datetime
-            else:
-                return None
         else:
             if isinstance(value, dt.date):
                 return str(DateTime(value))
-            else:
-                return value
+            return value
 
 
 class Factory:
@@ -270,5 +248,4 @@ class Factory:
         fn = cls.tags.get(name)
         if fn is not None:
             return fn(schema, name)
-        else:
-            return XBuiltin(schema, name)
+        return XBuiltin(schema, name)

@@ -18,10 +18,11 @@
 Provides classes for the (WS) SOAP I{document/literal}.
 """
 
-from logging import getLogger
 from suds import *
 from suds.bindings.binding import Binding
 from suds.sax.element import Element
+
+from logging import getLogger
 
 log = getLogger(__name__)
 
@@ -83,8 +84,7 @@ class Document(Binding):
         wrapped = method.soap.output.body.wrapped
         if wrapped:
             return body[0].children
-        else:
-            return body.children
+        return body.children
 
     def document(self, wrapper):
         """
@@ -111,8 +111,7 @@ class Document(Binding):
             for item in object:
                 tags.append(self.mkparam(method, pdef, item))
             return tags
-        else:
-            return Binding.mkparam(self, method, pdef, object)
+        return Binding.mkparam(self, method, pdef, object)
 
     def param_defs(self, method):
         #

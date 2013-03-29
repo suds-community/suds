@@ -63,10 +63,9 @@ def __fn(x, y):
     aty = y.get('arrayType', ns=ns)
     if aty is None:
         return SXAttribute(x, y)
-    else:
-        return Attribute(x, y, aty)
+    return Attribute(x, y, aty)
 
 #
-# Remap <xs:attrbute/> tags to __fn() builder.
+# Remap <xs:attribute/> tags to __fn() builder.
 #
 SXFactory.maptag('attribute', __fn)

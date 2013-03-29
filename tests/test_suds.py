@@ -38,13 +38,10 @@ if __name__ == "__main__":
 
 
 import suds
-import suds.client
-import suds.store
 import tests
 
 import pytest
 
-import os
 import re
 import xml.sax
 
@@ -168,7 +165,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # 0x12345678L in Python 2 and simply as 0x12345678 in Python 3.
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="One" />$', e1.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Two" />$', e2.str())
-    assert re.match('<Enumeration:0x[0-9a-f]+L? name="Thirty-Two" />$', e3.str())
+    assert re.match('<Enumeration:0x[0-9a-f]+L? name="Thirty-Two" />$',
+        e3.str())
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
@@ -1860,7 +1858,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method.location == u"https://localhost/dummy"
 
     # Methods (from service definition, for format specifications see the
-    # suds.ServiceDefinition.addports() docstring).
+    # suds.serviceDefinition.ServiceDefinition.addports() docstring).
     port, methods = service_definition.ports[0]
     assert len(methods) == 1
     method = methods[0]

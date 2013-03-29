@@ -211,7 +211,7 @@ class Definitions(WObject):
             for root in t.contents():
                 schema = Schema(root, self.url, self.options, container)
                 container.add(schema)
-        if not len(container): # empty
+        if not len(container):
             root = Element.buildPath(self.root, 'types/schema')
             schema = Schema(root, self.url, self.options, container)
             container.add(schema)

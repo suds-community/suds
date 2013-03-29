@@ -285,7 +285,6 @@ encoding = suds.byte_str("""\
     </xs:simpleContent>
   </xs:complexType>
 
-
   <xs:element name="string" type="tns:string"/>
   <xs:complexType name="string">
     <xs:simpleContent>

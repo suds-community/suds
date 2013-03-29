@@ -137,5 +137,4 @@ class Typed(Core):
         if value is not None:
             resolved = type.resolve()
             return resolved.translate(value)
-        else:
-            return value
+        return value
