@@ -591,7 +591,7 @@ class SoapClient:
         @return: The reply to the sent message.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
-        location = suds.bytes2str(self.location())
+        location = self.location()
         log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
         original_soapenv = soapenv
         plugins = PluginContainer(self.options.plugins)

@@ -792,10 +792,7 @@ class Port(NamedObject):
         self.__service = service
         self.binding = root.get('binding')
         address = root.getChild('address')
-        if address is None:
-            self.location = None
-        else:
-            self.location = address.get('location').encode('utf-8')
+        self.location = address is not None and address.get('location')
         self.methods = {}
 
     def method(self, name):
