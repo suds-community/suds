@@ -230,16 +230,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Method parameters as read from the service definition.
     assert len(service.params) == 3
     assert service.params[0][0].name == "x1"
-    assert service.params[0][0].type[0] == "string"
-    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[0][0].type == _string_type
     assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
     assert service.params[1][0].name == "x2"
-    assert service.params[1][0].type[0] == "UngaBunga"
-    assert service.params[1][0].type[1] == "my-namespace"
+    assert service.params[1][0].type == ("UngaBunga", "my-namespace")
     assert isinstance(service.params[1][1], suds.xsd.sxbasic.Complex)
     assert service.params[2][0].name == "x3"
-    assert service.params[2][0].type[0] == "string"
-    assert service.params[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[2][0].type == _string_type
     assert isinstance(service.params[2][1], suds.xsd.sxbuiltin.XString)
 
     # Method parameters as read from a method object.
@@ -313,12 +310,10 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Method parameters as read from the service definition.
     assert len(service.params) == 2
     assert service.params[0][0].name == "u1"
-    assert service.params[0][0].type[0] == "string"
-    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[0][0].type == _string_type
     assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
     assert service.params[1][0].name == "u2"
-    assert service.params[1][0].type[0] == "string"
-    assert service.params[1][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[1][0].type == _string_type
     assert isinstance(service.params[1][1], suds.xsd.sxbuiltin.XString)
 
     # Method parameters as read from a method object.
@@ -402,15 +397,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Method parameters as read from the service definition.
     assert len(service.params) == 3
     assert service.params[0][0].name == "x1"
-    assert service.params[0][0].type[0] == "string"
-    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[0][0].type == _string_type
     assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
     assert service.params[1][0].name == "x2"
     assert service.params[1][0].type is None
     assert isinstance(service.params[1][1], suds.xsd.sxbasic.Element)
     assert service.params[2][0].name == "x3"
-    assert service.params[2][0].type[0] == "string"
-    assert service.params[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[2][0].type == _string_type
     assert isinstance(service.params[2][1], suds.xsd.sxbuiltin.XString)
 
     # Method parameters as read from a method object.
@@ -507,15 +500,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Method parameters as read from the service definition.
     assert len(service.params) == 3
     assert service.params[0][0].name == "x1"
-    assert service.params[0][0].type[0] == "string"
-    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[0][0].type == _string_type
     assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
     assert service.params[1][0].name == "x2"
     assert service.params[1][0].type is None
     assert isinstance(service.params[1][1], suds.xsd.sxbasic.Element)
     assert service.params[2][0].name == "x3"
-    assert service.params[2][0].type[0] == "string"
-    assert service.params[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[2][0].type == _string_type
     assert isinstance(service.params[2][1], suds.xsd.sxbuiltin.XString)
 
     # Method parameters as read from a method object.
@@ -783,16 +774,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Method parameters as read from the service definition.
     assert len(service.params) == 3
     assert service.params[0][0].name == "x1"
-    assert service.params[0][0].type[0] == "string"
-    assert service.params[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[0][0].type == _string_type
     assert isinstance(service.params[0][1], suds.xsd.sxbuiltin.XString)
     assert service.params[1][0].name == "x2"
-    assert service.params[1][0].type[0] == "string"
-    assert service.params[1][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[1][0].type == _string_type
     assert isinstance(service.params[1][1], suds.xsd.sxbuiltin.XString)
     assert service.params[2][0].name == "x3"
-    assert service.params[2][0].type[0] == "string"
-    assert service.params[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert service.params[2][0].type == _string_type
     assert isinstance(service.params[2][1], suds.xsd.sxbuiltin.XString)
 
     # Method parameters as read from a method object.
@@ -868,8 +856,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     assert len(aType.rawchildren) == 1
     assert isinstance(aType.rawchildren[0], suds.xsd.sxbasic.Restriction)
-    assert aType.rawchildren[0].ref[0] == "string"
-    assert aType.rawchildren[0].ref[1] == "http://www.w3.org/2001/XMLSchema"
+    assert aType.rawchildren[0].ref == _string_type
 
     enum = client.factory.create("AAA")
     assert enum.One == "One"
@@ -944,14 +931,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert isinstance(children, list)
     assert len(children) == 3
     assert children[0][0].name == "x1"
-    assert children[0][0].type[0] == "string"
-    assert children[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert children[0][0].type == _string_type
     assert children[1][0].name == "x2"
-    assert children[1][0].type[0] == "Oklahoma"
-    assert children[1][0].type[1] == "my-namespace"
+    assert children[1][0].type == ("Oklahoma", "my-namespace")
     assert children[2][0].name == "x3"
-    assert children[2][0].type[0] == "string"
-    assert children[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert children[2][0].type == _string_type
 
     sequenceOut = client.factory.create("Wackadoodle")
     _assert_dynamic_type(sequenceOut, "Wackadoodle")
@@ -1027,14 +1011,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert isinstance(sequence_items, list)
     assert len(sequence_items) == 3
     assert sequence_items[0][0].name == "c1"
-    assert sequence_items[0][0].type[0] == "string"
-    assert sequence_items[0][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert sequence_items[0][0].type == _string_type
     assert sequence_items[1][0].name == "c2"
-    assert sequence_items[1][0].type[0] == "string"
-    assert sequence_items[1][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert sequence_items[1][0].type == _string_type
     assert sequence_items[2][0].name == "c3"
-    assert sequence_items[2][0].type[0] == "string"
-    assert sequence_items[2][0].type[1] == "http://www.w3.org/2001/XMLSchema"
+    assert sequence_items[2][0].type == _string_type
 
     sequence = client.factory.create("Oklahoma")
     getattr(sequence, "c1")
@@ -1980,3 +1961,6 @@ def _first_from_dict(d):
     """Returns the first name/value pair from a dictionary or None if empty."""
     for x in d.items():
         return x[0], x[1]
+
+
+_string_type = ("string", "http://www.w3.org/2001/XMLSchema")
