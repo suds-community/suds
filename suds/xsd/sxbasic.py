@@ -124,16 +124,8 @@ class Complex(SchemaObject):
     """
 
     def childtags(self):
-        return (
-            'attribute',
-            'attributeGroup',
-            'sequence',
-            'all',
-            'choice',
-            'complexContent',
-            'simpleContent',
-            'any',
-            'group')
+        return 'attribute', 'attributeGroup', 'sequence', 'all', 'choice',  \
+            'complexContent', 'simpleContent', 'any', 'group'
 
     def description(self):
         return ('name',)
@@ -159,7 +151,7 @@ class Group(SchemaObject):
     """
 
     def childtags(self):
-        return ('sequence', 'all', 'choice')
+        return 'sequence', 'all', 'choice'
 
     def dependencies(self):
         deps = []
@@ -172,14 +164,14 @@ class Group(SchemaObject):
                 raise TypeNotFound(self.ref)
             deps.append(g)
             midx = 0
-        return (midx, deps)
+        return midx, deps
 
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
 
     def description(self):
-        return ('name', 'ref')
+        return 'name', 'ref'
 
 
 class AttributeGroup(SchemaObject):
@@ -190,7 +182,7 @@ class AttributeGroup(SchemaObject):
     """
 
     def childtags(self):
-        return ('attribute', 'attributeGroup')
+        return 'attribute', 'attributeGroup'
 
     def dependencies(self):
         deps = []
@@ -203,14 +195,14 @@ class AttributeGroup(SchemaObject):
                 raise TypeNotFound(self.ref)
             deps.append(ag)
             midx = 0
-        return (midx, deps)
+        return midx, deps
 
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
 
     def description(self):
-        return ('name', 'ref')
+        return 'name', 'ref'
 
 
 class Simple(SchemaObject):
@@ -219,7 +211,7 @@ class Simple(SchemaObject):
     """
 
     def childtags(self):
-        return ('restriction', 'any', 'list')
+        return 'restriction', 'any', 'list'
 
     def enum(self):
         for child, ancestry in self.children():
@@ -271,7 +263,7 @@ class Restriction(SchemaObject):
         self.ref = root.get('base')
 
     def childtags(self):
-        return ('enumeration', 'attribute', 'attributeGroup')
+        return 'enumeration', 'attribute', 'attributeGroup'
 
     def dependencies(self):
         deps = []
@@ -285,7 +277,7 @@ class Restriction(SchemaObject):
             if not super.builtin():
                 deps.append(super)
                 midx = 0
-        return (midx, deps)
+        return midx, deps
 
     def restriction(self):
         return True
@@ -308,7 +300,7 @@ class Collection(SchemaObject):
     """
 
     def childtags(self):
-        return ('element', 'sequence', 'all', 'choice', 'any', 'group')
+        return 'element', 'sequence', 'all', 'choice', 'any', 'group'
 
 
 class Sequence(Collection):
@@ -326,6 +318,7 @@ class All(Collection):
     def all(self):
         return True
 
+
 class Choice(Collection):
     """
     Represents an (XSD) schema <xs:choice/> node.
@@ -340,7 +333,7 @@ class ComplexContent(SchemaObject):
     """
 
     def childtags(self):
-        return ('attribute', 'attributeGroup', 'extension', 'restriction')
+        return 'attribute', 'attributeGroup', 'extension', 'restriction'
 
     def extension(self):
         for c in self.rawchildren:
@@ -361,7 +354,7 @@ class SimpleContent(SchemaObject):
     """
 
     def childtags(self):
-        return ('extension', 'restriction')
+        return 'extension', 'restriction'
 
     def extension(self):
         for c in self.rawchildren:
@@ -389,7 +382,7 @@ class Enumeration(Content):
         self.name = root.get('value')
 
     def description(self):
-        return ('name', )
+        return ('name',)
 
     def enum(self):
         return True
@@ -425,7 +418,7 @@ class Element(TypedContent):
         return self
 
     def childtags(self):
-        return ('attribute', 'simpleType', 'complexType', 'any')
+        return 'attribute', 'simpleType', 'complexType', 'any'
 
     def extension(self):
         for c in self.rawchildren:
@@ -450,18 +443,18 @@ class Element(TypedContent):
                 raise TypeNotFound(self.ref)
             deps.append(e)
             midx = 0
-        return (midx, deps)
+        return midx, deps
 
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
 
     def description(self):
-        return ('name', 'ref', 'type')
+        return 'name', 'ref', 'type'
 
     def anytype(self):
         """ create an xsd:anyType reference """
-        p,u = Namespace.xsdns
+        p, u = Namespace.xsdns
         mp = self.root.findPrefix(u)
         if mp is None:
             mp = p
@@ -479,12 +472,8 @@ class Extension(SchemaObject):
         self.ref = root.get('base')
 
     def childtags(self):
-        return ('attribute',
-                'attributeGroup',
-                'sequence',
-                'all',
-                'choice',
-                'group')
+        return 'attribute', 'attributeGroup', 'sequence', 'all', 'choice',  \
+            'group'
 
     def dependencies(self):
         deps = []
@@ -498,7 +487,7 @@ class Extension(SchemaObject):
             if not super.builtin():
                 deps.append(super)
                 midx = 0
-        return (midx, deps)
+        return midx, deps
 
     def merge(self, other):
         SchemaObject.merge(self, other)
@@ -506,7 +495,7 @@ class Extension(SchemaObject):
         self.prepend(self.rawchildren, other.rawchildren, filter)
 
     def extension(self):
-        return ( self.ref is not None )
+        return self.ref is not None
 
     def description(self):
         return ('ref',)
@@ -573,9 +562,7 @@ class Import(SchemaObject):
 
     def locate(self):
         """ find the schema locally """
-        if self.ns[1] == self.schema.tns[1]:
-            return None
-        else:
+        if self.ns[1] != self.schema.tns[1]:
             return self.schema.locate(self.ns)
 
     def download(self, options):
@@ -595,7 +582,7 @@ class Import(SchemaObject):
             raise Exception(msg)
 
     def description(self):
-        return ('ns', 'location')
+        return 'ns', 'location'
 
 
 class Include(SchemaObject):
@@ -662,7 +649,7 @@ class Include(SchemaObject):
 
 
     def description(self):
-        return ('location')
+        return 'location'
 
 
 class Attribute(TypedContent):
@@ -689,7 +676,7 @@ class Attribute(TypedContent):
         return self.root.get('default', default='')
 
     def optional(self):
-        return ( self.use != 'required' )
+        return self.use != 'required'
 
     def dependencies(self):
         deps = []
@@ -702,10 +689,10 @@ class Attribute(TypedContent):
                 raise TypeNotFound(self.ref)
             deps.append(a)
             midx = 0
-        return (midx, deps)
+        return midx, deps
 
     def description(self):
-        return ('name', 'ref', 'type')
+        return 'name', 'ref', 'type'
 
 
 class Any(Content):
@@ -717,13 +704,13 @@ class Any(Content):
         root = self.root.clone()
         root.set('note', 'synthesized (any) child')
         child = Any(self.schema, root)
-        return (child, [])
+        return child, []
 
     def get_attribute(self, name):
         root = self.root.clone()
         root.set('note', 'synthesized (any) attribute')
         attribute = Any(self.schema, root)
-        return (attribute, [])
+        return attribute, []
 
     def any(self):
         return True
@@ -735,8 +722,7 @@ class Factory:
     @type tags: {tag:fn,}
     """
 
-    tags =\
-    {
+    tags = {
         'import' : Import,
         'include' : Include,
         'complexType' : Complex,
@@ -782,8 +768,6 @@ class Factory:
         fn = cls.tags.get(root.name)
         if fn is not None:
             return fn(schema, root)
-        else:
-            return None
 
     @classmethod
     def build(cls, root, schema, filter=('*',)):
@@ -834,7 +818,7 @@ class Factory:
             types[c.qname] = c
         for i in imports:
             children.remove(i)
-        return (children, imports, attributes, elements, types, groups, agrps)
+        return children, imports, attributes, elements, types, groups, agrps
 
 
 #######################################################

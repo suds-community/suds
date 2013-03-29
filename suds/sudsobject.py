@@ -262,18 +262,15 @@ class Printer:
         if isinstance(object, Object):
             if len(object) == 0:
                 return '<empty>'
-            else:
-                return self.print_object(object, h, n+2, nl)
+            return self.print_object(object, h, n+2, nl)
         if isinstance(object, dict):
             if len(object) == 0:
                 return '<empty>'
-            else:
-                return self.print_dictionary(object, h, n+2, nl)
+            return self.print_dictionary(object, h, n+2, nl)
         if isinstance(object, (list,tuple)):
             if len(object) == 0:
                 return '<empty>'
-            else:
-                return self.print_collection(object, h, n+2)
+            return self.print_collection(object, h, n+2)
         if isinstance(object, basestring):
             return '"%s"' % tostr(object)
         return '%s' % tostr(object)
@@ -359,7 +356,7 @@ class Printer:
 
     def unwrap(self, d, item):
         """ translate (unwrap) using an optional wrapper function """
-        nopt = ( lambda x: x )
+        nopt = lambda x: x
         try:
             md = d.__metadata__
             pmd = getattr(md, '__print__', None)
