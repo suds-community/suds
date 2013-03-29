@@ -311,14 +311,110 @@ PRIORETIZED:
 (+) * (Jurko) Sync with external related repositories.
 (+)     * 'https://bitbucket.org/palday/suds'.
 
-(02.03.2013.)
+(27.03.2013.)
 
-    * (Jurko) Sync with external related repositories.
-        * 'https://bitbucket.org/blarghmatey/suds-blarghmatey'.
-        
+(+) * (Jurko) Fix buggy Python 3 support patch related to reading the cache
+(+)   version.
+(+)     * The cache version file should be read as a text and not as a binary
+(+)       file.
+(+) * (Jurko) Fix test_enumeration_type_string_should_contain_its_value test
+(+)   under Python 2.
+(+) * (Jurko) Test & fix Python 2.4 compatibility.
+(+) * (Jurko) Fix input/output binding usage.
+(+)     * Incorrect binding was being used in several places.
+(+)     * Some of the uses related to processing the SOAP Fault error reporting
+(+)       element seem to be 'fake', needed only because of a a bit messy
+(+)       design. Planned to be fixed soon.
+          
+(28.03.2013.)
+
+(+) * (Jurko) Add web service reply processing related unit tests.
+(+) * (Jurko) Remove undocumented, untested & unused binding.replyfilter
+(+)   functionality.
+(+) * (Jurko) Remove seeming unused SoapClient last_sent() and last_received()
+(+)   functionality.
+(+) * (Jurko) Add a test for unicode Fault data processing.
+(+) * (Jurko) Merge SoapClient failed() & succeeded() functions into the same
+(+)   process_reply() function.
+(+) * (Jurko) Make binding classes no longer have anything to do with method
+(+)   independent Fault element processing.
+(+) * (Jurko) Make reply XML processing check the namespace used for Envelope &
+(+)   Body elements.
+(+) * (Jurko) Make SOAP Fault processing check the namespaces used for all
+(+)   relevant tags.
+(+) * (Jurko) Make HTTP status code 200 XML replies containing a Fault element
+(+)   consistently reported as SOAP faults (plus issue a warning about the
+(+)   non-standard HTTP status code) both when reporting such faults using
+(+)   exceptions or by returning a (status, reason) tuple.
+(+)     * Currently this is done only when reporting them using exceptions.
+(+) * (Jurko) Make plugins received() & parsed() calls now process both success
+(+)   & error replies.
+(+) * (Jurko) SOAP fault reports with invalid Fault structure should not cause
+(+)   suds code to break with an 'invalid attribute' exception.
+(+) * (Jurko) SOAP fault reports with no <detail> tag (optional) should not
+(+)   cause suds code to break with an 'invalid attribute' exception when run
+(+)   with the suds 'faults' option set to false.
+(+) * (Jurko) Clean up message reply processing return codes with suds 'faults'
+(+)   option set to both true & false.
+(+) * (Jurko) Reorganize SimClient injection keywords.
+(+)     * 'msg' - request message.
+(+)     * 'reply' - reply message ('msg' must not be set).
+(+)     * 'status' - HTTP status code acompanying the 'reply' message.
+(+)     * 'description' - description string acompanying the 'reply' message.
+(+) * (Jurko) Check failing tests.
+(+)     * All tests now pass except for ones related to SOAP Fault unicode
+(+)       faultstring processing.
+
+(29.03.2013.)
+
+(+) * (Jurko) Sync with external related repositories.
+(+)     * 'https://bitbucket.org/blarghmatey/suds-blarghmatey'.
+(+) * (Jurko) Additional SOAP web service reply tests.
+(+) * (Jurko) Fix detected unicode problems.
+(+)     * Remove invalid WebFault fix merged from an external source.
+(+)     * All suds exception classes now contain unicode description messages.
+(+)     * Undo a hasty unicode related WebFault fix merged from an external
+(+)       source in revision 16b084e8eea6511981d171e63cada98b58720c38.
+(+)     * Rename smart_str class to byte_str and make it accept only string
+(+)       parameters.
+(+)     * Clean Python2/3 compatibility DocumentStore fix.
+(+)         * Now contains raw data instead of unicode strings.
+(+)         * This also fixes a problem where unicode data read from the
+(+)           DocumentStore would fail to be encoded using the default encoding,
+(+)           which would then get reported as 'document not found'.
+(+)     * SAX parser now accepts only byte string content instead of also
+(+)       accepting unicode strings containing latin1 characters only.
+(+)     * Make tests now specify their fixed wsdl & reply content as byte
+(+)       strings only.
+(+)     * Make all tests pass.
+(+)         * Python 2.4.
+(+)         * Python 2.7.3.
+(+)         * Python 3.2.3.
+(+) * (Jurko) Remove Python 2/3 unicode encoding compatibility support assuming
+(+)   that its encoded unicode representations contain only latin1 characters.
+(+)     * SoapClient 'location' cleanup.
+(+)         * Should be stored as a unicode object instead of being converted
+(+)           from its byte representation assuming it was encoded using a
+(+)           specific encoding, e.g. if read from a WSDL schema, it should be
+(+)           decoded the same as the rest of the WSDL schema.
+(+)     * Remove str2bytes() & bytes2str().
+
+    * (Jurko) Prepare the '0.4.1 jurko 5' release.
+        * Update release notes.
+        * Follow the documented release procedure.
+            * Update version information.
+            * Tag in Hg.
+            * Upload the source package.
+                * Project site.
+                * PyPI.
+
 
 NON PRIORETIZED:
 =================================================
+
+    * SoapClient 'location' cleanup.
+        * URL quoting, especially if specified externally by the called instead
+          of having been read from a valid WSDL schema.
 
     * FileCache class fixes.
         * Remove incorrectly created cache files, e.g. if it gets created but
