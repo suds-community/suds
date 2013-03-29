@@ -184,21 +184,6 @@ def byte_str(s='', encoding='utf-8', input_encoding='utf-8', errors='strict'):
         return s.decode(input_encoding, errors).encode(encoding, errors)
     return s
 
-#   Quick-fix helper function for making some __str__ & __repr__ function
-# implementations originally returning UTF-8 encoded strings portable to Python
-# 3. The original implementation worked in Python 2 but in Python 3 this would
-# return a bytes object which is not an allowed return type for those calls. In
-# Python 3 on the other hand directly returning a unicode string from them is
-# perfectly valid and there is no need for converting those strings to utf-8
-# encoded strings in the first place.
-#   The original implementation classes should most likely be refactored to use
-# unicode for internal representation and convert to encoded bytes only at the
-# last possible moment, e.g. on an explicit __str__/__repr__ call.
-if sys.version_info >= (3, 0):
-    str_to_utf8_in_py2 = lambda str: str
-else:
-    str_to_utf8_in_py2 = lambda str: str.encode('utf-8')
-
 # Class used to represent a byte string. Useful for asserting that correct
 # string types are being passed around where needed.
 if sys.version_info >= (3, 0):

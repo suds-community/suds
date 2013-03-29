@@ -406,8 +406,7 @@ class Schema(UnicodeMixin):
         return '\n'.join(result)
 
     def __repr__(self):
-        myrep = '<%s tns="%s"/>' % (self.id, self.tns[1])
-        return str_to_utf8_in_py2(myrep)
+        return '<%s tns="%s"/>' % (self.id, self.tns[1])
 
     def __unicode__(self):
         return self.str()
