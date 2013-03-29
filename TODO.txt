@@ -398,6 +398,8 @@ PRIORETIZED:
 (+)           specific encoding, e.g. if read from a WSDL schema, it should be
 (+)           decoded the same as the rest of the WSDL schema.
 (+)     * Remove str2bytes() & bytes2str().
+(+) * (Jurko) Remove the str_to_utf8_in_py2() Python 2/3 unicode encoding
+(+)   compatibility support function as it no longer seems to be needed.
 
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Update release notes.
