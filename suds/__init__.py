@@ -187,17 +187,12 @@ def byte_str(s='', encoding='utf-8', errors='strict'):
 
 # Compatibility wrappers to convert between bytes and strings.
 if sys.version_info >= (3, 0):
-    def str2bytes(s):
-        if isinstance(s, bytes):
-            return s
-        return s.encode('latin1')
     def bytes2str(s):
         if isinstance(s, str):
             return s
         return s.decode('latin1')
 else:
     # For Python 2 bytes and string types are the same.
-    str2bytes = lambda s: s
     bytes2str = lambda s: s
 
 #   Quick-fix helper function for making some __str__ & __repr__ function
