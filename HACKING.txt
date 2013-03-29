@@ -14,6 +14,16 @@ GENERAL DEVELOPMENT NOTES:
         * To run the tests using Python 3 first process them and the rest of the
           library sources using the Python 2to3 conversion tool.
 
+    * Reproducing problematic use cases.
+        * Failing web service processing examples can be easiliy packaged as
+          reproducible test cases using the Suds library 'message & reply
+          injection' technique.
+        * For examples, see existing reply unit tests.
+            * Basically, you can create a client object based on a fixed WSDL
+              string (as done in the tests), and make it process a fixed reply
+              string (as done in the tests) without having it send a request to
+              an actual external web service.
+
     * Base sources should remain Python 2.x compatible. Since the original
       project states aiming for Python 2.4 compatibility we should do so as
       well.
