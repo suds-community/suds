@@ -167,33 +167,22 @@ class UnicodeMixin(object):
     else:
         __str__ = lambda x: unicode(x).encode('utf-8')
 
-# Used for literals as well because Python versions prior to 2.6 did not
-# support byte literals.
-def byte_str(s='', encoding='utf-8', errors='strict'):
+#   Used instead of byte literals because they are not supported on Python
+# versions prior to 2.6.
+def byte_str(s='', encoding='utf-8', input_encoding='utf-8', errors='strict'):
     """
     Returns a bytestring version of 's', encoded as specified in 'encoding'.
 
-    Accepts str & unicode objects, interpreting non-unicode strings as
-    utf-8 encoded byte strings.
+    Accepts str & unicode objects, interpreting non-unicode strings as byte
+    strings encoded using the given input encoding.
 
     """
     assert isinstance(s, basestring)
     if isinstance(s, unicode):
         return s.encode(encoding, errors)
-    input_encoding = 'utf-8'
     if s and encoding != input_encoding:
         return s.decode(input_encoding, errors).encode(encoding, errors)
     return s
-
-# Compatibility wrappers to convert between bytes and strings.
-if sys.version_info >= (3, 0):
-    def bytes2str(s):
-        if isinstance(s, str):
-            return s
-        return s.decode('latin1')
-else:
-    # For Python 2 bytes and string types are the same.
-    bytes2str = lambda s: s
 
 #   Quick-fix helper function for making some __str__ & __repr__ function
 # implementations originally returning UTF-8 encoded strings portable to Python
