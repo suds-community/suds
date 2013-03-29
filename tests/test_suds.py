@@ -1813,6 +1813,17 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert isinstance(elementOut, suds.xsd.sxbasic.Element)
     assert elementIn.name == "f"
     assert elementOut.name == "fResponse"
+    assert len(elementIn.children()) == 2
+    param_in_1 = elementIn.children()[0][0]
+    param_in_2 = elementIn.children()[1][0]
+    assert param_in_1.name == "a"
+    assert param_in_1.type == _string_type
+    assert param_in_2.name == "b"
+    assert param_in_2.type == _string_type
+    assert len(elementOut.children()) == 1
+    param_out_1 = elementOut.children()[0][0]
+    assert param_out_1.name == "c"
+    assert param_out_1.type == _string_type
 
     # Service definition.
     assert len(client.sd) == 1
@@ -1838,6 +1849,22 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method.name == "f"
     assert method.location == "https://localhost/dummy"
 
+    # Operations (from wsdl).
+    assert len(client.wsdl.bindings) == 1
+    binding_qname, binding = _first_from_dict(client.wsdl.bindings)
+    assert binding_qname == ("dummy", "my-namespace")
+    assert binding.__class__ is suds.wsdl.Binding
+    assert len(binding.operations) == 1
+    operation = binding.operations.values()[0]
+    input = operation.soap.input.body
+    output = operation.soap.output.body
+    assert len(input.parts) == 1
+    assert len(output.parts) == 1
+    input_element_qname = input.parts[0].element
+    output_element_qname = output.parts[0].element
+    assert input_element_qname == elementIn.qname
+    assert output_element_qname == elementOut.qname
+
     # Methods (from service definition, for format specifications see the
     # suds.serviceDefinition.ServiceDefinition.addports() docstring).
     port, methods = service_definition.ports[0]
@@ -1848,12 +1875,16 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_name == "f"
     method_params = method[1]
     assert len(method_params) == 2
-    assert method_params[0][0] == "a"
-    assert method_params[1][0] == "b"
 
-    # TODO: Once we learn more about suds - add the following assertions:
-    #   * assert method.input parameters = a (string), b (string).
-    #   * assert method.output parameters = c (string).
+    param_name = method_params[0][0]
+    param_element = method_params[0][1]
+    assert param_name == "a"
+    assert param_element is param_in_1
+
+    param_name = method_params[1][0]
+    param_element = method_params[1][1]
+    assert param_name == "b"
+    assert param_element is param_in_2
 
 
 def test_wsdl_schema_content():
