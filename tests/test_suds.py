@@ -1836,7 +1836,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     method_name, method = _first_from_dict(port.methods)
     assert method_name == "f"
     assert method.name == "f"
-    assert method.location == u"https://localhost/dummy"
+    assert method.location == "https://localhost/dummy"
 
     # Methods (from service definition, for format specifications see the
     # suds.serviceDefinition.ServiceDefinition.addports() docstring).
