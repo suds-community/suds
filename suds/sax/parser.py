@@ -39,10 +39,6 @@ import sys
 from xml.sax import make_parser, InputSource, ContentHandler
 from xml.sax.handler import feature_external_ges
 
-if sys.version_info < (3, 0):
-    from cStringIO import StringIO as BytesIO
-else:
-    from io import BytesIO
 
 log = getLogger(__name__)
 
@@ -137,7 +133,7 @@ class Parser:
             return handler.nodes[0]
         if string is not None:
             source = InputSource(None)
-            source.setByteStream(BytesIO(suds.str2bytes(string)))
+            source.setByteStream(suds.BytesIO(string))
             sax.parse(source)
             timer.stop()
             suds.metrics.log.debug('%s\nsax duration: %s', string, timer)

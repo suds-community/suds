@@ -24,6 +24,11 @@ import sys
 def client_from_wsdl(wsdl_content, *args, **kwargs):
     """
     Constructs a non-caching suds Client based on the given WSDL content.
+    
+      The wsdl_content is expected to be a raw byte string and not a unicode
+    string. This simple structure suits us fine here because XML content holds
+    its own embedded encoding identification ('utf-8' if not specified
+    explicitly).
 
       Stores the content directly inside the suds library internal document
     store under a hard-coded id to avoid having to load the data from a
@@ -44,6 +49,7 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
     # have per-client instead of global configuration & allows us to support
     # other cache types but certainly not as short as the current
     # implementation.
+    assert wsdl_content.__class__ is suds.byte_str_class
     testFileId = "whatchamacallit"
     suds.store.DocumentStore.store[testFileId] = wsdl_content
     kwargs["cache"] = None

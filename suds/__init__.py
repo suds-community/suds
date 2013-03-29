@@ -34,19 +34,19 @@ from version import __build__, __version__
 
 class MethodNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, "Method not found: '%s'" % name)
+        Exception.__init__(self, u"Method not found: '%s'" % name)
 
 class PortNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, "Port not found: '%s'" % name)
+        Exception.__init__(self, u"Port not found: '%s'" % name)
 
 class ServiceNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, "Service not found: '%s'" % name)
+        Exception.__init__(self, u"Service not found: '%s'" % name)
 
 class TypeNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, "Type not found: '%s'" % tostr(name))
+        Exception.__init__(self, u"Type not found: '%s'" % tostr(name))
 
 class BuildError(Exception):
     msg = """
@@ -71,8 +71,8 @@ class SoapHeadersNotPermitted(Exception):
 class WebFault(Exception):
     def __init__(self, fault, document):
         if hasattr(fault, 'faultstring'):
-            Exception.__init__(self, smart_str("Server raised fault: '%s'" %
-                fault.faultstring))
+            Exception.__init__(self, u"Server raised fault: '%s'" %
+                fault.faultstring)
         self.fault = fault
         self.document = document
 
@@ -154,6 +154,11 @@ def tostr(object, encoding=None):
 # Python 3 compatibility
 #
 
+if sys.version_info < (3, 0):
+    from cStringIO import StringIO as BytesIO
+else:
+    from io import BytesIO
+
 # Idea from 'http://lucumr.pocoo.org/2011/1/22/forwards-compatible-python'.
 class UnicodeMixin(object):
     if sys.version_info >= (3, 0):
@@ -162,27 +167,22 @@ class UnicodeMixin(object):
     else:
         __str__ = lambda x: unicode(x).encode('utf-8')
 
-def smart_str(s, encoding='utf-8', errors='strict'):
+# Used for literals as well because Python versions prior to 2.6 did not
+# support byte literals.
+def byte_str(s='', encoding='utf-8', errors='strict'):
     """
     Returns a bytestring version of 's', encoded as specified in 'encoding'.
 
-    Taken from django.
+    Accepts str & unicode objects, interpreting non-unicode strings as
+    utf-8 encoded byte strings.
+
     """
-    if not isinstance(s, basestring):
-        try:
-            return str(s)
-        except UnicodeEncodeError:
-            if isinstance(s, Exception):
-                # An Exception subclass containing non-ASCII data that does not
-                # know how to print itself properly. We should not raise a
-                # further exception.
-                return ' '.join([smart_str(arg, encoding, errors) for arg in s]
-                    )
-            return unicode(s).encode(encoding, errors)
+    assert isinstance(s, basestring)
     if isinstance(s, unicode):
         return s.encode(encoding, errors)
-    if s and encoding != 'utf-8':
-        return s.decode('utf-8', errors).encode(encoding, errors)
+    input_encoding = 'utf-8'
+    if s and encoding != input_encoding:
+        return s.decode(input_encoding, errors).encode(encoding, errors)
     return s
 
 # Compatibility wrappers to convert between bytes and strings.
@@ -214,3 +214,10 @@ if sys.version_info >= (3, 0):
     str_to_utf8_in_py2 = lambda str: str
 else:
     str_to_utf8_in_py2 = lambda str: str.encode('utf-8')
+
+# Class used to represent a byte string. Useful for asserting that correct
+# string types are being passed around where needed.
+if sys.version_info >= (3, 0):
+    byte_str_class = bytes
+else:
+    byte_str_class = str

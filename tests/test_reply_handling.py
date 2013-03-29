@@ -46,7 +46,8 @@ import xml.sax
 
 def test_ACCEPTED_and_NO_CONTENT_status_reported_as_None_with_faults():
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
-    f = lambda r, s : client.service.f(__inject={"reply":r, "status":s})
+    f = lambda r, s : client.service.f(__inject={"reply":suds.byte_str(r),
+        "status":s})
     assert f("", None) is None
     pytest.raises(Exception, f, "", httplib.INTERNAL_SERVER_ERROR)
     assert f("", httplib.ACCEPTED) is None
@@ -57,7 +58,8 @@ def test_ACCEPTED_and_NO_CONTENT_status_reported_as_None_with_faults():
 
 def test_ACCEPTED_and_NO_CONTENT_status_reported_as_None_without_faults():
     client = tests.client_from_wsdl(_wsdl__simple, faults=False)
-    f = lambda r, s : client.service.f(__inject={"reply":r, "status":s})
+    f = lambda r, s : client.service.f(__inject={"reply":suds.byte_str(r),
+        "status":s})
     assert f("", None) is not None
     assert f("", httplib.INTERNAL_SERVER_ERROR) is not None
     assert f("", httplib.ACCEPTED) is None
@@ -70,13 +72,13 @@ def test_badly_formed_reply_XML():
     for faults in (True, False):
         client = tests.client_from_wsdl(_wsdl__simple, faults=faults)
         pytest.raises(xml.sax.SAXParseException, client.service.f,
-            __inject={"reply":"bad food"})
+            __inject={"reply":suds.byte_str("bad food")})
 
 
 def test_empty_reply():
     client = tests.client_from_wsdl(_wsdl__simple, faults=False)
     f = lambda status=None, description=None : client.service.f(__inject=dict(
-        reply="", status=status, description=description))
+        reply=suds.byte_str(), status=status, description=description))
     status, reason = f()
     assert status == httplib.OK
     assert reason is None
@@ -95,8 +97,8 @@ def test_empty_reply():
 
 
 def test_fault_reply_with_unicode_faultstring():
-    unicode_string = "€ Jurko Gospodnetić ČĆŽŠĐčćžšđ"
-    fault_xml = """\
+    unicode_string = u"€ Jurko Gospodnetić ČĆŽŠĐčćžšđ"
+    fault_xml = suds.byte_str(u"""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
@@ -106,7 +108,7 @@ def test_fault_reply_with_unicode_faultstring():
     </env:Fault>
   </env:Body>
 </env:Envelope>
-""" % unicode_string
+""" % unicode_string)
 
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
     try:
@@ -126,7 +128,7 @@ def test_fault_reply_with_unicode_faultstring():
 
 
 def test_invalid_fault_namespace():
-    fault_xml = """\
+    fault_xml = suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:p="x">
   <env:Body>
@@ -139,7 +141,7 @@ def test_invalid_fault_namespace():
     </p:Fault>
   </env:Body>
 </env:Envelope>
-"""
+""")
     client = tests.client_from_wsdl(_wsdl__simple, faults=False)
     try:
         client.service.f(__inject=dict(reply=fault_xml, status=httplib.OK))
@@ -264,7 +266,7 @@ def _test_fault(fault, has_detail):
     assert not has_detail or _attibutes(fault.detail) == set(("errorcode",))
 
 
-_fault_reply__with_detail = """\
+_fault_reply__with_detail = suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
@@ -277,9 +279,9 @@ _fault_reply__with_detail = """\
     </env:Fault>
   </env:Body>
 </env:Envelope>
-"""
+""")
 
-_fault_reply__without_detail = """\
+_fault_reply__without_detail = suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
@@ -289,9 +291,9 @@ _fault_reply__without_detail = """\
     </env:Fault>
   </env:Body>
 </env:Envelope>
-"""
+""")
 
-_wsdl__simple = """\
+_wsdl__simple = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -347,4 +349,4 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-"""
+""")
