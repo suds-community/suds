@@ -19,13 +19,18 @@ GENERAL DEVELOPMENT NOTES:
       well.
         * Compatibility notes.
             * 'with' statement first introduced in Python 2.5.
+            * bytes literals introduced in Python 2.6.
 
     * Handling Python 3 related patches applicable to the original suds
       development project.
-        * Should be first be added to the 'Python 3 support' branch and then
-          merged back to the trunk from there.
-        * Should be kept synchronized with the ones found in the Mercurial patch
-          queue hosted at 'https://bitbucket.org/bernh/suds-python-3-patches'.
+        * Originally synchronized with the Mercurial patch queue hosted at
+          'https://bitbucket.org/bernh/suds-python-3-patches'.
+        * Used to be synchronized with the originating queue but that
+          synchronization is no longer being maintained as it became more and
+          more difficult as our work on suds progressed and both the original
+          sude project and this patch queue seem dead otherwise.
+            * Used to be committed first to the 'Python 3 support' branch and
+              then merged back to the trunk from there.
 
     * External documentation.
         * SOAP standards.
