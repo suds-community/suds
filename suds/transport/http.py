@@ -121,8 +121,7 @@ class HttpTransport(Transport):
         if (sys.version_info < (3, 0)) and (self.u2ver() < 2.6):
             socket.setdefaulttimeout(tm)
             return url.open(u2request)
-        else:
-            return url.open(u2request, timeout=tm)
+        return url.open(u2request, timeout=tm)
 
     def u2opener(self):
         """
@@ -132,8 +131,7 @@ class HttpTransport(Transport):
         """
         if self.urlopener is None:
             return urllib2.build_opener(*self.u2handlers())
-        else:
-            return self.urlopener
+        return self.urlopener
 
     def u2handlers(self):
         """
@@ -153,8 +151,7 @@ class HttpTransport(Transport):
         """
         try:
             part = urllib2.__version__.split('.', 1)
-            n = float('.'.join(part))
-            return n
+            return float('.'.join(part))
         except Exception, e:
             log.exception(e)
             return 0
@@ -169,10 +166,10 @@ class HttpTransport(Transport):
 
 class HttpAuthenticated(HttpTransport):
     """
-    Provides basic http authentication for servers that don't follow
-    the specified challenge / response model.  This implementation
-    appends the I{Authorization} http header with base64 encoded
-    credentials on every http request.
+    Provides basic HTTP authentication for servers that do not follow the
+    specified challenge/response model. This implementation appends the
+    I{Authorization} HTTP header with base64 encoded credentials on every HTTP
+    request.
     """
 
     def open(self, request):

@@ -56,8 +56,8 @@ def test_converting_client_to_string_must_not_raise_an_exception():
 
 
 def test_converting_metadata_to_string():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -119,8 +119,8 @@ def test_empty_valid_wsdl():
 
 
 def test_enumeration_type_string_should_contain_its_value():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -172,8 +172,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -263,8 +263,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_choice():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -343,8 +343,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_choice_in_a_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -448,8 +448,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_sequence_in_a_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -557,8 +557,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_sequence_in_a_choice():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -628,7 +628,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     param = client.factory.create("Choice.sequence")
     param.e2 = "Wackadoodle"
     request = _construct_SOAP_request(client, 'f', sequence=param)
-    assert request.str() == """<?xml version="1.0" encoding="UTF-8"?>
+    assert request.str() == """\
+<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
@@ -644,8 +645,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_sequence_in_a_choice_in_a_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -712,7 +713,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct a SOAP request containing our input parameters.
     request = _construct_SOAP_request(client, 'f', param)
-    assert request.str() == """<?xml version="1.0" encoding="UTF-8"?>
+    assert request.str() == """\
+<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
@@ -730,8 +732,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_strings():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -814,8 +816,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_enumeration():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -878,8 +880,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_sequence_in_a_global_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -967,8 +969,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_string_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1052,8 +1054,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_local_sequence_in_a_global_sequence():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1143,8 +1145,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__0():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1190,8 +1192,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__1():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1239,8 +1241,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__3():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1290,8 +1292,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_types():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1327,8 +1329,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_parameter_referencing_missing_element():
     try:
-        tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+        tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1371,8 +1373,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_occurrences():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1460,8 +1462,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1541,8 +1543,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__nobuiltin_caching():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1589,8 +1591,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__invalid_type():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1618,8 +1620,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__references():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1694,8 +1696,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_object_child_access_by_index():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1763,8 +1765,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_simple_wsdl():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"
@@ -1876,8 +1878,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_wsdl_schema_content():
-    client = tests.client_from_wsdl(
-"""<?xml version='1.0' encoding='UTF-8'?>
+    client = tests.client_from_wsdl("""\
+<?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
 xmlns:ns="my-namespace"

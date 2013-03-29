@@ -17,8 +17,8 @@
 import suds.client
 import suds.store
 
-import sys
 import logging
+import sys
 
 
 def client_from_wsdl(wsdl_content, *args, **kwargs):

@@ -15,17 +15,18 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Suds is a lightweight SOAP Python client that provides a
-service proxy for Web Services.
+Suds is a lightweight SOAP Python client providing a Web Service proxy.
 """
 
 import sys
+
 
 #
 # Project properties
 #
 
 from version import __build__, __version__
+
 
 #
 # Exceptions
@@ -49,10 +50,10 @@ class TypeNotFound(Exception):
 
 class BuildError(Exception):
     msg = """
-        An error occured while building an instance of (%s).  As a result
-        the object you requested could not be constructed.  It is recommended
-        that you construct the type manually using a Suds object.
-        Please open a ticket with a description of this error.
+        An error occured while building an instance of (%s). As a result the
+        object you requested could not be constructed. It is recommended that
+        you construct the type manually using a Suds object. Please open a
+        ticket with a description of this error.
         Reason: %s
         """
     def __init__(self, name, exception):
@@ -60,9 +61,9 @@ class BuildError(Exception):
 
 class SoapHeadersNotPermitted(Exception):
     msg = """
-        Method (%s) was invoked with SOAP headers.  The WSDL does not
-        define SOAP headers for this method.  Retry without the soapheaders
-        keyword argument.
+        Method (%s) was invoked with SOAP headers. The WSDL does not define
+        SOAP headers for this method. Retry without the soapheaders keyword
+        argument.
         """
     def __init__(self, name):
         Exception.__init__(self, self.msg % name)
@@ -75,6 +76,7 @@ class WebFault(Exception):
         self.fault = fault
         self.document = document
 
+
 #
 # Logging
 #
@@ -85,32 +87,20 @@ class Repr:
     def __str__(self):
         return repr(self.x)
 
+
 #
 # Utility
 #
 
-def smart_str(s, encoding='utf-8', errors='strict'):
+class null:
     """
-    Returns a bytestring version of 's', encoded as specified in 'encoding'.
+    The I{null} object.
+    Used to pass NULL for optional XML nodes.
+    """
+    pass
 
-    Taken from django.
-    """
-    if not isinstance(s, basestring):
-        try:
-            return str(s)
-        except UnicodeEncodeError:
-            if isinstance(s, Exception):
-                # An Exception subclass containing non-ASCII data that does not
-                # know how to print itself properly. We should not raise a
-                # further exception.
-                return ' '.join([smart_str(arg, encoding, errors) for arg in s]
-                    )
-            return unicode(s).encode(encoding, errors)
-    if isinstance(s, unicode):
-        return s.encode(encoding, errors)
-    if s and encoding != 'utf-8':
-        return s.decode('utf-8', errors).encode(encoding, errors)
-    return s
+def objid(obj):
+    return obj.__class__.__name__ + ':' + hex(id(obj))
 
 def tostr(object, encoding=None):
     """ get a unicode safe string representation of an object """
@@ -159,16 +149,6 @@ def tostr(object, encoding=None):
     except:
         return str(object)
 
-class null:
-    """
-    The I{null} object.
-    Used to pass NULL for optional XML nodes.
-    """
-    pass
-
-def objid(obj):
-    return obj.__class__.__name__\
-        +':'+hex(id(obj))
 
 #
 # Python 3 compatibility
@@ -181,6 +161,29 @@ class UnicodeMixin(object):
         __str__ = lambda x: x.__unicode__()
     else:
         __str__ = lambda x: unicode(x).encode('utf-8')
+
+def smart_str(s, encoding='utf-8', errors='strict'):
+    """
+    Returns a bytestring version of 's', encoded as specified in 'encoding'.
+
+    Taken from django.
+    """
+    if not isinstance(s, basestring):
+        try:
+            return str(s)
+        except UnicodeEncodeError:
+            if isinstance(s, Exception):
+                # An Exception subclass containing non-ASCII data that does not
+                # know how to print itself properly. We should not raise a
+                # further exception.
+                return ' '.join([smart_str(arg, encoding, errors) for arg in s]
+                    )
+            return unicode(s).encode(encoding, errors)
+    if isinstance(s, unicode):
+        return s.encode(encoding, errors)
+    if s and encoding != 'utf-8':
+        return s.decode('utf-8', errors).encode(encoding, errors)
+    return s
 
 # Compatibility wrappers to convert between bytes and strings.
 if sys.version_info >= (3, 0):
@@ -211,6 +214,3 @@ if sys.version_info >= (3, 0):
     str_to_utf8_in_py2 = lambda str: str
 else:
     str_to_utf8_in_py2 = lambda str: str.encode('utf-8')
-
-
-import client

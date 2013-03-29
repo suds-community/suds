@@ -29,9 +29,11 @@ log = getLogger(__name__)
 #
 # Soap section 5 encoding schema.
 #
-encoding = \
-"""<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://schemas.xmlsoap.org/soap/encoding/">
+encoding = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:tns="http://schemas.xmlsoap.org/soap/encoding/"
+    targetNamespace="http://schemas.xmlsoap.org/soap/encoding/">
 
  <xs:attribute name="root">
    <xs:annotation>
@@ -147,8 +149,6 @@ encoding = \
     </xs:simpleContent>
   </xs:complexType>
 
-
-
   <xs:element name="NOTATION" type="tns:NOTATION"/>
   <xs:complexType name="NOTATION">
     <xs:simpleContent>
@@ -157,7 +157,6 @@ encoding = \
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-
 
   <xs:element name="time" type="tns:time"/>
   <xs:complexType name="time">
@@ -536,8 +535,7 @@ encoding = \
 
 class DocumentStore:
     """
-    The I{suds} document store provides a local repository
-    for xml documnts.
+    The I{suds} document store provides a local repository for XML documnts.
     @cvar protocol: The URL protocol for the store.
     @type protocol: str
     @cvar store: The mapping of URL location to documents.
@@ -546,9 +544,7 @@ class DocumentStore:
 
     protocol = 'suds'
 
-    store = {
-        'schemas.xmlsoap.org/soap/encoding/' : encoding
-    }
+    store = {'schemas.xmlsoap.org/soap/encoding/':encoding}
 
     def open(self, url):
         """
@@ -561,8 +557,7 @@ class DocumentStore:
         protocol, location = self.split(url)
         if protocol == self.protocol:
             return self.find(location)
-        else:
-            return None
+        return
 
     def find(self, location):
         """
@@ -576,8 +571,7 @@ class DocumentStore:
             content = self.store[location]
             return StringIO(content)
         except:
-            reason = 'location "%s" not in document store' % location
-            raise Exception, reason
+            raise Exception, 'location "%s" not in document store' % location
 
     def split(self, url):
         """
@@ -590,5 +584,4 @@ class DocumentStore:
         parts = url.split('://', 1)
         if len(parts) == 2:
             return parts
-        else:
-            return (None, url)
+        return None, url
