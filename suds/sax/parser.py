@@ -26,15 +26,16 @@ containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
 
 """
 
-import sys
-from logging import getLogger
-import suds.metrics
+import suds
 from suds import *
 from suds.sax import *
+from suds.sax.attribute import Attribute
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.text import Text
-from suds.sax.attribute import Attribute
+
+from logging import getLogger
+import sys
 from xml.sax import make_parser, InputSource, ContentHandler
 from xml.sax.handler import feature_external_ges
 
@@ -86,8 +87,7 @@ class Handler(ContentHandler):
         del current.charbuffer
         if len(current):
             current.trim()
-        currentqname = current.qname()
-        if name == currentqname:
+        if name == current.qname():
             self.pop()
         else:
             raise Exception('malformed document')
@@ -127,18 +127,18 @@ class Parser:
         @param string: Parse string XML.
         @type string: str
         """
-        timer = metrics.Timer()
+        timer = suds.metrics.Timer()
         timer.start()
         sax, handler = self.saxparser()
         if file is not None:
             sax.parse(file)
             timer.stop()
-            metrics.log.debug('sax (%s) duration: %s', file, timer)
+            suds.metrics.log.debug('sax (%s) duration: %s', file, timer)
             return handler.nodes[0]
         if string is not None:
             source = InputSource(None)
             source.setByteStream(BytesIO(suds.str2bytes(string)))
             sax.parse(source)
             timer.stop()
-            metrics.log.debug('%s\nsax duration: %s', string, timer)
+            suds.metrics.log.debug('%s\nsax duration: %s', string, timer)
             return handler.nodes[0]

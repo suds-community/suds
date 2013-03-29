@@ -44,14 +44,6 @@ import httplib
 import xml.sax
 
 
-def test_badly_formed_reply_XML():
-    for faults in (True, False):
-        client = tests.client_from_wsdl(_wsdl__simple, faults=faults)
-        f = client.service.f
-        pytest.raises(xml.sax.SAXParseException, f,
-            __inject={"reply":"bad food"})
-
-
 def test_ACCEPTED_and_NO_CONTENT_status_reported_as_None_with_faults():
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
     f = lambda r, s : client.service.f(__inject={"reply":r, "status":s})
@@ -72,6 +64,13 @@ def test_ACCEPTED_and_NO_CONTENT_status_reported_as_None_without_faults():
     assert f("", httplib.NO_CONTENT) is None
     assert f("bla-bla", httplib.ACCEPTED) is None
     assert f("bla-bla", httplib.NO_CONTENT) is None
+
+
+def test_badly_formed_reply_XML():
+    for faults in (True, False):
+        client = tests.client_from_wsdl(_wsdl__simple, faults=faults)
+        pytest.raises(xml.sax.SAXParseException, client.service.f,
+            __inject={"reply":"bad food"})
 
 
 def test_empty_reply():
@@ -108,6 +107,7 @@ def test_fault_reply_with_unicode_faultstring():
   </env:Body>
 </env:Envelope>
 """ % unicode_string
+
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
     try:
         client.service.f(__inject=dict(reply=fault_xml,

@@ -63,10 +63,9 @@ class DocumentReader(Reader):
     def open(self, url):
         """
         Open an XML document at the specified I{URL}.
-        First, the document attempted to be retrieved from
-        the I{object cache}.  If not found, it is downloaded and
-        parsed using the SAX parser.  The result is added to the
-        cache for the next open().
+        First, the document attempted to be retrieved from the I{object cache}.
+        If not found, it is downloaded and parsed using the SAX parser. The
+        result is added to the cache for the next open().
         @param url: A document URL.
         @type url: str.
         @return: The specified XML document.

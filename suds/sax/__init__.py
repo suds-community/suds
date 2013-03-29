@@ -15,17 +15,16 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-The sax module contains a collection of classes that provide a
-(D)ocument (O)bject (M)odel representation of an XML document.
-The goal is to provide an easy, intuative interface for managing XML
-documents.  Although, the term, DOM, is used above, this model is
-B{far} better.
+The sax module contains a collection of classes that provide a (D)ocument
+(O)bject (M)odel representation of an XML document. The goal is to provide an
+easy, intuative interface for managing XML documents. Although, the term, DOM,
+is used above, this model is B{far} better.
 
-XML namespaces in suds are represented using a (2) element tuple
-containing the prefix and the URI.  Eg: I{('tns', 'http://myns')}
+XML namespaces in suds are represented using a (2) element tuple containing the
+prefix and the URI, e.g. I{('tns', 'http://myns')}
 
-@var encoder: A I{pluggable} XML special character processor used to
-    encode/decode strings.
+@var encoder: A I{pluggable} XML special character processor used to encode/
+    decode strings.
 @type encoder: L{Encoder}
 """
 
@@ -39,18 +38,16 @@ encoder = Encoder()
 
 def splitPrefix(name):
     """
-    Split the name into a tuple (I{prefix}, I{name}).  The first element in
-    the tuple is I{None} when the name does't have a prefix.
+    Split the name into a tuple (I{prefix}, I{name}). The first element in the
+    tuple is I{None} when the name does not have a prefix.
     @param name: A node name containing an optional prefix.
     @type name: basestring
     @return: A tuple containing the (2) parts of I{name}
     @rtype: (I{prefix}, I{name})
     """
-    if isinstance(name, basestring) \
-        and ':' in name:
-            return tuple(name.split(':', 1))
-    else:
-        return (None, name)
+    if isinstance(name, basestring) and ':' in name:
+        return tuple(name.split(':', 1))
+    return None, name
 
 
 class Namespace:
@@ -66,11 +63,11 @@ class Namespace:
 
     @classmethod
     def create(cls, p=None, u=None):
-        return (p, u)
+        return p, u
 
     @classmethod
     def none(cls, ns):
-        return ( ns == cls.default )
+        return ns == cls.default
 
     @classmethod
     def xsd(cls, ns):
@@ -90,7 +87,7 @@ class Namespace:
 
     @classmethod
     def xs(cls, ns):
-        return ( cls.xsd(ns) or cls.xsi(ns) )
+        return cls.xsd(ns) or cls.xsi(ns)
 
     @classmethod
     def w3(cls, ns):
