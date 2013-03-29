@@ -753,11 +753,13 @@ class SimClient(SoapClient):
         simulation = kwargs[self.injkey]
         msg = simulation.get('msg')
         if msg is not None:
+            assert msg.__class__ is suds.byte_str_class
             return self.send(_parse(msg))
         msg = self.method.binding.input.get_message(self.method, args, kwargs)
         log.debug('inject (simulated) send message:\n%s', msg)
         reply = simulation.get('reply')
         if reply is not None:
+            assert reply.__class__ is suds.byte_str_class
             status = simulation.get('status')
             description=simulation.get('description')
             if description is None:

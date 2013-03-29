@@ -50,13 +50,13 @@ import xml.sax
 
 
 def test_converting_client_to_string_must_not_raise_an_exception():
-    client = tests.client_from_wsdl(
-        "<?xml version='1.0' encoding='UTF-8'?><root />")
+    client = tests.client_from_wsdl(suds.byte_str(
+        "<?xml version='1.0' encoding='UTF-8'?><root />"))
     str(client)
 
 
 def test_converting_metadata_to_string():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -88,7 +88,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
     # Metadata with empty content.
     metadata = client.wsdl.__metadata__
     assert len(metadata) == 0
@@ -104,7 +104,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_empty_invalid_wsdl():
     try:
-        tests.client_from_wsdl("")
+        tests.client_from_wsdl(suds.byte_str(""))
     except xml.sax.SAXParseException, e:
         assert e.getMessage() == "no element found"
     else:
@@ -112,14 +112,14 @@ def test_empty_invalid_wsdl():
 
 
 def test_empty_valid_wsdl():
-    client = tests.client_from_wsdl(
-        "<?xml version='1.0' encoding='UTF-8'?><root />")
+    client = tests.client_from_wsdl(suds.byte_str(
+        "<?xml version='1.0' encoding='UTF-8'?><root />"))
     assert not client.wsdl.services, "No service definitions must be read "  \
         "from an empty WSDL."
 
 
 def test_enumeration_type_string_should_contain_its_value():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -151,7 +151,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
     enumeration_data = client.wsdl.schema.types["AAA", "my-namespace"]
     # Legend:
     #   eX - enumeration element.
@@ -172,7 +172,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -224,7 +224,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     assert len(service.types) == 1
@@ -263,7 +263,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_choice():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -307,7 +307,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     assert not service.types
@@ -343,7 +343,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_choice_in_a_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -396,7 +396,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     assert not service.types
@@ -448,7 +448,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_local_sequence_in_a_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -501,7 +501,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     assert not service.types
@@ -557,7 +557,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_sequence_in_a_choice():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -610,7 +610,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     # Input #1.
     request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
@@ -645,7 +645,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_sequence_in_a_choice_in_a_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -704,7 +704,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     # Construct input parameters.
     param = client.factory.create("External.choice")
@@ -732,7 +732,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_function_parameters_strings():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -777,7 +777,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     assert not service.types
@@ -816,7 +816,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_enumeration():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -848,7 +848,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     assert len(client.sd) == 1
     service = client.sd[0]
@@ -880,7 +880,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_sequence_in_a_global_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -919,7 +919,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
 
@@ -969,7 +969,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_global_string_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1001,7 +1001,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
 
@@ -1054,7 +1054,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_local_sequence_in_a_global_sequence():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1099,7 +1099,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     assert len(service.types) == 1
@@ -1145,7 +1145,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__0():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1186,13 +1186,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
     s = str(client)
     assert " f()\n" in s
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__1():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1235,13 +1235,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
     s = str(client)
     assert " f(xs:string x1)\n" in s
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__3():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1286,13 +1286,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
     s = str(client)
     assert " f(xs:string x1, xs:string x2, xs:string x3)\n" in s
 
 
 def test_no_types():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1316,7 +1316,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     assert len(client.sd) == 1
     service = client.sd[0]
@@ -1329,7 +1329,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_parameter_referencing_missing_element():
     try:
-        tests.client_from_wsdl("""\
+        tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1365,7 +1365,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
     except suds.TypeNotFound, e:
         assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
     else:
@@ -1373,7 +1373,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_occurrences():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1411,7 +1411,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
-""")
+"""))
     schema = client.wsdl.schema
 
     def a(schema, name, min=None, max=None):
@@ -1462,7 +1462,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1500,7 +1500,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
-""")
+"""))
     schema = client.wsdl.schema
 
     # Collect references to the test schema type nodes.
@@ -1543,7 +1543,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__nobuiltin_caching():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1561,7 +1561,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
-""")
+"""))
     schema = client.wsdl.schema
 
     # Collect references to the test schema element nodes.
@@ -1591,7 +1591,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__invalid_type():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1608,7 +1608,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
-""")
+"""))
     schema = client.wsdl.schema
     assert len(schema.elements) == 3
     elemento1 = schema.elements["Elemento1", "my-namespace"]
@@ -1620,7 +1620,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_node_resolve__references():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1651,7 +1651,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
-""")
+"""))
     schema = client.wsdl.schema
 
     # Collect references to the test schema element & type nodes.
@@ -1696,7 +1696,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_schema_object_child_access_by_index():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1728,7 +1728,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     service = client.sd[0]
     aType = service.types[0][0]
@@ -1765,7 +1765,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_simple_wsdl():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1820,7 +1820,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+"""))
 
     # Target namespace.
     assert client.wsdl.tns[0] == "ns"
@@ -1878,7 +1878,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_wsdl_schema_content():
-    client = tests.client_from_wsdl("""\
+    client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -1920,7 +1920,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
-""")
+"""))
 
     # Elements.
     assert len(client.wsdl.schema.elements) == 1
