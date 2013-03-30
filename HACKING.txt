@@ -28,8 +28,16 @@ GENERAL DEVELOPMENT NOTES:
       project states aiming for Python 2.4 compatibility we should do so as
       well.
         * Compatibility notes.
-            * 'with' statement first introduced in Python 2.5.
-            * bytes literals introduced in Python 2.6.
+            * Features introduced in Python 2.5.
+                * 'any' & 'all' functions.
+                * 'with' statement.
+            * Features introduced in Python 2.6.
+                * 'bytes' type.
+                * Byte literals, e.g. b"quack".
+                * String format() method.
+            * Features introduced in Python 2.7.
+                * Dictionary & set comprehensions.
+                * Set literals.
 
     * Handling Python 3 related patches applicable to the original suds
       development project.
