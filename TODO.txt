@@ -325,7 +325,7 @@ PRIORETIZED:
 (+)     * Some of the uses related to processing the SOAP Fault error reporting
 (+)       element seem to be 'fake', needed only because of a a bit messy
 (+)       design. Planned to be fixed soon.
-          
+
 (28.03.2013.)
 
 (+) * (Jurko) Add web service reply processing related unit tests.
@@ -400,8 +400,24 @@ PRIORETIZED:
 (+)     * Remove str2bytes() & bytes2str().
 (+) * (Jurko) Remove the str_to_utf8_in_py2() Python 2/3 unicode encoding
 (+)   compatibility support function as it no longer seems to be needed.
+(+) * (Jurko) Add tests for web service operation input & output element types.
+
+(30.03.2013.)
+
+(+) * (Jurko) Improve suds tests.
+
+(31.03.2013.)
+
+(+) * (Jurko) Add tests for wrapped suds operation input & output data.
+
+(01.04.2013.)
+
+    * (Jurko) Add tests for wrapped suds operation output data.
 
     * (Jurko) Merge patches sent in by Juraj Ivanèiæ from PKE sistemi.
+        * Add tests for disabled and/or explicitly enabled wrapped suds
+          operation input & output data.
+        * Add code for disabling suds library wrapped parameter support.
 
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Update release notes.
@@ -412,13 +428,40 @@ PRIORETIZED:
                 * Project site.
                 * PyPI.
 
+    * Fix failing tests.
+        * Choice support implementation is a bit smelly.
 
 NON PRIORETIZED:
 =================================================
 
+    * Optionally make suds check that the input parameters passed to its web
+      service proxy operations actually match their respective WSDL definitions.
+        * Current suds behaviour.
+            * Extra parameters are ignored.
+            * Parameters of invalid type are simply added into the generated
+              SOAP request as string and left up to the web service
+              implementation to deal with report as an error if the constructed
+              SOAP request turns out to be invalid.
+        * Having a local client-side check could make catching client side
+          programming bugs easier.
+
+    * Clean up & correct the choice support implementation.
+        * Choice parameters seem to be supported only for document/literal style
+          input parameters only.
+            * Add tests for this.
+            * Fix.
+        * See the currently disabled
+          'xxxtest_choice_parameter_implementation_inconsistencies' unit test
+          demonstrating a problem with the current implementation.
+
     * SoapClient 'location' cleanup.
         * URL quoting, especially if specified externally by the called instead
           of having been read from a valid WSDL schema.
+
+    * See how input parameter element for a document/literal web service
+      operation style gets handled when that element has 2 occurrences.
+        * See how this affects suds library's automated input data unwrapping.
+        * See how this sort of data is supposed to be entered anyway.
 
     * FileCache class fixes.
         * Remove incorrectly created cache files, e.g. if it gets created but
@@ -472,7 +515,7 @@ NON PRIORETIZED:
               authentication handler for urllib.
             * Testing this will require implementing a proxy server requiring
               NTLM authentication and a web service or at least a web service
-              requiring NTML authentication.
+              requiring NTLM authentication.
         * Using pylint.
 
     * Implement an urllib connection handler allowing connecting using HTTPS
@@ -504,3 +547,9 @@ NON PRIORETIZED:
         * Typo corrections for the original project web site.
             * 'docuemnt' --> 'document'.
             * 'becuase' --> 'because'.
+
+    * See whether standard and/or suds supports specifying message part
+      parameter element directly from an external schema.
+        * For example, 'integer' or 'string' elements defined in the
+          'http://schemas.xmlsoap.org/soap/encoding/' namespace (stored
+          internally by suds in the store.py module).
