@@ -125,5 +125,5 @@ class Options(Skin):
             Definition('cachingpolicy', int, 0),
             Definition('plugins', (list, tuple), []),
             Definition('nosend', bool, False),
-        ]
+            Definition('unwrap', bool, True)]
         Skin.__init__(self, domain, definitions, kwargs)

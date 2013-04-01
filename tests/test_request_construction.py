@@ -44,6 +44,30 @@ import suds
 import tests
 
 
+def test_disabling_automated_simple_interface_unwrapping():
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Elemento" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"), nosend=True, prettyxml=True, unwrap=False)
+    assert not _isInputWrapped(client, "f")
+    wrapper = client.factory.create("Wrapper")
+    wrapper.Elemento = "Wonderwall"
+    assert client.service.f(Wrapper=wrapper).envelope == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper>
+         <ns0:Elemento>Wonderwall</ns0:Elemento>
+      </ns0:Wrapper>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+
+
 def test_extra_parameters():
     """
     Extra input parameters should get silently ignored and not added to the

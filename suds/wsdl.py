@@ -251,6 +251,8 @@ class Definitions(WObject):
             for op in b.operations.values():
                 for body in (op.soap.input.body, op.soap.output.body):
                     body.wrapped = False
+                    if not self.options.unwrap:
+                        continue
                     if len(body.parts) != 1:
                         continue
                     for p in body.parts:

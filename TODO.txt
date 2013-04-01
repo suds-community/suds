@@ -413,11 +413,10 @@ PRIORETIZED:
 (01.04.2013.)
 
 (+) * (Jurko) Add tests for wrapped suds operation output data.
-
-    * (Jurko) Merge patches sent in by Juraj Ivanèiæ from PKE sistemi.
-        * Add tests for disabled and/or explicitly enabled wrapped suds
-          operation input & output data.
-        * Add code for disabling suds library wrapped parameter support.
+(+) * (Jurko) Merge patches sent in by Juraj Ivanèiæ from PKE sistemi.
+(+)     * Add tests for disabled wrapped suds operation input & output data
+(+)       support.
+(+)     * Add code for disabling suds library wrapped parameter support.
 
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Update release notes.
@@ -428,8 +427,6 @@ PRIORETIZED:
                 * Project site.
                 * PyPI.
 
-    * Fix failing tests.
-        * Choice support implementation is a bit smelly.
 
 NON PRIORETIZED:
 =================================================
