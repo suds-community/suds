@@ -158,6 +158,32 @@ def test_invalid_fault_namespace():
         assert reason == "trla baba lan"
 
 
+def test_missing_wrapper_response():
+    """
+    Suds library's automatic structure unwrapping should not be applied to
+    interpreting received SOAP Response XML.
+
+    """
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="fResponse" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"))
+    assert _isOutputWrapped(client, "f")
+
+    response_with_missing_wrapper = client.service.f(__inject=dict(
+        reply=suds.byte_str("""<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <fResponse xmlns="my-namespace">Anything</fResponse>
+  </env:Body>
+</env:Envelope>""")))
+    assert response_with_missing_wrapper is None
+
+
 def test_reply_error_with_detail_with_fault():
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
 
@@ -245,11 +271,104 @@ def test_reply_error_without_detail_without_fault():
     assert fault == "kung-fu-fui"
 
 
+def test_simple_bare_and_wrapped_output():
+    # Prepare web service proxies.
+    client_bare = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="fResponse" type="xsd:string" />""", "fResponse"))
+    client_wrapped = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="fResponse" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"))
+
+    #   Make sure suds library inteprets our WSDL definitions as wrapped or
+    # bare output interfaces as expected.
+    assert not _isOutputWrapped(client_bare, "f")
+    assert _isOutputWrapped(client_wrapped, "f")
+
+    #   Both bare & wrapped single parameter output web service operation
+    # results get presented the same way even though the wrapped one actually
+    # has an extra wrapper element around its received output data.
+    data = "The meaning of life."
+    get_response = lambda client, x : client.service.f(__inject=dict(
+        reply=suds.byte_str(x)))
+
+    response_bare = get_response(client_bare, """<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <fResponse xmlns="my-namespace">%s</fResponse>
+  </env:Body>
+</env:Envelope>""" % data)
+    assert response_bare.__class__ is suds.sax.text.Text
+    assert response_bare == data
+
+    response_wrapped = get_response(client_wrapped, """<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <Wrapper xmlns="my-namespace">
+      <fResponse>%s</fResponse>
+    </Wrapper>
+  </env:Body>
+</env:Envelope>""" % data)
+    assert response_wrapped.__class__ is suds.sax.text.Text
+    assert response_wrapped == data
+
+
+def test_wrapped_sequence_output():
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="result1" type="xsd:string" />
+            <xsd:element name="result2" type="xsd:string" />
+            <xsd:element name="result3" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"))
+    assert _isOutputWrapped(client, "f")
+
+    response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <Wrapper xmlns="my-namespace">
+        <result1>Uno</result1>
+        <result2>Due</result2>
+        <result3>Tre</result3>
+    </Wrapper>
+  </env:Body>
+</env:Envelope>""")))
+
+    #   Composite replies always get unmarshalled as a dynamically constructed
+    # class named 'reply'.
+    assert len(response.__class__.__bases__) == 1
+    assert response.__class__.__name__ == "reply"
+    assert response.__class__.__bases__[0] is suds.sudsobject.Object
+
+    # Check response content.
+    assert len(response) == 3
+    assert response.result1 == "Uno"
+    assert response.result2 == "Due"
+    assert response.result3 == "Tre"
+    assert response.result1.__class__ is suds.sax.text.Text
+    assert response.result2.__class__ is suds.sax.text.Text
+    assert response.result3.__class__ is suds.sax.text.Text
+
+
 def _attibutes(object):
     result = set()
     for x in object:
         result.add(x[0])
     return result
+
+
+def _isOutputWrapped(client, method_name):
+    assert len(client.wsdl.bindings) == 1
+    operation = client.wsdl.bindings.values()[0].operations[method_name]
+    return operation.soap.output.body.wrapped
 
 
 def _test_fault(fault, has_detail):
@@ -263,6 +382,62 @@ def _test_fault(fault, has_detail):
         expected_attributes.add("detail")
     assert _attibutes(fault) == expected_attributes
     assert not has_detail or _attibutes(fault.detail) == set(("errorcode",))
+
+
+def _wsdl(schema_content, *args):
+    """
+      Returns a WSDL schema used in different tests throughout this test
+    module.
+
+      The first input parameter is the schema part of the WSDL, the rest of the
+    parameters identify top level input parameter elements.
+
+"""
+    wsdl = ["""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+%s
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fResponseMessage">""" % schema_content]
+
+    assert len(args) >= 1
+    for arg in args:
+        wsdl.append("""\
+    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
+
+    wsdl.append("""\
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:output message="ns:fResponseMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="unga-bunga-location" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    return suds.byte_str("\n".join(wsdl))
 
 
 _fault_reply__with_detail = suds.byte_str("""\
@@ -292,17 +467,7 @@ _fault_reply__without_detail = suds.byte_str("""\
 </env:Envelope>
 """)
 
-_wsdl__simple = suds.byte_str("""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+_wsdl__simple = _wsdl("""\
       <xsd:element name="fResponse">
         <xsd:complexType>
           <xsd:sequence>
@@ -310,29 +475,4 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
             <xsd:element name="output_s" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fResponseMessage">
-    <wsdl:part name="parameters" element="ns:fResponse"/>
-  </wsdl:message>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
-      <wsdl:output message="ns:fResponseMessage" />
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
-""")
+      </xsd:element>""", "fResponse")

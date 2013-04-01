@@ -412,7 +412,7 @@ PRIORETIZED:
 
 (01.04.2013.)
 
-    * (Jurko) Add tests for wrapped suds operation output data.
+(+) * (Jurko) Add tests for wrapped suds operation output data.
 
     * (Jurko) Merge patches sent in by Juraj Ivanèiæ from PKE sistemi.
         * Add tests for disabled and/or explicitly enabled wrapped suds
