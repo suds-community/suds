@@ -46,6 +46,92 @@ import re
 import xml.sax
 
 
+# TODO: Update the current choice parameter handling implementation to make
+# this test pass.
+def xxxtest_choice_parameter_implementation_inconsistencies():
+    """
+    Choice parameter support implementation needs to be cleaned up.
+
+    If you declare a message part's element of a simple type X, or you define
+    it as a complex type having a single member of type X, and suds has been
+    configured to automatically unwrap such single-member complex types, the
+    web service proxy object's constructed function declarations should match.
+    They should both accept a single parameter of type X.
+
+    However the current choice support implementation causes only the 'complex'
+    case to get an additional 'choice' flag information to be included in the
+    constructed parameter definition structure.
+
+    """
+    wsdl_template = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+%s
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:%s" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="unga-bunga-location" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""
+
+    client = lambda x, y : tests.client_from_wsdl(suds.byte_str(wsdl_template %
+        (x, y)))
+
+    client_simple_short = client("""\
+      <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
+
+    client_simple_long = client("""\
+      <xsd:element name="Elemento">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string" />
+        </xsd:simpleType>
+      </xsd:element>""", "Elemento")
+
+    client_complex_wrapped = client("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Elemento" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper")
+
+    method_param = lambda x : x.sd[0].ports[0][1][0][1][0]
+    method_param_simple_short = method_param(client_simple_short)
+    method_param_simple_long = method_param(client_simple_long)
+    method_param_complex_wrapped = method_param(client_complex_wrapped)
+
+    assert len(method_param_simple_short) == len(method_param_simple_long)
+    assert len(method_param_simple_long) == len(method_param_complex_wrapped)
+
+
 def test_converting_client_to_string_must_not_raise_an_exception():
     client = tests.client_from_wsdl(suds.byte_str(
         "<?xml version='1.0' encoding='UTF-8'?><root />"))
