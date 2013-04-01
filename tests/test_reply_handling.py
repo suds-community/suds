@@ -74,6 +74,34 @@ def test_badly_formed_reply_XML():
             __inject={"reply":suds.byte_str("bad food")})
 
 
+def test_disabling_automated_simple_interface_unwrapping():
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Elemento" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"), unwrap=False)
+    assert not _isOutputWrapped(client, "f")
+
+    response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <Wrapper xmlns="my-namespace">
+        <Elemento>La-di-da-da-da</Elemento>
+    </Wrapper>
+  </env:Body>
+</env:Envelope>""")))
+
+    assert response.__class__.__name__ == "Wrapper"
+    assert len(response.__class__.__bases__) == 1
+    assert response.__class__.__bases__[0] is suds.sudsobject.Object
+    assert response.Elemento.__class__ is suds.sax.text.Text
+    assert response.Elemento == "La-di-da-da-da"
+
+
 def test_empty_reply():
     client = tests.client_from_wsdl(_wsdl__simple, faults=False)
     f = lambda status=None, description=None : client.service.f(__inject=dict(
