@@ -243,11 +243,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(service.ports) == 1
     port, methods = service.ports[0]
     assert len(methods) == 1
-    method = methods[0]
-    assert len(method) == 2
-    method_name = method[0]
+    method_name, method_params = methods[0]
     assert method_name == "f"
-    method_params = method[1]
     assert len(method_params) == 3
     assert method_params[0][0] == "x1"
     assert method_params[0][1] is service.params[0][0]
@@ -320,7 +317,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(service.ports) == 1
     port, methods = service.ports[0]
     assert len(methods) == 1
-    assert len(methods[0]) == 2
     method_name, method_params = methods[0]
     assert method_name == "f"
     assert len(method_params) == 2
@@ -410,11 +406,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(service.ports) == 1
     port, methods = service.ports[0]
     assert len(methods) == 1
-    method = methods[0]
-    assert len(method) == 2
-    method_name = method[0]
+    method_name, method_params = methods[0]
     assert method_name == "f"
-    method_params = method[1]
     assert len(method_params) == 3
     assert method_params[0][0] == "x1"
     assert method_params[0][1] is service.params[0][0]
@@ -513,11 +506,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(service.ports) == 1
     port, methods = service.ports[0]
     assert len(methods) == 1
-    method = methods[0]
-    assert len(method) == 2
-    method_name = method[0]
+    method_name, method_params = methods[0]
     assert method_name == "f"
-    method_params = method[1]
     assert len(method_params) == 3
     assert method_params[0][0] == "x1"
     assert method_params[0][1] is service.params[0][0]
@@ -787,11 +777,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(service.ports) == 1
     port, methods = service.ports[0]
     assert len(methods) == 1
-    method = methods[0]
-    assert len(method) == 2
-    method_name = method[0]
+    method_name, method_params = methods[0]
     assert method_name == "f"
-    method_params = method[1]
     assert len(method_params) == 3
     assert method_params[0][0] == "x1"
     assert method_params[0][1] is service.params[0][0]
@@ -1844,8 +1831,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Methods (from wsdl).
     assert len(port.methods) == 1
-    method_name, method = _first_from_dict(port.methods)
-    assert method_name == "f"
+    method = port.methods["f"]
     assert method.name == "f"
     assert method.location == "https://localhost/dummy"
 
@@ -1869,22 +1855,18 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # suds.serviceDefinition.ServiceDefinition.addports() docstring).
     port, methods = service_definition.ports[0]
     assert len(methods) == 1
-    method = methods[0]
-    assert len(method) == 2
-    method_name = method[0]
+    method_name, method_params = methods[0]
     assert method_name == "f"
-    method_params = method[1]
-    assert len(method_params) == 2
 
-    param_name = method_params[0][0]
-    param_element = method_params[0][1]
+    param_name, param_element, param_choice = method_params[0]
     assert param_name == "a"
     assert param_element is param_in_1
+    assert param_choice == False
 
-    param_name = method_params[1][0]
-    param_element = method_params[1][1]
+    param_name, param_element, param_choice = method_params[1]
     assert param_name == "b"
     assert param_element is param_in_2
+    assert param_choice == False
 
 
 def test_wsdl_schema_content():
