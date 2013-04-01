@@ -381,52 +381,196 @@ def test_optional_parameter_handling():
 </SOAP-ENV:Envelope>""")
 
 
-def test_wrapped_parameter():
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
+def test_twice_wrapped_parameter():
+    """
+      Suds does not recognize 'twice wrapped' data structures and unwraps the
+    external one but keeps the internal wrapping structure in place.
 
+    """
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="Wrapper1">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Wrapper2">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="Elemento" type="xsd:string" />
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper1"), nosend=True, prettyxml=True)
+
+    assert _isInputWrapped(client, "f")
+
+    #   The following calls are actually illegal and result in incorrectly
+    # generated SOAP requests.
+    assert client.service.f("A B C").envelope == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper1>
+         <ns0:Wrapper2>A B C</ns0:Wrapper2>
+      </ns0:Wrapper1>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+    assert client.service.f(Elemento="A B C").envelope == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper1>
+         <ns0:Wrapper2/>
+      </ns0:Wrapper1>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+    assert client.service.f(Wrapper2="A B C").envelope == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper1>
+         <ns0:Wrapper2>A B C</ns0:Wrapper2>
+      </ns0:Wrapper1>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+    assert client.service.f(Wrapper1="A B C").envelope == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper1>
+         <ns0:Wrapper2/>
+      </ns0:Wrapper1>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+
+
+def test_wrapped_parameter():
     # Prepare web service proxies.
-    service_simple = service_from_wsdl(_wsdl("""\
-      <xsd:element name="Elemento" type="xsd:string" />""", "Elemento"))
-    service_complex = service_from_wsdl(_wsdl("""\
+    client = lambda *args : tests.client_from_wsdl(_wsdl(*args), nosend=True,
+        prettyxml=True)
+    client_bare_single = client("""\
+      <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
+    client_bare_multiple_simple = client("""\
+      <xsd:element name="Elemento1" type="xsd:string" />
+      <xsd:element name="Elemento2" type="xsd:string" />""", "Elemento1",
+        "Elemento2")
+    client_bare_multiple_wrapped = client("""\
+      <xsd:complexType name="Wrapper">
+        <xsd:sequence>
+          <xsd:element name="Elemento" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="Elemento1" type="ns:Wrapper" />
+      <xsd:element name="Elemento2" type="ns:Wrapper" />""", "Elemento1",
+        "Elemento2")
+    client_wrapped_unnamed = client("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="Elemento" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", "Wrapper")
+    client_wrapped_named = client("""\
+      <xsd:complexType name="WrapperType">
+        <xsd:sequence>
+          <xsd:element name="Elemento" type="xsd:string" />
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="Wrapper" type="ns:WrapperType" />""", "Wrapper")
 
-    #   Both web service operations get called the same way even though the
-    # complex one actually has an extra wrapper element around its input data.
-    call = lambda s : s.f("Maestro").envelope
-    assert call(service_simple) == suds.byte_str("""\
+    #   Make sure suds library inteprets our WSDL definitions as wrapped or
+    # bare input interfaces as expected.
+    assert not _isInputWrapped(client_bare_single, "f")
+    assert not _isInputWrapped(client_bare_multiple_simple, "f")
+    assert not _isInputWrapped(client_bare_multiple_wrapped, "f")
+    assert _isInputWrapped(client_wrapped_unnamed, "f")
+    assert _isInputWrapped(client_wrapped_named, "f")
+
+    #   Both bare & wrapped single parameter input web service operations get
+    # called the same way even though the wrapped one actually has an extra
+    # wrapper element around its input data.
+    data = "Maestro"
+    call_single = lambda c : c.service.f(data).envelope
+    assert call_single(client_bare_single) == suds.byte_str("""\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
-      <ns0:Elemento>Maestro</ns0:Elemento>
+      <ns0:Elemento>%s</ns0:Elemento>
    </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    assert call(service_complex) == suds.byte_str("""\
+</SOAP-ENV:Envelope>""" % data)
+    response_single_wrapped = suds.byte_str("""\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
       <ns0:Wrapper>
-         <ns0:Elemento>Maestro</ns0:Elemento>
+         <ns0:Elemento>%s</ns0:Elemento>
+      </ns0:Wrapper>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""" % data)
+    assert call_single(client_wrapped_unnamed) == response_single_wrapped
+    assert call_single(client_wrapped_named) == response_single_wrapped
+
+    #   Suds library's automatic structure unwrapping prevents us from
+    # specifying the external wrapper structure directly.
+    assert client_wrapped_unnamed.service.f(Wrapper="A").envelope ==  \
+        suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper>
+         <ns0:Elemento/>
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
+    #   Multiple parameter web service operations are never automatically
+    # unwrapped.
+    data = ("Unga", "Bunga")
+    call_multiple = lambda c : c.service.f(*data).envelope
+    assert call_multiple(client_bare_multiple_simple) == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Elemento1>%s</ns0:Elemento1>
+      <ns0:Elemento2>%s</ns0:Elemento2>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""" % data)
+    assert call_multiple(client_bare_multiple_wrapped) == suds.byte_str("""\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Elemento1>%s</ns0:Elemento1>
+      <ns0:Elemento2>%s</ns0:Elemento2>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""" % data)
 
-def _wsdl(schema_content, request_element_name):
+
+def _isInputWrapped(client, method_name):
+    assert len(client.wsdl.bindings) == 1
+    operation = client.wsdl.bindings.values()[0].operations[method_name]
+    return operation.soap.input.body.wrapped
+
+
+def _wsdl(schema_content, *args):
     """
       Returns a WSDL schema used in different tests throughout this test
     module.
 
-    """
-    return suds.byte_str("""\
+      The first input parameter is the schema part of the WSDL, the rest of the
+    parameters identify top level input parameter elements.
+
+"""
+    wsdl = ["""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -440,8 +584,14 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 %s
     </xsd:schema>
   </wsdl:types>
-  <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:%s" />
+  <wsdl:message name="fRequestMessage">""" % schema_content]
+
+    assert len(args) >= 1
+    for arg in args:
+        wsdl.append("""\
+    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
+
+    wsdl.append("""\
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
@@ -462,4 +612,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""" % (schema_content, request_element_name))
+""")
+
+    return suds.byte_str("\n".join(wsdl))
