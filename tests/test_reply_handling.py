@@ -35,7 +35,6 @@ if __name__ == "__main__":
 
 
 import suds
-import suds.client
 import tests
 
 import pytest
@@ -304,14 +303,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-      <xsd:element name="fRequest">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="input_i" type="xsd:integer" />
-            <xsd:element name="input_s" type="xsd:string" />
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>
       <xsd:element name="fResponse">
         <xsd:complexType>
           <xsd:sequence>
@@ -322,15 +313,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
-  <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:fRequest"/>
-  </wsdl:message>
   <wsdl:message name="fResponseMessage">
     <wsdl:part name="parameters" element="ns:fResponse"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
       <wsdl:output message="ns:fResponseMessage" />
     </wsdl:operation>
   </wsdl:portType>
@@ -339,7 +326,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
       <wsdl:output><soap:body use="literal" /></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
