@@ -617,7 +617,7 @@ class SoapClient:
             content = error.fp and error.fp.read() or ''
             return process_reply(reply=content, status=error.httpcode,
                 description=tostr(error), original_soapenv=original_soapenv)
-        return process_reply(reply=reply.message,
+        return self.process_reply(reply=reply.message,
             original_soapenv=original_soapenv)
 
     def process_reply(self, reply, status=None, description=None,
