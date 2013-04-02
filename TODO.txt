@@ -418,8 +418,20 @@ PRIORETIZED:
 (+)       support.
 (+)     * Add code for disabling suds library wrapped parameter support.
 
+(02.04.2012.)
+
+(+) * (Jurko) Restriction support cleanup based on patches sent in by Juraj
+(+)   Ivanèiæ from PKE sistemi.
+(+)     * Research.
+(+)         * Not enough time to research this thoroughly and come up with a
+(+)           complete and well tested solution.
+(+)     * Prepare and commit related tests.
+(+)         * Mark the tests as 'expected to fail' & comment the reasons.
+(+)     * Commit as a separate unfinished private branch.
+(+) * (Jurko) Prepare the '0.4.1 jurko 5' release.
+(+)     * Update release notes.
+
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
-        * Update release notes.
         * Follow the documented release procedure.
             * Update version information.
             * Tag in Hg.
@@ -441,6 +453,19 @@ NON PRIORETIZED:
               SOAP request turns out to be invalid.
         * Having a local client-side check could make catching client side
           programming bugs easier.
+        * Ideas.
+            * Make sure given values fit their respective type value domains,
+              e.g. integers, strings, regular expressions, restrictions,
+              complex types where a builtin was expected, complex type of an
+              unexpected structure, etc.
+            * Extra parameters are reported as errors.
+            * Missing non-optional parameters are reported as errors.
+            * Input message part has both element & type specified.
+
+    * See how multi-occurrence input parameter elements are supposed to be
+      supported.
+        * With automated parameter unwrapping support.
+        * Without automated parameter unwrapping support.
 
     * Clean up & correct the choice support implementation.
         * Choice parameters seem to be supported only for document/literal style
@@ -473,7 +498,7 @@ NON PRIORETIZED:
         * Research.
             * See sources (grep for 'null'), old release notes (README.txt) and
               commit messages.
-            * What it is for,
+            * What it is for.
             * Whether it can be replaced with None.
             * If it serves some purpose see if it should be used for identifying
               missing 'choice' structure members as well.
