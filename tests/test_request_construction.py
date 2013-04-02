@@ -43,6 +43,38 @@ if __name__ == "__main__":
 import suds
 import tests
 
+import pytest
+
+
+# TODO: Update the current restriction type output parameter handling so such
+# parameters get converted to the correct Python data type based on the
+# restriction's underlying data type.
+@pytest.mark.xfail
+def test_bare_input_restriction_types():
+    client_unnamed = tests.client_from_wsdl(tests.wsdl_input("""\
+      <xsd:element name="Elemento">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="alfa" />
+            <xsd:enumeration value="beta" />
+            <xsd:enumeration value="gamma" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>""", "Elemento"))
+
+    client_named = tests.client_from_wsdl(tests.wsdl_input("""\
+      <xsd:simpleType name="MyType">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="alfa" />
+          <xsd:enumeration value="beta" />
+          <xsd:enumeration value="gamma" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+
+    assert not _isInputWrapped(client_unnamed, "f")
+    assert not _isInputWrapped(client_named, "f")
+
 
 def test_disabling_automated_simple_interface_unwrapping():
     client = tests.client_from_wsdl(tests.wsdl_input("""\

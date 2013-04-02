@@ -1350,6 +1350,83 @@ def test_parameter_referencing_missing_element():
         pytest.fail("Expected exception suds.TypeNotFound not raised.")
 
 
+# TODO: Update the current restriction type input parameter handling so they get
+# 'unwrapped' correctly instead of each of their enumeration values getting
+# interpreted as a separate input parameter.
+@pytest.mark.xfail
+def test_restrictions():
+    client_unnamed = tests.client_from_wsdl(tests.wsdl_input("""\
+      <xsd:element name="Elemento">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:int">
+            <xsd:enumeration value="1" />
+            <xsd:enumeration value="3" />
+            <xsd:enumeration value="5" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>""", "Elemento"))
+
+    client_named = tests.client_from_wsdl(tests.wsdl_input("""\
+      <xsd:simpleType name="MyType">
+        <xsd:restriction base="xsd:int">
+          <xsd:enumeration value="1" />
+          <xsd:enumeration value="3" />
+          <xsd:enumeration value="5" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+
+    client_twice_restricted = tests.client_from_wsdl(tests.wsdl_input("""\
+      <xsd:simpleType name="MyTypeGeneric">
+        <xsd:restriction base="xsd:int">
+          <xsd:enumeration value="1" />
+          <xsd:enumeration value="2" />
+          <xsd:enumeration value="3" />
+          <xsd:enumeration value="4" />
+          <xsd:enumeration value="5" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="MyType">
+        <xsd:restriction base="ns:MyTypeGeneric">
+          <xsd:enumeration value="1" />
+          <xsd:enumeration value="3" />
+          <xsd:enumeration value="5" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+
+    element_qref = ("Elemento", "my-namespace")
+    type_named_qref = ("MyType", "my-namespace")
+      
+    element_unnamed = client_unnamed.wsdl.schema.elements[element_qref]
+    element_named = client_named.wsdl.schema.elements[element_qref]
+    element_twice_restricted = client_twice_restricted.wsdl.schema.elements[
+        element_qref]
+
+    type_unnamed = element_unnamed.resolve()
+    type_named = element_named.resolve()
+    type_twice_restricted = element_twice_restricted.resolve()
+    assert type_unnamed is element_unnamed
+    assert type_named is client_named.wsdl.schema.types[type_named_qref]
+    assert type_twice_restricted is client_twice_restricted.wsdl.schema.types[
+        type_named_qref]
+
+    #   Regression test against suds automatically unwrapping input parameter
+    # type's enumeration values as separate parameters.
+    params_unnamed = client_unnamed.sd[0].params
+    params_named = client_named.sd[0].params
+    params_twice_restricted = client_twice_restricted.sd[0].params
+    assert len(params_unnamed) == 1
+    assert len(params_named) == 1
+    assert len(params_twice_restricted) == 1
+    assert params_unnamed[0][0] is element_unnamed
+    assert params_unnamed[0][1] is type_unnamed
+    assert params_named[0][0] is element_named
+    assert params_named[0][1] is type_named
+    assert params_twice_restricted[0][0] is element_twice_restricted
+    assert params_twice_restricted[0][1] is type_twice_restricted
+
+
 def test_schema_node_occurrences():
     client = tests.client_from_wsdl(suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
