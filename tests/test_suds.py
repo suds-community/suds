@@ -63,46 +63,7 @@ def xxxtest_choice_parameter_implementation_inconsistencies():
     constructed parameter definition structure.
 
     """
-    wsdl_template = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%s
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:%s" />
-  </wsdl:message>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="unga-bunga-location" />
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
-"""
-
-    client = lambda x, y : tests.client_from_wsdl(suds.byte_str(wsdl_template %
-        (x, y)))
+    client = lambda x, y : tests.client_from_wsdl(tests.wsdl_input(x, y))
 
     client_simple_short = client("""\
       <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
@@ -1381,43 +1342,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 def test_parameter_referencing_missing_element():
     try:
-        tests.client_from_wsdl(suds.byte_str("""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:missingElement" />
-  </wsdl:message>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
-"""))
+        tests.client_from_wsdl(tests.wsdl_input("", "missingElement"))
     except suds.TypeNotFound, e:
         assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
     else:

@@ -24,7 +24,7 @@ import sys
 def client_from_wsdl(wsdl_content, *args, **kwargs):
     """
     Constructs a non-caching suds Client based on the given WSDL content.
-    
+
       The wsdl_content is expected to be a raw byte string and not a unicode
     string. This simple structure suits us fine here because XML content holds
     its own embedded encoding identification ('utf-8' if not specified
@@ -62,3 +62,117 @@ def setup_logging():
     else:
         fmt = '%(asctime)s [%(levelname)s] %(funcName)s() @%(filename)s:%(lineno)d\n%(message)s\n'
     logging.basicConfig(level=logging.INFO, format=fmt)
+
+
+def wsdl_input(schema_content, *args):
+    """
+      Returns a WSDL schema used in different suds library tests, defining a
+    single operation named f, taking an externally specified input structure
+    and returning no output.
+
+      The first input parameter is the schema part of the WSDL, the rest of the
+    parameters identify top level input parameter elements.
+
+    """
+    wsdl = ["""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+%s
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">""" % schema_content]
+
+    assert len(args) >= 1
+    for arg in args:
+        wsdl.append("""\
+    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
+
+    wsdl.append("""\
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="unga-bunga-location" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    return suds.byte_str("\n".join(wsdl))
+
+
+def wsdl_output(schema_content, *args):
+    """
+      Returns a WSDL schema used in different suds library tests, defining a
+    single operation named f, taking no input and returning an externally
+    specified output structure.
+
+      The first input parameter is the schema part of the WSDL, the rest of the
+    parameters identify top level output parameter elements.
+
+    """
+    wsdl = ["""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+%s
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fResponseMessage">""" % schema_content]
+
+    assert len(args) >= 1
+    for arg in args:
+        wsdl.append("""\
+    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
+
+    wsdl.append("""\
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:output message="ns:fResponseMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document" />
+      <wsdl:output><soap:body use="literal" /></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="unga-bunga-location" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    return suds.byte_str("\n".join(wsdl))
