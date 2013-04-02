@@ -40,6 +40,7 @@ import tests
 import pytest
 
 import httplib
+import re
 import xml.sax
 
 
@@ -72,6 +73,101 @@ def test_badly_formed_reply_XML():
         client = tests.client_from_wsdl(_wsdl__simple, faults=faults)
         pytest.raises(xml.sax.SAXParseException, client.service.f,
             __inject={"reply":suds.byte_str("bad food")})
+
+
+def test_builtin_data_types():
+    integer_type_mapping = {
+        "byte":int,
+        "int":int,
+        "integer":int,
+        "long":long,
+        "negativeInteger":int,
+        "nonNegativeInteger":int,
+        "nonPositiveInteger":int,
+        "positiveInteger":int,
+        "short":int,
+        "unsignedByte":int,
+        "unsignedInt":int,
+        "unsignedLong":long,
+        "unsignedShort":int}
+    for tag, type in integer_type_mapping.items():
+        client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="value" type="xsd:%s" />""" % tag, "value"))
+        response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <value xmlns="my-namespace">15</value>
+  </env:Body>
+</env:Envelope>""")))
+        assert response.__class__ is type
+        assert response == 15
+
+    boolean_mapping = {"0":False, "1":True, "false":False, "true":True}
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="value" type="xsd:boolean" />""", "value"))
+    for value, expected_value in boolean_mapping.items():
+        response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <value xmlns="my-namespace">%s</value>
+  </env:Body>
+</env:Envelope>""" % value)))
+        assert response.__class__ is bool
+        assert response == expected_value
+
+    # Suds implements no extra range checking.
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="value" type="xsd:byte" />""", "value"))
+    response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <value xmlns="my-namespace">1500</value>
+  </env:Body>
+</env:Envelope>""")))
+    assert response.__class__ is int
+    assert response == 1500
+
+    #   Suds raises raw Python exceptions when it fails to convert received
+    # response element data to its mapped Python integer data type, according
+    # to the used WSDL schema.
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="value" type="xsd:int" />""", "value"))
+    try:
+        client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <value xmlns="my-namespace">Fifteen</value>
+  </env:Body>
+</env:Envelope>""")))
+    except ValueError, e:
+        # ValueError instance received here has different string
+        # representations depending on the Python version used:
+        #   Python 2.4:
+        #     "invalid literal for int(): Fifteen"
+        #   Python 2.7.3, 3.2.3:
+        #     "invalid literal for int() with base 10: 'Fifteen'"
+        assert re.match("invalid literal for int\(\)( with base 10)?: "
+            "('?)Fifteen\\2$", str(e))
+    else:
+        pytest.fail("Expected ValueError exception not raised.")
+
+    # Suds returns invalid boolean values as None.
+    invalid_boolean_values = ("True", "", "False", "2", "Fedora", "Z", "-1")
+    client = tests.client_from_wsdl(_wsdl("""\
+      <xsd:element name="value" type="xsd:boolean" />""", "value"))
+    for value in invalid_boolean_values:
+        response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <value xmlns="my-namespace">%s</value>
+  </env:Body>
+</env:Envelope>""" % value)))
+        assert response is None
 
 
 def test_disabling_automated_simple_interface_unwrapping():
