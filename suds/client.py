@@ -37,8 +37,7 @@ from suds.transport import TransportError, Request
 from suds.transport.https import HttpAuthenticated
 from suds.umx.basic import Basic as UmxBasic
 from suds.wsdl import Definitions
-from sudsobject import Factory as InstFactory
-from sudsobject import Object
+import sudsobject
 
 from cookielib import CookieJar
 from copy import deepcopy
@@ -217,7 +216,7 @@ class Factory:
         if type is None:
             raise TypeNotFound(name)
         if type.enum():
-            result = InstFactory.object(name)
+            result = sudsobject.Factory.object(name)
             for e, a in type.children():
                 setattr(result, e.name, e.name)
         else:
