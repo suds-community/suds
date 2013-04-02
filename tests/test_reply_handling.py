@@ -75,6 +75,63 @@ def test_badly_formed_reply_XML():
             __inject={"reply":suds.byte_str("bad food")})
 
 
+# TODO: Update the current restriction type output parameter handling so such
+# parameters get converted to the correct Python data type based on the
+# restriction's underlying data type.
+@pytest.mark.xfail
+def test_restriction_data_types():
+    client_unnamed = tests.client_from_wsdl(tests.wsdl_output("""\
+      <xsd:element name="Elemento">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:int">
+            <xsd:enumeration value="1" />
+            <xsd:enumeration value="3" />
+            <xsd:enumeration value="5" />
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>""", "Elemento"))
+
+    client_named = tests.client_from_wsdl(tests.wsdl_output("""\
+      <xsd:simpleType name="MyType">
+        <xsd:restriction base="xsd:int">
+          <xsd:enumeration value="1" />
+          <xsd:enumeration value="3" />
+          <xsd:enumeration value="5" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+
+    client_twice_restricted = tests.client_from_wsdl(tests.wsdl_output("""\
+      <xsd:simpleType name="MyTypeGeneric">
+        <xsd:restriction base="xsd:int">
+          <xsd:enumeration value="1" />
+          <xsd:enumeration value="2" />
+          <xsd:enumeration value="3" />
+          <xsd:enumeration value="4" />
+          <xsd:enumeration value="5" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="MyType">
+        <xsd:restriction base="ns:MyTypeGeneric">
+          <xsd:enumeration value="1" />
+          <xsd:enumeration value="3" />
+          <xsd:enumeration value="5" />
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+
+    for client in (client_unnamed, client_named, client_twice_restricted):
+        response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <Elemento xmlns="my-namespace">5</Elemento>
+  </env:Body>
+</env:Envelope>""")))
+        assert response.__class__ is int
+        assert response == 5
+
+
 def test_builtin_data_types():
     integer_type_mapping = {
         "byte":int,
