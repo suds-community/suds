@@ -48,7 +48,8 @@ import xml.sax
 
 # TODO: Update the current choice parameter handling implementation to make
 # this test pass.
-def xxxtest_choice_parameter_implementation_inconsistencies():
+@pytest.mark.xfail
+def test_choice_parameter_implementation_inconsistencies():
     """
     Choice parameter support implementation needs to be cleaned up.
 
