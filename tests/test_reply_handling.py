@@ -91,7 +91,7 @@ def test_builtin_data_types():
         "unsignedLong":long,
         "unsignedShort":int}
     for tag, type in integer_type_mapping.items():
-        client = tests.client_from_wsdl(_wsdl("""\
+        client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="value" type="xsd:%s" />""" % tag, "value"))
         response = client.service.f(__inject=dict(reply=suds.byte_str("""\
 <?xml version="1.0"?>
@@ -104,7 +104,7 @@ def test_builtin_data_types():
         assert response == 15
 
     boolean_mapping = {"0":False, "1":True, "false":False, "true":True}
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="value" type="xsd:boolean" />""", "value"))
     for value, expected_value in boolean_mapping.items():
         response = client.service.f(__inject=dict(reply=suds.byte_str("""\
@@ -118,7 +118,7 @@ def test_builtin_data_types():
         assert response == expected_value
 
     # Suds implements no extra range checking.
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="value" type="xsd:byte" />""", "value"))
     response = client.service.f(__inject=dict(reply=suds.byte_str("""\
 <?xml version="1.0"?>
@@ -133,7 +133,7 @@ def test_builtin_data_types():
     #   Suds raises raw Python exceptions when it fails to convert received
     # response element data to its mapped Python integer data type, according
     # to the used WSDL schema.
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="value" type="xsd:int" />""", "value"))
     try:
         client.service.f(__inject=dict(reply=suds.byte_str("""\
@@ -157,7 +157,7 @@ def test_builtin_data_types():
 
     # Suds returns invalid boolean values as None.
     invalid_boolean_values = ("True", "", "False", "2", "Fedora", "Z", "-1")
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="value" type="xsd:boolean" />""", "value"))
     for value in invalid_boolean_values:
         response = client.service.f(__inject=dict(reply=suds.byte_str("""\
@@ -171,7 +171,7 @@ def test_builtin_data_types():
 
 
 def test_disabling_automated_simple_interface_unwrapping():
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -288,7 +288,7 @@ def test_missing_wrapper_response():
     interpreting received SOAP Response XML.
 
     """
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -397,9 +397,9 @@ def test_reply_error_without_detail_without_fault():
 
 def test_simple_bare_and_wrapped_output():
     # Prepare web service proxies.
-    client_bare = tests.client_from_wsdl(_wsdl("""\
+    client_bare = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="fResponse" type="xsd:string" />""", "fResponse"))
-    client_wrapped = tests.client_from_wsdl(_wsdl("""\
+    client_wrapped = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -442,7 +442,7 @@ def test_simple_bare_and_wrapped_output():
 
 
 def test_wrapped_sequence_output():
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -508,62 +508,6 @@ def _test_fault(fault, has_detail):
     assert not has_detail or _attibutes(fault.detail) == set(("errorcode",))
 
 
-def _wsdl(schema_content, *args):
-    """
-      Returns a WSDL schema used in different tests throughout this test
-    module.
-
-      The first input parameter is the schema part of the WSDL, the rest of the
-    parameters identify top level input parameter elements.
-
-"""
-    wsdl = ["""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%s
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fResponseMessage">""" % schema_content]
-
-    assert len(args) >= 1
-    for arg in args:
-        wsdl.append("""\
-    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
-
-    wsdl.append("""\
-  </wsdl:message>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
-      <wsdl:output message="ns:fResponseMessage" />
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="unga-bunga-location" />
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
-""")
-
-    return suds.byte_str("\n".join(wsdl))
-
-
 _fault_reply__with_detail = suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
@@ -591,7 +535,7 @@ _fault_reply__without_detail = suds.byte_str("""\
 </env:Envelope>
 """)
 
-_wsdl__simple = _wsdl("""\
+_wsdl__simple = tests.wsdl_output("""\
       <xsd:element name="fResponse">
         <xsd:complexType>
           <xsd:sequence>

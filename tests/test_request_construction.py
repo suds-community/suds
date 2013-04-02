@@ -45,7 +45,7 @@ import tests
 
 
 def test_disabling_automated_simple_interface_unwrapping():
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -77,7 +77,7 @@ def test_extra_parameters():
     service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
-    service = service_from_wsdl(_wsdl("""\
+    service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -128,7 +128,7 @@ def test_invalid_argument_type_handling():
     client_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:complexType name="Freakazoid">
         <xsd:sequence>
           <xsd:element name="freak1" type="xsd:string" />
@@ -193,7 +193,7 @@ def test_missing_parameters():
     service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
-    service = service_from_wsdl(_wsdl("""\
+    service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -271,7 +271,7 @@ def test_named_parameter():
         prettyxml=True).service
 
     # Test different ways to make the same web service operation call.
-    service = service_from_wsdl(_wsdl("""\
+    service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -298,7 +298,7 @@ def test_named_parameter():
 
     #   The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
-    service = service_from_wsdl(_wsdl("""\
+    service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -329,7 +329,7 @@ def test_optional_parameter_handling():
     service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
-    service = service_from_wsdl(_wsdl("""\
+    service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -411,7 +411,7 @@ def test_twice_wrapped_parameter():
     external one but keeps the internal wrapping structure in place.
 
     """
-    client = tests.client_from_wsdl(_wsdl("""\
+    client = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper1">
         <xsd:complexType>
           <xsd:sequence>
@@ -474,8 +474,8 @@ def test_twice_wrapped_parameter():
 
 def test_wrapped_parameter():
     # Prepare web service proxies.
-    client = lambda *args : tests.client_from_wsdl(_wsdl(*args), nosend=True,
-        prettyxml=True)
+    client = lambda *args : tests.client_from_wsdl(tests.wsdl_input(*args),
+        nosend=True, prettyxml=True)
     client_bare_single = client("""\
       <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
     client_bare_multiple_simple = client("""\
@@ -583,59 +583,3 @@ def _isInputWrapped(client, method_name):
     assert len(client.wsdl.bindings) == 1
     operation = client.wsdl.bindings.values()[0].operations[method_name]
     return operation.soap.input.body.wrapped
-
-
-def _wsdl(schema_content, *args):
-    """
-      Returns a WSDL schema used in different tests throughout this test
-    module.
-
-      The first input parameter is the schema part of the WSDL, the rest of the
-    parameters identify top level input parameter elements.
-
-"""
-    wsdl = ["""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%s
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fRequestMessage">""" % schema_content]
-
-    assert len(args) >= 1
-    for arg in args:
-        wsdl.append("""\
-    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
-
-    wsdl.append("""\
-  </wsdl:message>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="unga-bunga-location" />
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
-""")
-
-    return suds.byte_str("\n".join(wsdl))
