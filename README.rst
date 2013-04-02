@@ -55,6 +55,99 @@ Here are the basic instructions for 3 different installation methods:
 Release notes
 =================================================
 
+version 0.4.1 jurko 5 (2013-04-02)
+    * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+      original suds Python library development project's Subversion repository.
+
+      * Last officially packaged & released suds Python library version - 0.4.1.
+
+    * Supported Python versions.
+
+      * Basic sources prepared for Python 2.x.
+      * For using Python 3 the sources first processed by the Python 2to3 tool
+        during the setup procedure.
+      * Tested with:
+
+        * Python 2.4.0 on Windows 7, x64.
+        * Python 2.7.3 on Windows 7, x64.
+        * Python 3.2.3 on Windows 7, x64.
+
+      * Intended to work with Python 2.4+.
+
+    * Improved Python 3 support.
+
+      * Cache files now used again.
+
+        * Problems cased by cache files being stored in text mode, but
+          attempting to write a bytes object in them. Too eager error handling
+          was then causing all such cached file usage to fail silently.
+
+      * WebFaults containing non-ASCII data now get constructed correctly.
+      * Fixed issue with encoding of authentication in ``transport/http.py``
+        (contributed by Phillip Alday).
+      * Unicode/byte string handling fixes.
+
+    * Fixed an IndexError occurring when calling a web service operation with
+      only a single input parameter.
+    * Fixed a log formatting error, originated in the original suds (contributed
+      by Guy Rozendorn).
+    * Fixed local timezone detection code (contributed by Tim Savage).
+    * Fixed a problem with running the project setup on non-Windows platforms.
+
+      * ``version.py`` file loading no longer sensitive to the line-ending type
+        used in that file.
+
+    * Removed different programming techniques & calls breaking compatibility
+      with Python 2.4.
+
+      * String ``format()`` method.
+      * Ternary if operator.
+
+    * Project ``README`` file converted to .rst format (contributed by Phillip
+      Alday).
+    * Corrected internal input/output binding usage. Output binding was being
+      used in several places where the input one was expected.
+    * HTTP status code 200 XML replies containing a ``Fault`` element now
+      consistently as a SOAP fault (plus a warning about the non-standard HTTP
+      status code) both when reporting such faults using exceptions or by
+      returning a (status, reason) tuple.
+
+      * Before this was done only when reporting them using exceptions.
+
+    * Reply XML processing now checks the namespace used for ``Envelope`` &
+      ``Body`` elements.
+    * SOAP fault processing now checks the namespaces used for all relevant
+      tags.
+    * Plugins now get a chance to process ``received()`` & ``parsed()`` calls
+      for both success & error replies.
+    * SOAP fault reports with invalid Fault structure no longer cause suds code
+      to break with an 'invalid attribute' exception.
+    * SOAP fault reports with no ``<detail>`` tag (optional) no longer cause
+      suds code to break with an 'invalid attribute' exception when run with the
+      suds ``faults`` option set to false.
+    * Added correct handling for HTTP errors containing no input file
+      information. Previously such cases caused suds to break with an 'invalid
+      attribute' exception.
+    * ``SimClient`` injection keywords reorganized:
+
+      * ``msg`` - request message.
+      * ``reply`` - reply message ('msg' must not be set).
+      * ``status`` - HTTP status code accompanying the 'reply' message.
+      * ``description`` - description string accompanying the 'reply' message.
+
+    * Added ``unwrap`` option, alowing the used to disable suds library's
+      automated simple document interface unwrapping (contributed by Juraj
+      Ivančić).
+    * Many unit tests updated and added.
+
+    * Internal code cleanup.
+
+      * Removed undocumented, unused and unused binding.replyfilter
+        functionality.
+      * Binding classes no longer have anything to do with method independent
+        Fault element processing.
+      * Removed SoapClient ``last_sent()`` and ``last_received()`` functions.
+
 version 0.4.1 jurko 4 (2012-04-17)
     * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
       original suds Python library development project's Subversion repository.
@@ -224,7 +317,7 @@ version 0.4.1 (2010-10-15)
 version 0.4 (2010-09-08)
   * Fix spelling errors in spec description.
   * Fix source0 URL warning.
-  * Updated caching to not cache intermediate wsdls.
+  * Updated caching to not cache intermediate WSDLs.
   * Added DocumentCache which caches verified XML documents as text. User can
     choose.
   * Added cachingpolicy option to allow user to specify whether to cache XML
@@ -313,7 +406,7 @@ version 0.3.5 (2009-04-16)
   * Removed checking fedora version check in spec since no longer building <
     fc9.
   * Updated makefile to roll tarball with tar.sh.
-  * Moved bare/wrapped determination to wsdl for document/literal.
+  * Moved bare/wrapped determination to WSDL for document/literal.
   * Refactored Transport into a package (provides better logging of http
     headers).
   * Fixed Tickets: #207, #209, #210, #212, #214, #215.
@@ -322,13 +415,13 @@ version 0.3.4 (2009-02-24)
   * Static (automatic) Import.bind('http://schemas.xmlsoap.org/soap/encoding/'),
     users no longer need to do this.
   * Basic ws-security with {{{UsernameToken}}} and clear-text password only.
-  * Add support for ''sparse'' soap headers via passing dictionary.
+  * Add support for ``sparse`` soap headers via passing dictionary.
   * Add support for arbitrary user defined soap headers.
   * Fixes service operations with multiple soap header entries.
   * Schema loading and dereferencing algorithm enhancements.
   * Nested soap multirefs fixed.
   * Better (true) support for elementFormDefault="unqualified" provides more
-    accurate namespaing.
+    accurate namespacing.
   * WSDL part types no longer default to WSDL targetNamespace.
   * Fixed Tickets: #4, #6, #21, #32, #62, #66, #71, #72, #114, #155, #201.
 
@@ -345,7 +438,7 @@ version 0.3.3 (2008-11-31)
   * Fixed Tickets: #51 - #60.
 
 version 0.3.2 (2008-11-07)
-  * SOAP {{{MultiRef}}} support ''(1st pass added r300)''.
+  * SOAP {{{MultiRef}}} support ``(1st pass added r300)``.
   * Add support for new schema tags:
 
     * ``<xs:include/>``
@@ -362,16 +455,16 @@ version 0.3.2 (2008-11-07)
 
   * Revise marshaller and binding to further sharpen the namespacing of nodes
     produced.
-  * Infinite recursion fixed in ''xsd'' package dereference() during schema
+  * Infinite recursion fixed in ``xsd`` package dereference() during schema
     loading.
-  * Add support for <wsdl:import/> of schema files into the wsdl root
+  * Add support for <wsdl:import/> of schema files into the WSDL root
     <definitions/>.
   * Fix double encoding of (&).
   * Add Client API:
 
     * ``setheaders()`` - same as keyword but works for all invocations.
     * ``addprefix()`` - mapping of namespace prefixes.
-    * ``setlocation()`` - Override the location in the wsdl; same as keyword
+    * ``setlocation()`` - Override the location in the WSDL; same as keyword
       except for all calls.
     * ``setproxy()`` - same as proxy keyword but for all invocations.
 
@@ -385,7 +478,7 @@ version 0.3.1 (2008-10-01)
 
    1) filter out the non-soap bindings - they were causing the real trouble;
    2) since most servers are happy with any of the soap bindings (soap 1.1 and
-      1.2), ambigious references to methods when invoking then without the port
+      1.2), ambiguous references to methods when invoking then without the port
       qualification will work just fine in almost every case. So, why not just
       allow suds to select the port. Let us not make the user do it when it is
       not necessary. In most cases, users on 0.2.9 and earlier will not have to
@@ -424,14 +517,14 @@ version 0.2.8 (2008-08-28)
   * Basic unmarshaller does not need a `schema`. Should have been removed during
     refactoring but was missed.
   * Update client to pass kwargs to send() and add `location` kwarg for
-    overriding the service location in the wsdl.
+    overriding the service location in the WSDL.
   * Update marshaller to NOT emit XML for object attributes that represent
     elements and/or attributes that are *both* optional and value=None.
 
     * Update factory (builder) to include all attributes.
     * Add optional() method to SchemaObject.
 
-  * Update wsdl to override namespace in operation if specified.
+  * Update WSDL to override namespace in operation if specified.
   * Fix schema loading issue - build all schemas before processing imports.
   * Update packaging in preparation of submission to fedora.
 
@@ -463,7 +556,7 @@ version 0.2.6 (2008-08-05)
 version 0.2.5 (2008-08-01)
   * Overhauled the (XSD) package. This new (merging) approach is simpler and
     should be more reliable and maintainable. Also, should provide better
-    performance since the merged schema performes lookups via dictionary lookup.
+    performance since the merged schema performs lookups via dictionary lookup.
     This overhaul should fix current TypeNotFound and <xs:extension/> problems,
     I hope :-).
   * Fixed dateTime printing bug.
@@ -503,7 +596,7 @@ version 0.2.2 (2008-07-08)
     well as, query incrementation.
   * Add inject keyword used to inject outbound soap messages and/or inbound
     reply messages.
-  * Refactor SoapClient and
+  * Refactored SoapClient and
 
     1) rename send() to invoke()
     2) split message sending from invoke() and place in send()
@@ -513,49 +606,49 @@ version 0.2.2 (2008-07-08)
   * Add Namespace class to sax for better management of namespace behavior;
     retrofix suds to import and use Namespace.
   * Change the default namespace used to resolve referenced types (having
-    attributes @base="",@type="") so that when no prefix is specified: uses XML
+    attributes @base="", @type="") so that when no prefix is specified: uses XML
     (node) namespace instead of the targetNamespace.
   * Apply fix as defined by davidglick@onenw.org in ticket #13.
   * Update service definition to print to display service methods as
     ' my_method(xs:int arg0, Person arg1) ' instead of
     ' my_method(arg0{xs:int}, arg1{Person}) ' which is more like traditional
     method signatures.
-  * Add xsd/python type converstion to unmarshaller (XBoolean only); refactor
+  * Add xsd/python type conversion to unmarshaller (XBoolean only); refactor
     unmarshaller to use Content class which makes APIs cleaner, adds symmetry
     between marshaller(s) and unmarshaller(s), provides good mechanism for
     schema-property based type conversions.
-  * Refactor marshaller with Appenders; add nobuiltin flag to resolve() to
-    support fix for returned_type() and returnes_collection() in bindings.
-  * Add support for (202,204) http codes.
+  * Refactored marshaller with Appenders; add nobuiltin flag to resolve() to
+    support fix for returned_type() and returned_collection() in bindings.
+  * Add support for (202, 204) http codes.
   * Add XBoolean and mappings; add findattr() to TreeResolver in preparation for
     type conversions.
   * Updated schema and schema property loading (deep recursion stopped); Changed
     Imported schemas so then no longer copy imported schemas, rather the import
     proxies find requests; Add ServiceDefinition class which provides better
     service inspection; also provides namespace mapping and show types; schema
-    property api simplified; support for xs:any and xs:anyType added; Some
+    property API simplified; support for xs:any and xs:anyType added; Some
     schema lookup problems fixed; Binding classes refactored slightly; A lot of
     debug logging added (might have to comment some out for performance - some
     of the args are expensive).
   * Add sudsobject.Property; a property is a special Object that contains a
-    (value) attributeand is returned by the Builder (factory) for schema-types
+    (value) attribute and is returned by the Builder (factory) for schema-types
     without children such as: <element/> and <simpleType/>; Builder, Marshallers
     and Resolvers updated to handle Properties; Resolver, Schema also updated to
     handle attribute lookups (this was missing).
   * Add groundwork for user defined soap headers.
   * Fix elementFormDefault per ticket #7
-  * Remove unused kwargs from bindings; cache bindings in wsdl; retrofit legacy
+  * Remove unused kwargs from bindings; cache bindings in WSDL; retrofit legacy
     ServiceProxy to delegate to {new} Client API; remove keyword nil_supported
     in favor of natural handling by 'nillable' attribute on <element/> within
     schemas.
   * Add support for <element/> attribute flags (nillable and form).
   * Add the Proxy (2nd generation API) class.
-  * Add accessor/conversion functions to that user don't need to access __x__
+  * Add accessor/conversion functions to that user do not need to access __x__
     attributes. Also add todict() and get_items() for easy conversion to
     dictionary and iteration.
   * Search top-level elements for @ref before looking deeper.
   * Add derived() to SchemaObject. This is needed to ensure that all derived
-    types (wsdl classes) are qualified by xsi:type without specifying the
+    types (WSDL classes) are qualified by xsi:type without specifying the
     xsi:type for all custom types as did in earlier releases of suds. Update
     the literal marshaller to only add the xsi:type when the type needs to be
     specified.
@@ -589,9 +682,9 @@ version 0.2.2 (2008-07-08)
     implementations have some redundancy.
 
     While doing this, it made sense to factor out the common schema-type
-    "lookup" functionality used by the Builder, Marshallers and Unmarshaller
+    "lookup" functionality used by the Builder, Marshaller and Unmarshaller
     classes into a hierarchy of "Resolver" classes. This reduces the complexity
-    and redundancy of the Builder, Marshallers and Unmarshaller classes and
+    and redundancy of the Builder, Marshaller and Unmarshaller classes and
     allows for better modularity. Once this refactoring was complete, the
     difference between the literal/encoded Marshallers became very small. Given
     that the amount of code in the bindings.literal and bindings.encoded
@@ -605,7 +698,7 @@ version 0.2.2 (2008-07-08)
     All of the Suds major components:
 
     * client (old: service proxy)
-    * wsdl
+    * WSDL
 
       * schema (xsd package)
       * resolvers
@@ -641,7 +734,7 @@ version 0.2.2 (2008-07-08)
     moved all methods (including class methods) to a Factory class that is
     included in the Object class as a class attr (__factory__). Now that *all*
     attributes have python built-in naming, we should not have any more name
-    collisions. This of course assumes that no wsdl/schema entity names will
+    collisions. This of course assumes that no WSDL/schema entity names will
     have a name with the python built-in naming convention but I have to draw
     the line somewhere. :-)
 
@@ -653,7 +746,7 @@ version 0.2.1 (2008-05-08)
     2) Resolve dependencies such as @ref and @base.
     3) Promote grandchildren as needed to flatten (denormalize) the tree.
 
-    The wsdl was also changed to only load the schema once and store it. The
+    The WSDL was also changed to only load the schema once and store it. The
     schema collection was changed to load schemas in 2 steps:
 
     1) Create all raw schema objects.
@@ -682,7 +775,7 @@ version 0.2.1 (2008-05-08)
   * Add support for (xsd) schema <attribute/> nodes which primarily affects
     objects returned by the Builder.
   * Update serviceproxy.py:set_proxies() to log DEBUG instead of INFO.
-  * Enhance schema __str__ to show both the raw xml and the model (mostly for
+  * Enhance schema __str__ to show both the raw XML and the model (mostly for
     debugging).
 
 version 0.2 (2008-04-28)
@@ -692,7 +785,7 @@ version 0.2 (2008-04-28)
     Object is a simpler (more straight forward) approach that requires less code
     and works better in the debugger.
   * The Binding (and the encoding) is selected on a per-method basis which is
-    more consistent with the wsdl. In <= 0.1.7, the binding was selected when
+    more consistent with the WSDL. In <= 0.1.7, the binding was selected when
     the ServiceProxy was constructed and used for all service methods. The
     binding was stored as self.binding. Since the WSDL provides for a separate
     binding style and encoding for each operation, Suds needed to be change to
@@ -713,13 +806,14 @@ version 0.2 (2008-04-28)
   * Http proxy supported (see above).
   * ServiceProxy refactored to delegate to a SoapClient. Since the service
     proxy exposes web services via getattr(), any attribute (including methods)
-    provided by the ServiceProxy class hides WS operations defined by the wsdl.
-    So, by moving everything to the SoapClient, wsdl operations are no longer
+    provided by the ServiceProxy class hides WS operations defined by the WSDL.
+    So, by moving everything to the SoapClient, WSDL operations are no longer
     hidden without having to use *hoky* names for attributes and methods in the
     service proxy. Instead, the service proxy has __client__ and __factory__
     attributes (which really should be at low risk for name collision). For now
     the get_instance() and get_enum() methods have not been moved to preserve
-    backward compatibility. Although, the prefered API change would to replace::
+    backward compatibility. Although, the preferred API change would to
+    replace::
 
       > service = ServiceProxy('myurl')
       > person = service.get_instance('person')
@@ -732,9 +826,9 @@ version 0.2 (2008-04-28)
     After a few releases giving time for users to switch the new API, the
     get_instance() and get_enum() methods may be removed with a notice in big
     letters.
-  * Fixed problem where a wsdl doesn't define a <schema/> section and Suds can't
-    resolve the prefixes for the http://www.w3.org/2001/XMLSchema namespace to
-    detect builtin types such as (xs:string).
+  * Fixed problem where a WSDL does not define a <schema/> section and Suds can
+    not resolve the prefixes for the http://www.w3.org/2001/XMLSchema namespace
+    to detect builtin types such as (xs:string).
 
 version 0.1.7 (2008-04-08)
   * Added Binding.nil_supported to controls how property values (out) = None and
@@ -746,7 +840,7 @@ version 0.1.7 (2008-04-08)
     * service.binding.nil_supported = False -- means that property values = None
       are marshalled (out) as <x/> and <x/> *and* <x xsi:nil=true/> is
       unmarshalled as None. The xsi:nil is really ignored.
-    * THE DEFAULT IS (TRUE)
+    * THE DEFAULT IS (TRUE).
 
   * Sax handler updated to handle multiple character() callbacks when the sax
     parser "chunks" the text. When the node.text is None, the node.text is set
@@ -764,14 +858,14 @@ version 0.1.7 (2008-04-08)
     unicode.
   * SchemaCollection changed to provide the builtin() and custom() methods. To
     support this, findPrefixes() was added to the Element in sax.py. This is a
-    better approach anyway since the wsdl and schemas may have many prefixes to
+    better approach anyway since the WSDL and schemas may have many prefixes to
     'http://www.w3.org/2001/XMLSchema'. Tested with both doc/lit and rpc/lit
     bindings.
   * Refactored bindings packages from document & rpc to literal & encoded.
   * Contains the completion of *full* namespace support as follows:
 
     * Namespace prefixes are no longer stripped from attribute values that
-      reference types defined in the wsdl.
+      reference types defined in the WSDL.
     * Schema's imported using <import/> should properly handle namespace and
       prefix mapping and re-mapping as needed.
     * All types are resolved, using fully qualified (w/ namespaces) lookups.
@@ -782,7 +876,7 @@ version 0.1.7 (2008-04-08)
   * Property maintains attribute names (keys) in the order added. This also
     means that get_item() and get_names() return ordered values. Although, I
     suspect ordering really needs to be done in the marshaller using the order
-    specified in the wsdl/schema.
+    specified in the WSDL/schema.
   * Major refactoring of the schema.py. The primary goals is preparation for
     type lookups that are fully qualified by namespace. Once completed, the
     prefixes on attribute values will no longer be stripped (purged). Change
@@ -798,11 +892,11 @@ version 0.1.7 (2008-04-08)
     5) All /children/ SchemaProperty lists are constructed at __init__ instead
        of on-demand.
     6) The SchemaGroup created and WSDL class updated. This works better then
-       having the wsdl aggregate the <schema/> nodes which severs linkage to the
-       wsdl parent element that have namespace prefix mapping.
+       having the WSDL aggregate the <schema/> nodes which severs linkage to the
+       WSDL parent element that have namespace prefix mapping.
     7) <import/> element handles properly in that both namespace remapping and
        prefix re-mapping of the imported schema's targetNamespace and
-       associated prefix mapping - is performed. E.g. SCHMEA-A has prefix (tns)
+       associated prefix mapping - is performed. E.g. SCHEMA-A has prefix (tns)
        mapped as xmlns:tns=http://nsA and has targetNamespace='http://nsA'.
        SCHEMA-B is importing schema A and has prefix (abc) mapped as
        xmlns:abc='http://nsABC'. SCHEMA-B imports A as <import
@@ -822,14 +916,14 @@ version 0.1.7 (2008-04-08)
     binding and for lots of collaboration on #suds.
 
 version 0.1.6 (2008-03-06)
-  * Provides proper handling of wsdls that contain schema sections containing
+  * Provides proper handling of WSDLs that contain schema sections containing
     xsd schema imports: <import namespace="" schemaLocation=""?>. The
     referenced schemas are imported when a schemaLocation is specified.
   * Raises exceptions for http status codes not already handled.
 
 version 0.1.5 (2008-02-21)
   * Provides better logging in the modules get logger by hierarchal names.
-  * Refactored as needed to truely support other bindings.
+  * Refactored as needed to truly support other bindings.
   * Add sax module which replaces ElementTree. This is faster, simpler and
     handles namespaces (prefixes) properly.
 
@@ -842,7 +936,7 @@ version 0.1.3 (2007-12-19)
     creating property objects with value=[] when mapped-in with < 2 values by
     the DocumentReader. Caused by missing the
     bindings.Document.ReplyHint.stripns() (which uses DocumentReader.stripns())
-    conversion to DocumentReader.stripn() now returning a tuple (ns,tag) as of
+    conversion to DocumentReader.stripn() now returning a tuple (ns, tag) as of
     0.1.2.
 
 version 0.1.2 (2007-12-18)
