@@ -614,7 +614,7 @@ class SoapClient:
             metrics.log.debug('waited %s on server reply', timer)
         except TransportError, e:
             content = e.fp and e.fp.read() or ''
-            return process_reply(reply=content, status=e.httpcode,
+            return self.process_reply(reply=content, status=e.httpcode,
                 description=tostr(e), original_soapenv=original_soapenv)
         return self.process_reply(reply=reply.message,
             original_soapenv=original_soapenv)
