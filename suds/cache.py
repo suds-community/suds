@@ -201,8 +201,8 @@ class FileCache(Cache):
         if self.duration[1] < 1:
             return
         created = dt.fromtimestamp(os.path.getctime(fn))
-        d = { self.duration[0]:self.duration[1] }
-        expired = created+timedelta(**d)
+        d = {self.duration[0]:self.duration[1]}
+        expired = created + timedelta(**d)
         if expired < dt.now():
             log.debug('%s expired, deleted', fn)
             os.remove(fn)
@@ -261,17 +261,17 @@ class DocumentCache(FileCache):
 
     def get(self, id):
         try:
-            fp = FileCache.getf(self, id)
+            fp = self.getf(self, id)
             if fp is None:
                 return None
             p = Parser()
             return p.parse(fp)
         except Exception:
-            FileCache.purge(self, id)
+            self.purge(self, id)
 
     def put(self, id, object):
         if isinstance(object, Element):
-            FileCache.put(self, id, str(object))
+            self.put(self, id, str(object))
         return object
 
 
@@ -288,15 +288,14 @@ class ObjectCache(FileCache):
 
     def get(self, id):
         try:
-            fp = FileCache.getf(self, id)
+            fp = self.getf(self, id)
             if fp is None:
                 return None
-            else:
-                return pickle.load(fp)
+            return pickle.load(fp)
         except Exception:
-            FileCache.purge(self, id)
+            self.purge(self, id)
 
     def put(self, id, object):
         bfr = pickle.dumps(object, self.protocol)
-        FileCache.put(self, id, bfr)
+        self.put(self, id, bfr)
         return object
