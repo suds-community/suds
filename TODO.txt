@@ -451,10 +451,14 @@ PRIORETIZED:
 (+)         * Remove unnecessary Cache functions.
 (+)             * getf() should be left in the FileCache class only.
 (+)             * putf() should be removed completely.
-        * Add tests.
-            * Separate DocumentStore instances must not share content.
-            * Not specifying a DocumentStore instance uses the default global
-              one.
+(+)     * Add tests.
+(+)         * Separate DocumentStore instances must not share content.
+(+)         * Not specifying a DocumentStore instance uses the default global
+(+)           one.
+(+)         * Default content.
+(+)         * Updating content.
+(+)         * Accessing existing content.
+(+)         * Accessing missing content.
 
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Follow the documented release procedure.
