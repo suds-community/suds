@@ -18,11 +18,11 @@
 Suds basic options classes.
 """
 
+from suds.cache import Cache, NoCache
 from suds.properties import *
+from suds.transport import Transport
 from suds.wsse import Security
 from suds.xsd.doctor import Doctor
-from suds.transport import Transport
-from suds.cache import Cache, NoCache
 
 
 class TpLinker(AutoLinker):
@@ -43,11 +43,11 @@ class TpLinker(AutoLinker):
 class Options(Skin):
     """
     Options:
-        - B{cache} - The XML document cache.  May be set (None) for no caching.
+        - B{cache} - The XML document cache. May be set to None for no caching.
                 - type: L{Cache}
-                - default: L{NoCache}
-        - B{faults} - Raise faults raised by server,
-            else return tuple from service method invocation as (httpcode, object).
+                - default: L{NoCache()}
+        - B{faults} - Raise faults raised by server, else return tuple from
+            service method invocation as (httpcode, object).
                 - type: I{bool}
                 - default: True
         - B{service} - The default service name.
@@ -73,23 +73,24 @@ class Options(Skin):
                 - type: L{Doctor}
                 - default: None
         - B{xstq} - The B{x}ml B{s}chema B{t}ype B{q}ualified flag indicates
-            that the I{xsi:type} attribute values should be qualified by namespace.
+            that the I{xsi:type} attribute values should be qualified by
+            namespace.
                 - type: I{bool}
                 - default: True
-        - B{prefixes} - Elements of the soap message should be qualified (when needed)
-            using XML prefixes as opposed to xmlns="" syntax.
+        - B{prefixes} - Elements of the soap message should be qualified (when
+            needed) using XML prefixes as opposed to xmlns="" syntax.
                 - type: I{bool}
                 - default: True
-        - B{retxml} - Flag that causes the I{raw} soap envelope to be returned instead
-            of the python object graph.
+        - B{retxml} - Flag that causes the I{raw} soap envelope to be returned
+            instead of the python object graph.
                 - type: I{bool}
                 - default: False
-        - B{prettyxml} - Flag that causes I{pretty} xml to be rendered when generating
-            the outbound soap envelope.
+        - B{prettyxml} - Flag that causes I{pretty} xml to be rendered when
+            generating the outbound soap envelope.
                 - type: I{bool}
                 - default: False
-        - B{autoblend} - Flag that ensures that the schema(s) defined within the
-            WSDL import each other.
+        - B{autoblend} - Flag that ensures that the schema(s) defined within
+            the WSDL import each other.
                 - type: I{bool}
                 - default: False
         - B{cachingpolicy} - The caching policy.
@@ -99,7 +100,8 @@ class Options(Skin):
                 - default: 0
         - B{plugins} - A plugin container.
                 - type: I{list}
-        - B{nosend} - Create the soap envelope but don't send.
+                - default: I{list()}
+        - B{nosend} - Create the soap envelope but do not send.
             When specified, method invocation returns a I{RequestContext}
             instead of sending it.
                 - type: I{bool}
