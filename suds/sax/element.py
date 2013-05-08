@@ -53,21 +53,19 @@ class Element(UnicodeMixin):
     @cvar specialprefixes: A dictionary of builtin-special prefixes.
     """
 
-    matcher = \
-    {
+    matcher = {
         'eq': lambda a,b: a == b,
         'startswith' : lambda a,b: a.startswith(b),
         'endswith' : lambda a,b: a.endswith(b),
-        'contains' : lambda a,b: b in a
-    }
+        'contains' : lambda a,b: b in a}
 
-    specialprefixes = { Namespace.xmlns[0] : Namespace.xmlns[1]  }
+    specialprefixes = {Namespace.xmlns[0] : Namespace.xmlns[1]}
 
     @classmethod
     def buildPath(self, parent, path):
-        """
-        Build the specifed pat as a/b/c where missing intermediate nodes are built
-        automatically.
+        """Build the specifed path as a/b/c.
+
+        Any missing intermediate nodes are built automatically.
         @param parent: A parent element on which the path is built.
         @type parent: I{Element}
         @param path: A simple path separated by (/).
@@ -84,14 +82,13 @@ class Element(UnicodeMixin):
 
     def __init__(self, name, parent=None, ns=None):
         """
-        @param name: The element's (tag) name.  May cotain a prefix.
+        @param name: The element's (tag) name. May contain a prefix.
         @type name: basestring
         @param parent: An optional parent element.
         @type parent: I{Element}
-        @param ns: An optional namespace
+        @param ns: An optional namespace.
         @type ns: (I{prefix}, I{name})
         """
-
         self.rename(name)
         self.expns = None
         self.nsprefixes = {}
@@ -142,8 +139,7 @@ class Element(UnicodeMixin):
         """
         if self.prefix is None:
             return self.name
-        else:
-            return '%s:%s' % (self.prefix, self.name)
+        return '%s:%s' % (self.prefix, self.name)
 
     def getRoot(self):
         """
@@ -153,8 +149,7 @@ class Element(UnicodeMixin):
         """
         if self.parent is None:
             return self
-        else:
-            return self.parent.getRoot()
+        return self.parent.getRoot()
 
     def clone(self, parent=None):
         """
@@ -217,7 +212,6 @@ class Element(UnicodeMixin):
             pass
         return self
 
-
     def get(self, name, ns=None, default=None):
         """
         Get the value of an attribute by name.
@@ -235,8 +229,7 @@ class Element(UnicodeMixin):
         attr = self.getAttribute(name, ns)
         if attr is None or attr.value is None:
             return default
-        else:
-            return attr.getValue()
+        return attr.getValue()
 
     def setText(self, value):
         """
@@ -262,8 +255,7 @@ class Element(UnicodeMixin):
         """
         if self.hasText():
             return self.text
-        else:
-            return default
+        return default
 
     def trim(self):
         """
@@ -282,7 +274,7 @@ class Element(UnicodeMixin):
         @return: True when has I{text}.
         @rtype: boolean
         """
-        return ( self.text is not None and len(self.text) )
+        return self.text is not None and len(self.text)
 
     def namespace(self):
         """
@@ -293,8 +285,7 @@ class Element(UnicodeMixin):
         """
         if self.prefix is None:
             return self.defaultNamespace()
-        else:
-            return self.resolvePrefix(self.prefix)
+        return self.resolvePrefix(self.prefix)
 
     def defaultNamespace(self):
         """
@@ -307,15 +298,14 @@ class Element(UnicodeMixin):
         p = self
         while p is not None:
             if p.expns is not None:
-                return (None, p.expns)
-            else:
-                p = p.parent
+                return None, p.expns
+            p = p.parent
         return Namespace.default
 
     def append(self, objects):
         """
-        Append the specified child based on whether it is an
-        element or an attrbuite.
+        Append the specified child based on whether it is an element or an
+        attribute.
         @param objects: A (single|collection) of attribute(s) or element(s)
             to be added as children.
         @type objects: (L{Element}|L{Attribute})
@@ -339,8 +329,8 @@ class Element(UnicodeMixin):
     def insert(self, objects, index=0):
         """
         Insert an L{Element} content at the specified index.
-        @param objects: A (single|collection) of attribute(s) or element(s)
-            to be added as children.
+        @param objects: A (single|collection) of attribute(s) or element(s) to
+            be added as children.
         @type objects: (L{Element}|L{Attribute})
         @param index: The position in the list of children to insert.
         @type index: int
@@ -523,9 +513,9 @@ class Element(UnicodeMixin):
         n = self
         while n is not None:
             if prefix in n.nsprefixes:
-                return (prefix, n.nsprefixes[prefix])
+                return prefix, n.nsprefixes[prefix]
             if prefix in self.specialprefixes:
-                return (prefix, self.specialprefixes[prefix])
+                return prefix, self.specialprefixes[prefix]
             n = n.parent
         return default
 
@@ -593,14 +583,13 @@ class Element(UnicodeMixin):
                 return prefix
         if self.parent is not None:
             return self.parent.findPrefix(uri, default)
-        else:
-            return default
+        return default
 
     def findPrefixes(self, uri, match='eq'):
         """
-        Find all prefixes that has been mapped to a namespace URI.
-        The local mapping is searched, then it walks up the tree until
-        it reaches the top collecting all matches.
+        Find all prefixes that have been mapped to a namespace URI.
+        The local mapping is searched, then it walks up the tree until it
+        reaches the top, collecting all matches.
         @param uri: A namespace URI.
         @type uri: basestring
         @param match: A matching function L{Element.matcher}.
@@ -688,9 +677,7 @@ class Element(UnicodeMixin):
         nocontent = ( nochildren and notext )
         if content:
             return nocontent
-        else:
-            return ( nocontent and noattrs )
-
+        return nocontent and noattrs
 
     def isnil(self):
         """
@@ -700,10 +687,7 @@ class Element(UnicodeMixin):
         @rtype: boolean
         """
         nilattr = self.getAttribute('nil', ns=Namespace.xsins)
-        if nilattr is None:
-            return False
-        else:
-            return ( nilattr.getValue().lower() == 'true' )
+        return nilattr is not None and ( nilattr.getValue().lower() == 'true' )
 
     def setnil(self, flag=True):
         """
@@ -732,7 +716,7 @@ class Element(UnicodeMixin):
         """
         if ns is None:
             return
-        if not isinstance(ns, (tuple,list)):
+        if not isinstance(ns, (tuple, list)):
             raise Exception('namespace must be tuple')
         if ns[0] is None:
             self.expns = ns[1]
@@ -766,8 +750,7 @@ class Element(UnicodeMixin):
         if len(self.children):
             result.append('\n%s' % tab)
         result.append('</%s>' % self.qname())
-        result = ''.join(result)
-        return result
+        return ''.join(result)
 
     def plain(self):
         """
@@ -789,8 +772,7 @@ class Element(UnicodeMixin):
         for c in self.children:
             result.append(c.plain())
         result.append('</%s>' % self.qname())
-        result = ''.join(result)
-        return result
+        return ''.join(result)
 
     def nsdeclarations(self):
         """
@@ -828,15 +810,9 @@ class Element(UnicodeMixin):
         @return: True if matched.
         @rtype: boolean
         """
-        if name is None:
-            byname = True
-        else:
-            byname = ( self.name == name )
-        if ns is None:
-            byns = True
-        else:
-            byns = ( self.namespace()[1] == ns[1] )
-        return ( byname and byns )
+        byname = name is None or ( self.name == name )
+        byns = ns is None or ( self.namespace()[1] == ns[1] )
+        return byname and byns
 
     def branch(self):
         """
@@ -864,8 +840,7 @@ class Element(UnicodeMixin):
 
     def walk(self, visitor):
         """
-        Walk the branch and call the visitor function
-        on each node.
+        Walk the branch and call the visitor function on each node.
         @param visitor: A function.
         @return: self
         @rtype: L{Element}
@@ -886,7 +861,6 @@ class Element(UnicodeMixin):
                 pruned.append(c)
         for p in pruned:
             self.children.remove(p)
-
 
     def __childrenAtPath(self, parts):
         result = []
@@ -918,29 +892,22 @@ class Element(UnicodeMixin):
     def __getitem__(self, index):
         if isinstance(index, basestring):
             return self.get(index)
-        else:
-            if index < len(self.children):
-                return self.children[index]
-            else:
-                return None
+        if index < len(self.children):
+            return self.children[index]
 
     def __setitem__(self, index, value):
         if isinstance(index, basestring):
             self.set(index, value)
         else:
-            if index < len(self.children) and \
-                isinstance(value, Element):
+            if index < len(self.children) and isinstance(value, Element):
                 self.children.insert(index, value)
 
     def __eq__(self, rhs):
-        return  rhs is not None and \
-            isinstance(rhs, Element) and \
-            self.name == rhs.name and \
-            self.namespace()[1] == rhs.namespace()[1]
+        return isinstance(rhs, Element) and  \
+            self.match(rhs.name, rhs.namespace())
 
     def __repr__(self):
-        return \
-            'Element (prefix=%s, name=%s)' % (self.prefix, self.name)
+        return 'Element (prefix=%s, name=%s)' % (self.prefix, self.name)
 
     def __unicode__(self):
         return self.str()
@@ -1138,8 +1105,8 @@ class PrefixNormalizer:
         @return: True if to be skipped.
         @rtype: boolean
         """
-        return ns is None or \
-            ( ns == Namespace.default ) or \
-            ( ns == Namespace.xsdns ) or \
-            ( ns == Namespace.xsins) or \
-            ( ns == Namespace.xmlns )
+        return (ns is None or
+            ns == Namespace.default or
+            ns == Namespace.xsdns or
+            ns == Namespace.xsins or
+            ns == Namespace.xmlns)

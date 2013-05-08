@@ -38,8 +38,8 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
         * All files stored under the same id so each new local file overwrites
           the previous one.
         * We need to explicitly disable caching here or otherwise, because we
-          are using the same id for all our local WSDL documents, suds would
-          always reuse the first such local document from its cache.
+          use the same id for all our local WSDL documents, suds would always
+          reuse the first such local document from its cache.
 
     """
     # Idea for an alternative implementation:

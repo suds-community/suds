@@ -139,8 +139,8 @@ class SchemaObject(UnicodeMixin):
         """
         for child, ancestry in self.attributes():
             if child.name == name:
-                return (child, ancestry)
-        return (None, [])
+                return child, ancestry
+        return None, []
 
     def get_child(self, name):
         """
@@ -152,8 +152,8 @@ class SchemaObject(UnicodeMixin):
         """
         for child, ancestry in self.children():
             if child.any() or child.name == name:
-                return (child, ancestry)
-        return (None, [])
+                return child, ancestry
+        return None, []
 
     def namespace(self, prefix=None):
         """
@@ -193,7 +193,7 @@ class SchemaObject(UnicodeMixin):
         min = self.min
         if min is None:
             min = '1'
-        return ( min == '0' )
+        return min == '0'
 
     def required(self):
         """
@@ -201,8 +201,7 @@ class SchemaObject(UnicodeMixin):
         @return: True if required, else False
         @rtype: boolean
         """
-        return ( not self.optional() )
-
+        return not self.optional()
 
     def resolve(self, nobuiltin=False):
         """
@@ -346,7 +345,7 @@ class SchemaObject(UnicodeMixin):
         @return: A merge dependency index and a list of dependencies.
         @rtype: (int, [L{SchemaObject},...])
         """
-        return (None, [])
+        return None, []
 
     def autoqualified(self):
         """
@@ -397,7 +396,6 @@ class SchemaObject(UnicodeMixin):
             if v is None:
                 continue
             setattr(self, n, v)
-
 
     def content(self, collection=None, filter=Filter(), history=None):
         """
@@ -592,7 +590,7 @@ class Iter:
                 return self.next()
             if isinstance(result, Content):
                 ancestry = [f.sx for f in self.stack]
-                return (result, ancestry)
+                return result, ancestry
             self.push(result)
             return self.next()
 
