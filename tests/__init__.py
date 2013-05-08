@@ -34,25 +34,23 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
     store under a hard-coded id to avoid having to load the data from a
     temporary file.
 
-      Caveats:
-        * All files stored under the same id so each new local file overwrites
-          the previous one.
-        * We need to explicitly disable caching here or otherwise, because we
-          use the same id for all our local WSDL documents, suds would always
-          reuse the first such local document from its cache.
+      Uses a locally created empty document store unless one is provided
+    externally using the 'documentStore' keyword argument.
+
+      Explicitly disables caching or otherwise, because we use the same
+    hardcoded id for our main WSDL document, suds would always reuse the first
+    such local document from its cache instead of fetching it from our document
+    store.
 
     """
-    # Idea for an alternative implementation:
-    #   Custom suds.cache.Cache subclass that would know how to access our
-    # locally stored documents or at least not cache them if we are storing
-    # them inside the suds library DocumentStore. Not difficult, allows us to
-    # have per-client instead of global configuration & allows us to support
-    # other cache types but certainly not as short as the current
-    # implementation.
     assert wsdl_content.__class__ is suds.byte_str_class
+    store = kwargs.get("documentStore")
+    if store is None:
+        store = suds.store.DocumentStore()
+        kwargs.update(documentStore=store)
     testFileId = "whatchamacallit"
-    suds.store.DocumentStore.store[testFileId] = wsdl_content
-    kwargs["cache"] = None
+    store.update({testFileId:wsdl_content})
+    kwargs.update(cache=None)
     return suds.client.Client("suds://" + testFileId, *args, **kwargs)
 
 

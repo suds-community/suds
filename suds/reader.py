@@ -88,14 +88,16 @@ class DocumentReader(Reader):
         @return: A file pointer to the document.
         @rtype: file-like
         """
-        store = DocumentStore()
-        fp = store.open(url)
-        if fp is None:
+        content = None
+        store = self.options.documentStore
+        if store is not None:
+            content = store.open(url)
+        if content is None:
             fp = self.options.transport.open(Request(url))
-        try:
-            content = fp.read()
-        finally:
-            fp.close()
+            try:
+                content = fp.read()
+            finally:
+                fp.close()
         ctx = self.plugins.document.loaded(url=url, document=content)
         content = ctx.document
         sax = Parser()
