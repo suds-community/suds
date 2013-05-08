@@ -546,6 +546,13 @@ class DocumentStore:
         self.update = self.__store.update
         self.update(*args, **kwargs)
 
+    def __len__(self):
+        # Implementation note:
+        #   We can not implement '__len__' as simply self.__store.__len__, as
+        # we do for 'update' because that causes py2to3 conversion to fail.
+        #                                            (08.05.2013.) (Jurko)
+        return len(self.__store)
+
     def open(self, url):
         """
         Open a document at the specified URL.
