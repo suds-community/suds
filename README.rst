@@ -55,7 +55,7 @@ Here are the basic instructions for 3 different installation methods:
 Release notes
 =================================================
 
-version 0.4.1 jurko 5 (2013-04-02)
+version 0.4.1 jurko 5 (planned soon)
     * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
       original suds Python library development project's Subversion repository.
 
@@ -135,9 +135,36 @@ version 0.4.1 jurko 5 (2013-04-02)
       * ``status`` - HTTP status code accompanying the 'reply' message.
       * ``description`` - description string accompanying the 'reply' message.
 
-    * Added ``unwrap`` option, alowing the used to disable suds library's
+    * Added ``unwrap`` option, alowing the user to disable suds library's
       automated simple document interface unwrapping (contributed by Juraj
       Ivančić).
+    * Fixed a problem with suds constructing parameter XML elements in its SOAP
+      requests in incorrect namespaces in case they have been defined by XSD
+      schema elements referencing XSD schema elements with a different target
+      namespace.
+    * ``DocumentStore`` instance updated.
+
+      * Separate ``DocumentStore`` instances now hold separate data with every
+        instance holding all the hardcoded suds library XML document data.
+      * ``DocumentStore`` now supports a dict-like update() method for adding
+        new documents to it.
+      * ``Client`` instances may now be given a specific ``DocumentStore``
+        instance using the 'documentStore' option. Not specifying the option
+        uses a shared singleton instance. Specifying the option as ``None``
+        avoids using any document store whatsoever.
+      * Suds tests no longer have to modify the global shared ``DocumentStore``
+        data in order to avoid loading its known data from external files and so
+        may no longer affect each other by leaving behind data in that global
+        shared ``DocumentStore``.
+      * Documents may now be fetched from a ``DocumentStore`` using a transport
+        protocol other than ``suds``. When using the ``suds`` protocol an
+        exception is raised if the document could not be found in the store
+        while in all other cases ``None`` is returned instead.
+      * Documents in a ``DocumentStore`` are now accessed as bytes instead
+        file-like stream objects.
+      * Made more ``DocumentStore`` functions private.
+
+    * Corrected error message displayed in case of a transport error.
     * Many unit tests updated and added.
 
     * Internal code cleanup.
@@ -147,6 +174,13 @@ version 0.4.1 jurko 5 (2013-04-02)
       * Binding classes no longer have anything to do with method independent
         Fault element processing.
       * Removed SoapClient ``last_sent()`` and ``last_received()`` functions.
+      * Fixed file closing in ``reader.py`` & ``cache.py`` modules - used files
+        now closed explicitly in case of failed file operations instead of
+        relying on the Python GC to close them 'some time later on'.
+      * Fixed silently ignoring internal exceptions like ``KeyboardInterrupt``
+        in the ``cache.py`` module.
+      * Removed unused Cache module ``getf()`` & ``putf()`` functions.
+        ``getf()`` left only in ``FileCache`` and its derived classes.
 
 version 0.4.1 jurko 4 (2012-04-17)
     * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
