@@ -30,7 +30,7 @@ import os
 from tempfile import gettempdir as tmp
 try:
     import cPickle as pickle
-except:
+except Exception:
     import pickle
 
 log = getLogger(__name__)
@@ -157,7 +157,7 @@ class FileCache(Cache):
         try:
             if not os.path.isdir(self.location):
                 os.makedirs(self.location)
-        except:
+        except Exception:
             log.debug(self.location, exc_info=1)
         return self
 
@@ -168,7 +168,7 @@ class FileCache(Cache):
             f.write(bfr)
             f.close()
             return bfr
-        except:
+        except Exception:
             log.debug(id, exc_info=1)
             return bfr
 
@@ -178,7 +178,7 @@ class FileCache(Cache):
             bfr = f.read()
             f.close()
             return bfr
-        except:
+        except Exception:
             pass
 
     def getf(self, id):
@@ -186,7 +186,7 @@ class FileCache(Cache):
             fn = self.__fn(id)
             self.validate(fn)
             return self.open(fn, 'rb')
-        except:
+        except Exception:
             pass
 
     def validate(self, fn):
@@ -217,7 +217,7 @@ class FileCache(Cache):
         fn = self.__fn(id)
         try:
             os.remove(fn)
-        except:
+        except Exception:
             pass
 
     def open(self, fn, *args):
@@ -235,7 +235,7 @@ class FileCache(Cache):
             f.close()
             if version != suds.__version__:
                 raise Exception()
-        except:
+        except Exception:
             self.clear()
             f = self.open(path, 'w')
             f.write(suds.__version__)
@@ -263,7 +263,7 @@ class DocumentCache(FileCache):
                 return None
             p = Parser()
             return p.parse(fp)
-        except:
+        except Exception:
             FileCache.purge(self, id)
 
     def put(self, id, object):
@@ -290,7 +290,7 @@ class ObjectCache(FileCache):
                 return None
             else:
                 return pickle.load(fp)
-        except:
+        except Exception:
             FileCache.purge(self, id)
 
     def put(self, id, object):
