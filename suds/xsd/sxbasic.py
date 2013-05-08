@@ -435,12 +435,8 @@ class Element(TypedContent):
     def dependencies(self):
         deps = []
         midx = None
-        if self.ref is not None:
-            query = ElementQuery(self.ref)
-            e = query.execute(self.schema)
-            if e is None:
-                log.debug(self.schema)
-                raise TypeNotFound(self.ref)
+        e = self.__deref()
+        if e is not None:
             deps.append(e)
             midx = 0
         return midx, deps
@@ -460,6 +456,33 @@ class Element(TypedContent):
             mp = p
             self.root.addPrefix(p, u)
         return ':'.join((mp, 'anyType'))
+
+    def namespace(self, prefix=None):
+        """
+        Get this schema element's target namespace.
+
+        In case of reference elements, the target namespace is defined by the
+        referenced and not the referencing element node.
+
+        @param prefix: The default prefix.
+        @type prefix: str
+        @return: The schema element's target namespace
+        @rtype: (I{prefix},I{URI})
+        """
+        e = self.__deref()
+        if e is not None:
+            return e.namespace(prefix)
+        return super(Element, self).namespace()
+
+    def __deref(self):
+        if self.ref is None:
+            return
+        query = ElementQuery(self.ref)
+        e = query.execute(self.schema)
+        if e is None:
+            log.debug(self.schema)
+            raise TypeNotFound(self.ref)
+        return e
 
 
 class Extension(SchemaObject):

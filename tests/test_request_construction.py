@@ -41,6 +41,7 @@ if __name__ == "__main__":
 
 
 import suds
+import suds.store
 import tests
 
 import pytest
@@ -98,6 +99,126 @@ def test_disabling_automated_simple_interface_unwrapping():
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
+
+
+def test_element_references_to_different_namespaces():
+    main_wsdl = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="first-namespace"
+    targetNamespace="first-namespace">
+
+  <wsdl:types>
+    <xsd:schema
+        targetNamespace="first-namespace"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        xmlns:second="second-namespace">
+      <xsd:import namespace="second-namespace" schemaLocation="suds://external_schema"/>
+      <xsd:element name="local_referenced" type="xsd:string"/>
+      <xsd:element name="fRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="local" type="xsd:string"/>
+            <xsd:element ref="local_referenced"/>
+            <xsd:element ref="second:external"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="tns:fRequest"/>
+  </wsdl:message>
+
+  <wsdl:portType name="DummyServicePortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="tns:fRequestMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="DummyServiceBinding" type="tns:DummyServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="DummyService">
+    <wsdl:port name="DummyServicePort" binding="tns:DummyServiceBinding">
+      <soap:address location="BoogaWooga"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+
+    external_schema = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<schema
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="second-namespace">
+  <element name="external" type="string"/>
+</schema>
+""")
+
+    original_store = suds.store.DocumentStore.store
+    suds.store.DocumentStore.store = store = original_store.copy()
+    try:
+        store["external_schema"] = external_schema
+        client = tests.client_from_wsdl(main_wsdl, nosend=True)
+        request = client.service.f(local="--L--", local_referenced="--LR--",
+            external="--E--")
+
+        root = request.original_envelope
+        root_children = root.getChildren()
+        assert len(root_children) == 1
+        envelope = root_children[0]
+
+        assert envelope.__class__ is suds.sax.element.Element
+        assert envelope.name == "Envelope"
+        envelope_children = envelope.getChildren()
+        assert len(envelope_children) == 2
+        header = envelope_children[0]
+        body = envelope_children[1]
+
+        assert header.__class__ is suds.sax.element.Element
+        assert header.name == "Header"
+
+        assert body.__class__ is suds.sax.element.Element
+        assert body.name == "Body"
+        body_children = body.getChildren()
+        assert len(body_children) == 1
+        operationRequest = body_children[0]
+
+        assert operationRequest.__class__ is suds.sax.element.Element
+        assert operationRequest.name == "fRequest"
+        operationRequest_children = operationRequest.getChildren()
+        assert len(operationRequest_children) == 3
+        p1 = operationRequest_children[0]
+        p2 = operationRequest_children[1]
+        p3 = operationRequest_children[2]
+
+        assert p1.__class__ is suds.sax.element.Element
+        assert p1.name == "local"
+        assert p1.namespace()[1] == "first-namespace"
+        assert p1.text == "--L--"
+
+        assert p2.__class__ is suds.sax.element.Element
+        assert p2.name == "local_referenced"
+        assert p2.namespace()[1] == "first-namespace"
+        assert p2.text == "--LR--"
+
+        assert p3.__class__ is suds.sax.element.Element
+        assert p3.name == "external"
+        assert p3.namespace()[1] == "second-namespace"
+        assert p3.text == "--E--"
+    finally:
+        suds.store.DocumentStore.store = original_store
 
 
 def test_extra_parameters():
