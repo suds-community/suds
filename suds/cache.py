@@ -51,16 +51,6 @@ class Cache:
         """
         raise Exception('not-implemented')
 
-    def getf(self, id):
-        """
-        Get a object from the cache by ID.
-        @param id: The object ID.
-        @type id: str
-        @return: The object, else None
-        @rtype: any
-        """
-        raise Exception('not-implemented')
-
     def put(self, id, object):
         """
         Put a object into the cache.
@@ -68,16 +58,6 @@ class Cache:
         @type id: str
         @param object: The object to add.
         @type object: any
-        """
-        raise Exception('not-implemented')
-
-    def putf(self, id, fp):
-        """
-        Write a fp into the cache.
-        @param id: The object ID.
-        @type id: str
-        @param fp: File pointer.
-        @type fp: file-like object.
         """
         raise Exception('not-implemented')
 
@@ -104,13 +84,7 @@ class NoCache(Cache):
     def get(self, id):
         return None
 
-    def getf(self, id):
-        return None
-
     def put(self, id, object):
-        pass
-
-    def putf(self, id, fp):
         pass
 
 
@@ -197,18 +171,6 @@ class FileCache(Cache):
         except:
             log.debug(id, exc_info=1)
             return bfr
-
-    def putf(self, id, fp):
-        try:
-            fn = self.__fn(id)
-            f = self.open(fn, 'wb')
-            f.write(fp.read())
-            fp.close()
-            f.close()
-            return open(fn)
-        except:
-            log.debug(id, exc_info=1)
-            return fp
 
     def get(self, id):
         try:
