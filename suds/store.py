@@ -557,7 +557,6 @@ class DocumentStore:
         protocol, location = self.split(url)
         if protocol == self.protocol:
             return self.find(location)
-        return
 
     def find(self, location):
         """
