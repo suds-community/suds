@@ -92,8 +92,10 @@ class DocumentReader(Reader):
         fp = store.open(url)
         if fp is None:
             fp = self.options.transport.open(Request(url))
-        content = fp.read()
-        fp.close()
+        try:
+            content = fp.read()
+        finally:
+            fp.close()
         ctx = self.plugins.document.loaded(url=url, document=content)
         content = ctx.document
         sax = Parser()
