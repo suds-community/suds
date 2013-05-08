@@ -165,8 +165,10 @@ class FileCache(Cache):
         try:
             fn = self.__fn(id)
             f = self.open(fn, 'wb')
-            f.write(bfr)
-            f.close()
+            try:
+                f.write(bfr)
+            finally:
+                f.close()
             return bfr
         except Exception:
             log.debug(id, exc_info=1)
@@ -175,9 +177,10 @@ class FileCache(Cache):
     def get(self, id):
         try:
             f = self.getf(id)
-            bfr = f.read()
-            f.close()
-            return bfr
+            try:
+                return f.read()
+            finally:
+                f.close()
         except Exception:
             pass
 
