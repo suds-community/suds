@@ -418,7 +418,7 @@ PRIORETIZED:
 (+)       support.
 (+)     * Add code for disabling suds library wrapped parameter support.
 
-(02.04.2012.)
+(02.04.2013.)
 
 (+) * (Jurko) Restriction support cleanup based on patches sent in by Juraj
 (+)   Ivanèiæ from PKE sistemi.
@@ -431,8 +431,25 @@ PRIORETIZED:
 (+) * (Jurko) Prepare the '0.4.1 jurko 5' release.
 (+)     * Update release notes.
 
+(08.05.2013.)
+
+(+) * (Jurko) Make suds construct SOAP requests with correct element namespaces
+(+)   when their XSD schema definition nodes reference other nodes with a
+(+)   different namespace.
+(+)     * Research.
+(+)     * Add test.
+(+)     * Implement.
+(+)     * Report back to Jens Arm from KabelDeutschland who reported the issue.
+
+    * (Jurko) Support specifying a custom DocumentStore instance for a specific
+      Client.
+        * Support.
+        * Update test code adding documents to the global DocumentStore instance
+          to use a local one instead.
+
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Follow the documented release procedure.
+            * Update release notes.
             * Update version information.
             * Tag in Hg.
             * Upload the source package.
@@ -455,12 +472,18 @@ NON PRIORETIZED:
           programming bugs easier.
         * Ideas.
             * Make sure given values fit their respective type value domains,
-              e.g. integers, strings, regular expressions, restrictions,
-              complex types where a builtin was expected, complex type of an
-              unexpected structure, etc.
+              e.g. integers, strings, regular expressions, restrictions, complex
+              types where a builtin was expected, complex type of an unexpected
+              structure, etc.
             * Extra parameters are reported as errors.
             * Missing non-optional parameters are reported as errors.
             * Input message part has both element & type specified.
+
+    * See how invalid schemas containing a ref-cycle are handled.
+        * They should be reported as invalid either when dereferencing them
+          (e.g. to determine an element's target namespace) or when building the
+          internal schema object tree and should not cause us to go into endless
+          recursion.
 
     * See how multi-occurrence input parameter elements are supposed to be
       supported.
@@ -546,13 +569,21 @@ NON PRIORETIZED:
         * Implement.
 
     * Prepare additional test cases.
+        * Loading a wsdl from a file as in suds.client.Client(
+          "file://localhost/Folder/aaa.wsdl").
+            * Path not containing spaces.
+            * Path containing spaces.
+        * Invalid element reference.
+        * Handing schema imports.
+            * With the same target namespace.
+            * With a different target namespace.
         * Prepared SOAP operation invocation requests.
             * With choice parameters.
         * Calling a web service operation with no parameters.
             * RPC binding style.
             * Document binding style.
 
-    * Proces ideas collected from external projects using suds.
+    * Process ideas collected from external projects using suds.
         * Alternative choice implementation that would not automatically expand
           all choice function parameters but instead take some more generic
           'choice' object parameter.
