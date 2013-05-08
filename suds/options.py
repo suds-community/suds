@@ -20,6 +20,7 @@ Suds basic options classes.
 
 from suds.cache import Cache, NoCache
 from suds.properties import *
+from suds.store import DocumentStore, defaultDocumentStore
 from suds.transport import Transport
 from suds.wsse import Security
 from suds.xsd.doctor import Doctor
@@ -46,6 +47,12 @@ class Options(Skin):
         - B{cache} - The XML document cache. May be set to None for no caching.
                 - type: L{Cache}
                 - default: L{NoCache()}
+        - B{documentStore} - The XML document store used to access locally
+            stored documents without having to download them from an external
+            location. May be set to None for no internal suds library document
+            store.
+                - type: L{DocumentStore}
+                - default: L{defaultDocumentStore}
         - B{faults} - Raise faults raised by server, else return tuple from
             service method invocation as (httpcode, object).
                 - type: I{bool}
@@ -111,6 +118,7 @@ class Options(Skin):
         domain = __name__
         definitions = [
             Definition('cache', Cache, NoCache()),
+            Definition('documentStore', DocumentStore, defaultDocumentStore),
             Definition('faults', bool, True),
             Definition('transport', Transport, None, TpLinker()),
             Definition('service', (int, basestring), None),

@@ -440,12 +440,21 @@ PRIORETIZED:
 (+)     * Add test.
 (+)     * Implement.
 (+)     * Report back to Jens Arm from KabelDeutschland who reported the issue.
-
-    * (Jurko) Support specifying a custom DocumentStore instance for a specific
-      Client.
-        * Support.
-        * Update test code adding documents to the global DocumentStore instance
-          to use a local one instead.
+(+) * (Jurko) Support specifying a custom DocumentStore instance for a specific
+(+)   Client.
+(+)     * Support.
+(+)     * Update test code adding documents to the global DocumentStore instance
+(+)       to use a local one instead.
+(+)     * Cleanup.
+(+)         * DocumentStore.open() can return the bytes object directly instead
+(+)           of having to wrap it inside a BytesIO instance.
+(+)         * Remove unnecessary Cache functions.
+(+)             * getf() should be left in the FileCache class only.
+(+)             * putf() should be removed completely.
+        * Add tests.
+            * Separate DocumentStore instances must not share content.
+            * Not specifying a DocumentStore instance uses the default global
+              one.
 
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Follow the documented release procedure.
