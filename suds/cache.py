@@ -261,17 +261,17 @@ class DocumentCache(FileCache):
 
     def get(self, id):
         try:
-            fp = self.getf(self, id)
+            fp = self.getf(id)
             if fp is None:
                 return None
             p = Parser()
             return p.parse(fp)
         except Exception:
-            self.purge(self, id)
+            self.purge(id)
 
     def put(self, id, object):
         if isinstance(object, Element):
-            self.put(self, id, str(object))
+            self.put(id, str(object))
         return object
 
 
@@ -288,14 +288,14 @@ class ObjectCache(FileCache):
 
     def get(self, id):
         try:
-            fp = self.getf(self, id)
+            fp = self.getf(id)
             if fp is None:
                 return None
             return pickle.load(fp)
         except Exception:
-            self.purge(self, id)
+            self.purge(id)
 
     def put(self, id, object):
         bfr = pickle.dumps(object, self.protocol)
-        self.put(self, id, bfr)
+        self.put(id, bfr)
         return object
