@@ -36,11 +36,18 @@ if __name__ == "__main__":
 
 import suds
 import suds.cache
+import suds.sax.parser
 
 import pytest
 
 import os
 import tempfile
+
+
+class InvisibleMan:
+    """Dummy class used for pickling related tests."""
+    def __init__(self, x):
+        self.x = x
 
 
 # Hardcoded values used in different caching test cases.
@@ -62,6 +69,39 @@ def test_Cache():
     pytest.raises(Exception, cache.put, "id", "object")
     pytest.raises(Exception, cache.purge, "id")
     pytest.raises(Exception, cache.clear)
+
+
+def test_DocumentCache(tmpdir):
+    cacheFolder = tmpdir.join("puffy").strpath
+    cache = suds.cache.DocumentCache(cacheFolder)
+    assert isinstance(cache, suds.cache.FileCache)
+    assert cache.get("unga1") is None
+
+    # TODO: DocumentCache class interface seems silly. Its get() operation
+    # returns an XML document while its put() operation takes an XML element.
+    # The put() operation also silently ignores passed data of incorrect type.
+    # TODO: Update this test to no longer depend on the exact input XML data
+    # formatting. We currently expect it to be formatted exactly as what gets
+    # read back from the DocumentCache.
+    content = suds.byte_str("""\
+<xsd:element name="Elemento">
+   <xsd:simpleType>
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="alfa"/>
+         <xsd:enumeration value="beta"/>
+         <xsd:enumeration value="gamma"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+</xsd:element>""")
+    xml = suds.sax.parser.Parser().parse(suds.BytesIO(content))
+    cache.put("unga1", xml.getChildren()[0])
+    readXML = cache.get("unga1")
+    assert isinstance(readXML, suds.sax.document.Document)
+    readXMLElements = readXML.getChildren()
+    assert len(readXMLElements) == 1
+    readXMLElement = readXMLElements[0]
+    assert isinstance(readXMLElement, suds.sax.element.Element)
+    assert suds.byte_str(str(readXMLElement)) == content
 
 
 def test_FileCache():
@@ -289,6 +329,22 @@ def test_NoCache():
     # instance.
     pytest.raises(Exception, cache.purge, "id")
     pytest.raises(Exception, cache.clear)
+
+
+def test_ObjectCache(tmpdir):
+    cacheFolder = tmpdir.join("george carlin").strpath
+    cache = suds.cache.ObjectCache(cacheFolder)
+    assert isinstance(cache, suds.cache.FileCache)
+    assert cache.get("unga1") is None
+    assert cache.get("unga2") is None
+    cache.put("unga1", InvisibleMan(1))
+    cache.put("unga2", InvisibleMan(2))
+    read1 = cache.get("unga1")
+    read2 = cache.get("unga2")
+    assert read1.__class__ is InvisibleMan
+    assert read2.__class__ is InvisibleMan
+    assert read1.x == 1
+    assert read2.x == 2
 
 
 def _isEmptyCacheFolder(folder):
