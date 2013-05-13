@@ -78,7 +78,7 @@ version 0.4.1 jurko 5 (planned soon)
 
       * Cache files now used again.
 
-        * Problems cased by cache files being stored in text mode, but
+        * Problems caused by cache files being stored in text mode, but
           attempting to write a bytes object in them. Too eager error handling
           was then causing all such cached file usage to fail silently.
 

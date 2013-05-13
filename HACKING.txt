@@ -46,7 +46,7 @@ GENERAL DEVELOPMENT NOTES:
         * Used to be synchronized with the originating queue but that
           synchronization is no longer being maintained as it became more and
           more difficult as our work on suds progressed and both the original
-          sude project and this patch queue seem dead otherwise.
+          suds project and this patch queue seem dead otherwise.
             * Used to be committed first to the 'Python 3 support' branch and
               then merged back to the trunk from there.
 
