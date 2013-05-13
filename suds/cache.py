@@ -271,7 +271,7 @@ class DocumentCache(FileCache):
 
     def put(self, id, object):
         if isinstance(object, Element):
-            self.put(id, str(object))
+            FileCache.put(self, id, str(object))
         return object
 
 
@@ -297,5 +297,5 @@ class ObjectCache(FileCache):
 
     def put(self, id, object):
         bfr = pickle.dumps(object, self.protocol)
-        self.put(id, bfr)
+        FileCache.put(self, id, bfr)
         return object
