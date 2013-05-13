@@ -271,7 +271,7 @@ class DocumentCache(FileCache):
 
     def put(self, id, object):
         if isinstance(object, Element):
-            FileCache.put(self, id, str(object))
+            FileCache.put(self, id, suds.byte_str(str(object)))
         return object
 
 
