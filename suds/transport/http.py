@@ -186,9 +186,7 @@ class HttpAuthenticated(HttpTransport):
             credentials = ':'.join(credentials)
             # Bytes and strings are different in Python 3 than in Python 2.x.
             if sys.version_info < (3,0):
-                encoded = base64.encodestring(credentials)
-                # There is an extra terminal \n in Python 2.x.
-                basic = 'Basic %s' % encoded[:-1]
+                basic = 'Basic %s' % base64.b64encode(credentials)
             else:
                 encodedBytes = base64.urlsafe_b64encode(credentials.encode())
                 encodedString = encodedBytes.decode()
