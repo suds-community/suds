@@ -191,7 +191,7 @@ class HttpAuthenticated(HttpTransport):
                 basic = 'Basic %s' % encoded[:-1]
             else:
                 encodedBytes = base64.urlsafe_b64encode(credentials.encode())
-                encodedString = encoded.decode()
+                encodedString = encodedBytes.decode()
                 basic = 'Basic %s' % encodedString
             request.headers['Authorization'] = basic
 
