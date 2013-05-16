@@ -87,6 +87,8 @@ version 0.4.1 jurko 5 (planned soon)
         (contributed by Phillip Alday).
       * Unicode/byte string handling fixes.
 
+    * Fixed encoding long user credentials for basic HTTP authentication in
+      ``transport/http.py`` (contributed by Jan-Wijbrand Kolman).
     * Fixed an IndexError occurring when calling a web service operation with
       only a single input parameter.
     * Fixed a log formatting error, originated in the original suds (contributed
@@ -135,7 +137,7 @@ version 0.4.1 jurko 5 (planned soon)
       * ``status`` - HTTP status code accompanying the 'reply' message.
       * ``description`` - description string accompanying the 'reply' message.
 
-    * Added ``unwrap`` option, alowing the user to disable suds library's
+    * Added ``unwrap`` option, allowing the user to disable suds library's
       automated simple document interface unwrapping (contributed by Juraj
       Ivančić).
     * Fixed a problem with suds constructing parameter XML elements in its SOAP
@@ -354,8 +356,8 @@ version 0.4 (2010-09-08)
   * Updated caching to not cache intermediate WSDLs.
   * Added DocumentCache which caches verified XML documents as text. User can
     choose.
-  * Added cachingpolicy option to allow user to specify whether to cache XML
-    documents or the WSDL object.
+  * Added ``cachingpolicy`` option to allow user to specify whether to cache
+    XML documents or WSDL objects.
   * Provided for repeating values in reply for message parts consistent with way
     handled in nested objects.
   * Added charset=utf-8 to stock content-type http header.
@@ -373,7 +375,7 @@ version 0.3.9 (2009-12-17)
   * No more SAX parsing exceptions on damaged or incomplete cached files.
   * Cached WSDL objects. Entire Definitions object including contained Schema
     object cached via pickle.
-  * Copy of soap encoding schema packaged with suds.
+  * Copy of SOAP encoding schema packaged with suds.
   * Refactor Transports to use ProxyHandler instead of
     urllib2.Request.set_proxy().
   * Added WSSE enhancements <Timestamp/> and <Expires/> support. See: Timestamp
