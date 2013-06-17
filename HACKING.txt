@@ -31,6 +31,23 @@ GENERAL DEVELOPMENT NOTES:
             * Features introduced in Python 2.5.
                 * 'any' & 'all' functions.
                 * 'with' statement.
+                * 'try/except/finally' blocks.
+                    * Prior to this Python release code like the following:
+                        try:
+                            A
+                        except XXX:
+                            B
+                        finally:
+                            C
+                      is considered illegal and needed to be written using
+                      nested try blocks as in:
+                        try:
+                            try:
+                                A
+                            except XXX:
+                                B
+                        finally:
+                            C
             * Features introduced in Python 2.6.
                 * 'bytes' type.
                 * Byte literals, e.g. b"quack".
