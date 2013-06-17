@@ -13,7 +13,6 @@ include HACKING.txt
 include LICENSE.txt
 include makefile
 include python-suds.spec
-include README.txt
 include sdist
 include TODO.txt
 
