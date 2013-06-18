@@ -89,7 +89,7 @@ def test_disabling_automated_simple_interface_unwrapping():
     assert not _isInputWrapped(client, "f")
     wrapper = client.factory.create("Wrapper")
     wrapper.Elemento = "Wonderwall"
-    assert client.service.f(Wrapper=wrapper).envelope == suds.byte_str("""\
+    _check_request(client.service.f(Wrapper=wrapper), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -236,8 +236,7 @@ def test_extra_parameters():
       </xsd:element>""", "Wrapper"))
 
     # Unnamed parameters.
-    assert service.f("something", 0, "extra1", "extra2").envelope ==  \
-        suds.byte_str("""\
+    _check_request(service.f("something", 0, "extra1", "extra2"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -250,8 +249,7 @@ def test_extra_parameters():
 </SOAP-ENV:Envelope>""")
 
     # Named parameters.
-    assert service.f("something", extra="1", anInteger=7).envelope ==  \
-        suds.byte_str("""\
+    _check_request(service.f("something", extra="1", anInteger=7), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -295,8 +293,7 @@ def test_invalid_argument_type_handling():
     class SomeType:
         def __str__(self):
             return "Some string representation."
-    assert client.service.f(anInteger=SomeType()).envelope ==  \
-        suds.byte_str("""\
+    _check_request(client.service.f(anInteger=SomeType()), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -314,8 +311,7 @@ def test_invalid_argument_type_handling():
     value.freak1 = "Tiny"
     value.freak2 = "Miny"
     value.freak3 = "Mo"
-    assert client.service.f(anInteger=value).envelope ==  \
-        suds.byte_str("""\
+    _check_request(client.service.f(anInteger=value), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -348,7 +344,7 @@ def test_missing_parameters():
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
 
-    assert service.f().envelope == suds.byte_str("""\
+    _check_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -360,7 +356,7 @@ def test_missing_parameters():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    assert service.f(u"Pero Ždero").envelope == suds.byte_str("""\
+    _check_request(service.f(u"Pero Ždero"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -372,7 +368,7 @@ def test_missing_parameters():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    assert service.f(anInteger=666).envelope == suds.byte_str("""\
+    _check_request(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -385,8 +381,7 @@ def test_missing_parameters():
 </SOAP-ENV:Envelope>""")
 
     # None value is treated the same as undefined.
-    assert service.f(aString=None, anInteger=666).envelope ==  \
-        suds.byte_str("""\
+    _check_request(service.f(aString=None, anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -397,8 +392,7 @@ def test_missing_parameters():
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    assert service.f(aString="Omega", anInteger=None).envelope ==  \
-        suds.byte_str("""\
+    _check_request(service.f(aString="Omega", anInteger=None), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -415,6 +409,14 @@ def test_named_parameter():
     service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
+    class Tester:
+        def __init__(self, service, expected_xml):
+            self.service = service
+            self.expected_xml = expected_xml
+
+        def test(self, *args, **kwargs):
+            _check_request(self.service.f(*args, **kwargs), self.expected_xml)
+
     # Test different ways to make the same web service operation call.
     service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
@@ -425,7 +427,7 @@ def test_named_parameter():
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
-    expected_request = suds.byte_str("""\
+    t = Tester(service, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -436,10 +438,10 @@ def test_named_parameter():
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    assert expected_request == service.f("einz", "zwei").envelope
-    assert expected_request == service.f(uno="einz", due="zwei").envelope
-    assert expected_request == service.f(due="zwei", uno="einz").envelope
-    assert expected_request == service.f("einz", due="zwei").envelope
+    t.test("einz", "zwei")
+    t.test(uno="einz", due="zwei")
+    t.test(due="zwei", uno="einz")
+    t.test("einz", due="zwei")
 
     #   The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
@@ -452,7 +454,7 @@ def test_named_parameter():
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
-    expected_request = suds.byte_str("""\
+    t = Tester(service, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -463,10 +465,10 @@ def test_named_parameter():
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    assert expected_request == service.f("zwei", "einz").envelope
-    assert expected_request == service.f(uno="einz", due="zwei").envelope
-    assert expected_request == service.f(due="zwei", uno="einz").envelope
-    assert expected_request == service.f("zwei", uno="einz").envelope
+    t.test("zwei", "einz")
+    t.test(uno="einz", due="zwei")
+    t.test(due="zwei", uno="einz")
+    t.test("zwei", uno="einz")
 
 
 def test_optional_parameter_handling():
@@ -484,7 +486,7 @@ def test_optional_parameter_handling():
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
 
-    assert service.f().envelope == suds.byte_str("""\
+    _check_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -494,7 +496,7 @@ def test_optional_parameter_handling():
 </SOAP-ENV:Envelope>""")
 
     # None is treated as an undefined value.
-    assert service.f(None).envelope == suds.byte_str("""\
+    _check_request(service.f(None), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -504,7 +506,7 @@ def test_optional_parameter_handling():
 </SOAP-ENV:Envelope>""")
 
     # Empty string values are treated as well defined values.
-    assert service.f("").envelope == suds.byte_str("""\
+    _check_request(service.f(""), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -515,7 +517,7 @@ def test_optional_parameter_handling():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    assert service.f("Kiflica").envelope == suds.byte_str("""\
+    _check_request(service.f("Kiflica"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -526,7 +528,7 @@ def test_optional_parameter_handling():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    assert service.f(anInteger=666).envelope == suds.byte_str("""\
+    _check_request(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -537,7 +539,7 @@ def test_optional_parameter_handling():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    assert service.f("Alfa", 9).envelope == suds.byte_str("""\
+    _check_request(service.f("Alfa", 9), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -575,7 +577,7 @@ def test_twice_wrapped_parameter():
 
     #   The following calls are actually illegal and result in incorrectly
     # generated SOAP requests.
-    assert client.service.f("A B C").envelope == suds.byte_str("""\
+    _check_request(client.service.f("A B C"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -585,7 +587,7 @@ def test_twice_wrapped_parameter():
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    assert client.service.f(Elemento="A B C").envelope == suds.byte_str("""\
+    _check_request(client.service.f(Elemento="A B C"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -595,7 +597,7 @@ def test_twice_wrapped_parameter():
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    assert client.service.f(Wrapper2="A B C").envelope == suds.byte_str("""\
+    _check_request(client.service.f(Wrapper2="A B C"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -605,7 +607,7 @@ def test_twice_wrapped_parameter():
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    assert client.service.f(Wrapper1="A B C").envelope == suds.byte_str("""\
+    _check_request(client.service.f(Wrapper1="A B C"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -664,8 +666,9 @@ def test_wrapped_parameter():
     # called the same way even though the wrapped one actually has an extra
     # wrapper element around its input data.
     data = "Maestro"
-    call_single = lambda c : c.service.f(data).envelope
-    assert call_single(client_bare_single) == suds.byte_str("""\
+    call_single = lambda c : c.service.f(data)
+
+    _check_request(call_single(client_bare_single), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -673,7 +676,8 @@ def test_wrapped_parameter():
       <ns0:Elemento>%s</ns0:Elemento>
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % data)
-    response_single_wrapped = suds.byte_str("""\
+
+    expected_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -682,14 +686,13 @@ def test_wrapped_parameter():
          <ns0:Elemento>%s</ns0:Elemento>
       </ns0:Wrapper>
    </ns1:Body>
-</SOAP-ENV:Envelope>""" % data)
-    assert call_single(client_wrapped_unnamed) == response_single_wrapped
-    assert call_single(client_wrapped_named) == response_single_wrapped
+</SOAP-ENV:Envelope>""" % data
+    _check_request(call_single(client_wrapped_unnamed), expected_xml)
+    _check_request(call_single(client_wrapped_named), expected_xml)
 
     #   Suds library's automatic structure unwrapping prevents us from
     # specifying the external wrapper structure directly.
-    assert client_wrapped_unnamed.service.f(Wrapper="A").envelope ==  \
-        suds.byte_str("""\
+    _check_request(client_wrapped_unnamed.service.f(Wrapper="A"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -703,8 +706,9 @@ def test_wrapped_parameter():
     #   Multiple parameter web service operations are never automatically
     # unwrapped.
     data = ("Unga", "Bunga")
-    call_multiple = lambda c : c.service.f(*data).envelope
-    assert call_multiple(client_bare_multiple_simple) == suds.byte_str("""\
+    call_multiple = lambda c : c.service.f(*data)
+
+    _check_request(call_multiple(client_bare_multiple_simple), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -713,7 +717,8 @@ def test_wrapped_parameter():
       <ns0:Elemento2>%s</ns0:Elemento2>
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % data)
-    assert call_multiple(client_bare_multiple_wrapped) == suds.byte_str("""\
+
+    _check_request(call_multiple(client_bare_multiple_wrapped), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -722,6 +727,10 @@ def test_wrapped_parameter():
       <ns0:Elemento2>%s</ns0:Elemento2>
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % data)
+
+
+def _check_request(request, expected_xml):
+    tests.compare_xml_to_string(request.original_envelope, expected_xml)
 
 
 def _isInputWrapped(client, method_name):

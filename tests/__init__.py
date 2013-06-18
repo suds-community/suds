@@ -54,6 +54,73 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
     return suds.client.Client("suds://" + testFileId, *args, **kwargs)
 
 
+def compare_xml(lhs, rhs):
+    """
+    Compares two XML documents.
+
+    Not intended to be perfect, but only good enough comparison to be used
+    internally inside the project's test suite.
+
+    Does not compare namespace prefixes and considers them irrelevant. This is
+    because suds may generate different namespace prefixes for the same
+    underlying XML structure when used from different Python versions.
+
+    """
+    assert lhs.__class__ is suds.sax.document.Document
+    assert rhs.__class__ is suds.sax.document.Document
+    assert len(lhs.getChildren()) == 1
+    assert len(rhs.getChildren()) == 1
+    compare_xml_element(lhs.getChildren()[0], rhs.getChildren()[0])
+
+
+def compare_xml_element(lhs, rhs):
+    """
+    Compares two XML elements.
+
+    Not intended to be perfect, but only good enough comparison to be used
+    internally inside the project's test suite.
+
+    Does not compare namespace prefixes and considers them irrelevant. This is
+    because suds may generate different namespace prefixes for the same
+    underlying XML structure when used from different Python versions.
+    
+    Empty string & None XML element texts are considered the same to compensate
+    for different XML object tree construction methods representing 'no text'
+    elements differently, e.g. when constructed by the sax parser or when
+    constructed in code to represent a SOAP request.
+
+    """
+    assert lhs.__class__ is suds.sax.element.Element
+    assert rhs.__class__ is suds.sax.element.Element
+    assert lhs.namespace()[1] == rhs.namespace()[1]
+    assert lhs.name == rhs.name
+    lhs_text = lhs.text
+    rhs_text = rhs.text
+    if lhs_text == "":
+        lhs_text = None
+    if rhs_text == "":
+        rhs_text = None
+    assert lhs_text == rhs_text
+    assert len(lhs.getChildren()) == len(rhs.getChildren())
+    for l, r in zip(lhs.getChildren(), rhs.getChildren()):
+        compare_xml_element(l, r)
+
+
+def compare_xml_to_string(lhs, rhs):
+    """
+    Compares two XML documents, second one given as a string.
+
+    Not intended to be perfect, but only good enough comparison to be used
+    internally inside the project's test suite.
+
+    Does not compare namespace prefixes and considers them irrelevant. This is
+    because suds may generate different namespace prefixes for the same
+    underlying XML structure when used from different Python versions.
+
+    """
+    compare_xml(lhs, suds.sax.parser.Parser().parse(string=suds.byte_str(rhs)))
+
+
 def setup_logging():
     if sys.version_info < (2, 5):
         fmt = '%(asctime)s [%(levelname)s] @%(filename)s:%(lineno)d\n%(message)s\n'
