@@ -460,6 +460,30 @@ PRIORETIZED:
 (+)         * Accessing existing content.
 (+)         * Accessing missing content.
 
+(17.06.2013.)
+
+(+) * (Jurko) Upgrade the setup procedure to use the latest setuptools 0.7.2
+(+)   release instead of the now deprecated 'distribute' Python package.
+(+)     * Research.
+(+)     * Implement.
+
+(18.06.2013.)
+
+(+) * (Jurko) Upgrade the setup procedure to use the latest setuptools 0.7.2
+(+)   release instead of the now deprecated 'distribute' Python package.
+(+)     * Add automated setuptools installation (downloaded on-demand from
+(+)       PyPI).
+(+)     * Fix issues with installing on Python 2.4.
+(+)     * Add project installation troubleshooting notes to the main readme.
+
+    * (Jurko) Resolve test failures caused by suds generating slightly different
+      SOAP requests when using Python 3.3.
+        * Tests should not depend on the order in which XML attributes are
+          specified for a single XML element where this is not necessary.
+
+    * (Jurko) See how to allow using the setup script's 'test' option to run the
+      project's pytest based test suite.
+
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Follow the documented release procedure.
             * Update release notes.
@@ -543,6 +567,8 @@ NON PRIORETIZED:
         * There should be no need for installing suds to a global location
           similar to how this is not needed when running Py2 tests.
             * When done, update related HACKING notes.
+            * Look into how this could be implemented using the setup script
+              commands like 'test' or 'develop'.
 
     * Generate suds Python library documentation (epydoc).
         * Research.
