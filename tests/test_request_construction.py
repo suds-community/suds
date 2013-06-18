@@ -168,54 +168,21 @@ def test_element_references_to_different_namespaces():
 
     store = suds.store.DocumentStore(external_schema=external_schema,
         wsdl=wsdl)
-    client = suds.client.Client("suds://wsdl", cache=None, nosend=True,
-        documentStore=store)
-    request = client.service.f(local="--L--", local_referenced="--LR--",
-        external="--E--")
-
-    root = request.original_envelope
-    root_children = root.getChildren()
-    assert len(root_children) == 1
-    envelope = root_children[0]
-
-    assert envelope.__class__ is suds.sax.element.Element
-    assert envelope.name == "Envelope"
-    envelope_children = envelope.getChildren()
-    assert len(envelope_children) == 2
-    header = envelope_children[0]
-    body = envelope_children[1]
-
-    assert header.__class__ is suds.sax.element.Element
-    assert header.name == "Header"
-
-    assert body.__class__ is suds.sax.element.Element
-    assert body.name == "Body"
-    body_children = body.getChildren()
-    assert len(body_children) == 1
-    operationRequest = body_children[0]
-
-    assert operationRequest.__class__ is suds.sax.element.Element
-    assert operationRequest.name == "fRequest"
-    operationRequest_children = operationRequest.getChildren()
-    assert len(operationRequest_children) == 3
-    p1 = operationRequest_children[0]
-    p2 = operationRequest_children[1]
-    p3 = operationRequest_children[2]
-
-    assert p1.__class__ is suds.sax.element.Element
-    assert p1.name == "local"
-    assert p1.namespace()[1] == "first-namespace"
-    assert p1.text == "--L--"
-
-    assert p2.__class__ is suds.sax.element.Element
-    assert p2.name == "local_referenced"
-    assert p2.namespace()[1] == "first-namespace"
-    assert p2.text == "--LR--"
-
-    assert p3.__class__ is suds.sax.element.Element
-    assert p3.name == "external"
-    assert p3.namespace()[1] == "second-namespace"
-    assert p3.text == "--E--"
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        nosend=True, prettyxml=True)
+    _check_request(client.service.f(local="--L--", local_referenced="--LR--",
+        external="--E--"), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns1="first-namespace" xmlns:ns2="second-namespace" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <SOAP-ENV:Body>
+      <ns1:fRequest>
+         <ns1:local>--L--</ns1:local>
+         <ns1:local_referenced>--LR--</ns1:local_referenced>
+         <ns2:external>--E--</ns2:external>
+      </ns1:fRequest>
+   </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>""")
 
 
 def test_extra_parameters():
