@@ -131,6 +131,10 @@ version 0.4.1 jurko 5 (planned soon)
         * Automatically downloads & installs an appropriate ``setuptools``
           package version if needed.
 
+      * ``distutils`` ``obsoletes`` setup parameter usage removed when run using
+        this Python versions earlier than 2.5 as that is the first version
+        implementing support for this parameter.
+
     * Removed different programming techniques & calls breaking compatibility
       with Python 2.4.
 
@@ -200,6 +204,12 @@ version 0.4.1 jurko 5 (planned soon)
 
     * Corrected error message displayed in case of a transport error.
     * Many unit tests updated and added.
+    * Unit tests may now be run using the setuptools 'setup.py test' command.
+
+      * Note that this method does not allow passing additional pytest testing
+        framework command-line arguments. To specify any such parameters invoke
+        the pytest framework directly, e.g. using 'python -m pytest' in the
+        project's root folder.
 
     * Internal code cleanup.
 
