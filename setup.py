@@ -84,7 +84,7 @@ if script_folder != current_folder:
 # '<string>'.
 exec(read_python_code(os.path.join("suds", "version.py")))
 
-extra = {}
+extra_setup_params = {}
 
 if sys.version_info < (2, 4, 4):
     # Python 2.4.3 seems to have issues with setuptools collecting its
@@ -112,10 +112,10 @@ if sys.version_info < (2, 4, 4):
 
 if sys.version_info >= (2, 5):
     # distutils.setup() 'obsoletes' parameter not introduced until Python 2.5.
-    extra["obsoletes"] = ["suds"]
+    extra_setup_params["obsoletes"] = ["suds"]
 
 if sys.version_info >= (3, 0):
-    extra["use_2to3"] = True
+    extra_setup_params["use_2to3"] = True
 
     #   Teach Python's urllib lib2to3 fixer that the old urllib2.__version__
     # data member is now stored in the urllib.request module.
@@ -216,5 +216,5 @@ setup(
     license="(specified using classifiers)",
     platforms=["(specified using classifiers)"],
 
-    **extra
+    **extra_setup_params
 )
