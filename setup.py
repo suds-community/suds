@@ -85,6 +85,10 @@ if script_folder != current_folder:
 exec(read_python_code(os.path.join("suds", "version.py")))
 
 extra = {}
+if sys.version_info >= (2, 5):
+    # distutils.setup() 'obsoletes' parameter not introduced until Python 2.5.
+    extra["obsoletes"] = ["suds"]
+
 if sys.version_info >= (3, 0):
     extra["use_2to3"] = True
 
@@ -139,7 +143,6 @@ setup(
     keywords=["SOAP", "web", "service", "client"],
     url=project_url,
     download_url=download_url,
-    obsoletes=["suds"],
     tests_require=["pytest"],
     packages=find_packages(exclude=packages_excluded_from_build),
 
