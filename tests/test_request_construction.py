@@ -273,9 +273,6 @@ def test_invalid_argument_type_handling():
     report this error.
 
     """
-    client_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
     client = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:complexType name="Freakazoid">
         <xsd:sequence>
