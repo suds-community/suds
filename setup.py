@@ -85,6 +85,31 @@ if script_folder != current_folder:
 exec(read_python_code(os.path.join("suds", "version.py")))
 
 extra = {}
+
+if sys.version_info < (2, 4, 4):
+    # Python 2.4.3 seems to have issues with setuptools collecting its
+    # requirement packages from PyPI using HTTPS. This has been encountered
+    # using Python 2.4.3/x86 on Windows 7/SP1/x64 with setuptools 0.7.2. The
+    # same issue does not occur when using Python 2.4.4/x86 in the same
+    # environment.
+    #
+    # As a workaround we replace setuptools's PackageIndex class with one that
+    # always uses the HTTP transfer protocol instead of HTTPS when dealing with
+    # this Python version.
+    #
+    # Note that this workaround affects only setuptools's automated requirement
+    # package downloading. Any requirement packages can still be installed
+    # manually by the user, using a suitable package index source URL.
+    import setuptools.package_index
+    OriginalPackageIndex = setuptools.package_index.PackageIndex
+    class NoHTTPSPackageIndex(OriginalPackageIndex):
+        def __init__(self, *args, **kwargs):
+            OriginalPackageIndex.__init__(self, *args, **kwargs)
+            cue = "https:"
+            if self.index_url.lower().startswith(cue):
+                self.index_url = "http:" + self.index_url[len(cue):]
+    setuptools.package_index.PackageIndex = NoHTTPSPackageIndex
+
 if sys.version_info >= (2, 5):
     # distutils.setup() 'obsoletes' parameter not introduced until Python 2.5.
     extra["obsoletes"] = ["suds"]
