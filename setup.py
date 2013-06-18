@@ -85,6 +85,7 @@ if script_folder != current_folder:
 exec(read_python_code(os.path.join("suds", "version.py")))
 
 extra_setup_params = {}
+extra_setup_cmdclass = {}
 
 if sys.version_info < (2, 4, 4):
     # Python 2.4.3 seems to have issues with setuptools collecting its
@@ -151,14 +152,35 @@ project_url = "https://bitbucket.org/jurko/suds"
 base_download_url = project_url + "/downloads"
 download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
 download_url = "%s/%s" % (base_download_url, download_distribution_name)
-packages_excluded_from_build = []
 
-#   We generally do not want the tests package or any of its subpackages
-# included in our non-source package builds (source distribution content gets
-# specified separately via the MANIFEST.ini configuration file). Comment out
-# the following line to include the test code anyway, e.g. if you want to run
-# Python 3 based tests from the package build folder.
-packages_excluded_from_build += ["tests", "tests.*"]
+# Support for integrating running the project' pytest based test suite directly
+# into this setup script so the test suite can be run by 'setup.py test'. Since
+# Python's distutils framework does not allow passing all received command-line
+# arguments to its commands, it does not seem easy to customize how pytest runs
+# its tests this way. To have better control over this, user should run the
+# pytest on the target source tree directly, possibly after first building a
+# temporary one to work around problems like Python 2/3 compatibility.
+import setuptools.command.test
+class PyTest(setuptools.command.test.test):
+    def finalize_options(self):
+        setuptools.command.test.test.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+    def run_tests(self):
+        # Make sure the tests are run on the correct test sources. E.g. when
+        # using Python 3, the tests need to be run in the temporary build
+        # folder where they have been previously processed using py2to3.
+        # Running them directly on the original source tree would fail due to
+        # Python 2/3 source code incompatibility.
+        ei_cmd = self.get_finalized_command("egg_info")
+        build_path = setuptools.command.test.normalize_path(ei_cmd.egg_base)
+        test_args = ["--pyargs", build_path]
+        import pytest
+        errno = pytest.main(test_args)
+        sys.exit(errno)
+extra_setup_params.update(tests_require=["pytest"])
+extra_setup_cmdclass.update(test=PyTest)
+
 
 setup(
     name=package_name,
@@ -168,8 +190,7 @@ setup(
     keywords=["SOAP", "web", "service", "client"],
     url=project_url,
     download_url=download_url,
-    tests_require=["pytest"],
-    packages=find_packages(exclude=packages_excluded_from_build),
+    packages=find_packages(),
 
     # 'maintainer' will be listed as the distribution package author.
     # Warning: Due to a 'distribute' package defect when used with Python 3
@@ -215,6 +236,9 @@ setup(
     # using 'classifiers'.
     license="(specified using classifiers)",
     platforms=["(specified using classifiers)"],
+
+    # Register custom distutils commands.
+    cmdclass=extra_setup_cmdclass,
 
     **extra_setup_params
 )
