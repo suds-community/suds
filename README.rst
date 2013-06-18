@@ -63,16 +63,17 @@ version 0.4.1 jurko 5 (planned soon)
 
     * Supported Python versions.
 
+      * Intended to work with Python 2.4+.
       * Basic sources prepared for Python 2.x.
       * For using Python 3 the sources first processed by the Python 2to3 tool
         during the setup procedure.
-      * Tested with:
+      * Tested in the following environments:
 
-        * Python 2.4.0 on Windows 7, x64.
-        * Python 2.7.3 on Windows 7, x64.
-        * Python 3.2.3 on Windows 7, x64.
-
-      * Intended to work with Python 2.4+.
+        * Python 2.4.4/x86, on Windows 7/SP1/x64.
+        * Python 2.7.3/x64, on Windows 7/SP1/x64.
+        * Python 3.2.3/x64, on Windows 7/SP1/x64.
+        * Python 3.3.2/x86, on Windows 7/SP1/x64.
+        * Python 3.3.2/x64, on Windows 7/SP1/x64.
 
     * Improved Python 3 support.
 
@@ -94,10 +95,17 @@ version 0.4.1 jurko 5 (planned soon)
     * Fixed a log formatting error, originated in the original suds (contributed
       by Guy Rozendorn).
     * Fixed local timezone detection code (contributed by Tim Savage).
-    * Fixed a problem with running the project setup on non-Windows platforms.
+    * Setup updated.
 
-      * ``version.py`` file loading no longer sensitive to the line-ending type
-        used in that file.
+      * Fixed a problem with running the project setup on non-Windows platforms.
+
+        * ``version.py`` file loading no longer sensitive to the line-ending
+          type used in that file.
+        * Stopped using the ``distribute`` setup package since it has been
+          merged back into the original ``setuptools`` project. Now using
+          ``setuptools`` version 0.7.2 or later.
+        * Automatically downloads & installs an appropriate ``setuptools``
+          package version if needed.
 
     * Removed different programming techniques & calls breaking compatibility
       with Python 2.4.
@@ -192,15 +200,16 @@ version 0.4.1 jurko 4 (2012-04-17)
 
     * Supported Python versions.
 
+      * Intended to work with Python 2.4+.
       * Basic sources prepared for Python 2.x.
       * For using Python 3 the sources first processed by the Python 2to3 tool
         during the setup procedure.
-      * Tested with:
+      * Installation procedure requires the ``distribute`` Python package to be
+        installed on the system.
+      * Tested in the following environments:
 
-        * Python 2.7.1 on Windows XP, x64.
-        * Python 3.2.2 on Windows XP, x64.
-
-      * Intended to work with Python 2.4+.
+        * Python 2.7.1/x64 on Windows XP/SP3/x64.
+        * Python 3.2.2/x64 on Windows XP/SP3/x64.
 
     * Cleaned up how the distribution package maintainer name string is
       specified so it does not contain characters causing the setup procedure to
@@ -220,15 +229,16 @@ version 0.4.1 jurko 3 (2011-12-26)
 
     * Supported Python versions.
 
+      * Intended to work with Python 2.4+.
       * Basic sources prepared for Python 2.x.
       * For using Python 3 the sources first processed by the Python 2to3 tool
         during the setup procedure.
-      * Tested with:
+      * Installation procedure requires the ``distribute`` Python package to be
+        installed on the system.
+      * Tested in the following environments:
 
-        * Python 2.7.1 on Windows XP, x86.
-        * Python 3.2.2 on Windows XP, x86.
-
-      * Intended to work with Python 2.4+.
+        * Python 2.7.1/x86 on Windows XP/SP3/x86.
+        * Python 3.2.2/x86 on Windows XP/SP3/x86.
 
     * Operation parameter specification string no longer includes a trailing
       comma.
@@ -250,15 +260,16 @@ version 0.4.1 jurko 2 (2011-12-24)
 
     * Supported Python versions.
 
+      * Intended to work with Python 2.4+.
       * Basic sources prepared for Python 2.x.
       * For using Python 3 the sources first processed by the Python 2to3 tool
         during the setup procedure.
-      * Tested with:
+      * Installation procedure requires the ``distribute`` Python package to be
+        installed on the system.
+      * Tested in the following environments:
 
-        * Python 2.7.1 on Windows XP, x86.
-        * Python 3.2.2 on Windows XP, x86.
-
-      * Intended to work with Python 2.4+.
+        * Python 2.7.1/x86 on Windows XP/SP3/x86.
+        * Python 3.2.2/x86 on Windows XP/SP3/x86.
 
     * Fixed a bug causing converting a ``suds.client.Client`` object to a string
       to fail & raise an ``IndexError`` exception.
@@ -277,15 +288,16 @@ version 0.4.1 jurko 1 (2011-12-24)
 
     * Supported Python versions.
 
+      * Intended to work with Python 2.4+.
       * Basic sources prepared for Python 2.x.
       * For using Python 3 the sources first processed by the Python 2to3 tool
         during the setup procedure.
-      * Tested with:
+      * Installation procedure requires the ``distribute`` Python package to be
+        installed on the system.
+      * Tested in the following environments:
 
-        * Python 2.7.1 on Windows XP, x86.
-        * Python 3.2.2 on Windows XP, x86.
-
-      * Intended to work with Python 2.4+.
+        * Python 2.7.1/x86 on Windows XP/SP3/x86.
+        * Python 3.2.2/x86 on Windows XP/SP3/x86.
 
     * Added Python 3 support:
 
@@ -297,6 +309,9 @@ version 0.4.1 jurko 1 (2011-12-24)
 
       * Original sources compatible with Python 2. Automated conversion to
         Python 3 sources during setup.
+
+        * Automated conversion implemented by depending on the ``distribute``
+          setup package.
 
     * Made suds work with operations taking choice parameters.
 
@@ -844,7 +859,7 @@ version 0.2 (2008-04-28)
     proxy exposes web services via getattr(), any attribute (including methods)
     provided by the ServiceProxy class hides WS operations defined by the WSDL.
     So, by moving everything to the SoapClient, WSDL operations are no longer
-    hidden without having to use *hoky* names for attributes and methods in the
+    hidden without having to use *hokey* names for attributes and methods in the
     service proxy. Instead, the service proxy has __client__ and __factory__
     attributes (which really should be at low risk for name collision). For now
     the get_instance() and get_enum() methods have not been moved to preserve
@@ -895,7 +910,7 @@ version 0.1.7 (2008-04-08)
   * SchemaCollection changed to provide the builtin() and custom() methods. To
     support this, findPrefixes() was added to the Element in sax.py. This is a
     better approach anyway since the WSDL and schemas may have many prefixes to
-    'http://www.w3.org/2001/XMLSchema'. Tested with both doc/lit and rpc/lit
+    'http://www.w3.org/2001/XMLSchema'. Tested using both doc/lit and rpc/lit
     bindings.
   * Refactored bindings packages from document & rpc to literal & encoded.
   * Contains the completion of *full* namespace support as follows:
