@@ -640,8 +640,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 """))
 
     # Input #1.
-    request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
-    assert request.str() == """<?xml version="1.0" encoding="UTF-8"?>
+    tests.compare_xml_to_string(_construct_SOAP_request(client, 'f',
+        a1="Wackadoodle"), """\
+<?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
@@ -649,13 +650,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
          <ns0:a1>Wackadoodle</ns0:a1>
       </ns0:Choice>
    </ns1:Body>
-</SOAP-ENV:Envelope>"""
+</SOAP-ENV:Envelope>""")
 
     # Input #2.
     param = client.factory.create("Choice.sequence")
     param.e2 = "Wackadoodle"
-    request = _construct_SOAP_request(client, 'f', sequence=param)
-    assert request.str() == """\
+    tests.compare_xml_to_string(_construct_SOAP_request(client, 'f',
+        sequence=param), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -668,7 +669,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
          </ns0:sequence>
       </ns0:Choice>
    </ns1:Body>
-</SOAP-ENV:Envelope>"""
+</SOAP-ENV:Envelope>""")
 
 
 def test_function_parameters_sequence_in_a_choice_in_a_sequence():
@@ -739,8 +740,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     param.sequence.e2 = "Wackadoodle"
 
     # Construct a SOAP request containing our input parameters.
-    request = _construct_SOAP_request(client, 'f', param)
-    assert request.str() == """\
+    tests.compare_xml_to_string(_construct_SOAP_request(client, 'f', param),
+        """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -755,7 +756,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
          </ns0:choice>
       </ns0:External>
    </ns1:Body>
-</SOAP-ENV:Envelope>"""
+</SOAP-ENV:Envelope>""")
 
 
 def test_function_parameters_strings():

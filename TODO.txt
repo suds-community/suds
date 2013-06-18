@@ -475,14 +475,15 @@ PRIORETIZED:
 (+)       PyPI).
 (+)     * Fix issues with installing on Python 2.4.
 (+)     * Add project installation troubleshooting notes to the main readme.
+(+) * (Jurko) See how to allow using the setup script's 'test' option to run the
+(+)   project's pytest based test suite.
 
-    * (Jurko) Resolve test failures caused by suds generating slightly different
-      SOAP requests when using Python 3.3.
-        * Tests should not depend on the order in which XML attributes are
-          specified for a single XML element where this is not necessary.
+(19.06.2013.)
 
-    * (Jurko) See how to allow using the setup script's 'test' option to run the
-      project's pytest based test suite.
+(+) * (Jurko) Resolve test failures caused by suds generating slightly different
+(+)   SOAP requests when using Python 3.3.
+(+)     * Tests should not depend on the order in which XML attributes are
+(+)       specified for a single XML element where this is not necessary.
 
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Follow the documented release procedure.
@@ -564,11 +565,18 @@ NON PRIORETIZED:
               missing 'choice' structure members as well.
 
     * Make it simpler to run Py3 tests.
-        * There should be no need for installing suds to a global location
-          similar to how this is not needed when running Py2 tests.
-            * When done, update related HACKING notes.
-            * Look into how this could be implemented using the setup script
-              commands like 'test' or 'develop'.
+        * Current status.
+            * May be run without additional pytest options by running 'setup.py
+              test' from the root project folder.
+                * This method will automatically download & install pytest from
+                  PyPI if needed, but will leave them installed in the project's
+                  root folder.
+            * May be run from the root project folder by first building the
+              project to a temporary location: 'setup.py build & pytest build'.
+                * This method allows specifying additional pytest command-line
+                  arguments.
+        * Do some more thinking on this and, when done, update related HACKING
+          notes.
 
     * Generate suds Python library documentation (epydoc).
         * Research.
