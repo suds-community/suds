@@ -85,7 +85,7 @@ if script_folder != current_folder:
 exec(read_python_code(os.path.join("suds", "version.py")))
 
 extra = {}
-if sys.version_info >= (3,0):
+if sys.version_info >= (3, 0):
     extra["use_2to3"] = True
 
     #   Teach Python's urllib lib2to3 fixer that the old urllib2.__version__
@@ -182,7 +182,7 @@ setup(
         "Programming Language :: Python :: 3.2",
         "Topic :: Internet"],
 
-    #   PEP-314 states that if possible license & plaform should be specified
+    #   PEP-314 states that if possible license & platform should be specified
     # using 'classifiers'.
     license="(specified using classifiers)",
     platforms=["(specified using classifiers)"],
