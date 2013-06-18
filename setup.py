@@ -208,6 +208,7 @@ setup(
         "Programming Language :: Python :: 3.0",
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
         "Topic :: Internet"],
 
     #   PEP-314 states that if possible license & platform should be specified
