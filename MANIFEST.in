@@ -16,6 +16,3 @@ include makefile
 include python-suds.spec
 include sdist
 include TODO.txt
-
-# Test scripts explicitly not included in non-source distribution packages.
-recursive-include tests *.py
