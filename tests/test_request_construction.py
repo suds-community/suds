@@ -166,8 +166,10 @@ def test_element_references_to_different_namespaces():
 </schema>
 """)
 
-    store = suds.store.DocumentStore(external_schema=external_schema)
-    client = tests.client_from_wsdl(wsdl, nosend=True, documentStore=store)
+    store = suds.store.DocumentStore(external_schema=external_schema,
+        wsdl=wsdl)
+    client = suds.client.Client("suds://wsdl", cache=None, nosend=True,
+        documentStore=store)
     request = client.service.f(local="--L--", local_referenced="--LR--",
         external="--E--")
 
