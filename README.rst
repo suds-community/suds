@@ -42,7 +42,7 @@ Here are the basic instructions for 3 different installation methods:
 
 #. Using easy-install
 
-   * Have the 'distribute' package installed.
+   * Have the 'setuptools' package installed.
    * Run 'easy_install suds-jurko'.
 
 #. From sources

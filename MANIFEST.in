@@ -9,6 +9,7 @@ include .hgignore
 include .hgtags
 include .project
 include .pydevproject
+include ez_setup.py
 include HACKING.txt
 include LICENSE.txt
 include makefile

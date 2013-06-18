@@ -16,12 +16,17 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
+# Automatically download & install an appropriate setuptools version if needed.
+import ez_setup
+ez_setup.use_setuptools()
+
+# 'setuptools' related packages.
+import pkg_resources
+from setuptools import setup, find_packages
+
 import os
 import os.path
 import sys
-
-import pkg_resources
-from setuptools import setup, find_packages
 
 
 def read_python_code(filename):
@@ -135,7 +140,6 @@ setup(
     url=project_url,
     download_url=download_url,
     obsoletes=["suds"],
-    setup_requires=["distribute"],
     tests_require=["pytest"],
     packages=find_packages(exclude=packages_excluded_from_build),
 
@@ -148,6 +152,10 @@ setup(
     # the user's default system code-page, e.g. typically CP1250 on eastern
     # European Windows, CP1252 on western European Windows, UTF-8 on Linux or
     # any other.
+    #
+    # 'distribute' package merged back with the 'setuptools' package in the
+    # setuptools 0.7 release but we have not yet checked whether this bug has
+    # been corrected there or not.
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
     maintainer="Jurko Gospodnetic",
