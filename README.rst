@@ -93,6 +93,7 @@ version 0.4.1 jurko 5 (planned soon)
         during the setup procedure.
       * Tested in the following environments:
 
+        * Python 2.4.3/x86, on Windows 7/SP1/x64.
         * Python 2.4.4/x86, on Windows 7/SP1/x64.
         * Python 2.7.3/x64, on Windows 7/SP1/x64.
         * Python 3.2.3/x64, on Windows 7/SP1/x64.
