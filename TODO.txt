@@ -496,6 +496,14 @@ PRIORETIZED:
 (+)             * Project site.
 (+)             * PyPI.
 
+    * (Jurko) Fix suds time-zone handling according to a pull request received
+      on bitbucket from MDuggan1.
+        * Research.
+        * Add tests.
+        * Implement.
+        * Check for feedback from users requesting this patch.
+        * Plan a new release including this patch.
+
     * (Jurko) Process pull requests received on 'bitbucket.org'.
 
 NON PRIORETIZED:
