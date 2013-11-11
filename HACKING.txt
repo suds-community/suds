@@ -148,7 +148,7 @@ TOP-LEVEL FILES & FOLDERS:
 RELEASE PROCEDURE:
 =================================================
 
-    * Document the release correctly in 'README.txt'.
+    * Document the release correctly in 'README.rst'.
 
     * Version identification.
         * Remove the '(development)' suffix for official release builds.
