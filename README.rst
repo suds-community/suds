@@ -79,7 +79,7 @@ Installation troubleshooting:
 Release notes
 =================================================
 
-version 0.4.1 jurko 5 (planned soon)
+version 0.4.1 jurko 5 (2013-11-11)
 ------------------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
