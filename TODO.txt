@@ -485,15 +485,21 @@ PRIORETIZED:
 (+)     * Tests should not depend on the order in which XML attributes are
 (+)       specified for a single XML element where this is not necessary.
 
+(11.11.2013.)
+
+(+) * (Jurko) Prepare the '0.4.1 jurko 5' release.
+(+)     * Follow the documented release procedure.
+(+)         * Update release notes.
+(+)         * Update version information.
+
     * (Jurko) Prepare the '0.4.1 jurko 5' release.
         * Follow the documented release procedure.
-            * Update release notes.
-            * Update version information.
             * Tag in Hg.
             * Upload the source package.
                 * Project site.
                 * PyPI.
 
+    * (Jurko) Process pull requests received on 'bitbucket.org'.
 
 NON PRIORETIZED:
 =================================================
