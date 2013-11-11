@@ -491,13 +491,10 @@ PRIORETIZED:
 (+)     * Follow the documented release procedure.
 (+)         * Update release notes.
 (+)         * Update version information.
-
-    * (Jurko) Prepare the '0.4.1 jurko 5' release.
-        * Follow the documented release procedure.
-            * Tag in Hg.
-            * Upload the source package.
-                * Project site.
-                * PyPI.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
 
     * (Jurko) Process pull requests received on 'bitbucket.org'.
 
