@@ -54,344 +54,345 @@ Here are the basic instructions for 3 different installation methods:
 Installation troubleshooting:
 -----------------------------
 
-    * If automated ``setuptools`` Python package installation fails (used in
-      releases ``0.4.1 jurko 5`` and later), e.g. due to PyPI web site not being
-      available, user might need to install it manually and then rerun the
-      installation.
-    * Releases prior to ``0.4.1. jurko 5`` will fail if the ``distribute``
-      Python package is not already installed on the system.
-    * Python 2.4.3 on Windows has been seen to have problems using automated
-      ``setuptools`` Python package downloads via the HTTPS protocol. The same
-      does not occur when using Python version 2.4.4.
+* If automated ``setuptools`` Python package installation fails (used in
+  releases ``0.4.1 jurko 5`` and later), e.g. due to PyPI web site not being
+  available, user might need to install it manually and then rerun the
+  installation.
+* Releases prior to ``0.4.1. jurko 5`` will fail if the ``distribute`` Python
+  package is not already installed on the system.
+* Python 2.4.3 on Windows has been seen to have problems using automated
+  ``setuptools`` Python package downloads via the HTTPS protocol. The same does
+  not occur when using Python version 2.4.4.
 
-      * This mostly affects newer ``setuptools``/``distribute`` Python package
-        versions which use the HTTPS protocol by default.
-      * Our package installation attempts to workaround this problem by
-        switching to using the HTTP protocol internally when necessary.
-      * If this occurs, install the required packages manually from their
-        sources or by using ``easy_install``/``pip`` and specifying that they
-        should use the HTTP protocol instead of HTTPS, e.g.::
+  * This mostly affects newer ``setuptools``/``distribute`` Python package
+    versions which use the HTTPS protocol by default.
+  * Our package installation attempts to workaround this problem by switching to
+    using the HTTP protocol internally when necessary.
+  * If this occurs, install the required packages manually from their sources or
+    by using ``easy_install``/``pip`` and specifying that they should use the
+    HTTP protocol instead of HTTPS, e.g.::
 
-          easy_install -i "http://pypi.python.org/simple" ...
-          pip install -i "http://pypi.python.org/simple" ...
+      easy_install -i "http://pypi.python.org/simple" ...
+      pip install -i "http://pypi.python.org/simple" ...
 
 
 Release notes
 =================================================
 
 version 0.4.1 jurko 5 (planned soon)
-    * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
-      original suds Python library development project's Subversion repository.
+------------------------------------
 
-      * Last officially packaged & released suds Python library version - 0.4.1.
+* Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+  original suds Python library development project's Subversion repository.
 
-    * Supported Python versions.
+  * Last officially packaged & released suds Python library version - 0.4.1.
 
-      * Intended to work with Python 2.4+.
-      * Basic sources prepared for Python 2.x.
-      * For using Python 3 the sources first processed by the Python 2to3 tool
-        during the setup procedure.
-      * Tested in the following environments:
+* Supported Python versions.
 
-        * Python 2.4.3/x86, on Windows 7/SP1/x64.
-        * Python 2.4.4/x86, on Windows 7/SP1/x64.
-        * Python 2.7.3/x64, on Windows 7/SP1/x64.
-        * Python 3.2.3/x64, on Windows 7/SP1/x64.
-        * Python 3.3.2/x86, on Windows 7/SP1/x64.
-        * Python 3.3.2/x64, on Windows 7/SP1/x64.
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Tested in the following environments:
 
-    * Improved Python 3 support.
+    * Python 2.4.3/x86, on Windows 7/SP1/x64.
+    * Python 2.4.4/x86, on Windows 7/SP1/x64.
+    * Python 2.7.3/x64, on Windows 7/SP1/x64.
+    * Python 3.2.3/x64, on Windows 7/SP1/x64.
+    * Python 3.3.2/x86, on Windows 7/SP1/x64.
+    * Python 3.3.2/x64, on Windows 7/SP1/x64.
 
-      * Cache files now used again.
+* Improved Python 3 support.
 
-        * Problems caused by cache files being stored in text mode, but
-          attempting to write a bytes object in them. Too eager error handling
-          was then causing all such cached file usage to fail silently.
+  * Cache files now used again.
 
-      * WebFaults containing non-ASCII data now get constructed correctly.
-      * Fixed issue with encoding of authentication in ``transport/http.py``
-        (contributed by Phillip Alday).
-      * Unicode/byte string handling fixes.
+    * Problems caused by cache files being stored in text mode, but attempting
+      to write a bytes object in them. Too eager error handling was then causing
+      all such cached file usage to fail silently.
 
-    * Fixed encoding long user credentials for basic HTTP authentication in
-      ``transport/http.py`` (contributed by Jan-Wijbrand Kolman).
-    * Fixed an IndexError occurring when calling a web service operation with
-      only a single input parameter.
-    * Fixed a log formatting error, originated in the original suds (contributed
-      by Guy Rozendorn).
-    * Fixed local timezone detection code (contributed by Tim Savage).
-    * Setup updated.
+  * WebFaults containing non-ASCII data now get constructed correctly.
+  * Fixed issue with encoding of authentication in ``transport/http.py``
+    (contributed by Phillip Alday).
+  * Unicode/byte string handling fixes.
 
-      * Fixed a problem with running the project setup on non-Windows platforms.
+* Fixed encoding long user credentials for basic HTTP authentication in
+  ``transport/http.py`` (contributed by Jan-Wijbrand Kolman).
+* Fixed an IndexError occurring when calling a web service operation with only a
+  single input parameter.
+* Fixed a log formatting error, originated in the original suds (contributed by
+  Guy Rozendorn).
+* Fixed local timezone detection code (contributed by Tim Savage).
+* Setup updated.
 
-        * ``version.py`` file loading no longer sensitive to the line-ending
-          type used in that file.
-        * Stopped using the ``distribute`` setup package since it has been
-          merged back into the original ``setuptools`` project. Now using
-          ``setuptools`` version 0.7.2 or later.
-        * Automatically downloads & installs an appropriate ``setuptools``
-          package version if needed.
+  * Fixed a problem with running the project setup on non-Windows platforms.
 
-      * ``distutils`` ``obsoletes`` setup parameter usage removed when run using
-        this Python versions earlier than 2.5 as that is the first version
-        implementing support for this parameter.
+    * ``version.py`` file loading no longer sensitive to the line-ending type
+      used in that file.
+    * Stopped using the ``distribute`` setup package since it has been merged
+      back into the original ``setuptools`` project. Now using ``setuptools``
+      version 0.7.2 or later.
+    * Automatically downloads & installs an appropriate ``setuptools`` package
+      version if needed.
 
-    * Removed different programming techniques & calls breaking compatibility
-      with Python 2.4.
+  * ``distutils`` ``obsoletes`` setup parameter usage removed when run using
+    this Python versions earlier than 2.5 as that is the first version
+    implementing support for this parameter.
 
-      * String ``format()`` method.
-      * Ternary if operator.
+* Removed different programming techniques & calls breaking compatibility with
+  Python 2.4.
 
-    * Project ``README`` file converted to .rst format (contributed by Phillip
-      Alday).
-    * Corrected internal input/output binding usage. Output binding was being
-      used in several places where the input one was expected.
-    * HTTP status code 200 XML replies containing a ``Fault`` element now
-      consistently as a SOAP fault (plus a warning about the non-standard HTTP
-      status code) both when reporting such faults using exceptions or by
-      returning a (status, reason) tuple.
+  * String ``format()`` method.
+  * Ternary if operator.
 
-      * Before this was done only when reporting them using exceptions.
+* Project ``README`` file converted to .rst format (contributed by Phillip
+  Alday).
+* Corrected internal input/output binding usage. Output binding was being used
+  in several places where the input one was expected.
+* HTTP status code 200 XML replies containing a ``Fault`` element now
+  consistently as a SOAP fault (plus a warning about the non-standard HTTP
+  status code) both when reporting such faults using exceptions or by returning
+  a (status, reason) tuple.
 
-    * Reply XML processing now checks the namespace used for ``Envelope`` &
-      ``Body`` elements.
-    * SOAP fault processing now checks the namespaces used for all relevant
-      tags.
-    * Plugins now get a chance to process ``received()`` & ``parsed()`` calls
-      for both success & error replies.
-    * SOAP fault reports with invalid Fault structure no longer cause suds code
-      to break with an 'invalid attribute' exception.
-    * SOAP fault reports with no ``<detail>`` tag (optional) no longer cause
-      suds code to break with an 'invalid attribute' exception when run with the
-      suds ``faults`` option set to false.
-    * Added correct handling for HTTP errors containing no input file
-      information. Previously such cases caused suds to break with an 'invalid
-      attribute' exception.
-    * ``SimClient`` injection keywords reorganized:
+  * Before this was done only when reporting them using exceptions.
 
-      * ``msg`` - request message.
-      * ``reply`` - reply message ('msg' must not be set).
-      * ``status`` - HTTP status code accompanying the 'reply' message.
-      * ``description`` - description string accompanying the 'reply' message.
+* Reply XML processing now checks the namespace used for ``Envelope`` & ``Body``
+  elements.
+* SOAP fault processing now checks the namespaces used for all relevant tags.
+* Plugins now get a chance to process ``received()`` & ``parsed()`` calls for
+  both success & error replies.
+* SOAP fault reports with invalid Fault structure no longer cause suds code to
+  break with an 'invalid attribute' exception.
+* SOAP fault reports with no ``<detail>`` tag (optional) no longer cause suds
+  code to break with an 'invalid attribute' exception when run with the suds
+  ``faults`` option set to false.
+* Added correct handling for HTTP errors containing no input file information.
+  Previously such cases caused suds to break with an 'invalid attribute'
+  exception.
+* ``SimClient`` injection keywords reorganized:
 
-    * Added ``unwrap`` option, allowing the user to disable suds library's
-      automated simple document interface unwrapping (contributed by Juraj
-      Ivančić).
-    * Fixed a problem with suds constructing parameter XML elements in its SOAP
-      requests in incorrect namespaces in case they have been defined by XSD
-      schema elements referencing XSD schema elements with a different target
-      namespace.
-    * ``DocumentStore`` instance updated.
+  * ``msg`` - request message.
+  * ``reply`` - reply message ('msg' must not be set).
+  * ``status`` - HTTP status code accompanying the 'reply' message.
+  * ``description`` - description string accompanying the 'reply' message.
 
-      * Separate ``DocumentStore`` instances now hold separate data with every
-        instance holding all the hardcoded suds library XML document data.
-      * ``DocumentStore`` now supports a dict-like update() method for adding
-        new documents to it.
-      * ``Client`` instances may now be given a specific ``DocumentStore``
-        instance using the 'documentStore' option. Not specifying the option
-        uses a shared singleton instance. Specifying the option as ``None``
-        avoids using any document store whatsoever.
-      * Suds tests no longer have to modify the global shared ``DocumentStore``
-        data in order to avoid loading its known data from external files and so
-        may no longer affect each other by leaving behind data in that global
-        shared ``DocumentStore``.
-      * Documents may now be fetched from a ``DocumentStore`` using a transport
-        protocol other than ``suds``. When using the ``suds`` protocol an
-        exception is raised if the document could not be found in the store
-        while in all other cases ``None`` is returned instead.
-      * Documents in a ``DocumentStore`` are now accessed as bytes instead
-        file-like stream objects.
-      * Made more ``DocumentStore`` functions private.
+* Added ``unwrap`` option, allowing the user to disable suds library's
+  automated simple document interface unwrapping (contributed by Juraj Ivančić).
+* Fixed a problem with suds constructing parameter XML elements in its SOAP
+  requests in incorrect namespaces in case they have been defined by XSD schema
+  elements referencing XSD schema elements with a different target namespace.
+* ``DocumentStore`` instance updated.
 
-    * Corrected error message displayed in case of a transport error.
-    * Many unit tests updated and added.
-    * Unit tests may now be run using the setuptools 'setup.py test' command.
+  * Separate ``DocumentStore`` instances now hold separate data with every
+    instance holding all the hardcoded suds library XML document data.
+  * ``DocumentStore`` now supports a dict-like update() method for adding new
+    documents to it.
+  * ``Client`` instances may now be given a specific ``DocumentStore`` instance
+    using the 'documentStore' option. Not specifying the option uses a shared
+    singleton instance. Specifying the option as ``None`` avoids using any
+    document store whatsoever.
+  * Suds tests no longer have to modify the global shared ``DocumentStore`` data
+    in order to avoid loading its known data from external files and so may no
+    longer affect each other by leaving behind data in that global shared
+    ``DocumentStore``.
+  * Documents may now be fetched from a ``DocumentStore`` using a transport
+    protocol other than ``suds``. When using the ``suds`` protocol an exception
+    is raised if the document could not be found in the store while in all other
+    cases ``None`` is returned instead.
+  * Documents in a ``DocumentStore`` are now accessed as bytes instead file-like
+    stream objects.
+  * Made more ``DocumentStore`` functions private.
 
-      * Note that this method does not allow passing additional pytest testing
-        framework command-line arguments. To specify any such parameters invoke
-        the pytest framework directly, e.g. using 'python -m pytest' in the
-        project's root folder.
+* Corrected error message displayed in case of a transport error.
+* Many unit tests updated and added.
+* Unit tests may now be run using the setuptools 'setup.py test' command.
 
-    * Internal code cleanup.
+  * Note that this method does not allow passing additional pytest testing
+    framework command-line arguments. To specify any such parameters invoke the
+    pytest framework directly, e.g. using 'python -m pytest' in the project's
+    root folder.
 
-      * Removed undocumented, unused and unused binding.replyfilter
-        functionality.
-      * Binding classes no longer have anything to do with method independent
-        Fault element processing.
-      * Removed SoapClient ``last_sent()`` and ``last_received()`` functions.
-      * Fixed file closing in ``reader.py`` & ``cache.py`` modules - used files
-        now closed explicitly in case of failed file operations instead of
-        relying on the Python GC to close them 'some time later on'.
-      * Fixed silently ignoring internal exceptions like ``KeyboardInterrupt``
-        in the ``cache.py`` module.
-      * Removed unused Cache module ``getf()`` & ``putf()`` functions.
-        ``getf()`` left only in ``FileCache`` and its derived classes.
+* Internal code cleanup.
+
+  * Removed undocumented, unused and unused ``binding.replyfilter``
+    functionality.
+  * Binding classes no longer have anything to do with method independent Fault
+    element processing.
+  * Removed SoapClient ``last_sent()`` and ``last_received()`` functions.
+  * Fixed file closing in ``reader.py`` & ``cache.py`` modules - used files now
+    closed explicitly in case of failed file operations instead of relying on
+    the Python GC to close them 'some time later on'.
+  * Fixed silently ignoring internal exceptions like ``KeyboardInterrupt`` in
+    the ``cache.py`` module.
+  * Removed unused Cache module ``getf()`` & ``putf()`` functions. ``getf()``
+    left only in ``FileCache`` and its derived classes.
 
 version 0.4.1 jurko 4 (2012-04-17)
-    * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
-      original suds Python library development project's Subversion repository.
+----------------------------------
 
-      * Last officially packaged & released suds Python library version - 0.4.1.
+* Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+  original suds Python library development project's Subversion repository.
 
-    * Supported Python versions.
+  * Last officially packaged & released suds Python library version - 0.4.1.
 
-      * Intended to work with Python 2.4+.
-      * Basic sources prepared for Python 2.x.
-      * For using Python 3 the sources first processed by the Python 2to3 tool
-        during the setup procedure.
-      * Installation procedure requires the ``distribute`` Python package to be
-        installed on the system.
-      * Tested in the following environments:
+* Supported Python versions.
 
-        * Python 2.7.1/x64 on Windows XP/SP3/x64.
-        * Python 3.2.2/x64 on Windows XP/SP3/x64.
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Installation procedure requires the ``distribute`` Python package to be
+    installed on the system.
+  * Tested in the following environments:
 
-    * Cleaned up how the distribution package maintainer name string is
-      specified so it does not contain characters causing the setup procedure to
-      fail when run using Python 3+ on systems using CP1250 or UTF-8 as their
-      default code-page.
-    * Internal cleanup - renamed bounded to single_occurrence and unbounded to
-      multi_occurrence.
-    * Original term unbounded meant that its object has more than one
-      occurrence while its name inferred that 'it has no upper limit on its
-      number of occurrences'.
+    * Python 2.7.1/x64 on Windows XP/SP3/x64.
+    * Python 3.2.2/x64 on Windows XP/SP3/x64.
+
+* Cleaned up how the distribution package maintainer name string is specified so
+  it does not contain characters causing the setup procedure to fail when run
+  using Python 3+ on systems using CP1250 or UTF-8 as their default code-page.
+* Internal cleanup - renamed bounded to single_occurrence and unbounded to
+  multi_occurrence.
+* Original term unbounded meant that its object has more than one occurrence
+  while its name inferred that 'it has no upper limit on its number of
+  occurrences'.
 
 version 0.4.1 jurko 3 (2011-12-26)
-    * Based on revision 711 (1be817c8a7672b001eb9e5cce8842ebd0bf424ee) from the
-      original suds Python library development project's Subversion repository.
+----------------------------------
 
-      * Last officially packaged & released suds Python library version - 0.4.1.
+* Based on revision 711 (1be817c8a7672b001eb9e5cce8842ebd0bf424ee) from the
+  original suds Python library development project's Subversion repository.
 
-    * Supported Python versions.
+  * Last officially packaged & released suds Python library version - 0.4.1.
 
-      * Intended to work with Python 2.4+.
-      * Basic sources prepared for Python 2.x.
-      * For using Python 3 the sources first processed by the Python 2to3 tool
-        during the setup procedure.
-      * Installation procedure requires the ``distribute`` Python package to be
-        installed on the system.
-      * Tested in the following environments:
+* Supported Python versions.
 
-        * Python 2.7.1/x86 on Windows XP/SP3/x86.
-        * Python 3.2.2/x86 on Windows XP/SP3/x86.
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Installation procedure requires the ``distribute`` Python package to be
+    installed on the system.
+  * Tested in the following environments:
 
-    * Operation parameter specification string no longer includes a trailing
-      comma.
-    * suds.xsd.xsbasic.Enumeration objects now list their value in their string
-      representation.
-    * ``suds.sudsobject.Metadata`` ``__unicode__()`` / ``__str__()`` /
-      ``__repr__()`` functions no longer raise an AttributeError when the object
-      is not empty.
-    * Fixed a bug with suds.xsd.sxbasic.TypedContent.resolve() returning an
-      incorrect type when called twice on the same node referencing a builtin
-      type with the parameter ``nobuiltin=True``.
-    * Added more test cases.
+    * Python 2.7.1/x86 on Windows XP/SP3/x86.
+    * Python 3.2.2/x86 on Windows XP/SP3/x86.
+
+* Operation parameter specification string no longer includes a trailing comma.
+* suds.xsd.xsbasic.Enumeration objects now list their value in their string
+  representation.
+* ``suds.sudsobject.Metadata`` ``__unicode__()`` / ``__str__()`` /
+  ``__repr__()`` functions no longer raise an AttributeError when the object is
+  not empty.
+* Fixed a bug with suds.xsd.sxbasic.TypedContent.resolve() returning an
+  incorrect type when called twice on the same node referencing a builtin type
+  with the parameter ``nobuiltin=True``.
+* Added more test cases.
 
 version 0.4.1 jurko 2 (2011-12-24)
-    * Based on revision 711 (1be817c8a7672b001eb9e5cce8842ebd0bf424ee) from the
-      original suds Python library development project's Subversion repository.
+----------------------------------
 
-      * Last officially packaged & released suds Python library version - 0.4.1.
+* Based on revision 711 (1be817c8a7672b001eb9e5cce8842ebd0bf424ee) from the
+  original suds Python library development project's Subversion repository.
 
-    * Supported Python versions.
+  * Last officially packaged & released suds Python library version - 0.4.1.
 
-      * Intended to work with Python 2.4+.
-      * Basic sources prepared for Python 2.x.
-      * For using Python 3 the sources first processed by the Python 2to3 tool
-        during the setup procedure.
-      * Installation procedure requires the ``distribute`` Python package to be
-        installed on the system.
-      * Tested in the following environments:
+* Supported Python versions.
 
-        * Python 2.7.1/x86 on Windows XP/SP3/x86.
-        * Python 3.2.2/x86 on Windows XP/SP3/x86.
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Installation procedure requires the ``distribute`` Python package to be
+    installed on the system.
+  * Tested in the following environments:
 
-    * Fixed a bug causing converting a ``suds.client.Client`` object to a string
-      to fail & raise an ``IndexError`` exception.
+    * Python 2.7.1/x86 on Windows XP/SP3/x86.
+    * Python 3.2.2/x86 on Windows XP/SP3/x86.
 
-      * Changed the way ``suds.client.Client to-string`` conversion outputs
-        build info. This fixes a bug in the original ``0.4.1 jurko 1`` forked
-        project release causing printing out a ``suds.client.Client`` object to
-        raise an exception due to the code in question making some undocumented
-        assumptions on how the build information string should be formatted.
+* Fixed a bug causing converting a ``suds.client.Client`` object to a string to
+  fail & raise an ``IndexError`` exception.
+
+  * Changed the way ``suds.client.Client to-string`` conversion outputs build
+    info. This fixes a bug in the original ``0.4.1 jurko 1`` forked project
+    release causing printing out a ``suds.client.Client`` object to raise an
+    exception due to the code in question making some undocumented assumptions
+    on how the build information string should be formatted.
 
 version 0.4.1 jurko 1 (2011-12-24)
-    * Based on revision 711 (1be817c8a7672b001eb9e5cce8842ebd0bf424ee) from the
-      original suds Python library development project's Subversion repository.
+----------------------------------
 
-      * Last officially packaged & released suds Python library version - 0.4.1.
+* Based on revision 711 (1be817c8a7672b001eb9e5cce8842ebd0bf424ee) from the
+  original suds Python library development project's Subversion repository.
 
-    * Supported Python versions.
+  * Last officially packaged & released suds Python library version - 0.4.1.
 
-      * Intended to work with Python 2.4+.
-      * Basic sources prepared for Python 2.x.
-      * For using Python 3 the sources first processed by the Python 2to3 tool
-        during the setup procedure.
-      * Installation procedure requires the ``distribute`` Python package to be
-        installed on the system.
-      * Tested in the following environments:
+* Supported Python versions.
 
-        * Python 2.7.1/x86 on Windows XP/SP3/x86.
-        * Python 3.2.2/x86 on Windows XP/SP3/x86.
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Installation procedure requires the ``distribute`` Python package to be
+    installed on the system.
+  * Tested in the following environments:
 
-    * Added Python 3 support:
+    * Python 2.7.1/x86 on Windows XP/SP3/x86.
+    * Python 3.2.2/x86 on Windows XP/SP3/x86.
 
-      * Based on patches integrated from a Mercurial patch queue maintained by
-        `Bernhard Leiner <https://bitbucket.org/bernh/suds-python-3-patches>`_.
+* Added Python 3 support:
 
-        * Last collected patch series commit:
-          ``96ffba978d5c74df28846b4273252cf1f94f7c78``.
+  * Based on patches integrated from a Mercurial patch queue maintained by
+    `Bernhard Leiner <https://bitbucket.org/bernh/suds-python-3-patches>`_.
 
-      * Original sources compatible with Python 2. Automated conversion to
-        Python 3 sources during setup.
+    * Last collected patch series commit:
+      ``96ffba978d5c74df28846b4273252cf1f94f7c78``.
 
-        * Automated conversion implemented by depending on the ``distribute``
-          setup package.
+  * Original sources compatible with Python 2. Automated conversion to Python 3
+    sources during setup.
 
-    * Made suds work with operations taking choice parameters.
+    * Automated conversion implemented by depending on the ``distribute`` setup
+      package.
 
-      * Based on a patch by michaelgruenewald & bennetb01 attached to ticket
-        `#342 <http://fedorahosted.org/suds/ticket/342>` on the original suds
-        project issue tracker. Comments listed related to that ticket seem to
-        indicate that there may be additional problems with this patch but so
-        far we have not encountered any.
+* Made suds work with operations taking choice parameters.
 
-    * Fixed the ``DateTimeTest.testOverflow`` test to work correctly in all
-      timezones.
+  * Based on a patch by michaelgruenewald & bennetb01 attached to ticket `#342
+    <http://fedorahosted.org/suds/ticket/342>`_ on the original suds project
+    issue tracker. Comments listed related to that ticket seem to indicate that
+    there may be additional problems with this patch but so far we have not
+    encountered any.
 
-      * This test would fail if run directly when run on a computer with a
-        positive timezone time adjustment while it would not fail when run
-        together with all the other tests in this module since some other test
-        would leave behind a nonpositive timezone adjustment setting. Now the
-        test explicitly sets its own timezone time adjustment to a negative
-        value.
-      * Fixes a bug referenced in the original suds project issue tracker as
-        ticket `#422 <http://fedorahosted.org/suds/ticket/422>`_.
+* Fixed the ``DateTimeTest.testOverflow`` test to work correctly in all
+  timezones.
 
-    * Corrected accessing suds.xsd.sxbase.SchemaObject subitems by index.
+  * This test would fail if run directly when run on a computer with a positive
+    timezone time adjustment while it would not fail when run together with all
+    the other tests in this module since some other test would leave behind a
+    nonpositive timezone adjustment setting. Now the test explicitly sets its
+    own timezone time adjustment to a negative value.
+  * Fixes a bug referenced in the original suds project issue tracker as ticket
+    `#422 <http://fedorahosted.org/suds/ticket/422>`_.
 
-      * Fixes a bug referenced in the original suds project issue tracker as
-        ticket `#420 <http://fedorahosted.org/suds/ticket/420>`_.
+* Corrected accessing suds.xsd.sxbase.SchemaObject subitems by index.
 
-    * Internal code & project data cleanup.
+  * Fixes a bug referenced in the original suds project issue tracker as ticket
+    `#420 <http://fedorahosted.org/suds/ticket/420>`_.
 
-      * Extracted version information into a separate module.
-      * Added missing release notes for the original suds Python library
-        project.
-      * Ported unit tests to the pytest testing framework.
-      * Cleaned up project tests.
+* Internal code & project data cleanup.
 
-        * Separated standalone tests from those requiring an external web
-          service.
-        * Added additional unit tests.
+  * Extracted version information into a separate module.
+  * Added missing release notes for the original suds Python library project.
+  * Ported unit tests to the pytest testing framework.
+  * Cleaned up project tests.
 
-        * Added development related documentation - ``HACKING.txt``.
-        * Setup procedure cleaned up a bit.
+    * Separated standalone tests from those requiring an external web service.
+    * Added additional unit tests.
+    * Added development related documentation - ``HACKING.txt``.
+    * Setup procedure cleaned up a bit.
 
-    * Known defects.
+* Known defects.
 
-      * Converting a ``suds.client.Client`` object to a string fails & raises an
-        ``IndexError`` exception.
+  * Converting a ``suds.client.Client`` object to a string fails & raises an
+    ``IndexError`` exception.
 
 
 Original suds library release notes
