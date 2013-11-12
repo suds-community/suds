@@ -496,6 +496,14 @@ PRIORETIZED:
 (+)             * Project site.
 (+)             * PyPI.
 
+(13.11.2013.)
+
+    * (Jurko) Update the project's versioning scheme to no longer have pip
+      detect suds-jurko releases as 'prerelease' only due to our version tag
+      formatting.
+        * Accept that the original suds project has died and continue with the
+          natural version number progression.
+
     * (Jurko) Fix suds time-zone handling according to a pull request received
       on bitbucket from MDuggan1.
         * Research.
