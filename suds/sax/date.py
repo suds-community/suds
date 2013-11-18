@@ -5,7 +5,7 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU Library Lesser General Public License for more details at
 # ( http://www.gnu.org/licenses/lgpl.html ).
 #
@@ -14,17 +14,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Nathan Van Gheem (vangheem@gmail.com)
 
-"""
-The I{date} module provides classes for conversion between XML dates and
-Python objects.
-"""
+"""Classes for conversion between XML dates and Python objects."""
 
 from logging import getLogger
-from suds import *
-from suds.xsd import *
-import time
+from suds import UnicodeMixin
+
 import datetime
 import re
+import time
 
 log = getLogger(__name__)
 
@@ -39,26 +36,29 @@ class Date(UnicodeMixin):
         - YYYY-MM-DD-06:00
     @ivar date: The object value.
     @type date: B{datetime}.I{date}
+
     """
-    def __init__(self, date):
+
+    def __init__(self, value):
         """
-        @param date: The value of the object.
-        @type date: (date|str)
-        @raise ValueError: When I{date} is invalid.
+        @param value: The date value of the object.
+        @type value: (datetime.date|str)
+        @raise ValueError: When I{value} is invalid.
+
         """
-        if isinstance(date, datetime.date):
-            self.date = date
-            return
-        if isinstance(date, basestring):
-            self.date = self.__parse(date)
-            return
-        raise ValueError, type(date)
+        if isinstance(value, datetime.date):
+            self.date = value
+        elif isinstance(value, basestring):
+            self.date = self.__parse(value)
+        else:
+            raise ValueError, type(value)
 
     def year(self):
         """
         Get the I{year} component.
         @return: The year.
         @rtype: int
+
         """
         return self.date.year
 
@@ -67,6 +67,7 @@ class Date(UnicodeMixin):
         Get the I{month} component.
         @return: The month.
         @rtype: int
+
         """
         return self.date.month
 
@@ -75,6 +76,7 @@ class Date(UnicodeMixin):
         Get the I{day} component.
         @return: The day.
         @rtype: int
+
         """
         return self.date.day
 
@@ -91,7 +93,8 @@ class Date(UnicodeMixin):
         @param s: A date string.
         @type s: str
         @return: A date object.
-        @rtype: I{date}
+        @rtype: B{datetime}.I{date}
+
         """
         try:
             year, month, day = s[:10].split('-', 2)
@@ -119,34 +122,36 @@ class Time(UnicodeMixin):
         - HH:MI:SS.ms(+|-)06:00
     @ivar tz: The timezone
     @type tz: L{Timezone}
-    @ivar date: The object value.
-    @type date: B{datetime}.I{time}
+    @ivar time: The object value.
+    @type time: B{datetime}.I{time}
+
     """
 
-    def __init__(self, time, adjusted=True):
+    def __init__(self, value, adjusted=True):
         """
-        @param time: The value of the object.
-        @type time: (time|str)
+        @param value: The time value of the object.
+        @type value: (datetime.time|str)
         @param adjusted: Adjust for I{local} Timezone.
         @type adjusted: boolean
-        @raise ValueError: When I{time} is invalid.
+        @raise ValueError: When I{value} is invalid.
+
         """
         self.tz = Timezone()
-        if isinstance(time, datetime.time):
-            self.time = time
-            return
-        if isinstance(time, basestring):
-            self.time = self.__parse(time)
+        if isinstance(value, datetime.time):
+            self.time = value
+        elif isinstance(value, basestring):
+            self.time = self.__parse(value)
             if adjusted:
                 self.__adjust()
-            return
-        raise ValueError, type(time)
+        else:
+            raise ValueError, type(value)
 
     def hour(self):
         """
         Get the I{hour} component.
         @return: The hour.
         @rtype: int
+
         """
         return self.time.hour
 
@@ -155,6 +160,7 @@ class Time(UnicodeMixin):
         Get the I{minute} component.
         @return: The minute.
         @rtype: int
+
         """
         return self.time.minute
 
@@ -163,6 +169,7 @@ class Time(UnicodeMixin):
         Get the I{seconds} component.
         @return: The seconds.
         @rtype: int
+
         """
         return self.time.second
 
@@ -171,13 +178,12 @@ class Time(UnicodeMixin):
         Get the I{microsecond} component.
         @return: The microsecond.
         @rtype: int
+
         """
         return self.time.microsecond
 
     def __adjust(self):
-        """
-        Adjust for TZ offset.
-        """
+        """Adjust for TZ offset."""
         if hasattr(self, 'offset'):
             today = datetime.date.today()
             delta = self.tz.adjustment(self.offset)
@@ -199,6 +205,7 @@ class Time(UnicodeMixin):
         @type s: str
         @return: A time object.
         @rtype: B{datetime}.I{time}
+
         """
         try:
             offset = None
@@ -209,29 +216,29 @@ class Time(UnicodeMixin):
             second, ms = self.__second(second)
             if len(part) == 2:
                 self.offset = self.__offset(part[1])
-            if ms is None:
-                return datetime.time(hour, minute, second)
-            else:
-                return datetime.time(hour, minute, second, ms)
+            return datetime.time(hour, minute, second, ms)
         except:
             log.debug(s, exec_info=True)
             raise ValueError, 'Invalid format "%s"' % s
 
-    def __second(self, s):
+    @staticmethod
+    def __second(s):
         """
         Parse the seconds and microseconds.
         The microseconds are truncated to 999999 due to a restriction in
         the python datetime.datetime object.
         @param s: A string representation of the seconds.
         @type s: str
-        @return: Tuple of (sec,ms)
+        @return: Tuple of (sec, ms)
         @rtype: tuple.
+
         """
         part = s.split('.')
+        seconds = int(part[0])
+        microseconds = 0
         if len(part) > 1:
-            return (int(part[0]), int(part[1][:6]))
-        else:
-            return (int(part[0]), None)
+            microseconds = int(part[1][:6])
+        return seconds, microseconds
 
     def __offset(self, s):
         """
@@ -240,6 +247,7 @@ class Time(UnicodeMixin):
         @type s: str
         @return: The signed offset in hours.
         @rtype: str
+
         """
         if len(s) == len('-00:00'):
             return int(s[:3])
@@ -253,11 +261,10 @@ class Time(UnicodeMixin):
         time = self.time.isoformat()
         if self.tz.local:
             return '%s%+.2d:00' % (time, self.tz.local)
-        else:
-            return '%sZ' % time
+        return '%sZ' % time
 
 
-class DateTime(Date,Time):
+class DateTime(Date, Time):
     """
     An XML time object.
     Supported formats:
@@ -268,34 +275,32 @@ class DateTime(Date,Time):
         - YYYY-MM-DDB{T}HH:MI:SS(+|-)06:00
         - YYYY-MM-DDB{T}HH:MI:SS.ms(+|-)06:00
     @ivar datetime: The object value.
-    @type datetime: B{datetime}.I{datedate}
+    @type datetime: B{datetime}.I{datetime}
+
     """
-    def __init__(self, date):
+
+    def __init__(self, value):
         """
-        @param date: The value of the object.
-        @type date: (datetime|str)
-        @raise ValueError: When I{tm} is invalid.
+        @param value: The datetime value of the object.
+        @type value: (datetime.datetime|str)
+        @raise ValueError: When I{value} is invalid.
+
         """
-        if isinstance(date, datetime.datetime):
-            Date.__init__(self, date.date())
-            Time.__init__(self, date.time())
-            self.datetime = \
-                datetime.datetime.combine(self.date, self.time)
-            return
-        if isinstance(date, basestring):
-            part = date.split('T')
+        if isinstance(value, datetime.datetime):
+            Date.__init__(self, value.date())
+            Time.__init__(self, value.time())
+            self.datetime = datetime.datetime.combine(self.date, self.time)
+        elif isinstance(value, basestring):
+            part = value.split('T')
             Date.__init__(self, part[0])
             Time.__init__(self, part[1], 0)
-            self.datetime = \
-                datetime.datetime.combine(self.date, self.time)
+            self.datetime = datetime.datetime.combine(self.date, self.time)
             self.__adjust()
-            return
-        raise ValueError, type(date)
+        else:
+            raise ValueError, type(value)
 
     def __adjust(self):
-        """
-        Adjust for TZ offset.
-        """
+        """Adjust for TZ offset."""
         if not hasattr(self, 'offset'):
             return
         delta = self.tz.adjustment(self.offset)
@@ -315,9 +320,7 @@ class DateTime(Date,Time):
 
 
 class UTC(DateTime):
-    """
-    Represents current UTC time.
-    """
+    """Represents current UTC time."""
 
     def __init__(self, date=None):
         if date is None:
@@ -329,6 +332,7 @@ class UTC(DateTime):
 def get_local_timezone(tz):
     """
     Returns the local timezone offset based on local timezone and DST status.
+
     """
     if time.localtime().tm_isdst:
         offset_minutes = time.altzone
@@ -344,6 +348,7 @@ class Timezone:
     @type local: int
     @cvar patten: The regex patten to match TZ.
     @type patten: re.Pattern
+
     """
 
     pattern = re.compile('([zZ])|([\-\+][0-9]{2}:[0-9]{2})')
@@ -363,6 +368,7 @@ class Timezone:
         @type s: basestring
         @return: The split parts.
         @rtype: tuple
+
         """
         m = cls.pattern.search(s)
         if m is None:
@@ -375,6 +381,7 @@ class Timezone:
         Get the adjustment to the I{local} TZ.
         @return: The delta between I{offset} and local TZ.
         @rtype: B{datetime}.I{timedelta}
+
         """
         delta = ( self.local - offset )
         return datetime.timedelta(hours=delta)
