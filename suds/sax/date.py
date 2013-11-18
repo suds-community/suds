@@ -15,15 +15,15 @@
 # written by: Nathan Van Gheem (vangheem@gmail.com)
 
 """
-The I{xdate} module provides classes for converstion
-between XML dates and python objects.
+The I{date} module provides classes for conversion between XML dates and
+Python objects.
 """
 
 from logging import getLogger
 from suds import *
 from suds.xsd import *
 import time
-import datetime as dt
+import datetime
 import re
 
 log = getLogger(__name__)
@@ -46,7 +46,7 @@ class Date(UnicodeMixin):
         @type date: (date|str)
         @raise ValueError: When I{date} is invalid.
         """
-        if isinstance(date, dt.date):
+        if isinstance(date, datetime.date):
             self.date = date
             return
         if isinstance(date, basestring):
@@ -98,7 +98,7 @@ class Date(UnicodeMixin):
             year = int(year)
             month = int(month)
             day = int(day)
-            return dt.date(year, month, day)
+            return datetime.date(year, month, day)
         except:
             log.debug(s, exec_info=True)
             raise ValueError, 'Invalid format "%s"' % s
@@ -132,7 +132,7 @@ class Time(UnicodeMixin):
         @raise ValueError: When I{time} is invalid.
         """
         self.tz = Timezone()
-        if isinstance(time, dt.time):
+        if isinstance(time, datetime.time):
             self.time = time
             return
         if isinstance(time, basestring):
@@ -179,9 +179,9 @@ class Time(UnicodeMixin):
         Adjust for TZ offset.
         """
         if hasattr(self, 'offset'):
-            today = dt.date.today()
+            today = datetime.date.today()
             delta = self.tz.adjustment(self.offset)
-            d = dt.datetime.combine(today, self.time)
+            d = datetime.datetime.combine(today, self.time)
             d = ( d + delta )
             self.time = d.time()
 
@@ -210,9 +210,9 @@ class Time(UnicodeMixin):
             if len(part) == 2:
                 self.offset = self.__offset(part[1])
             if ms is None:
-                return dt.time(hour, minute, second)
+                return datetime.time(hour, minute, second)
             else:
-                return dt.time(hour, minute, second, ms)
+                return datetime.time(hour, minute, second, ms)
         except:
             log.debug(s, exec_info=True)
             raise ValueError, 'Invalid format "%s"' % s
@@ -276,18 +276,18 @@ class DateTime(Date,Time):
         @type date: (datetime|str)
         @raise ValueError: When I{tm} is invalid.
         """
-        if isinstance(date, dt.datetime):
+        if isinstance(date, datetime.datetime):
             Date.__init__(self, date.date())
             Time.__init__(self, date.time())
             self.datetime = \
-                dt.datetime.combine(self.date, self.time)
+                datetime.datetime.combine(self.date, self.time)
             return
         if isinstance(date, basestring):
             part = date.split('T')
             Date.__init__(self, part[0])
             Time.__init__(self, part[1], 0)
             self.datetime = \
-                dt.datetime.combine(self.date, self.time)
+                datetime.datetime.combine(self.date, self.time)
             self.__adjust()
             return
         raise ValueError, type(date)
@@ -321,7 +321,7 @@ class UTC(DateTime):
 
     def __init__(self, date=None):
         if date is None:
-            date = dt.datetime.utcnow()
+            date = datetime.datetime.utcnow()
         DateTime.__init__(self, date)
         self.tz.local = 0
 
@@ -377,4 +377,4 @@ class Timezone:
         @rtype: B{datetime}.I{timedelta}
         """
         delta = ( self.local - offset )
-        return dt.timedelta(hours=delta)
+        return datetime.timedelta(hours=delta)
