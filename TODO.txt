@@ -496,21 +496,40 @@ PRIORETIZED:
 (+)             * Project site.
 (+)             * PyPI.
 
-(13.11.2013.)
+(18.11.2013.)
 
-    * (Jurko) Update the project's versioning scheme to no longer have pip
-      detect suds-jurko releases as 'prerelease' only due to our version tag
-      formatting.
-        * Accept that the original suds project has died and continue with the
-          natural version number progression.
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Research.
+(+)         * Suds assumes that all timezones have a full-hour offset from the
+(+)           UTC timeone and does not work correctly with those that do not.
+(+)             * This seems to be a suds specific problem and not a more
+(+)               general Python issue as some information on the net implies.
+(+)         * FixedOffsetTimezone.
+(+)             * datetime.tzinfo subclass.
+(+)             * Used only in test code.
+(+)             * Represents fixed offset timezones with no daylight saving
+(+)               time.
+(+)     * Start morphing the current suds & test code base towards the suggested
+(+)       patched code.
+
+(19.11.2013.)
 
     * (Jurko) Fix suds time-zone handling according to a pull request received
       on bitbucket from MDuggan1.
         * Research.
         * Add tests.
         * Implement.
+        * See if we can reuse datetime.timezone instead of
+          suds.sax.date.FixedOffsetTimezone with Python 3.2+.
         * Check for feedback from users requesting this patch.
         * Plan a new release including this patch.
+
+    * (Jurko) Update the project's versioning scheme to no longer have pip
+      detect suds-jurko releases as 'prerelease' only due to our version tag
+      formatting.
+        * Accept that the original suds project has died and continue with the
+          natural version number progression.
 
     * (Jurko) Process pull requests received on 'bitbucket.org'.
 
