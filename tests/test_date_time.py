@@ -53,6 +53,22 @@ class TestDate:
     def testTimezonePositive(self):
         self.__equalsTimezone(6)
 
+    def testTranslateToString(self):
+        translated = _date2String(datetime.date(2013, 7, 24))
+        assert isinstance(translated, str)
+        assert translated == "2013-07-24"
+
+    def testTranslateToString_datetime(self):
+        translated = _date2String(datetime.datetime(2013, 7, 24, 11, 59, 47))
+        assert isinstance(translated, str)
+        assert translated == "2013-07-24"
+
+    def testTranslateToString_failed(self):
+        dummy = _Dummy()
+        assert _date2String(dummy) is dummy
+        time = datetime.time()
+        assert _date2String(time) is time
+
     def testUtcTimezone(self):
         Timezone.LOCAL = lambda tz: 0
         ref = datetime.date(1941, 12, 7)
@@ -251,6 +267,36 @@ class TestDateTime:
     def testTimezonePositive(self):
         self.__equalsTimezone(6)
 
+    def testTranslateToString(self):
+        Timezone.LOCAL = lambda tz: 0
+        translated = _datetime2String(datetime.datetime(2021, 12, 31, 11, 25))
+        assert isinstance(translated, str)
+        assert translated == "2021-12-31T11:25:00Z"
+
+        Timezone.LOCAL = lambda tz: 4
+        translated = _datetime2String(datetime.datetime(2021, 1, 1, 16, 53, 9))
+        assert isinstance(translated, str)
+        assert translated == "2021-01-01T16:53:09+04:00"
+
+        Timezone.LOCAL = lambda tz: -4
+        translated = _datetime2String(datetime.datetime(2021, 1, 1, 16, 53, 9))
+        assert isinstance(translated, str)
+        assert translated == "2021-01-01T16:53:09-04:00"
+
+    def testTranslateToString_failed(self):
+        dummy = _Dummy()
+        assert _datetime2String(dummy) is dummy
+        time = datetime.time(22, 47, 9, 981)
+        assert _datetime2String(time) is time
+        date = datetime.date(2101, 1, 1)
+        assert _datetime2String(date) is date
+
+    def testUtcTimezone(self):
+        Timezone.LOCAL = lambda tz: 0
+        ref = datetime.date(1941, 12, 7)
+        s = '%.4d-%.2d-%.2dZ' % (ref.year, ref.month, ref.day)
+        assert _XDate().translate(s) == ref
+
     def testUtcTimezone(self):
         Timezone.LOCAL = lambda tz: 0
         ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
@@ -391,6 +437,30 @@ class TestTime:
             ref.microsecond)
         assert _XTime().translate(s) == ref
 
+    def testTranslateToString(self):
+        Timezone.LOCAL = lambda tz: 0
+        translated = _time2String(datetime.time(11, 25))
+        assert isinstance(translated, str)
+        assert translated == "11:25:00Z"
+
+        Timezone.LOCAL = lambda tz: 4
+        translated = _time2String(datetime.time(16, 53, 12))
+        assert isinstance(translated, str)
+        assert translated == "16:53:12+04:00"
+
+        Timezone.LOCAL = lambda tz: -4
+        translated = _time2String(datetime.time(16, 53, 12))
+        assert isinstance(translated, str)
+        assert translated == "16:53:12-04:00"
+
+    def testTranslateToString_failed(self):
+        dummy = _Dummy()
+        assert _time2String(dummy) is dummy
+        date = datetime.date(2001, 1, 1)
+        assert _time2String(date) is date
+        aDateTime = datetime.datetime(1997, 2, 13)
+        assert _time2String(aDateTime) is aDateTime
+
     def testUtcTimezone(self):
         Timezone.LOCAL = lambda tz: 0
         ref = datetime.time(10, 30, 22)
@@ -406,6 +476,11 @@ class TestTime:
     @staticmethod
     def __strTime(h, m, s, offset):
         return '%.2d:%.2d:%.2d%+.2d:00' % (h, m, s, offset)
+
+
+class _Dummy:
+    """Class for testing unknown object class handling."""
+    pass
 
 
 class _XDate(suds.xsd.sxbuiltin.XDate):
@@ -424,3 +499,15 @@ class _XTime(suds.xsd.sxbuiltin.XTime):
     """Mock XTime not connected to an actual schema."""
     def __init__(self):
         pass
+
+
+def _date2String(value):
+    return _XDate().translate(value, topython=False)
+
+
+def _datetime2String(value):
+    return _XDateTime().translate(value, topython=False)
+
+
+def _time2String(value):
+    return _XTime().translate(value, topython=False)
