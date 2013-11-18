@@ -53,33 +53,6 @@ class Date(UnicodeMixin):
         else:
             raise ValueError, type(value)
 
-    def year(self):
-        """
-        Get the I{year} component.
-        @return: The year.
-        @rtype: int
-
-        """
-        return self.date.year
-
-    def month(self):
-        """
-        Get the I{month} component.
-        @return: The month.
-        @rtype: int
-
-        """
-        return self.date.month
-
-    def day(self):
-        """
-        Get the I{day} component.
-        @return: The day.
-        @rtype: int
-
-        """
-        return self.date.day
-
     def __parse(self, s):
         """
         Parse the string date.
@@ -145,42 +118,6 @@ class Time(UnicodeMixin):
                 self.__adjust()
         else:
             raise ValueError, type(value)
-
-    def hour(self):
-        """
-        Get the I{hour} component.
-        @return: The hour.
-        @rtype: int
-
-        """
-        return self.time.hour
-
-    def minute(self):
-        """
-        Get the I{minute} component.
-        @return: The minute.
-        @rtype: int
-
-        """
-        return self.time.minute
-
-    def second(self):
-        """
-        Get the I{seconds} component.
-        @return: The seconds.
-        @rtype: int
-
-        """
-        return self.time.second
-
-    def microsecond(self):
-        """
-        Get the I{microsecond} component.
-        @return: The microsecond.
-        @rtype: int
-
-        """
-        return self.time.microsecond
 
     def __adjust(self):
         """Adjust for TZ offset."""
