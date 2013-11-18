@@ -142,7 +142,7 @@ class XTime(XBuiltin):
             if isinstance(value, basestring) and len(value):
                 return Time(value).time
         else:
-            if isinstance(value, dt.date):
+            if isinstance(value, dt.time):
                 return str(Time(value))
             return value
 
@@ -157,7 +157,7 @@ class XDateTime(XBuiltin):
             if isinstance(value, basestring) and len(value):
                 return DateTime(value).datetime
         else:
-            if isinstance(value, dt.date):
+            if isinstance(value, dt.datetime):
                 return str(DateTime(value))
             return value
 
