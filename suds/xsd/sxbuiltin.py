@@ -62,7 +62,8 @@ class XBoolean(XBuiltin):
     translation = ({'1':True, 'true':True, '0':False, 'false':False},
         {True:'true', 1:'true', False:'false', 0:'false'})
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring):
                 return XBoolean.translation[0].get(value)
@@ -77,7 +78,8 @@ class XInteger(XBuiltin):
     Represents an (xsd) xs:int builtin type.
     """
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return int(value)
@@ -92,7 +94,8 @@ class XLong(XBuiltin):
     Represents an (xsd) xs:long builtin type.
     """
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return long(value)
@@ -107,7 +110,8 @@ class XFloat(XBuiltin):
     Represents an (xsd) xs:float builtin type.
     """
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return float(value)
@@ -122,7 +126,8 @@ class XDate(XBuiltin):
     Represents an (xsd) xs:date builtin type.
     """
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return Date(value).date
@@ -137,7 +142,8 @@ class XTime(XBuiltin):
     Represents an (xsd) xs:time builtin type.
     """
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return Time(value).time
@@ -152,7 +158,8 @@ class XDateTime(XBuiltin):
     Represents an (xsd) xs:datetime builtin type.
     """
 
-    def translate(self, value, topython=True):
+    @staticmethod
+    def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring) and len(value):
                 return DateTime(value).datetime
