@@ -32,13 +32,186 @@ if __name__ == "__main__":
     sys.exit(-2)
 
 
-from suds.sax.date import Timezone
+from suds.sax.date import Date, DateTime, Time, Timezone
 from suds.xsd.sxbuiltin import XDate, XDateTime, XTime
 import tests
+
+import pytest
 
 import datetime
 
 tests.setup_logging()
+
+"""Invalid date strings reused for both date & datetime testing."""
+_invalid_date_strings = (
+        "",
+        "abla",
+        "12",
+        "12-01",
+        "-12-01",
+        "1900-01",
+        "+1900-10-01",  # Plus sign not allowed.
+        "1900-13-01",  # Invalid month.
+        "1900-02-30",  # Invalid day.
+        "2001-02-29",  # Not a leap year.
+        "2100-02-29",  # Not a leap year.
+        " 1900-01-01",
+        "1900- 01-01",
+        "1900-01 -01",
+        "1900-01-01 ",
+        "1900-13-011",
+        "1900-01-01X",
+        "1900-01-01T",  # 'T' is a date/time separator for DateTime.
+        "1900-01-01-25:00",  # Invalid time zone indicator.
+        "1900-01-01-24:00",  # Invalid time zone indicator.
+        "1900-01-01+25:00",  # Invalid time zone indicator.
+        "1900-01-01+24:00")  # Invalid time zone indicator.
+
+"""Invalid date strings reused for both time & datetime testing."""
+_invalid_time_strings = (
+        "",
+        "bunga",
+        "12",
+        "::",
+        "12:",
+        "12:01",
+        "12:01:",
+        "12:01: 00",
+        "12:01:  00",
+        "23: 01:00",
+        " 23:01:00",
+        "23 :01:00",
+        "23::00",
+        "23:000:00",
+        "023:00:00",
+        "23:00:000",
+        "25:01:00",
+        "-1:01:00",
+        "24:01:00",
+        "23:-1:00",
+        "23:61:00",
+        "23:60:00",
+        "23:59:-1",
+        "23:59:61",
+        "23:59:60",
+        "7.59.13",
+        "7-59-13",
+        "-0:01:00",
+        "23:-0:00",
+        "23:59:-0",
+        "23:59:6.a",
+        "23:59:6.",
+        "23:59:6:0",
+        "23:59:6.12x",
+        "23:59:6.12x45",
+        "23:59:6.999999 ",
+        "23:59:6.999999x",
+        "T23:59:6")
+
+class TestDate:
+    """Tests for the suds.sax.date.Date class."""
+
+    @pytest.mark.parametrize(("string", "y", "m", "d"), (
+        ("1900-01-01", 1900, 1, 1),
+        ("1900-1-1", 1900, 1, 1),
+        ("1900-01-01z", 1900, 1, 1),
+        ("1900-01-01Z", 1900, 1, 1),
+        ("1900-01-01+02:00", 1900, 1, 1),
+        ("1900-01-01-21:13", 1900, 1, 1),
+        ("2000-02-29", 2000, 2, 29)))  # Leap year.
+    def testStringToValue(self, string, y, m, d):
+        assert Date(string).date == datetime.date(y, m, d)
+
+    @pytest.mark.parametrize("string", _invalid_date_strings)
+    def testStringToValue_failure(self, string):
+        pytest.raises(ValueError, Date, string)
+
+
+class TestDateTime:
+    """Tests for the suds.sax.date.DateTime class."""
+
+    @pytest.mark.parametrize(
+        ("string", "y", "M", "d", "h", "m", "s", "micros"), (
+        ("2013-11-19T14:05:23.428068", 2013, 11, 19, 14, 5, 23, 428068),
+        ("2013-11-19 14:05:23.428068", 2013, 11, 19, 14, 5, 23, 428068),
+        ("2013-11-19T14:05:23.428068-02:00", 2013, 11, 19, 14, 5, 23, 428068),
+        ("2013-11-19T14:05:23.428068+02:00", 2013, 11, 19, 14, 5, 23, 428068)))
+    def testStringToValue(self, string, y, M, d, h, m, s, micros):
+        assert DateTime(string).datetime == datetime.datetime(y, M, d, h, m, s,
+            micros)
+
+    @pytest.mark.parametrize(
+        ("string", "y", "M", "d", "h", "m", "s", "micros"), (
+        ("2000-2-28T23:59:59.9999995", 2000, 2, 29, 0, 0, 0, 0),
+        ("2000-2-29T23:59:59.9999995", 2000, 3, 1, 0, 0, 0, 0),
+        ("2013-12-31T23:59:59.9999994", 2013, 12, 31, 23, 59, 59, 999999),
+        ("2013-12-31T23:59:59.99999949", 2013, 12, 31, 23, 59, 59, 999999),
+        ("2013-12-31T23:59:59.9999995", 2014, 1, 1, 0, 0, 0, 0)))
+    def testStringToValue_subsecondRounding(self, string, y, M, d, h, m, s,
+        micros):
+        assert DateTime(string).datetime == datetime.datetime(y, M, d, h, m, s,
+            micros)
+
+    @pytest.mark.parametrize("string",
+        [x + "T00:00:00" for x in _invalid_date_strings] +
+        ["2000-12-31T" + x for x in _invalid_time_strings] + [
+        "2013-11-19T14:05:23.428068-25:00",  # Invalid time zone indicator.
+        "2013-11-19T14:05:23.428068-24:00",  # Invalid time zone indicator.
+        "2013-11-19T14:05:23.428068+24:00",  # Invalid time zone indicator.
+        "2013-11-19T14:05:23.428068+25:00"])  # Invalid time zone indicator.
+    def testStringToValue_failure(self, string):
+        pytest.raises(ValueError, Date, string)
+
+
+class TestTime:
+    """Tests for the suds.sax.date.Time class."""
+
+    @pytest.mark.parametrize(("string", "h", "m", "s", "micros"), (
+        ("10:59:47", 10, 59, 47, 0),
+        ("9:9:13", 9, 9, 13, 0),
+        ("18:0:09.2139", 18, 0, 9, 213900),
+        ("18:0:09.02139", 18, 0, 9, 21390),
+        ("18:0:09.002139", 18, 0, 9, 2139),
+        ("0:00:00.00013", 0, 0, 0, 130),
+        ("0:00:00.000001", 0, 0, 0, 1),
+        ("0:00:00.000000", 0, 0, 0, 0),
+        ("23:59:6.999999", 23, 59, 6, 999999),
+        ("1:13:50.0", 1, 13, 50, 0),
+        ("18:0:09.2139z", 18, 0, 9, 213900),
+        ("18:0:09.2139Z", 18, 0, 9, 213900),
+        ("18:0:09.2139+10:31", 18, 0, 9, 213900),
+        ("18:0:09.2139-10:31", 18, 0, 9, 213900)))
+    def testStringToValue(self, string, h, m, s, micros):
+        assert Time(string).time == datetime.time(h, m, s, micros)
+
+    @pytest.mark.parametrize(("string", "h", "m", "s", "micros"), (
+        ("0:0:0.0000000", 0, 0, 0, 0),
+        ("0:0:0.0000001", 0, 0, 0, 0),
+        ("0:0:0.0000004", 0, 0, 0, 0),
+        ("0:0:0.0000005", 0, 0, 0, 1),
+        ("0:0:0.0000006", 0, 0, 0, 1),
+        ("0:0:0.0000009", 0, 0, 0, 1),
+        ("0:0:0.5", 0, 0, 0, 500000),
+        ("0:0:0.5000004", 0, 0, 0, 500001),
+        ("0:0:0.5000005", 0, 0, 0, 500001),
+        ("0:0:0.50000050", 0, 0, 0, 500001),
+        ("0:0:0.50000051", 0, 0, 0, 500001),
+        ("0:0:0.50000055", 0, 0, 0, 500001),
+        ("0:0:0.50000059", 0, 0, 0, 500001),
+        ("0:0:0.5000006", 0, 0, 0, 500001),
+        ("0:0:0.9999990", 0, 0, 0, 999999),
+        ("0:0:0.9999991", 0, 0, 0, 999999),
+        ("0:0:0.9999994", 0, 0, 0, 999999),
+        ("0:0:0.99999949", 0, 0, 0, 999999),
+        ("0:0:0.9999995", 0, 0, 1, 0),
+        ("0:0:0.9999996", 0, 0, 1, 0),
+        ("0:0:0.9999999", 0, 0, 1, 0)))
+    def testStringToValue_subsecondRounding(self, string, h, m, s, micros):
+        assert Time(string).time == datetime.time(0, 0, 0, micros)
+
+    @pytest.mark.parametrize("string", _invalid_time_strings)
+    def testStringToValue_failure(self, string):
+        pytest.raises(ValueError, Time, string)
 
 
 class TestXDate:
