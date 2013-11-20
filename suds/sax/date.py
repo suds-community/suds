@@ -46,7 +46,9 @@ class Date(UnicodeMixin):
         @raise ValueError: When I{value} is invalid.
 
         """
-        if isinstance(value, datetime.date):
+        if isinstance(value, datetime.datetime):
+            self.date = value.date()
+        elif isinstance(value, datetime.date):
             self.date = value
         elif isinstance(value, basestring):
             self.date = self.__parse(value)
