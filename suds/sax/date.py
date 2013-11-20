@@ -52,8 +52,8 @@ class Date(UnicodeMixin):
     """
     An XML date object supporting the xsd:date datatype.
 
-    @ivar date: The object value.
-    @type date: B{datetime}.I{date}
+    @ivar value: The object value.
+    @type value: B{datetime}.I{date}
 
     """
 
@@ -65,11 +65,11 @@ class Date(UnicodeMixin):
 
         """
         if isinstance(value, datetime.datetime):
-            self.date = value.date()
+            self.value = value.date()
         elif isinstance(value, datetime.date):
-            self.date = value
+            self.value = value
         elif isinstance(value, basestring):
-            self.date = self.__parse(value)
+            self.value = self.__parse(value)
         else:
             raise ValueError("invalid type for Date(): %s" % type(value))
 
@@ -97,15 +97,15 @@ class Date(UnicodeMixin):
         return _date_from_match(match_result)
 
     def __unicode__(self):
-        return self.date.isoformat()
+        return self.value.isoformat()
 
 
 class DateTime(UnicodeMixin):
     """
     An XML datetime object supporting the xsd:dateTime datatype.
 
-    @ivar datetime: The object value.
-    @type datetime: B{datetime}.I{datetime}
+    @ivar value: The object value.
+    @type value: B{datetime}.I{datetime}
 
     """
 
@@ -118,9 +118,9 @@ class DateTime(UnicodeMixin):
         """
         self.tz = Timezone()
         if isinstance(value, datetime.datetime):
-            self.datetime = value
+            self.value = value
         elif isinstance(value, basestring):
-            self.datetime = self.__parse(value)
+            self.value = self.__parse(value)
             self.__adjust()
         else:
             raise ValueError("invalid type for DateTime(): %s" % type(value))
@@ -131,9 +131,9 @@ class DateTime(UnicodeMixin):
             return
         delta = self.tz.adjustment(self.offset)
         try:
-            self.datetime = ( self.datetime + delta )
+            self.value = ( self.value + delta )
         except OverflowError:
-            log.warn("'%s' caused overflow, not-adjusted", self.datetime)
+            log.warn("'%s' caused overflow, not-adjusted", self.value)
 
     def __parse(self, value):
         """
@@ -166,7 +166,7 @@ class DateTime(UnicodeMixin):
         return result
 
     def __unicode__(self):
-        datetime = self.datetime.isoformat()
+        datetime = self.value.isoformat()
         if self.tz.local:
             return "%s%+.2d:00" % (datetime, self.tz.local)
         return "%sZ" % datetime
@@ -178,8 +178,8 @@ class Time(UnicodeMixin):
 
     @ivar tz: The timezone
     @type tz: L{Timezone}
-    @ivar time: The object value.
-    @type time: B{datetime}.I{time}
+    @ivar value: The object value.
+    @type value: B{datetime}.I{time}
 
     """
 
@@ -194,9 +194,9 @@ class Time(UnicodeMixin):
         """
         self.tz = Timezone()
         if isinstance(value, datetime.time):
-            self.time = value
+            self.value = value
         elif isinstance(value, basestring):
-            self.time = self.__parse(value)
+            self.value = self.__parse(value)
             if adjusted:
                 self.__adjust()
         else:
@@ -207,9 +207,9 @@ class Time(UnicodeMixin):
         if hasattr(self, "offset"):
             today = datetime.date.today()
             delta = self.tz.adjustment(self.offset)
-            d = datetime.datetime.combine(today, self.time)
+            d = datetime.datetime.combine(today, self.value)
             d = ( d + delta )
-            self.time = d.time()
+            self.value = d.time()
 
     def __parse(self, value):
         """
@@ -240,7 +240,7 @@ class Time(UnicodeMixin):
         return time
 
     def __unicode__(self):
-        time = self.time.isoformat()
+        time = self.value.isoformat()
         if self.tz.local:
             return "%s%+.2d:00" % (time, self.tz.local)
         return "%sZ" % time
