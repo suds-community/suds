@@ -79,8 +79,49 @@ Installation troubleshooting:
 Release notes
 =================================================
 
+version 0.4.1 jurko 6 (in development)
+--------------------------------------
+
+* Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+  original suds Python library development project's Subversion repository.
+
+  * Last officially packaged & released suds Python library version - 0.4.1.
+
+* Supported Python versions.
+
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Tested in the following environments:
+
+    * Python 2.4.3/x86, on Windows 7/SP1/x64.
+    * Python 2.4.4/x86, on Windows 7/SP1/x64.
+    * Python 2.7.3/x64, on Windows 7/SP1/x64.
+    * Python 3.2.3/x64, on Windows 7/SP1/x64.
+    * Python 3.3.3/x86, on Windows 7/SP1/x64.
+    * Python 3.3.3/x64, on Windows 7/SP1/x64.
+
+* Improved the suds date/time handling (contributed by MDuggan1, based on a
+  patch attached to issue `#353 <http://fedorahosted.org/suds/ticket/353>`_ on
+  the original suds project issue tracker).
+
+  * Replaces the timezone handling related fix made in the previous release.
+  * More detailed testing.
+  * Corrected subsecond to microsecond conversion, including rounding.
+  * ``DateTime`` class no longer derived from ``Date`` & ``Time`` classes.
+  * Recognizes more date/time strings valid 'by intuition'.
+  * Rejects more invalid date/time strings.
+  
+    * Time zone specifiers containing hours and minutes but without a colon are
+      rejected to avoid confusion, e.g. whether ``+121`` should be interpreted
+      as ``+12:01`` or ``+01:21``.
+    * Time zone specifiers limited to under 24 hours. Without this Python's
+      timezone UTC offset calculation would raise an exception on some
+      operations, e.g. timezone aware datetime.datetime/time comparisons.
+
 version 0.4.1 jurko 5 (2013-11-11)
-------------------------------------
+----------------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
   original suds Python library development project's Subversion repository.
