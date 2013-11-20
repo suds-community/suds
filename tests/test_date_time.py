@@ -62,10 +62,18 @@ _invalid_date_strings = (
         "1900-13-011",
         "1900-01-01X",
         "1900-01-01T",  # 'T' is a date/time separator for DateTime.
-        "1900-01-01-25:00",  # Invalid time zone indicator.
-        "1900-01-01-24:00",  # Invalid time zone indicator.
-        "1900-01-01+25:00",  # Invalid time zone indicator.
-        "1900-01-01+24:00")  # Invalid time zone indicator.
+        # Invalid time zone indicators.
+            "1900-01-01 +17:00",
+            "1900-01-01+ 17:00",
+            "1900-01-01*17:00",
+            "1900-01-01 17:00",
+            "1900-01-01+17:",
+            "1900-01-01+170",
+            "1900-01-01+170:00",
+            "1900-01-01-:4",
+            "1900-01-01-2a:00",
+            "1900-01-01-222:00",
+            "1900-01-01-12:000")
 
 """Invalid date strings reused for both time & datetime testing."""
 _invalid_time_strings = (
@@ -106,7 +114,19 @@ _invalid_time_strings = (
         "23:59:6.12x45",
         "23:59:6.999999 ",
         "23:59:6.999999x",
-        "T23:59:6")
+        "T23:59:6",
+        # Invalid time zone indicators.
+            "13:27:04 -10:00",
+            "13:27:04- 10:00",
+            "13:27:04*17:00",
+            "13:27:04 17:00",
+            "13:27:04-003",
+            "13:27:04-003:00",
+            "13:27:04-13:60",
+            "13:27:04-121",
+            "13:27:04-121:00",
+            "13:27:04+12:",
+            "13:27:04-:13")
 
 class TestDate:
     """Tests for the suds.sax.date.Date class."""
@@ -116,9 +136,15 @@ class TestDate:
         ("1900-1-1", 1900, 1, 1),
         ("1900-01-01z", 1900, 1, 1),
         ("1900-01-01Z", 1900, 1, 1),
+        ("1900-01-01-02", 1900, 1, 1),
+        ("1900-01-01+2", 1900, 1, 1),
         ("1900-01-01+02:00", 1900, 1, 1),
+        ("1900-01-01+99:59", 1900, 1, 1),
         ("1900-01-01-21:13", 1900, 1, 1),
-        ("2000-02-29", 2000, 2, 29)))  # Leap year.
+        ("2000-02-29", 2000, 2, 29),  # Leap year.
+        # Date ignores timezone information so no detailed error checking.
+            ("1900-01-01+00:60", 1900, 1, 1),
+            ("1900-01-01-00:99", 1900, 1, 1)))
     def testStringToValue(self, string, y, m, d):
         assert Date(string).date == datetime.date(y, m, d)
 
@@ -133,9 +159,12 @@ class TestDateTime:
     @pytest.mark.parametrize(
         ("string", "y", "M", "d", "h", "m", "s", "micros"), (
         ("2013-11-19T14:05:23.428068", 2013, 11, 19, 14, 5, 23, 428068),
-        ("2013-11-19 14:05:23.428068", 2013, 11, 19, 14, 5, 23, 428068),
+        ("2013-11-19 14:05:23.4280", 2013, 11, 19, 14, 5, 23, 428000),
+        ("2013-11-19T14:05:23.428068-3", 2013, 11, 19, 14, 5, 23, 428068),
+        ("2013-11-19T14:05:23.068+03", 2013, 11, 19, 14, 5, 23, 68000),
         ("2013-11-19T14:05:23.428068-02:00", 2013, 11, 19, 14, 5, 23, 428068),
-        ("2013-11-19T14:05:23.428068+02:00", 2013, 11, 19, 14, 5, 23, 428068)))
+        ("2013-11-19T14:05:23.428068+02:00", 2013, 11, 19, 14, 5, 23, 428068),
+        ("2013-11-19T14:05:23.428068-99:59", 2013, 11, 19, 14, 5, 23, 428068)))
     def testStringToValue(self, string, y, M, d, h, m, s, micros):
         assert DateTime(string).datetime == datetime.datetime(y, M, d, h, m, s,
             micros)
@@ -155,12 +184,20 @@ class TestDateTime:
     @pytest.mark.parametrize("string",
         [x + "T00:00:00" for x in _invalid_date_strings] +
         ["2000-12-31T" + x for x in _invalid_time_strings] + [
-        "2013-11-19T14:05:23.428068-25:00",  # Invalid time zone indicator.
-        "2013-11-19T14:05:23.428068-24:00",  # Invalid time zone indicator.
-        "2013-11-19T14:05:23.428068+24:00",  # Invalid time zone indicator.
-        "2013-11-19T14:05:23.428068+25:00"])  # Invalid time zone indicator.
+        # Invalid date/time separator characters.
+            "2013-11-1914:05:23.428068",
+            "2013-11-19X14:05:23.428068",
+        # Invalid time zone indicators.
+            "2013-11-19T14:05:23.428068-225",
+            "2013-11-19T14:05:23.428068-22:",
+            "2013-11-19T14:05:23.428068-224:00",
+            "2013-11-19T14:05:23.428068-014:00",
+            "2013-11-19T14:05:23.428068-00:002",
+            "2013-11-19T14:05:23.428068+224",
+            "2013-11-19T14:05:23.428068+225:00",
+            "2013-11-19T14:05:23.428068+015:00"])
     def testStringToValue_failure(self, string):
-        pytest.raises(ValueError, Date, string)
+        pytest.raises(ValueError, DateTime, string)
 
 
 class TestTime:
@@ -179,8 +216,13 @@ class TestTime:
         ("1:13:50.0", 1, 13, 50, 0),
         ("18:0:09.2139z", 18, 0, 9, 213900),
         ("18:0:09.2139Z", 18, 0, 9, 213900),
+        ("18:0:09.2139+3", 18, 0, 9, 213900),
+        ("18:0:09.2139-3", 18, 0, 9, 213900),
+        ("18:0:09.2139-03", 18, 0, 9, 213900),
+        ("18:0:09.2139+9:3", 18, 0, 9, 213900),
         ("18:0:09.2139+10:31", 18, 0, 9, 213900),
-        ("18:0:09.2139-10:31", 18, 0, 9, 213900)))
+        ("18:0:09.2139-10:31", 18, 0, 9, 213900),
+        ("18:0:09.2139-99:59", 18, 0, 9, 213900)))
     def testStringToValue(self, string, h, m, s, micros):
         assert Time(string).time == datetime.time(h, m, s, micros)
 
@@ -192,7 +234,7 @@ class TestTime:
         ("0:0:0.0000006", 0, 0, 0, 1),
         ("0:0:0.0000009", 0, 0, 0, 1),
         ("0:0:0.5", 0, 0, 0, 500000),
-        ("0:0:0.5000004", 0, 0, 0, 500001),
+        ("0:0:0.5000004", 0, 0, 0, 500000),
         ("0:0:0.5000005", 0, 0, 0, 500001),
         ("0:0:0.50000050", 0, 0, 0, 500001),
         ("0:0:0.50000051", 0, 0, 0, 500001),
@@ -207,7 +249,7 @@ class TestTime:
         ("0:0:0.9999996", 0, 0, 1, 0),
         ("0:0:0.9999999", 0, 0, 1, 0)))
     def testStringToValue_subsecondRounding(self, string, h, m, s, micros):
-        assert Time(string).time == datetime.time(0, 0, 0, micros)
+        assert Time(string).time == datetime.time(h, m, s, micros)
 
     @pytest.mark.parametrize("string", _invalid_time_strings)
     def testStringToValue_failure(self, string):
@@ -437,10 +479,8 @@ class TestXDateTime:
 
     def testSimpleWithMicrosecond(self):
         Timezone.LOCAL = lambda tz: 0
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22, 454)
-        s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.4d" % (ref.year, ref.month,
-            ref.day, ref.hour, ref.minute, ref.second, ref.microsecond)
-        assert XDateTime.translate(s) == ref
+        ref = datetime.datetime(1941, 12, 7, 10, 30, 22, 454000)
+        assert XDateTime.translate("1941-12-7T10:30:22.454") == ref
 
     def testTimezoneNegative(self):
         self.__equalsTimezone(-6)
@@ -603,26 +643,23 @@ class TestXTime:
 
     def testSimple(self):
         ref = datetime.time(10, 30, 22)
-        s = "%.2d:%.2d:%.2d" % (ref.hour, ref.minute, ref.second)
+        s = "%.2d:%.2d:%d" % (ref.hour, ref.minute, ref.second)
         assert XTime.translate(s) == ref
 
     def testSimpleWithLongMicrosecond(self):
-        ref = datetime.time(10, 30, 22, 999999)
-        s = "%.2d:%.2d:%.2d.%4.d" % (ref.hour, ref.minute, ref.second,
-            int("999999999"))
-        assert XTime.translate(s) == ref
+        assert XTime.translate("10:30:22.9999991") == datetime.time(10, 30, 22,
+            999999)
+
+    def testSimpleWithLongMicrosecondAndRounding(self):
+        assert XTime.translate("10:30:22.9999995") == datetime.time(10, 30, 23)
 
     def testSimpleWithMicrosecond(self):
-        ref = datetime.time(10, 30, 22, 999999)
-        s = "%.2d:%.2d:%.2d.%4.d" % (ref.hour, ref.minute, ref.second,
-            ref.microsecond)
-        assert XTime.translate(s) == ref
+        assert XTime.translate("10:30:22.999999") == datetime.time(10, 30, 22,
+            999999)
 
     def testSimpleWithShortMicrosecond(self):
-        ref = datetime.time(10, 30, 22, 34)
-        s = "%.2d:%.2d:%.2d.%4.d" % (ref.hour, ref.minute, ref.second,
-            ref.microsecond)
-        assert XTime.translate(s) == ref
+        assert XTime.translate("10:30:22.34") == datetime.time(10, 30, 22,
+            340000)
 
     def testTranslateToString(self):
         Timezone.LOCAL = lambda tz: 0
