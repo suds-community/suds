@@ -25,24 +25,24 @@ import re
 import time
 
 
-SNIPPET_DATE =  \
+_SNIPPET_DATE =  \
     r"(?P<year>\d{1,})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
-SNIPPET_TIME =  \
+_SNIPPET_TIME =  \
     r"(?P<hour>\d{1,2}):(?P<minute>[0-5]?[0-9]):(?P<second>[0-5]?[0-9])"  \
     r"(?:\.(?P<subsecond>\d+))?"
-SNIPPET_ZONE =  \
+_SNIPPET_ZONE =  \
     r"(?:(?P<tz_sign>[-+])(?P<tz_hour>\d{1,2})"  \
     r"(?::(?P<tz_minute>[0-5]?[0-9])(?::(?P<tz_second>[0-5]?[0-9]))?)?)"  \
     r"|(?P<tz_utc>[Zz])"
 
-PATTERN_DATE = r"^%s(?:%s)?$" % (SNIPPET_DATE, SNIPPET_ZONE)
-PATTERN_TIME = r"^%s(?:%s)?$" % (SNIPPET_TIME, SNIPPET_ZONE)
-PATTERN_DATETIME = r"^%s[T ]%s(?:%s)?$" % (SNIPPET_DATE, SNIPPET_TIME,
-                                           SNIPPET_ZONE)
+_PATTERN_DATE = r"^%s(?:%s)?$" % (_SNIPPET_DATE, _SNIPPET_ZONE)
+_PATTERN_TIME = r"^%s(?:%s)?$" % (_SNIPPET_TIME, _SNIPPET_ZONE)
+_PATTERN_DATETIME = r"^%s[T ]%s(?:%s)?$" % (_SNIPPET_DATE, _SNIPPET_TIME,
+                                            _SNIPPET_ZONE)
 
-RE_DATE = re.compile(PATTERN_DATE)
-RE_TIME = re.compile(PATTERN_TIME)
-RE_DATETIME = re.compile(PATTERN_DATETIME)
+_RE_DATE = re.compile(_PATTERN_DATE)
+_RE_TIME = re.compile(_PATTERN_TIME)
+_RE_DATETIME = re.compile(_PATTERN_DATETIME)
 
 
 class Date(UnicodeMixin):
@@ -88,7 +88,7 @@ class Date(UnicodeMixin):
         @rtype: B{datetime}.I{date}
 
         """
-        match_result = RE_DATE.match(value)
+        match_result = _RE_DATE.match(value)
         if match_result is None:
             raise ValueError("date data has invalid format '%s'" % (value,))
         return _date_from_match(match_result)
@@ -137,7 +137,7 @@ class DateTime(UnicodeMixin):
         @rtype: B{datetime}.I{datetime}
 
         """
-        match_result = RE_DATETIME.match(value)
+        match_result = _RE_DATETIME.match(value)
         if match_result is None:
            raise ValueError("date data has invalid format '%s'" % (value,))
 
@@ -195,7 +195,7 @@ class Time(UnicodeMixin):
         @rtype: B{datetime}.I{time}
 
         """
-        match_result = RE_TIME.match(value)
+        match_result = _RE_TIME.match(value)
         if match_result is None:
            raise ValueError("date data has invalid format '%s'" % (value,))
 
@@ -370,7 +370,8 @@ def _date_from_match(match_object):
     """
     Create a date object from a regular expression match.
 
-    The regular expression match is expected to be from RE_DATE or RE_DATETIME.
+    The regular expression match is expected to be from _RE_DATE or
+    _RE_DATETIME.
 
     @param match_object: The regular expression match.
     @type value: B{re}.I{MatchObject}
@@ -394,7 +395,8 @@ def _time_from_match(match_object):
     Subsecond information is rounded to microseconds due to a restriction in
     the python datetime.datetime/time implementation.
 
-    The regular expression match is expected to be from RE_DATETIME or RE_TIME.
+    The regular expression match is expected to be from _RE_DATETIME or
+    _RE_TIME.
 
     @param match_object: The regular expression match.
     @type value: B{re}.I{MatchObject}
@@ -420,8 +422,8 @@ def _tzinfo_from_match(match_object):
     """
     Create a timezone information object from a regular expression match.
 
-    The regular expression match is expected to be from RE_DATE, RE_DATETIME or
-    RE_TIME.
+    The regular expression match is expected to be from _RE_DATE, _RE_DATETIME
+    or _RE_TIME.
 
     @param match_object: The regular expression match.
     @type value: B{re}.I{MatchObject}
