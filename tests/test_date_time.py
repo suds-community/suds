@@ -220,36 +220,6 @@ class TestDateTime:
         assert DateTime(string).value == ref
 
 
-class TestFixedOffsetTimezone:
-    """Tests for the suds.sax.date.FixedOffsetTimezone class."""
-
-    @pytest.mark.parametrize(("hours", "minutes", "seconds", "name"), (
-        (-13, 0, 0, "-13:00"),
-        (-5, 0, 0, "-05:00"),
-        (0, 0, 0, "+00:00"),
-        (5, 0, 0, "+05:00"),
-        (13, 0, 0, "+13:00"),
-        (5, 50, 0, "+05:50"),
-        (-4, 30, 0, "-04:30"),
-        (-22, 12, 59, "-22:12:59"),
-        (-22, 12, 1, "-22:12:01"),
-        (12, 00, 59, "+12:00:59"),
-        (15, 12, 1, "+15:12:01")))
-    def test(self, hours, minutes, seconds, name):
-        tz_delta = datetime.timedelta(hours=hours, minutes=minutes,
-            seconds=seconds)
-        tz = FixedOffsetTimezone(tz_delta)
-        assert tz.utcoffset(None) is tz_delta
-        assert tz.dst(None) == datetime.timedelta(0)
-        assert tz.tzname(None) == name
-        assert str(tz) == "FixedOffsetTimezone " + name
-
-    @pytest.mark.parametrize("hours", (-5, 0, 5))
-    def testConstructFromInteger(self, hours):
-        tz = FixedOffsetTimezone(hours)
-        assert tz.utcoffset(None) == datetime.timedelta(hours=hours)
-
-
 class TestTime:
     """Tests for the suds.sax.date.Time class."""
 
@@ -311,17 +281,6 @@ class TestTime:
     @pytest.mark.parametrize("string", _invalid_time_strings)
     def testStringToValue_failure(self, string):
         pytest.raises(ValueError, Time, string)
-
-
-class TestUtcTimezone:
-    """Tests for the suds.sax.date.UtcTimezone class."""
-
-    def test(self):
-        tz = UtcTimezone()
-        assert tz.utcoffset(None) == datetime.timedelta(0)
-        assert tz.dst(None) == datetime.timedelta(0)
-        assert tz.tzname(None) == "UTC"
-        assert str(tz) == "UtcTimezone"
 
 
 class TestXDate:
