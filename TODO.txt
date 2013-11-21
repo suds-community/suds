@@ -559,6 +559,8 @@ PRIORETIZED:
 (+)         * FixedOffsetTimezone class.
 (+)     * Fix FixedOffsetTimezone.tzname() output string formatting bug with
 (+)       negative timezone offsets.
+(+)     * Add tests.
+(+)         * UtcTimezone class.
 
 (22.11.2013.)
 

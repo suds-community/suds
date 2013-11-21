@@ -313,6 +313,17 @@ class TestTime:
         pytest.raises(ValueError, Time, string)
 
 
+class TestUtcTimezone:
+    """Tests for the suds.sax.date.UtcTimezone class."""
+
+    def test(self):
+        tz = UtcTimezone()
+        assert tz.utcoffset(None) == datetime.timedelta(0)
+        assert tz.dst(None) == datetime.timedelta(0)
+        assert tz.tzname(None) == "UTC"
+        assert str(tz) == "UtcTimezone"
+
+
 class TestXDate:
     """Tests for the suds.xsd.sxbuiltin.XDate class."""
 
