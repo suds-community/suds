@@ -248,10 +248,6 @@ class FixedOffsetTimezone(datetime.tzinfo, UnicodeMixin):
         http://docs.python.org/library/datetime.html#datetime.tzinfo.tzname
 
         """
-        sign = "+"
-        if self.__offset < datetime.timedelta():
-            sign = "-"
-
         # total_seconds was introduced in Python 2.7
         if hasattr(self.__offset, "total_seconds"):
             total_seconds = self.__offset.total_seconds()
@@ -270,8 +266,8 @@ class FixedOffsetTimezone(datetime.tzinfo, UnicodeMixin):
         total_seconds -= seconds
 
         if seconds:
-            return '%s%02d:%02d:%02d' % (sign, hours, minutes, seconds)
-        return '%s%02d:%02d' % (sign, hours, minutes)
+            return "%+03d:%02d:%02d" % (hours, minutes, seconds)
+        return "%+03d:%02d" % (hours, minutes)
 
     def __unicode__(self):
         return "FixedOffsetTimezone %s" % (self.tzname(None),)

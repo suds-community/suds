@@ -133,6 +133,7 @@ _invalid_time_strings = (
             "13:27:04-24:00"
             "13:27:04+99:00")
 
+
 class TestDate:
     """Tests for the suds.sax.date.Date class."""
 
@@ -217,6 +218,36 @@ class TestDateTime:
         tzinfo = FixedOffsetTimezone(tzdelta)
         ref = datetime.datetime(y, M, d, h, m, s, micros, tzinfo=tzinfo)
         assert DateTime(string).value == ref
+
+
+class TestFixedOffsetTimezone:
+    """Tests for the suds.sax.date.FixedOffsetTimezone class."""
+
+    @pytest.mark.parametrize(("hours", "minutes", "seconds", "name"), (
+        (-13, 0, 0, "-13:00"),
+        (-5, 0, 0, "-05:00"),
+        (0, 0, 0, "+00:00"),
+        (5, 0, 0, "+05:00"),
+        (13, 0, 0, "+13:00"),
+        (5, 50, 0, "+05:50"),
+        (-4, 30, 0, "-04:30"),
+        (-22, 12, 59, "-22:12:59"),
+        (-22, 12, 1, "-22:12:01"),
+        (12, 00, 59, "+12:00:59"),
+        (15, 12, 1, "+15:12:01")))
+    def test(self, hours, minutes, seconds, name):
+        tz_delta = datetime.timedelta(hours=hours, minutes=minutes,
+            seconds=seconds)
+        tz = FixedOffsetTimezone(tz_delta)
+        assert tz.utcoffset(None) is tz_delta
+        assert tz.dst(None) == datetime.timedelta(0)
+        assert tz.tzname(None) == name
+        assert str(tz) == "FixedOffsetTimezone " + name
+
+    @pytest.mark.parametrize("hours", (-5, 0, 5))
+    def testConstructFromInteger(self, hours):
+        tz = FixedOffsetTimezone(hours)
+        assert tz.utcoffset(None) == datetime.timedelta(hours=hours)
 
 
 class TestTime:
