@@ -32,7 +32,8 @@ if __name__ == "__main__":
     sys.exit(-2)
 
 
-from suds.sax.date import Date, DateTime, Time, Timezone
+from suds.sax.date import (Date, DateTime, Time, UtcTimezone,
+    FixedOffsetTimezone)
 from suds.xsd.sxbuiltin import XDate, XDateTime, XTime
 import tests
 
@@ -73,7 +74,9 @@ _invalid_date_strings = (
             "1900-01-01-:4",
             "1900-01-01-2a:00",
             "1900-01-01-222:00",
-            "1900-01-01-12:000")
+            "1900-01-01-12:000"
+            "1900-01-01+00:60",
+            "1900-01-01-00:99")
 
 """Invalid date strings reused for both time & datetime testing."""
 _invalid_time_strings = (
@@ -126,7 +129,9 @@ _invalid_time_strings = (
             "13:27:04-121",
             "13:27:04-121:00",
             "13:27:04+12:",
-            "13:27:04-:13")
+            "13:27:04-:13"
+            "13:27:04-24:00"
+            "13:27:04+99:00")
 
 class TestDate:
     """Tests for the suds.sax.date.Date class."""
@@ -141,10 +146,7 @@ class TestDate:
         ("1900-01-01+02:00", 1900, 1, 1),
         ("1900-01-01+99:59", 1900, 1, 1),
         ("1900-01-01-21:13", 1900, 1, 1),
-        ("2000-02-29", 2000, 2, 29),  # Leap year.
-        # Date ignores timezone information so no detailed error checking.
-            ("1900-01-01+00:60", 1900, 1, 1),
-            ("1900-01-01-00:99", 1900, 1, 1)))
+        ("2000-02-29", 2000, 2, 29)))  # Leap year.
     def testStringToValue(self, string, y, m, d):
         assert Date(string).value == datetime.date(y, m, d)
 
@@ -159,25 +161,8 @@ class TestDateTime:
     @pytest.mark.parametrize(
         ("string", "y", "M", "d", "h", "m", "s", "micros"), (
         ("2013-11-19T14:05:23.428068", 2013, 11, 19, 14, 5, 23, 428068),
-        ("2013-11-19 14:05:23.4280", 2013, 11, 19, 14, 5, 23, 428000),
-        ("2013-11-19T14:05:23.428068-3", 2013, 11, 19, 14, 5, 23, 428068),
-        ("2013-11-19T14:05:23.068+03", 2013, 11, 19, 14, 5, 23, 68000),
-        ("2013-11-19T14:05:23.428068-02:00", 2013, 11, 19, 14, 5, 23, 428068),
-        ("2013-11-19T14:05:23.428068+02:00", 2013, 11, 19, 14, 5, 23, 428068),
-        ("2013-11-19T14:05:23.428068-99:59", 2013, 11, 19, 14, 5, 23, 428068)))
+        ("2013-11-19 14:05:23.4280", 2013, 11, 19, 14, 5, 23, 428000)))
     def testStringToValue(self, string, y, M, d, h, m, s, micros):
-        assert DateTime(string).value == datetime.datetime(y, M, d, h, m, s,
-            micros)
-
-    @pytest.mark.parametrize(
-        ("string", "y", "M", "d", "h", "m", "s", "micros"), (
-        ("2000-2-28T23:59:59.9999995", 2000, 2, 29, 0, 0, 0, 0),
-        ("2000-2-29T23:59:59.9999995", 2000, 3, 1, 0, 0, 0, 0),
-        ("2013-12-31T23:59:59.9999994", 2013, 12, 31, 23, 59, 59, 999999),
-        ("2013-12-31T23:59:59.99999949", 2013, 12, 31, 23, 59, 59, 999999),
-        ("2013-12-31T23:59:59.9999995", 2014, 1, 1, 0, 0, 0, 0)))
-    def testStringToValue_subsecondRounding(self, string, y, M, d, h, m, s,
-        micros):
         assert DateTime(string).value == datetime.datetime(y, M, d, h, m, s,
             micros)
 
@@ -195,9 +180,43 @@ class TestDateTime:
             "2013-11-19T14:05:23.428068-00:002",
             "2013-11-19T14:05:23.428068+224",
             "2013-11-19T14:05:23.428068+225:00",
-            "2013-11-19T14:05:23.428068+015:00"])
+            "2013-11-19T14:05:23.428068+015:00",
+            "2013-11-19T14:05:23.428068+00:60",
+            "2013-11-19T14:05:23.428068+24:00",
+            "2013-11-19T14:05:23.428068-99:00"])
     def testStringToValue_failure(self, string):
         pytest.raises(ValueError, DateTime, string)
+
+    @pytest.mark.parametrize(
+        ("string", "y", "M", "d", "h", "m", "s", "micros"), (
+        ("2000-2-28T23:59:59.9999995", 2000, 2, 29, 0, 0, 0, 0),
+        ("2000-2-29T23:59:59.9999995", 2000, 3, 1, 0, 0, 0, 0),
+        ("2013-12-31T23:59:59.9999994", 2013, 12, 31, 23, 59, 59, 999999),
+        ("2013-12-31T23:59:59.99999949", 2013, 12, 31, 23, 59, 59, 999999),
+        ("2013-12-31T23:59:59.9999995", 2014, 1, 1, 0, 0, 0, 0)))
+    def testStringToValue_subsecondRounding(self, string, y, M, d, h, m, s,
+        micros):
+        ref = datetime.datetime(y, M, d, h, m, s, micros)
+        assert DateTime(string).value == ref
+
+    @pytest.mark.parametrize(
+        ("string", "y", "M", "d", "h", "m", "s", "micros", "tz_h", "tz_m"), (
+        ("2013-11-19T14:05:23.428068-3",
+            2013, 11, 19, 14, 5, 23, 428068, -3, 0),
+        ("2013-11-19T14:05:23.068+03",
+            2013, 11, 19, 14, 5, 23, 68000, 3, 0),
+        ("2013-11-19T14:05:23.428068-02:00",
+            2013, 11, 19, 14, 5, 23, 428068, -2, 0),
+        ("2013-11-19T14:05:23.428068+02:00",
+            2013, 11, 19, 14, 5, 23, 428068, 2, 0),
+        ("2013-11-19T14:05:23.428068-23:59",
+            2013, 11, 19, 14, 5, 23, 428068, -23, -59)))
+    def testStringToValue_timezone(self, string, y, M, d, h, m, s, micros,
+        tz_h, tz_m):
+        tzdelta = datetime.timedelta(hours=tz_h, minutes=tz_m)
+        tzinfo = FixedOffsetTimezone(tzdelta)
+        ref = datetime.datetime(y, M, d, h, m, s, micros, tzinfo=tzinfo)
+        assert DateTime(string).value == ref
 
 
 class TestTime:
@@ -213,16 +232,7 @@ class TestTime:
         ("0:00:00.000001", 0, 0, 0, 1),
         ("0:00:00.000000", 0, 0, 0, 0),
         ("23:59:6.999999", 23, 59, 6, 999999),
-        ("1:13:50.0", 1, 13, 50, 0),
-        ("18:0:09.2139z", 18, 0, 9, 213900),
-        ("18:0:09.2139Z", 18, 0, 9, 213900),
-        ("18:0:09.2139+3", 18, 0, 9, 213900),
-        ("18:0:09.2139-3", 18, 0, 9, 213900),
-        ("18:0:09.2139-03", 18, 0, 9, 213900),
-        ("18:0:09.2139+9:3", 18, 0, 9, 213900),
-        ("18:0:09.2139+10:31", 18, 0, 9, 213900),
-        ("18:0:09.2139-10:31", 18, 0, 9, 213900),
-        ("18:0:09.2139-99:59", 18, 0, 9, 213900)))
+        ("1:13:50.0", 1, 13, 50, 0)))
     def testStringToValue(self, string, h, m, s, micros):
         assert Time(string).value == datetime.time(h, m, s, micros)
 
@@ -251,6 +261,22 @@ class TestTime:
     def testStringToValue_subsecondRounding(self, string, h, m, s, micros):
         assert Time(string).value == datetime.time(h, m, s, micros)
 
+    @pytest.mark.parametrize(
+        ("string", "h", "m", "s", "micros", "tz_h", "tz_m"), (
+        ("18:0:09.2139z", 18, 0, 9, 213900, 0, 0),
+        ("18:0:09.2139Z", 18, 0, 9, 213900, 0, 0),
+        ("18:0:09.2139+3", 18, 0, 9, 213900, 3, 0),
+        ("18:0:09.2139-3", 18, 0, 9, 213900, -3, 0),
+        ("18:0:09.2139-03", 18, 0, 9, 213900, -3, 0),
+        ("18:0:09.2139+9:3", 18, 0, 9, 213900, 9, 3),
+        ("18:0:09.2139+10:31", 18, 0, 9, 213900, 10, 31),
+        ("18:0:09.2139-10:31", 18, 0, 9, 213900, -10, -31)))
+    def testStringToValue_timezone(self, string, h, m, s, micros, tz_h, tz_m):
+        tzdelta = datetime.timedelta(hours=tz_h, minutes=tz_m)
+        tzinfo = FixedOffsetTimezone(tzdelta)
+        ref = datetime.time(h, m, s, micros, tzinfo=tzinfo)
+        assert Time(string).value == ref
+
     @pytest.mark.parametrize("string", _invalid_time_strings)
     def testStringToValue_failure(self, string):
         pytest.raises(ValueError, Time, string)
@@ -264,11 +290,16 @@ class TestXDate:
         s = "%.4d-%.2d-%.2d" % (ref.year, ref.month, ref.day)
         assert XDate.translate(s) == ref
 
-    def testTimezoneNegative(self):
-        self.__equalsTimezone(-6)
-
-    def testTimezonePositive(self):
-        self.__equalsTimezone(6)
+    @pytest.mark.parametrize("tz", (
+        "Z",
+        "-06:00",
+        "-00:00",
+        "+00:00",
+        "+06:00"))
+    def testTimezone(self, tz):
+        ref = datetime.date(1941, 12, 7)
+        s = "%.4d-%.2d-%.2d%s" % (ref.year, ref.month, ref.day, tz)
+        assert XDate.translate(s) == ref
 
     def testTranslateToString(self):
         translated = self.__toString(datetime.date(2013, 7, 24))
@@ -283,224 +314,54 @@ class TestXDate:
     def testTranslateToString_failed(self):
         dummy = _Dummy()
         assert self.__toString(dummy) is dummy
-        time = datetime.time()
-        assert self.__toString(time) is time
-
-    def testUtcTimezone(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.date(1941, 12, 7)
-        s = "%.4d-%.2d-%.2dZ" % (ref.year, ref.month, ref.day)
-        assert XDate.translate(s) == ref
+        ref = datetime.time()
+        assert self.__toString(ref) is ref
 
     @staticmethod
     def __toString(value):
         return XDate.translate(value, topython=False)
 
-    @staticmethod
-    def __equalsTimezone(tz):
-        Timezone.LOCAL = lambda x: tz
-        ref = datetime.date(1941, 12, 7)
-        s = "%.4d-%.2d-%.2d%+.2d:00" % (ref.year, ref.month, ref.day, tz)
-        assert XDate.translate(s) == ref
-
 
 class TestXDateTime:
     """Tests for the suds.xsd.sxbuiltin.XDateTime class."""
 
-    def testConvertNegativeToGreaterNegative(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, -5)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour - 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToGreaterNegativeAndPreviousDay(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.datetime(1941, 12, 7, 0, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, -5)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert 6 == t.day
-        assert 23 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToLesserNegative(self):
-        Timezone.LOCAL = lambda tz: -5
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, -6)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour + 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToLesserNegativeAndNextDay(self):
-        Timezone.LOCAL = lambda tz: -5
-        ref = datetime.datetime(1941, 12, 7, 23, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, -6)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert 8 == t.day
-        assert 0 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToPositive(self):
-        Timezone.LOCAL = lambda tz: 3
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, -6)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour + 9 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToUtc(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, -6)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour + 6 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToGreaterPositive(self):
-        Timezone.LOCAL = lambda tz: 3
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, 2)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour + 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToLesserPositive(self):
-        Timezone.LOCAL = lambda tz: 2
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, 3)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour - 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToNegative(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, 3)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour - 9 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToUtc(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, 3)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour - 3 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertUtcToNegative(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ" % (ref.year, ref.month, ref.day,
-            ref.hour, ref.minute, ref.second)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour - 6 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertUtcToPositive(self):
-        Timezone.LOCAL = lambda tz: 3
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ" % (ref.year, ref.month, ref.day,
-            ref.hour, ref.minute, ref.second)
-        t = XDateTime.translate(s)
-        assert ref.year == t.year
-        assert ref.month == t.month
-        assert ref.day == t.day
-        assert ref.hour + 3 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testOverflow(self):
-        Timezone.LOCAL = lambda tz: -2
-        ref = datetime.datetime(1, 1, 1, 0, 0, 0)
-        s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2dZ" % (ref.year, ref.month, ref.day,
-            ref.hour, ref.minute, ref.second)
-        assert XDateTime.translate(s) == ref
-
     def testSimple(self):
-        Timezone.LOCAL = lambda tz: 0
         ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
         s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d" % (ref.year, ref.month, ref.day,
             ref.hour, ref.minute, ref.second)
         assert XDateTime.translate(s) == ref
 
     def testSimpleWithMicrosecond(self):
-        Timezone.LOCAL = lambda tz: 0
         ref = datetime.datetime(1941, 12, 7, 10, 30, 22, 454000)
         assert XDateTime.translate("1941-12-7T10:30:22.454") == ref
 
-    def testTimezoneNegative(self):
-        self.__equalsTimezone(-6)
-
-    def testTimezonePositive(self):
-        self.__equalsTimezone(6)
+    @pytest.mark.parametrize("tz", (-6, 0, 6))
+    def testTimezone(self, tz):
+        ref = datetime.datetime(1941, 12, 7, 10, 30, 22, tzinfo=UtcTimezone())
+        s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d%+.2d:00" % (ref.year, ref.month,
+            ref.day, ref.hour + tz, ref.minute, ref.second, tz)
+        assert XDateTime.translate(s) == ref
 
     def testTranslateToString(self):
-        Timezone.LOCAL = lambda tz: 0
-        translated = self.__toString(datetime.datetime(2021, 12, 31, 11, 25))
+        ref = datetime.datetime(2021, 12, 31, 11, 25)
+        translated = self.__toString(ref)
         assert isinstance(translated, str)
-        assert translated == "2021-12-31T11:25:00Z"
+        assert translated == "2021-12-31T11:25:00"
 
-        Timezone.LOCAL = lambda tz: 4
-        translated = self.__toString(datetime.datetime(2021, 1, 1, 16, 53, 9))
+        ref = datetime.datetime(2021, 12, 31, 11, 25, tzinfo=UtcTimezone())
+        translated = self.__toString(ref)
+        assert isinstance(translated, str)
+        assert translated == "2021-12-31T11:25:00+00:00"
+
+        tzinfo = FixedOffsetTimezone(4)
+        ref = datetime.datetime(2021, 1, 1, 16, 53, 9, tzinfo=tzinfo)
+        translated = self.__toString(ref)
         assert isinstance(translated, str)
         assert translated == "2021-01-01T16:53:09+04:00"
 
-        Timezone.LOCAL = lambda tz: -4
-        translated = self.__toString(datetime.datetime(2021, 1, 1, 16, 53, 59))
+        tzinfo = FixedOffsetTimezone(-4)
+        ref = datetime.datetime(2021, 1, 1, 16, 53, 59, tzinfo=tzinfo)
+        translated = self.__toString(ref)
         assert isinstance(translated, str)
         assert translated == "2021-01-01T16:53:59-04:00"
 
@@ -512,31 +373,6 @@ class TestXDateTime:
         date = datetime.date(2101, 1, 1)
         assert self.__toString(date) is date
 
-    def testUtcTimezone(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.date(1941, 12, 7)
-        s = "%.4d-%.2d-%.2dZ" % (ref.year, ref.month, ref.day)
-        assert XDate.translate(s) == ref
-
-    def testUtcTimezone(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d" % (ref.year, ref.month, ref.day,
-            ref.hour, ref.minute, ref.second)
-        assert XDateTime.translate(s) == ref
-
-    def __equalsTimezone(self, tz):
-        Timezone.LOCAL = lambda x: tz
-        ref = datetime.datetime(1941, 12, 7, 10, 30, 22)
-        s = self.__strDateTime(ref.year, ref.month, ref.day, ref.hour,
-            ref.minute, ref.second, tz)
-        assert XDateTime.translate(s) == ref
-
-    @staticmethod
-    def __strDateTime(Y, M, D, h, m, s, offset):
-        return "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d%+.2d:00" % (Y, M, D, h, m, s,
-            offset)
-
     @staticmethod
     def __toString(value):
         return XDateTime.translate(value, topython=False)
@@ -545,135 +381,45 @@ class TestXDateTime:
 class TestXTime:
     """Tests for the suds.xsd.sxbuiltin.XTime class."""
 
-    def testConvertNegativeToGreaterNegative(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, -5)
-        t = XTime.translate(s)
-        assert ref.hour - 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToLesserNegative(self):
-        Timezone.LOCAL = lambda tz: -5
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, -6)
-        t = XTime.translate(s)
-        assert ref.hour + 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToPositive(self):
-        Timezone.LOCAL = lambda tz: 3
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, -6)
-        t = XTime.translate(s)
-        assert ref.hour + 9 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertNegativeToUtc(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, -6)
-        t = XTime.translate(s)
-        assert ref.hour + 6 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToGreaterPositive(self):
-        Timezone.LOCAL = lambda tz: 3
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, 2)
-        t = XTime.translate(s)
-        assert ref.hour + 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToLesserPositive(self):
-        Timezone.LOCAL = lambda tz: 2
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, 3)
-        t = XTime.translate(s)
-        assert ref.hour - 1 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToNegative(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, 3)
-        t = XTime.translate(s)
-        assert ref.hour - 9 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertPositiveToUtc(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, 3)
-        t = XTime.translate(s)
-        assert ref.hour - 3 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertUtcToNegative(self):
-        Timezone.LOCAL = lambda tz: -6
-        ref = datetime.time(10, 30, 22)
-        s = "%.2d:%.2d:%.2dZ" % (ref.hour, ref.minute, ref.second)
-        t = XTime.translate(s)
-        assert ref.hour - 6 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testConvertUtcToPositive(self):
-        Timezone.LOCAL = lambda tz: 3
-        ref = datetime.time(10, 30, 22)
-        s = "%.2d:%.2d:%.2dZ" % (ref.hour, ref.minute, ref.second)
-        t = XTime.translate(s)
-        assert ref.hour + 3 == t.hour
-        assert ref.minute == t.minute
-        assert ref.second == t.second
-
-    def testNegativeTimezone(self):
-        self.__equalsTimezone(-6)
-
-    def testPositiveTimezone(self):
-        self.__equalsTimezone(6)
-
     def testSimple(self):
         ref = datetime.time(10, 30, 22)
         s = "%.2d:%.2d:%d" % (ref.hour, ref.minute, ref.second)
         assert XTime.translate(s) == ref
 
     def testSimpleWithLongMicrosecond(self):
-        assert XTime.translate("10:30:22.9999991") == datetime.time(10, 30, 22,
-            999999)
+        ref = datetime.time(10, 30, 22, 999999)
+        assert XTime.translate("10:30:22.9999991") == ref
 
     def testSimpleWithLongMicrosecondAndRounding(self):
         assert XTime.translate("10:30:22.9999995") == datetime.time(10, 30, 23)
 
     def testSimpleWithMicrosecond(self):
-        assert XTime.translate("10:30:22.999999") == datetime.time(10, 30, 22,
-            999999)
+        ref = datetime.time(10, 30, 22, 999999)
+        assert XTime.translate("10:30:22.999999") == ref
 
     def testSimpleWithShortMicrosecond(self):
-        assert XTime.translate("10:30:22.34") == datetime.time(10, 30, 22,
-            340000)
+        ref = datetime.time(10, 30, 22, 340000)
+        assert XTime.translate("10:30:22.34") == ref
+
+    @pytest.mark.parametrize("tz", (-6, 0, 6))
+    def testTimezone(self, tz):
+        ref = datetime.time(10, 30, 22, tzinfo=UtcTimezone())
+        s = self.__strTime(ref.hour + tz, ref.minute, ref.second, tz)
+        assert XTime.translate(s) == ref
 
     def testTranslateToString(self):
-        Timezone.LOCAL = lambda tz: 0
-        translated = self.__toString(datetime.time(11, 25))
+        ref = datetime.time(11, 25, tzinfo=UtcTimezone())
+        translated = self.__toString(ref)
         assert isinstance(translated, str)
-        assert translated == "11:25:00Z"
+        assert translated == "11:25:00+00:00"
 
-        Timezone.LOCAL = lambda tz: 4
-        translated = self.__toString(datetime.time(16, 53, 12))
+        ref = datetime.time(16, 53, 12, tzinfo=FixedOffsetTimezone(4))
+        translated = self.__toString(ref)
         assert isinstance(translated, str)
         assert translated == "16:53:12+04:00"
 
-        Timezone.LOCAL = lambda tz: -4
-        translated = self.__toString(datetime.time(16, 53, 12))
+        ref = datetime.time(16, 53, 12, tzinfo=FixedOffsetTimezone(-4))
+        translated = self.__toString(ref)
         assert isinstance(translated, str)
         assert translated == "16:53:12-04:00"
 
@@ -684,18 +430,6 @@ class TestXTime:
         assert self.__toString(date) is date
         aDateTime = datetime.datetime(1997, 2, 13)
         assert self.__toString(aDateTime) is aDateTime
-
-    def testUtcTimezone(self):
-        Timezone.LOCAL = lambda tz: 0
-        ref = datetime.time(10, 30, 22)
-        s = "%.2d:%.2d:%.2dZ" % (ref.hour, ref.minute, ref.second)
-        assert XTime.translate(s) == ref
-
-    def __equalsTimezone(self, tz):
-        Timezone.LOCAL = lambda x: tz
-        ref = datetime.time(10, 30, 22)
-        s = self.__strTime(ref.hour, ref.minute, ref.second, tz)
-        assert XTime.translate(s) == ref
 
     @staticmethod
     def __strTime(h, m, s, offset):
