@@ -22,7 +22,7 @@ from logging import getLogger
 from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
-from suds.sax.date import UTC
+from suds.sax.date import DateTime, UtcTimezone
 from datetime import datetime, timedelta
 
 try:
@@ -90,11 +90,11 @@ class Token(Object):
 
     @classmethod
     def utc(cls):
-        return datetime.utcnow()
+        return datetime.utcnow().replace(tzinfo=UtcTimezone())
 
     @classmethod
     def sysdate(cls):
-        utc = UTC()
+        utc = DateTime(self.utc())
         return str(utc)
 
     def __init__(self):
@@ -178,7 +178,7 @@ class UsernameToken(Token):
             root.append(n)
         if self.created is not None:
             n = Element('Created', ns=wsuns)
-            n.setText(str(UTC(self.created)))
+            n.setText(str(DateTime(self.created)))
             root.append(n)
         return root
 
@@ -204,9 +204,9 @@ class Timestamp(Token):
     def xml(self):
         root = Element("Timestamp", ns=wsuns)
         created = Element('Created', ns=wsuns)
-        created.setText(str(UTC(self.created)))
+        created.setText(str(DateTime(self.created)))
         expires = Element('Expires', ns=wsuns)
-        expires.setText(str(UTC(self.expires)))
+        expires.setText(str(DateTime(self.expires)))
         root.append(created)
         root.append(expires)
         return root
