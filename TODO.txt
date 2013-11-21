@@ -552,9 +552,18 @@ PRIORETIZED:
 
 (21.11.2013.)
 
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Check for feedback from users requesting this patch.
+(+)     * Add tests.
+(+)         * FixedOffsetTimezone class.
+(+)     * Fix FixedOffsetTimezone.tzname() output string formatting bug with
+(+)       negative timezone offsets.
+
+(22.11.2013.)
+
     * (Jurko) Fix suds time-zone handling according to a pull request received
       on bitbucket from MDuggan1.
-        * Check for feedback from users requesting this patch.
         * Add tests.
             * Time zone indicator string without a colon between hours and
               minutes.
