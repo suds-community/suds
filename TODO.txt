@@ -515,14 +515,66 @@ PRIORETIZED:
 
 (19.11.2013.)
 
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Research.
+(+)     * Prepare date/time string parsing tests.
+
+(20.11.2013.)
+
+(+) * (Jurko) Start documenting the upcoming suds 0.4.1 jurko 6 release.
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Research.
+(+)     * Implement parsing.
+(+)     * DateTime no longer derived from Date & Time.
+(+)     * Date constructed from datetime.datetime should hold a datetime.date.
+(+)     * Research.
+(+)         * See if sax.date.Date("1900-01-01+02:00") should hold a timezone
+(+)           aware date object.
+(+)             * Related test: TestDate.testStringToValue().
+(+)         * Timezone data.
+(+)             * See when we need to specify timezone information.
+(+)                 * In tests when we create DateTime/Time objects.
+(+)                 * Default timezone when parsing web service responses.
+(+)                     * YAGNI - for now left to user code reading specific
+(+)                       DateTime/Time objects.
+(+)                 * Default timezone when constructing web service requests.
+(+)                     * YAGNI - for now left to user code creating specific
+(+)                       DateTime/Time objects.
+(+)     * Implement.
+(+)         * Contained datetime.DateTime/Time objects should hold their
+(+)           timezone information.
+(+)     * Research.
+(+)         * Test TestDate.testStringToValue_failure() fails on Python 2 but
+(+)           passed on Python 3.
+(+)             * Fixed by the latest implementation changes.
+
+(21.11.2013.)
+
     * (Jurko) Fix suds time-zone handling according to a pull request received
       on bitbucket from MDuggan1.
-        * Research.
+        * Check for feedback from users requesting this patch.
         * Add tests.
-        * Implement.
+            * Time zone indicator string without a colon between hours and
+              minutes.
+                * Allowed by patch code.
+                * This leads to border cases like "+121" where you do not know
+                  whether this represents "+01:21" or "+12:01".
+                * Not allowed by the XML schema specification
+                  ('http://www.w3.org/TR/xmlschema-2').
+            * Time zone indicator strings containing second information.
+                * Allowed by patch code.
+                * Not allowed by the XML schema specification
+                  ('http://www.w3.org/TR/xmlschema-2').
+            * tzinfo classes.
+            * Remove test code duplication.
+                * XDate & Date class.
+                * XDateTime & DateTime class.
+                * XTime & Time class.
+                * Timezone handling checks in XDateTime & XTime classes.
         * See if we can reuse datetime.timezone instead of
           suds.sax.date.FixedOffsetTimezone with Python 3.2+.
-        * Check for feedback from users requesting this patch.
         * Plan a new release including this patch.
 
     * (Jurko) Update the project's versioning scheme to no longer have pip
