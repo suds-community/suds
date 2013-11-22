@@ -32,7 +32,7 @@ _SNIPPET_TIME =  \
     r"(?:\.(?P<subsecond>\d+))?"
 _SNIPPET_ZONE =  \
     r"(?:(?P<tz_sign>[-+])(?P<tz_hour>\d{1,2})"  \
-    r"(?::(?P<tz_minute>[0-5]?[0-9])(?::(?P<tz_second>[0-5]?[0-9]))?)?)"  \
+    r"(?::(?P<tz_minute>[0-5]?[0-9]))?)"  \
     r"|(?P<tz_utc>[Zz])"
 
 _PATTERN_DATE = r"^%s(?:%s)?$" % (_SNIPPET_DATE, _SNIPPET_ZONE)
@@ -226,7 +226,10 @@ class FixedOffsetTimezone(datetime.tzinfo, UnicodeMixin):
         if type(offset) == int:
             offset = datetime.timedelta(hours=offset)
         elif type(offset) != datetime.timedelta:
-            raise TypeError("offset must be an int or datetime.timedelta")
+            raise TypeError("timezone offset must be an int or "
+                "datetime.timedelta")
+        if offset.microseconds or (offset.seconds % 60 != 0):
+            raise ValueError("timezone offset must have minute precision")
         self.__offset = offset
 
     def dst(self, dt):
@@ -441,17 +444,16 @@ def _tzinfo_from_match(match_object):
 
     h = int(match_object.group("tz_hour") or 0)
     m = int(match_object.group("tz_minute") or 0)
-    s = int(match_object.group("tz_second") or 0)
-    tz_delta = datetime.timedelta(hours=h, minutes=m, seconds=s)
-    if tz_delta == datetime.timedelta():
+    if h == 0 and m == 0:
         return UtcTimezone()
 
     # Python limitation - timezone offsets larger than one day (in absolute)
     # will cause operations depending on tzinfo.utcoffset() to fail, e.g.
     # comparing two timezone aware datetime.datetime/time objects.
-    if tz_delta >= datetime.timedelta(days=1):
+    if h >= 24:
         raise ValueError("timezone indicator too large")
 
+    tz_delta = datetime.timedelta(hours=h, minutes=m)
     if tz_sign == "-":
         tz_delta *= -1
     return FixedOffsetTimezone(tz_delta)
