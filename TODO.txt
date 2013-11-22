@@ -575,22 +575,13 @@ PRIORETIZED:
 
 (22.11.2013.)
 
-    * (Jurko) Fix suds time-zone handling according to a pull request received
-      on bitbucket from MDuggan1.
-        * Add tests.
-            * Time zone indicator strings containing second information.
-                * Allowed by patch code.
-                * Not allowed by the XML schema specification
-                  ('http://www.w3.org/TR/xmlschema-2').
-            * tzinfo classes.
-            * Remove test code duplication.
-                * XDate & Date class.
-                * XDateTime & DateTime class.
-                * XTime & Time class.
-                * Timezone handling checks in XDateTime & XTime classes.
-        * See if we can reuse datetime.timezone instead of
-          suds.sax.date.FixedOffsetTimezone with Python 3.2+.
-        * Plan a new release including this patch.
+    * (Jurko) Remove date/time related test code duplication.
+        * XDate & Date class.
+        * XDateTime & DateTime class.
+        * XTime & Time class.
+        * Timezone handling checks in XDateTime & XTime classes.
+
+    * (Jurko) Plan a new release.
 
     * (Jurko) Update the project's versioning scheme to no longer have pip
       detect suds-jurko releases as 'prerelease' only due to our version tag
@@ -643,7 +634,7 @@ NON PRIORETIZED:
           demonstrating a problem with the current implementation.
 
     * SoapClient 'location' cleanup.
-        * URL quoting, especially if specified externally by the called instead
+        * URL quoting, especially if specified externally by the caller instead
           of having been read from a valid WSDL schema.
 
     * See how input parameter element for a document/literal web service
