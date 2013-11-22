@@ -575,11 +575,23 @@ PRIORETIZED:
 
 (22.11.2013.)
 
+(+) * (Jurko) Remove date/time related test code duplication.
+(+)     * Date, DateTime & Time classes.
+(+)         * Clean up test function names.
+(+)         * Test construction from unexpected objects.
+(+)         * Test construction from datetime.date/datetime/time objects.
+(+)         * str() tests.
+
     * (Jurko) Remove date/time related test code duplication.
         * XDate & Date class.
         * XDateTime & DateTime class.
         * XTime & Time class.
         * Timezone handling checks in XDateTime & XTime classes.
+
+    * (Jurko) Make converting datetime/time to string output subsecond
+      information without trailing zeroes.
+        * Test.
+        * Implement.
 
     * (Jurko) Plan a new release.
 
