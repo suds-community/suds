@@ -256,8 +256,7 @@ class FixedOffsetTimezone(datetime.tzinfo, UnicodeMixin):
             total_seconds = self.__offset.total_seconds()
         else:
             total_seconds = (self.__offset.days * 24 * 60 * 60) + \
-                            (self.__offset.seconds) + \
-                            (self.__offset.microseconds / 1000000.0)
+                            (self.__offset.seconds)
 
         hours = total_seconds // (60 * 60)
         total_seconds -= hours * 60 * 60
