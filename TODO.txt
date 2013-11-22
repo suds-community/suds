@@ -581,12 +581,12 @@ PRIORETIZED:
 (+)         * Test construction from unexpected objects.
 (+)         * Test construction from datetime.date/datetime/time objects.
 (+)         * str() tests.
+(+)     * XDate & Date class.
+(+)     * XDateTime & DateTime class.
+(+)     * XTime & Time class.
+(+)     * Timezone handling checks in XDateTime & XTime classes.
 
-    * (Jurko) Remove date/time related test code duplication.
-        * XDate & Date class.
-        * XDateTime & DateTime class.
-        * XTime & Time class.
-        * Timezone handling checks in XDateTime & XTime classes.
+(23.11.2013.)
 
     * (Jurko) Make converting datetime/time to string output subsecond
       information without trailing zeroes.
