@@ -43,6 +43,12 @@ import datetime
 
 tests.setup_logging()
 
+
+class _Dummy:
+    """Class for testing unknown object class handling."""
+    pass
+
+
 """Invalid date strings reused for both date & datetime testing."""
 _invalid_date_strings = (
         "",
@@ -142,6 +148,20 @@ _invalid_time_strings = (
 class TestDate:
     """Tests for the suds.sax.date.Date class."""
 
+    def testConstructFromDate(self):
+        date = datetime.date(2001, 12, 10)
+        assert Date(date).value is date
+
+    def testConstructFromDateTime_naive(self):
+        date = datetime.datetime(2001, 12, 10, 10, 50, 21, 32132)
+        assert Date(date).value == datetime.date(2001, 12, 10)
+
+    @pytest.mark.parametrize("hours", (5, 20))
+    def testConstructFromDateTime_tzAware(self, hours):
+        tz = FixedOffsetTimezone(10)
+        date = datetime.datetime(2001, 12, 10, hours, 50, 21, 32132, tzinfo=tz)
+        assert Date(date).value == datetime.date(2001, 12, 10)
+
     @pytest.mark.parametrize(("string", "y", "m", "d"), (
         ("1900-01-01", 1900, 1, 1),
         ("1900-1-1", 1900, 1, 1),
@@ -153,22 +173,48 @@ class TestDate:
         ("1900-01-01+99:59", 1900, 1, 1),
         ("1900-01-01-21:13", 1900, 1, 1),
         ("2000-02-29", 2000, 2, 29)))  # Leap year.
-    def testStringToValue(self, string, y, m, d):
+    def testConstructFromString(self, string, y, m, d):
         assert Date(string).value == datetime.date(y, m, d)
 
     @pytest.mark.parametrize("string", _invalid_date_strings)
-    def testStringToValue_failure(self, string):
+    def testConstructFromString_failure(self, string):
         pytest.raises(ValueError, Date, string)
+
+    @pytest.mark.parametrize("source", (
+        None,
+        object(),
+        _Dummy(),
+        datetime.time(10, 10)))
+    def testConstructFromUnknown(self, source):
+        pytest.raises(ValueError, Date, source)
+
+    @pytest.mark.parametrize(("input", "output"), (
+        ("1900-01-01", "1900-01-01"),
+        ("2000-02-29", "2000-02-29"),
+        ("1900-1-1", "1900-01-01"),
+        ("1900-01-01z", "1900-01-01"),
+        ("1900-01-01Z", "1900-01-01"),
+        ("1900-01-01-02", "1900-01-01"),
+        ("1900-01-01+2", "1900-01-01"),
+        ("1900-01-01+02:00", "1900-01-01"),
+        ("1900-01-01+99:59", "1900-01-01"),
+        ("1900-01-01-21:13", "1900-01-01")))
+    def testConvertToString(self, input, output):
+        assert str(Date(input)) == output
 
 
 class TestDateTime:
     """Tests for the suds.sax.date.DateTime class."""
 
+    def testConstructFromDateTime(self):
+        dt = datetime.datetime(2001, 12, 10, 1, 1)
+        assert DateTime(dt).value is dt
+
     @pytest.mark.parametrize(
         ("string", "y", "M", "d", "h", "m", "s", "micros"), (
         ("2013-11-19T14:05:23.428068", 2013, 11, 19, 14, 5, 23, 428068),
         ("2013-11-19 14:05:23.4280", 2013, 11, 19, 14, 5, 23, 428000)))
-    def testStringToValue(self, string, y, M, d, h, m, s, micros):
+    def testConstructFromString(self, string, y, M, d, h, m, s, micros):
         assert DateTime(string).value == datetime.datetime(y, M, d, h, m, s,
             micros)
 
@@ -178,7 +224,7 @@ class TestDateTime:
         # Invalid date/time separator characters.
             "2013-11-1914:05:23.428068",
             "2013-11-19X14:05:23.428068"])
-    def testStringToValue_failure(self, string):
+    def testConstructFromString_failure(self, string):
         pytest.raises(ValueError, DateTime, string)
 
     @pytest.mark.parametrize(
@@ -188,8 +234,8 @@ class TestDateTime:
         ("2013-12-31T23:59:59.9999994", 2013, 12, 31, 23, 59, 59, 999999),
         ("2013-12-31T23:59:59.99999949", 2013, 12, 31, 23, 59, 59, 999999),
         ("2013-12-31T23:59:59.9999995", 2014, 1, 1, 0, 0, 0, 0)))
-    def testStringToValue_subsecondRounding(self, string, y, M, d, h, m, s,
-        micros):
+    def testConstructFromString_subsecondRounding(self, string, y, M, d, h, m,
+        s, micros):
         ref = datetime.datetime(y, M, d, h, m, s, micros)
         assert DateTime(string).value == ref
 
@@ -205,16 +251,41 @@ class TestDateTime:
             2013, 11, 19, 14, 5, 23, 428068, 2, 0),
         ("2013-11-19T14:05:23.428068-23:59",
             2013, 11, 19, 14, 5, 23, 428068, -23, -59)))
-    def testStringToValue_timezone(self, string, y, M, d, h, m, s, micros,
-        tz_h, tz_m):
+    def testConstructFromString_timezone(self, string, y, M, d, h, m, s,
+        micros, tz_h, tz_m):
         tzdelta = datetime.timedelta(hours=tz_h, minutes=tz_m)
         tzinfo = FixedOffsetTimezone(tzdelta)
         ref = datetime.datetime(y, M, d, h, m, s, micros, tzinfo=tzinfo)
         assert DateTime(string).value == ref
 
+    @pytest.mark.parametrize("source", (
+        None,
+        object(),
+        _Dummy(),
+        datetime.date(2010, 10, 27),
+        datetime.time(10, 10)))
+    def testConstructFromUnknown(self, source):
+        pytest.raises(ValueError, DateTime, source)
+
+    @pytest.mark.parametrize(("input", "output"), (
+        ("2013-11-19T14:05:23.428068", "2013-11-19T14:05:23.428068"),
+        ("2013-11-19 14:05:23.4280", "2013-11-19T14:05:23.428000"),
+        ("2013-12-31T23:59:59.9999995", "2014-01-01T00:00:00"),
+        ("2013-11-19T14:05:23.428068-3", "2013-11-19T14:05:23.428068-03:00"),
+        ("2013-11-19T14:05:23.068+03", "2013-11-19T14:05:23.068000+03:00"),
+        ("2013-11-19T14:05:23.4-02:00", "2013-11-19T14:05:23.400000-02:00"),
+        ("2013-11-19T14:05:23.410+02:00", "2013-11-19T14:05:23.410000+02:00"),
+        ("2013-11-19T14:05:23.428-23:59", "2013-11-19T14:05:23.428000-23:59")))
+    def testConvertToString(self, input, output):
+        assert str(DateTime(input)) == output
+
 
 class TestTime:
     """Tests for the suds.sax.date.Time class."""
+
+    def testConstructFromTime(self):
+        time = datetime.time(1, 1)
+        assert Time(time).value is time
 
     @pytest.mark.parametrize(("string", "h", "m", "s", "micros"), (
         ("10:59:47", 10, 59, 47, 0),
@@ -227,8 +298,12 @@ class TestTime:
         ("0:00:00.000000", 0, 0, 0, 0),
         ("23:59:6.999999", 23, 59, 6, 999999),
         ("1:13:50.0", 1, 13, 50, 0)))
-    def testStringToValue(self, string, h, m, s, micros):
+    def testConstructFromString(self, string, h, m, s, micros):
         assert Time(string).value == datetime.time(h, m, s, micros)
+
+    @pytest.mark.parametrize("string", _invalid_time_strings)
+    def testConstructFromString_failure(self, string):
+        pytest.raises(ValueError, Time, string)
 
     @pytest.mark.parametrize(("string", "h", "m", "s", "micros"), (
         ("0:0:0.0000000", 0, 0, 0, 0),
@@ -252,7 +327,8 @@ class TestTime:
         ("0:0:0.9999995", 0, 0, 1, 0),
         ("0:0:0.9999996", 0, 0, 1, 0),
         ("0:0:0.9999999", 0, 0, 1, 0)))
-    def testStringToValue_subsecondRounding(self, string, h, m, s, micros):
+    def testConstructFromString_subsecondRounding(self, string, h, m, s,
+        micros):
         assert Time(string).value == datetime.time(h, m, s, micros)
 
     @pytest.mark.parametrize(
@@ -265,15 +341,33 @@ class TestTime:
         ("18:0:09.2139+9:3", 18, 0, 9, 213900, 9, 3),
         ("18:0:09.2139+10:31", 18, 0, 9, 213900, 10, 31),
         ("18:0:09.2139-10:31", 18, 0, 9, 213900, -10, -31)))
-    def testStringToValue_timezone(self, string, h, m, s, micros, tz_h, tz_m):
+    def testConstructFromString_timezone(self, string, h, m, s, micros, tz_h,
+        tz_m):
         tzdelta = datetime.timedelta(hours=tz_h, minutes=tz_m)
         tzinfo = FixedOffsetTimezone(tzdelta)
         ref = datetime.time(h, m, s, micros, tzinfo=tzinfo)
         assert Time(string).value == ref
 
-    @pytest.mark.parametrize("string", _invalid_time_strings)
-    def testStringToValue_failure(self, string):
-        pytest.raises(ValueError, Time, string)
+    @pytest.mark.parametrize("source", (
+        None,
+        object(),
+        _Dummy(),
+        datetime.date(2010, 10, 27),
+        datetime.datetime(2010, 10, 27, 10, 10)))
+    def testConstructFromUnknown(self, source):
+        pytest.raises(ValueError, Time, source)
+
+    @pytest.mark.parametrize(("input", "output"), (
+        ("14:05:23.428068", "14:05:23.428068"),
+        ("14:05:23.4280", "14:05:23.428000"),
+        ("23:59:59.9999995", "00:00:00"),
+        ("14:05:23.428068-3", "14:05:23.428068-03:00"),
+        ("14:05:23.068+03", "14:05:23.068000+03:00"),
+        ("14:05:23.4-02:00", "14:05:23.400000-02:00"),
+        ("14:05:23.410+02:00", "14:05:23.410000+02:00"),
+        ("14:05:23.428-23:59", "14:05:23.428000-23:59")))
+    def testConvertToString(self, input, output):
+        assert str(Time(input)) == output
 
 
 class TestXDate:
@@ -432,8 +526,3 @@ class TestXTime:
     @staticmethod
     def __toString(value):
         return XTime.translate(value, topython=False)
-
-
-class _Dummy:
-    """Class for testing unknown object class handling."""
-    pass
