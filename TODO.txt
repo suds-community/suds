@@ -561,6 +561,13 @@ PRIORETIZED:
 (+)       negative timezone offsets.
 (+)     * Add tests.
 (+)         * UtcTimezone class.
+(+) * (Jurko) Remove support for timezone specifiers including seconds as such
+(+)   are not supported by either Python or the XSD data types specification.
+(+)     * Add/update tests.
+(+)         * Input like "+10:10:10" should be rejected.
+(+)         * Timezone offset timedelta objects containing more detailed than
+(+)           minute information.
+(+)     * Remove support.
 
 (22.11.2013.)
 
