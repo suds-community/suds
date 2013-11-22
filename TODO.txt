@@ -568,19 +568,16 @@ PRIORETIZED:
 (+)         * Timezone offset timedelta objects containing more detailed than
 (+)           minute information.
 (+)     * Remove support.
+(+) * (Jurko) Add tests making sure timezone indicator strings without a colon
+(+)   between hours and minutes are not accepted.
+(+)     * This leads to border cases like "+121" where you do not know whether
+(+)       this represents "+01:21" or "+12:01".
 
 (22.11.2013.)
 
     * (Jurko) Fix suds time-zone handling according to a pull request received
       on bitbucket from MDuggan1.
         * Add tests.
-            * Time zone indicator string without a colon between hours and
-              minutes.
-                * Allowed by patch code.
-                * This leads to border cases like "+121" where you do not know
-                  whether this represents "+01:21" or "+12:01".
-                * Not allowed by the XML schema specification
-                  ('http://www.w3.org/TR/xmlschema-2').
             * Time zone indicator strings containing second information.
                 * Allowed by patch code.
                 * Not allowed by the XML schema specification
