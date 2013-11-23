@@ -5,8 +5,6 @@
 # tried out did not work correctly with Python 3.
 
 # Top level project files.
-include .hgignore
-include .hgtags
 include ez_setup.py
 include HACKING.txt
 include LICENSE.txt
