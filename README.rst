@@ -1,8 +1,8 @@
 Overview
 =================================================
 
-"Suds" is a lightweight SOAP-based web service client for Python licensed
-under LGPL (see the ``LICENSE.txt`` file included in the distribution).
+"Suds" is a lightweight SOAP-based web service client for Python licensed under
+LGPL (see the ``LICENSE.txt`` file included in the distribution).
 
 This is hopefully just a temporary fork of the original suds Python library
 project created because the original project development seems to have stalled.
