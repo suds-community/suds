@@ -79,8 +79,8 @@ Installation troubleshooting:
 Release notes
 =================================================
 
-version 0.5 (in development)
-----------------------------
+version 0.5 (development)
+-------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
   original suds Python library development project's Subversion repository.
@@ -97,8 +97,8 @@ version 0.5 (in development)
 
     * Python 2.4.3/x86, on Windows 7/SP1/x64.
     * Python 2.4.4/x86, on Windows 7/SP1/x64.
-    * Python 2.7.3/x64, on Windows 7/SP1/x64.
-    * Python 3.2.3/x64, on Windows 7/SP1/x64.
+    * Python 2.7.6/x64, on Windows 7/SP1/x64.
+    * Python 3.2.5/x64, on Windows 7/SP1/x64.
     * Python 3.3.3/x86, on Windows 7/SP1/x64.
     * Python 3.3.3/x64, on Windows 7/SP1/x64.
 
@@ -122,13 +122,18 @@ version 0.5 (in development)
   * ``DateTime`` class no longer derived from ``Date`` & ``Time`` classes.
   * Recognizes more date/time strings valid 'by intuition'.
   * Rejects more invalid date/time strings.
-  
+
     * Time zone specifiers containing hours and minutes but without a colon are
       rejected to avoid confusion, e.g. whether ``+121`` should be interpreted
       as ``+12:01`` or ``+01:21``.
     * Time zone specifiers limited to under 24 hours. Without this Python's
       timezone UTC offset calculation would raise an exception on some
       operations, e.g. timezone aware datetime.datetime/time comparisons.
+
+* Removed several project files related to the original developer's development
+  environment.
+* Removed several internal Mercurial version control system related files from
+  the project's source distribution package.
 
 version 0.4.1 jurko 5 (2013-11-11)
 ----------------------------------
