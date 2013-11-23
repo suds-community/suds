@@ -117,10 +117,6 @@ TOP-LEVEL FILES & FOLDERS:
     * 'tests/'.
         * Project test code.
 
-    * '.project', '.pydevproject', 'makefile', 'python-suds.spec', 'sdist'.
-        * Original suds library development project's development environment
-          configuration & scripts as used by the original developer.
-
     * 'MANIFEST.in'.
         * Build system configuration file listing the files to be included in
           the project's source distribution packages in addition to those

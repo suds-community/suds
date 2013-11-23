@@ -601,11 +601,10 @@ PRIORETIZED:
 (+)       natural version number progression.
 (+) * (Jurko) Plan a new release.
 (+) * (Jurko) Update used setuptools version.
+(+) * (Jurko) Remove unused project files inherited from the original suds
+(+)   project.
 
 (24.11.2013.)
-
-    * (Jurko) Remove unused project files inherited from the original suds
-      project.
 
     * (Jurko) Test the project with different Python installations.
 
