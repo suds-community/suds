@@ -382,6 +382,9 @@ class TestXDate:
 
     """
 
+    def testTranslateEmptyStringToPythonObject(self):
+        assert XDate.translate("") == None
+
     def testTranslateStringToPythonObject(self):
         assert XDate.translate("1941-12-7") == datetime.date(1941, 12, 7)
 
@@ -415,6 +418,9 @@ class TestXDateTime:
 
     """
 
+    def testTranslateEmptyStringToPythonObject(self):
+        assert XDateTime.translate("") == None
+
     def testTranslateStringToPythonObject(self):
         dt = datetime.datetime(1941, 12, 7, 10, 30, 22, 454000)
         assert XDateTime.translate("1941-12-7T10:30:22.454") == dt
@@ -443,6 +449,9 @@ class TestXTime:
     TestDateTime.
 
     """
+
+    def testTranslateEmptyStringToPythonObject(self):
+        assert XTime.translate("") == None
 
     def testTranslateStringToPythonObject(self):
         assert XTime.translate("10:30:22") == datetime.time(10, 30, 22)
