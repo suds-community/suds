@@ -79,8 +79,8 @@ Installation troubleshooting:
 Release notes
 =================================================
 
-version 0.4.1 jurko 6 (in development)
---------------------------------------
+version 0.5 (in development)
+----------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
   original suds Python library development project's Subversion repository.
@@ -101,6 +101,16 @@ version 0.4.1 jurko 6 (in development)
     * Python 3.2.3/x64, on Windows 7/SP1/x64.
     * Python 3.3.3/x86, on Windows 7/SP1/x64.
     * Python 3.3.3/x64, on Windows 7/SP1/x64.
+
+* Updated the project's versioning scheme and detached it from the original
+  suds project. The original project's stall seems to be long-term (likely
+  permanent) and making our version information match the original one was
+  getting to be too much of a hassle.
+
+  * For example, with our original versioning scheme, latest pip versions
+    recognize our package releases as 'development builds' and refuse to install
+    them by default (supply the '--pre' command-line option to force the install
+    anyway).
 
 * Improved the suds date/time handling (contributed by MDuggan1, based on a
   patch attached to issue `#353 <http://fedorahosted.org/suds/ticket/353>`_ on

@@ -588,18 +588,29 @@ PRIORETIZED:
 
 (23.11.2013.)
 
-    * (Jurko) Make converting datetime/time to string output subsecond
-      information without trailing zeroes.
-        * Test.
-        * Implement.
+(+) * (Jurko) Make converting datetime/time to string output subsecond
+(+)   information without trailing zeroes.
+(+)     * Test.
+(+)     * Implement.
+(+)     * Discard as the implementation complexity seems way too great and the
+(+)       gain does not seem to reciprocate the cost.
+(+) * (Jurko) Update the project's versioning scheme to no longer have pip
+(+)   detect suds-jurko releases as 'prerelease' only due to our version tag
+(+)   formatting.
+(+)     * Accept that the original suds project has died and continue with the
+(+)       natural version number progression.
+(+) * (Jurko) Plan a new release.
 
-    * (Jurko) Plan a new release.
+(24.11.2013.)
 
-    * (Jurko) Update the project's versioning scheme to no longer have pip
-      detect suds-jurko releases as 'prerelease' only due to our version tag
-      formatting.
-        * Accept that the original suds project has died and continue with the
-          natural version number progression.
+    * (Jurko) Update used setuptools version.
+
+    * (Jurko) Remove unused project files inherited from the original suds
+      project.
+
+    * (Jurko) Test the project with different Python installations.
+
+    * (Jurko) Prepare a new suds-jurko 0.5 release.
 
     * (Jurko) Process pull requests received on 'bitbucket.org'.
 

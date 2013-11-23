@@ -152,12 +152,9 @@ RELEASE PROCEDURE:
 
     * Version identification.
         * Remove the '(development)' suffix for official release builds.
-        * Format '<base-suds-version> jurko #'.
-            * E.g. '0.4.1 jurko 1'.
 
     * Tag in Hg.
-        * Name the tag like 'release-<version-info>'.
-            * E.g. 'release-0.4.1 jurko 1'.
+        * Name the tag like 'release-<version-info>', e.g. 'release-0.5'.
 
     * Prepare official releases based only on tagged commits.
         * Note.
@@ -173,6 +170,6 @@ RELEASE PROCEDURE:
 
     * Next development version identification.
         * Bump up the forked project version counter.
-        * Add back the '(development)' suffix.
+        * Add back the '(development)' suffix, e.g. as in '0.5 (development)'.
 
     * Notify whomever the new release might concern.
