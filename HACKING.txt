@@ -150,6 +150,9 @@ RELEASE PROCEDURE:
 
     * Document the release correctly in 'README.rst'.
 
+    * Test the project build with the latest available setuptools project.
+        * Update the ez_setup.py setuptools installation script as needed.
+
     * Version identification.
         * Remove the '(development)' suffix for official release builds.
 
@@ -166,7 +169,6 @@ RELEASE PROCEDURE:
             * Run 'setup.py sdist register upload'.
         * Upload the prepared source package to the project site.
             * Use the BitBucket project web interface.
-        * Optionally archive the prepared source package locally.
 
     * Next development version identification.
         * Bump up the forked project version counter.
