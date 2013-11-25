@@ -15,7 +15,7 @@ GENERAL DEVELOPMENT NOTES:
           library sources using the Python 2to3 conversion tool.
 
     * Reproducing problematic use cases.
-        * Failing web service processing examples can be easiliy packaged as
+        * Failing web service processing examples can be easily packaged as
           reproducible test cases using the Suds library 'message & reply
           injection' technique.
         * For examples, see existing reply unit tests.
@@ -135,7 +135,7 @@ TOP-LEVEL FILES & FOLDERS:
             * 'setup.py build' for building the project.
             * 'setup.py develop' for preparing the development environment
               (adding the project folder to the Python module search path).
-            * 'setup.py install' for builing & installing the project.
+            * 'setup.py install' for building & installing the project.
             * 'setup.py register' for registering a project release at PyPI.
             * 'setup.py sdist' for preparing a source distribution.
             * 'setup.py upload' for uploading prepared packages to PyPI.
