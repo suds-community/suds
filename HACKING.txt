@@ -32,7 +32,7 @@ GENERAL DEVELOPMENT NOTES:
                 * 'any' & 'all' functions.
                 * 'with' statement.
                 * 'try/except/finally' blocks.
-                    * Prior to this Python release code like the following:
+                    * Prior to this Python release, code like the following:
                         try:
                             A
                         except XXX:
@@ -48,6 +48,20 @@ GENERAL DEVELOPMENT NOTES:
                                 B
                         finally:
                             C
+                * 'yield' expression inside a try: block with a finally: clause.
+                    * Prior to this Python release, code like the following:
+                        try:
+                            yield x
+                        finally:
+                            do_something()
+                      is considered illegal, but can be replaced with legal code
+                      similar to the following:
+                        try:
+                            yield x
+                        except:
+                            do_something()
+                            raise
+                        do_something()
             * Features introduced in Python 2.6.
                 * 'bytes' type.
                 * Byte literals, e.g. b"quack".
