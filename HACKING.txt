@@ -13,6 +13,8 @@ GENERAL DEVELOPMENT NOTES:
         * 'pytest' testing framework needed to run unit tests.
         * To run the tests using Python 3 first process them and the rest of the
           library sources using the Python 2to3 conversion tool.
+        * For more detailed information see the 'DEVELOPMENT & TESTING
+          ENVIRONMENT' section below.
 
     * Reproducing problematic use cases.
         * Failing web service processing examples can be easily packaged as
@@ -185,3 +187,130 @@ RELEASE PROCEDURE:
         * Add back the '(development)' suffix, e.g. as in '0.5 (development)'.
 
     * Notify whomever the new release might concern.
+
+
+DEVELOPMENT & TESTING ENVIRONMENT:
+=================================================
+
+  In all command-line examples below pyX, pyXY & pyXYZ represent a Python
+interpreter executable for a specific Python version X, X.Y & X.Y.Z
+respectively.
+
+  Testing environment is generally set up as follows:
+    1. Install Python.
+    2. Install setuptools (using setup_ez.py or from the source distribution).
+    3. Install pip using setuptools (optional).
+    4. Install pytest using pip or setuptools.
+  This should hold for all Python releases except some older ones explicitly
+listed below.
+
+  To run all of the project unit tests with a specific interpreter without
+additional configuration options run the project's setup.py script with the
+'test' parameter and an appropriate Python interpreter. E.g. run any of the
+following from the top level project folder:
+    py243 setup.py test
+    py27 setup.py test
+    py3 setup.py test
+
+  To have more control over the run test suite run it from the top level project
+folder using pytest, e.g.
+    Using a Python 2.x interpreter:
+        py27 -m pytest
+    Using a Python 3.x interpreter:
+        py33 setup.py build & py33 -m pytest build
+This way you can specify additional pytest options on the command-line.
+
+  In both cases, tests run using Python interpreter version 3.x will be run in
+the build folder constructed by the setup.py script by running the py2to3 tool
+on the project's sources. You might need to manually remove the build folder in
+order to have sources in it regenerated when wanting to run the test suite using
+a different Python 3.x interpreter version, as those sources are regenerated
+based solely on the original & processed source files' timestamp information and
+not the Python version used to process them.
+
+  See the pytest documentation for a detailed list of available command-line
+options. Some interesting ones:
+    -l         ... show local variable state in tracebacks
+    --tb=short ... shorter traceback information for each failure
+    -x         ... stop on first failure
+
+  On Windows you might have a problem setting up multiple parallel Python
+interpreter versions in case they match their major and minor version numbers,
+e.g. Python 2.4.3 & 2.4.4. In those cases, standard Windows installer will
+automatically remove the previous installation instead of simply adding a new
+one. In order to achieve such parallel setup we suggest the following steps:
+  1. Install the first version in a dummy folder, and do so for the current user
+     only.
+  2. Copy the dummy target folder to the desired folder for the first
+     installation, e.g. Python243.
+  3. Uninstall the original version.
+  4. Set up a shortcut or a batch script (e.g. py243.cmd) for running this
+     interpreter without having to have it added to the system path.
+  5. Repeat the steps for the second installation.
+Installing Python for the current user only is necessary in order to make Python
+install all of its files into the target folder and not move some of them into
+shared system folders.
+  Note that this will leave you without the start menu or registry entries for
+these Python installations. Registry entries should be needed only if you want
+to run some external Python package installation tool requiring those entries in
+order to determine where to install its package data. In that case you can set
+those entries manually, e.g. by using a script similar to the one found at
+  'http://nedbatchelder.com/blog/201007/installing_python_packages_from_windows_installers_into.html'.
+
+Notes on setting up specific Python versions:
+---------------------------------------------
+
+Python 2.4.3
+    * Does not work with HTTPS links so you can not use the Python package index
+      directly, since it, at some point, switched to using HTTPS links only.
+        * You could potentially work around this problem by somehow mapping its
+          https: links to http: ones or download its link page manually, locally
+          modify it to contain http: links and then use that download link page
+          instead of the default downloaded one.
+        * An alternative and tested solution is to install into Python 2.4.4 and
+          then copy all the related site-packages entries from that installation
+          into this one.
+            * For pytest 2.4.1 with py library version 1.4.15 the following data
+              was copied.
+                * Folders.
+                    _pytest
+                    argparse-1.2.1-py2.4.egg-info
+                    py
+                    py-1.4.15-py2.4.egg-info
+                    pytest-2.4.1-py2.4.egg-info
+                * Files.
+                    argparse.py
+                    pytest.py
+
+Python 2.4.x
+    * Can not run pip using 'python.exe -m pip'. Workaround is to use one of the
+      pip startup scripts found in the Python installation's 'Scripts' folder or
+      to use the following invocation:
+        py244 -c "import pip;pip.main()" <regular-pip-options>
+
+    * pip.
+        * 1.1 - last version supporting Python 2.4.
+            * Install using:
+                py244 -m easy_install pip==1.1
+        * Can not be run using 'python.exe -m pip'.
+            * Workaround is to use one of the pip startup scripts found in the
+              Python installations 'Scripts' folder or the following invocation:
+                py244 -c "import pip;pip.main()" <regular-pip-options>
+
+    * pytest.
+        * 2.4.1 - last version supporting Python 2.4.
+            * Install using:
+                py244 -c "import pip;pip.main()" install pytest==2.4.1
+        * Depends on the py package library version >= 1.4.16. However those
+          versions fail to install with Python 2.4 (tested up to and including
+          1.4.18).
+            * May be worked around by forcing pytest to use an older py package
+              library version:
+                1. Run the pytest installation using pip. It will fail but it
+                   will install everything needed except the py package library.
+                2. Install the py package library version 1.4.15 using:
+                    py244 -c "import pip;pip.main()" install py==1.4.15
+            * If worked around by using the py 1.4.15 library version, pytest's
+              startup scripts will not work (as they explicitly check pytest's
+              package dependencies), but pytest can still be run using:
+                py244 -m pytest <regular-pytest-options>
