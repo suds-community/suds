@@ -604,9 +604,52 @@ PRIORETIZED:
 (+) * (Jurko) Remove unused project files inherited from the original suds
 (+)   project.
 
-(24.11.2013.)
+(25.11.2013.)
 
-    * (Jurko) Test the project with different Python installations.
+(+) * (Jurko) Test the project with different Python installations.
+(+)     * Python 2.4.3/x86, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * 'pytest'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * Run tests.
+(+)     * Python 2.4.4/x86, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * 'pytest'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * Run tests.
+(+)     * Python 2.7.6/x64, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+)     * Python 3.2.5/x64, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+)     * Python 3.3.3/x86, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+)     * Python 3.3.3/x64, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+) * (Jurko) Document the test environment setup in HACKING.txt.
+
+(26.11.2013.)
 
     * (Jurko) Prepare a new suds-jurko 0.5 release.
 
