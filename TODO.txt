@@ -648,12 +648,22 @@ PRIORETIZED:
 (+)         * 'pytest'.
 (+)         * Run tests.
 (+) * (Jurko) Document the test environment setup in HACKING.txt.
+(+) * (Jurko) Prepare a new suds-jurko 0.5 release.
 
 (26.11.2013.)
 
-    * (Jurko) Prepare a new suds-jurko 0.5 release.
-
     * (Jurko) Process pull requests received on 'bitbucket.org'.
+
+    * (Jurko) Find a cleaner way to install suds tests. Currently they get
+      installed into a top-level 'tests' folder and so may cause conflicts with
+      some other 'tests' package that might exist in the target Python
+      environment.
+        * Ideas to consider.
+            * Placing the 'tests' folder under the 'suds' folder.
+            * Placing the top level suds folder outside the egg folder (similar
+              to how this is done for the pytest package), not having the egg
+              folder added to the Python path and leaving the tests folder
+              inside the egg folder.
 
 NON PRIORETIZED:
 =================================================
