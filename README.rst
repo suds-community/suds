@@ -134,6 +134,7 @@ version 0.5 (development)
   environment.
 * Removed several internal Mercurial version control system related files from
   the project's source distribution package.
+* Better documented the project's development & testing environment.
 
 version 0.4.1 jurko 5 (2013-11-11)
 ----------------------------------
