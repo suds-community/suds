@@ -1,6 +1,6 @@
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the 
+# published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
@@ -32,7 +32,7 @@ setup_logging()
 #logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 url = 'http://localhost:8080/axis2/services/BasicService?wsdl'
-    
+
 print 'url=%s' % url
 
 #
@@ -200,7 +200,7 @@ try:
     print '\nreply( %s )\n' % tostr(result)
 except Exception, e:
     print e
-    
+
 #
 # test faults
 #

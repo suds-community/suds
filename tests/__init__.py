@@ -83,7 +83,7 @@ def compare_xml_element(lhs, rhs):
     Does not compare namespace prefixes and considers them irrelevant. This is
     because suds may generate different namespace prefixes for the same
     underlying XML structure when used from different Python versions.
-    
+
     Empty string & None XML element texts are considered the same to compensate
     for different XML object tree construction methods representing 'no text'
     elements differently, e.g. when constructed by the sax parser or when

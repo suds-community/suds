@@ -1398,7 +1398,7 @@ def test_restrictions():
 
     element_qref = ("Elemento", "my-namespace")
     type_named_qref = ("MyType", "my-namespace")
-      
+
     element_unnamed = client_unnamed.wsdl.schema.elements[element_qref]
     element_named = client_named.wsdl.schema.elements[element_qref]
     element_twice_restricted = client_twice_restricted.wsdl.schema.elements[
