@@ -25,23 +25,27 @@ class TransportError(Exception):
         self.httpcode = httpcode
         self.fp = fp
 
+
 class Request:
     """
-    A transport request
-    @ivar url: The url for the request.
+    A transport request.
+
+    @ivar url: The URL for the request.
     @type url: str
     @ivar message: The message to be sent in a POST request.
     @type message: str
-    @ivar headers: The http headers to be used for the request.
+    @ivar headers: The HTTP headers to be used for the request.
     @type headers: dict
+
     """
 
     def __init__(self, url, message=None):
         """
-        @param url: The url for the request.
+        @param url: The URL for the request.
         @type url: str
-        @param message: The (optional) message to be send in the request.
+        @param message: The (optional) message to be sent in the request.
         @type message: str
+
         """
         self.url = url
         self.headers = {}
@@ -59,19 +63,19 @@ class Request:
 class Reply:
     """
     A transport reply
-    @ivar code: The http code returned.
+    @ivar code: The HTTP code returned.
     @type code: int
     @ivar message: The message to be sent in a POST request.
     @type message: str
-    @ivar headers: The http headers to be used for the request.
+    @ivar headers: The HTTP headers to be used for the request.
     @type headers: dict
     """
 
     def __init__(self, code, headers, message):
         """
-        @param code: The http code returned.
+        @param code: The HTTP code returned.
         @type code: int
-        @param headers: The http returned headers.
+        @param headers: The HTTP returned headers.
         @type headers: dict
         @param message: The (optional) reply message received.
         @type message: str
@@ -117,7 +121,7 @@ class Transport:
         """
         Send soap message.  Implementations are expected to handle:
             - proxies
-            - I{http} headers
+            - I{HTTP} headers
             - cookies
             - sending message
             - brokering exceptions into L{TransportError}
