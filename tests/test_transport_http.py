@@ -180,6 +180,60 @@ def test_sending_unicode_data():
     pytest.raises(urllib2.URLError, client.service.f, u"Дмитровский район")
 
 
+def test_sending_unicode_location():
+    """
+    Suds should refuse to send HTTP requests with a target location string
+    containing non-ASCII characters. URLs are supposed to consist of 
+    characters only.
+    
+    """
+    wsdl = suds.byte_str("""\
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions targetNamespace="myNamespace"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns="myNamespace"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <xsd:schema targetNamespace="myNamespace">
+      <xsd:element name="fRequest" type="xsd:string"/>
+      <xsd:element name="fResponse" type="xsd:string"/>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fInputMessage">
+    <wsdl:part name="parameters" element="tns:fRequest"/>
+  </wsdl:message>
+  <wsdl:message name="fOutputMessage">
+    <wsdl:part name="parameters" element="tns:fResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="Port">
+    <wsdl:operation name="f">
+      <wsdl:input message="tns:fInputMessage"/>
+      <wsdl:output message="tns:fOutputMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="Binding" type="tns:Port">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Service">
+    <wsdl:port name="Port" binding="tns:Binding">
+      <soap:address location="http://Дмитровский-район-152312306:9999/svc"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""")
+
+    store = suds.store.DocumentStore(wsdl=wsdl)
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        timeout=0)
+    pytest.raises(UnicodeEncodeError, client.service.f, "plonker")
+
+
 def _encode_basic_credentials(username, password):
     """
       Encodes user credentials as used in basic HTTP authentication.
