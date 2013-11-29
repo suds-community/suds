@@ -125,7 +125,7 @@ class SchemaCollection(UnicodeMixin):
         the namespace is compared to each schema's I{targetNamespace}
         @param ns: A namespace.
         @type ns: (prefix,URI)
-        @return: The schema matching the namesapce, else None.
+        @return: The schema matching the namespace, else None.
         @rtype: L{Schema}
         """
         return self.namespaces.get(ns[1])
@@ -335,7 +335,7 @@ class Schema(UnicodeMixin):
         The request is passed to the container.
         @param ns: A namespace.
         @type ns: (prefix,URI)
-        @return: The schema matching the namesapce, else None.
+        @return: The schema matching the namespace, else None.
         @rtype: L{Schema}
         """
         if self.container is not None:
