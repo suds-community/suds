@@ -81,7 +81,7 @@ class TnsFilter:
 
     def add(self, *tns):
         """
-        Add I{targetNamesapces} to be added.
+        Add I{targetNamespaces} to be added.
         @param tns: A list of target namespaces.
         @type tns: [str,...]
         """
@@ -174,7 +174,7 @@ class Import:
     def exists(self, root):
         """
         Check to see if the <xs:import/> already exists
-        in the specified schema root by matching I{namesapce}.
+        in the specified schema root by matching I{namespace}.
         @param root: A schema root.
         @type root: L{Element}
         """
@@ -195,14 +195,12 @@ class ImportDoctor(Doctor, DocumentPlugin):
     """
 
     def __init__(self, *imports):
-        """
-        """
         self.imports = []
         self.add(*imports)
 
     def add(self, *imports):
         """
-        Add a namesapce to be checked.
+        Add a namespace to be checked.
         @param imports: A list of L{Import} objects.
         @type imports: [L{Import},..]
         """

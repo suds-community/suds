@@ -558,8 +558,8 @@ class DocumentStore:
         Open a document at the specified URL.
 
         Missing documents referenced using the internal 'suds' protocol are
-        reported by raising an exceptions. For other protocols, None is
-        returned instead.
+        reported by raising an exception. For other protocols, None is returned
+        instead.
 
         @param url: A document URL.
         @type url: str
