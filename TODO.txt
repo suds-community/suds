@@ -698,9 +698,8 @@ PRIORETIZED:
 (+)     * Confirm with Alexey Sveshnikov that it is ok with him to make the
 (+)       reproducible use case public.
 (+)     * Close related project pull requests on 'bitbucket.org'.
-
-    * (Jurko) Add a test for handling actual non-ASCII unicode service location
-      data.
+(+) * (Jurko) Add a test for handling actual non-ASCII unicode service location
+(+)   data.
 
     * (Jurko) See if the suds HttpTransport.open() method ever gets called.
 
