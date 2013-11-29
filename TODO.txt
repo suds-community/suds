@@ -650,7 +650,59 @@ PRIORETIZED:
 (+) * (Jurko) Document the test environment setup in HACKING.txt.
 (+) * (Jurko) Prepare a new suds-jurko 0.5 release.
 
-(26.11.2013.)
+(28.11.2013.)
+
+(+) * (Jurko) Look into a reported problem with how unicode data gets encoded
+(+)   inside a suds SOAP request with Python 2. Reported by Alexey Sveshnikov
+(+)   and mduggan1.
+(+)     * Get a reproducible use case from Alexey Sveshnikov.
+(+)     * Research.
+(+)         * Data in HTTP requests needs to be encoded as defined by the
+(+)           Content-Type header given in that request (ISO-8859-1 being the
+(+)           default).
+(+)         * Suds set the "Content-Type=text/xml; charset=utf-8" HTTP request
+(+)           header for all of its SOAP requests.
+(+)         * Python's http module (used internally by the urllib module) add
+(+)           the given message data to its existing data. Suds gives its
+(+)           message data to urllib as an utf-8 encoded bytes object. If
+(+)           existing message data is unicode, it will attempt to forcefully
+(+)           convert the given message data to unicode assuming all it contains
+(+)           is ASCII characters.
+(+)         * Suds message data is already a utf-8 encoded bytes object.
+(+)         * With Python-3 httplib's previous message data is a bytes and not a
+(+)           string object.
+(+)         * The reason why httplib's message content is converted to unicode
+(+)           is that with Python 2 the initial header is a unicode object
+(+)           u'POST /service HTTP/1.1' while with Python 3 it is a bytes object
+(+)           b'POST /service HTTP/1.1'.
+(+)             * Python 2.
+(+)                 * Affects Python 2.7.
+(+)                 * Does not affect Python 2.4.
+(+)             * Python 3.
+(+)                 * Its httplib Request object automatically converts the
+(+)                   passed URL to a bytes object (assumes it contains only
+(+)                   ASCII characters) which then prevents all the other
+(+)                   request data from being forcibly converted to unicode.
+
+(29.11.2013.)
+
+(+) * (Jurko) Look into a reported problem with how unicode data gets encoded
+(+)   inside a suds SOAP request with Python 2. Reported by Alexey Sveshnikov
+(+)   and mduggan1.
+(+)     * Reduce the reproducible use case.
+(+)         * Should not require an external web service.
+(+)         * Integrate into regular suds-jurko tests.
+(+)     * Make the reproducible test case not attempt to connect to the network
+(+)       if the test passes.
+(+)     * Fix the issue.
+(+)     * Confirm with Alexey Sveshnikov that it is ok with him to make the
+(+)       reproducible use case public.
+(+)     * Close related project pull requests on 'bitbucket.org'.
+
+    * (Jurko) Add a test for handling actual non-ASCII unicode service location
+      data.
+
+    * (Jurko) See if the suds HttpTransport.open() method ever gets called.
 
     * (Jurko) Process pull requests received on 'bitbucket.org'.
 
@@ -673,9 +725,9 @@ NON PRIORETIZED:
         * Current suds behaviour.
             * Extra parameters are ignored.
             * Parameters of invalid type are simply added into the generated
-              SOAP request as string and left up to the web service
-              implementation to deal with report as an error if the constructed
-              SOAP request turns out to be invalid.
+              SOAP request as strings and left up to the web service
+              implementation to deal with and report as an error if the
+              constructed SOAP request turns out to be invalid.
         * Having a local client-side check could make catching client side
           programming bugs easier.
         * Ideas.
