@@ -724,6 +724,10 @@ class SoapClient:
         return result
 
     def location(self):
+        """
+        Returns the SOAP request's target location URL.
+
+        """
         return Unskin(self.options).get('location', self.method.location)
 
 
