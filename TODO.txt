@@ -708,10 +708,11 @@ PRIORETIZED:
 (+)       when downloading a WSDL schema from the net.
 (+)     * It seems like Transport's open() & send() methods might be megreable,
 (+)       but that would first require further research. For now - YAGNI.
+(+) * (Jurko) Process pull requests received on 'bitbucket.org'.
+(+)     * Fix setup.py current working folder path comparison so it works with
+(+)       links in the path. Contributed by ryanpetrello.
 
 (01.12.2013.)
-
-    * (Jurko) Process pull requests received on 'bitbucket.org'.
 
     * (Jurko) Find a cleaner way to install suds tests. Currently they get
       installed into a top-level 'tests' folder and so may cause conflicts with

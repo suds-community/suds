@@ -58,8 +58,8 @@ def read_python_code(filename):
 #     parameters makes the final installed distribution contain the absolute
 #     package source location information and not include some other meta-data
 #     package information as well.
-script_folder = os.path.abspath(os.path.dirname(__file__))
-current_folder = os.path.abspath(os.getcwd())
+script_folder = os.path.realpath(os.path.dirname(__file__))
+current_folder = os.path.realpath(os.getcwd())
 if script_folder != current_folder:
     print("ERROR: Suds library setup script needs to be run from the folder "
         "containing it.")
