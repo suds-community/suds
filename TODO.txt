@@ -701,7 +701,15 @@ PRIORETIZED:
 (+) * (Jurko) Add a test for handling actual non-ASCII unicode service location
 (+)   data.
 
-    * (Jurko) See if the suds HttpTransport.open() method ever gets called.
+(30.11.2013.)
+
+(+) * (Jurko) See if the suds HttpTransport.open() method ever gets called.
+(+)     * Yup, transport open() methods get called from DocumentReader, e.g.
+(+)       when downloading a WSDL schema from the net.
+(+)     * It seems like Transport's open() & send() methods might be megreable,
+(+)       but that would first require further research. For now - YAGNI.
+
+(01.12.2013.)
 
     * (Jurko) Process pull requests received on 'bitbucket.org'.
 
