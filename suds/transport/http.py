@@ -1,21 +1,21 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
 Contains classes for basic HTTP transport implementations.
+
 """
 
 from suds.transport import *
@@ -35,8 +35,9 @@ log = getLogger(__name__)
 
 class HttpTransport(Transport):
     """
-    HTTP transport using urllib2.  Provided basic http transport
-    that provides for cookies, proxies but no authentication.
+    Basic HTTP transport implemented using using urllib2, that provides for
+    cookies & proxies but no authentication.
+
     """
 
     def __init__(self, **kwargs):
@@ -49,6 +50,7 @@ class HttpTransport(Transport):
             - B{timeout} - Set the url open timeout (seconds).
                     - type: I{float}
                     - default: 90
+
         """
         Transport.__init__(self)
         Unskin(self.options).update(kwargs)
@@ -95,26 +97,32 @@ class HttpTransport(Transport):
     def addcookies(self, u2request):
         """
         Add cookies in the cookiejar to the request.
+
         @param u2request: A urllib2 request.
-        @rtype: u2request: urllib2.Requet.
+        @rtype: u2request: urllib2.Request.
+
         """
         self.cookiejar.add_cookie_header(u2request)
 
     def getcookies(self, fp, u2request):
         """
         Add cookies in the request to the cookiejar.
+
         @param u2request: A urllib2 request.
-        @rtype: u2request: urllib2.Requet.
+        @rtype: u2request: urllib2.Request.
+
         """
         self.cookiejar.extract_cookies(fp, u2request)
 
     def u2open(self, u2request):
         """
         Open a connection.
+
         @param u2request: A urllib2 request.
-        @type u2request: urllib2.Requet.
+        @type u2request: urllib2.Request.
         @return: The opened file-like urllib2 object.
         @rtype: fp
+
         """
         tm = self.options.timeout
         url = self.u2opener()
@@ -126,8 +134,10 @@ class HttpTransport(Transport):
     def u2opener(self):
         """
         Create a urllib opener.
+
         @return: An opener.
         @rtype: I{OpenerDirector}
+
         """
         if self.urlopener is None:
             return urllib2.build_opener(*self.u2handlers())
@@ -136,8 +146,10 @@ class HttpTransport(Transport):
     def u2handlers(self):
         """
         Get a collection of urllib handlers.
+
         @return: A list of handlers to be installed in the opener.
         @rtype: [Handler,...]
+
         """
         handlers = []
         handlers.append(urllib2.ProxyHandler(self.proxy))
@@ -146,6 +158,7 @@ class HttpTransport(Transport):
     def u2ver(self):
         """
         Get the major/minor version of the urllib2 lib.
+
         @return: The urllib2 version.
         @rtype: float
         """
@@ -192,9 +205,8 @@ class HttpTransport(Transport):
 class HttpAuthenticated(HttpTransport):
     """
     Provides basic HTTP authentication for servers that do not follow the
-    specified challenge/response model. This implementation appends the
-    I{Authorization} HTTP header with base64 encoded credentials on every HTTP
-    request.
+    specified challenge/response model. Appends the I{Authorization} HTTP
+    header with base64 encoded credentials on every HTTP request.
     """
 
     def open(self, request):
@@ -209,7 +221,6 @@ class HttpAuthenticated(HttpTransport):
         credentials = self.credentials()
         if not (None in credentials):
             credentials = ':'.join(credentials)
-            # Bytes and strings are different in Python 3 than in Python 2.x.
             if sys.version_info < (3,0):
                 basic = 'Basic %s' % base64.b64encode(credentials)
             else:
@@ -219,4 +230,4 @@ class HttpAuthenticated(HttpTransport):
             request.headers['Authorization'] = basic
 
     def credentials(self):
-        return (self.options.username, self.options.password)
+        return self.options.username, self.options.password
