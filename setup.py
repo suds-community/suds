@@ -110,7 +110,7 @@ Lightweight SOAP client (Jurko's fork).
 ---------------------------------------
 
   Based on the original 'suds' project by Jeff Ortel (jortel at redhat
-dot com) hosted at 'https://fedorahosted.org/suds'.
+dot com) hosted at 'http://fedorahosted.org/suds'.
 
   'Suds' is a lightweight SOAP-based web service client for Python
 licensed under LGPL (see the LICENSE.txt file included in the
@@ -125,7 +125,7 @@ if it ever gets revived again.
 
 package_name = "suds-jurko"
 version_tag = pkg_resources.safe_version(__version__)
-project_url = "https://bitbucket.org/jurko/suds"
+project_url = "http://bitbucket.org/jurko/suds"
 base_download_url = project_url + "/downloads"
 download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
 download_url = "%s/%s" % (base_download_url, download_distribution_name)

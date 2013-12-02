@@ -2,7 +2,7 @@ GENERAL DEVELOPMENT NOTES:
 =================================================
 
     * Project's sources accessible from a Mercurial version control repository
-      hosted by BitBucket at 'https://bitbucket.org/jurko/suds'.
+      hosted by BitBucket at 'http://bitbucket.org/jurko/suds'.
 
     * Project development should be tracked in the TODO.txt file.
         * Exact formatting is not important as long as its contect is kept
@@ -75,7 +75,7 @@ GENERAL DEVELOPMENT NOTES:
     * Handling Python 3 related patches applicable to the original suds
       development project.
         * Originally synchronized with the Mercurial patch queue hosted at
-          'https://bitbucket.org/bernh/suds-python-3-patches'.
+          'http://bitbucket.org/bernh/suds-python-3-patches'.
         * Used to be synchronized with the originating queue but that
           synchronization is no longer being maintained as it became more and
           more difficult as our work on suds progressed and both the original
