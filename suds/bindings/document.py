@@ -57,6 +57,9 @@ class Document(Binding):
 
     """
     def bodycontent(self, method, args, kwargs):
+        if args and kwargs:
+            raise Exception("Don't mix positional and keyword arguments in "
+                            "service calls")
         if not len(method.soap.input.body.parts):
             return ()
         wrapped = method.soap.input.body.wrapped
@@ -65,13 +68,13 @@ class Document(Binding):
             root = self.document(pts[0])
         else:
             root = []
-        n = 0
-        for pd in self.param_defs(method):
-            if n < len(args):
-                value = args[n]
+        args = list(args)
+        for pd_idx, pd in enumerate(self.param_defs(method)):
+            if args:
+                value = args.pop(0)
             else:
-                value = kwargs.get(pd[0])
-            n += 1
+                value = kwargs.pop(pd[0], None)
+
             # Skip non-existing by-choice arguments.
             # Implementation notes:
             #   * This functionality might be better placed inside the mkparam()
@@ -89,6 +92,12 @@ class Document(Binding):
                 ns = pd[1].namespace('ns0')
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
+        if args:
+            raise Exception("Not all positional arguments have been consumed "
+                            "(%d remaining)" % len(args))
+        if kwargs:
+            raise Exception("The following keyword arguments have not been "
+                            "consumed: '%s'" % "', '".join(kwargs.keys()))
         return root
 
     def replycontent(self, method, body):
