@@ -123,7 +123,13 @@ def compare_xml_to_string(lhs, rhs):
 
 def runUsingPyTest(callerGlobals):
     """Run the caller test script using the pytest testing framework."""
-    filename = callerGlobals.get("__file__")
+    # Trick setuptools into not recognizing we are referencing __file__ here.
+    # If setuptools detects __file__ usage in a module, any package containing
+    # this module will be installed as an actual folder instead of a zipped
+    # archive. This __file__ usage is safe since it is used only when a script
+    # has been run directly, and that can not be done from a zipped package
+    # archive.
+    filename = callerGlobals.get("file".join(["__"] * 2))
     if not filename:
         sys.exit("Internal error: can not determine test script name.")
     try:
