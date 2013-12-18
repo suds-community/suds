@@ -22,14 +22,8 @@ Implemented using the 'pytest' testing framework.
 """
 
 if __name__ == "__main__":
-    try:
-        import pytest
-        pytest.main(["--pyargs", __file__])
-    except ImportError:
-        print("'py.test' unit testing framework not available. Can not run "
-            "'{}' directly as a script.".format(__file__))
-    import sys
-    sys.exit(-2)
+    import __init__
+    __init__.runUsingPyTest(globals())
 
 
 from suds.sax.date import (Date, DateTime, Time, UtcTimezone,

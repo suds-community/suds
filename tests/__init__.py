@@ -121,6 +121,21 @@ def compare_xml_to_string(lhs, rhs):
     compare_xml(lhs, suds.sax.parser.Parser().parse(string=suds.byte_str(rhs)))
 
 
+def runUsingPyTest(callerGlobals):
+    """Run the caller test script using the pytest testing framework."""
+    filename = callerGlobals.get("__file__")
+    if not filename:
+        sys.exit("Internal error: can not determine test script name.")
+    try:
+        import pytest
+    except ImportError:
+        filename = filename or "<unknown-script>"
+        sys.exit("'py.test' unit testing framework not available. Can not run "
+            "'%s' directly as a script." % (filename,))
+    exitCode = pytest.main(["--pyargs", filename] + sys.argv[1:])
+    sys.exit(exitCode)
+
+
 def setup_logging():
     if sys.version_info < (2, 5):
         fmt = '%(asctime)s [%(levelname)s] @%(filename)s:%(lineno)d\n%(message)s\n'
