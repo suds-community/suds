@@ -122,8 +122,8 @@ def test_sending_unicode_data():
     sent over the network. This would allow us to test that this data both got
     constructed and that got constructed correctly and not require us to fake
     sending it over the network at all.
-    """
 
+    """
     wsdl = suds.byte_str("""\
 <?xml version="1.0" encoding="utf-8"?>
 <wsdl:definitions targetNamespace="myNamespace"
