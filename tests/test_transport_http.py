@@ -92,29 +92,29 @@ def test_sending_unicode_data():
     """
     Original suds implementation passed its request location URL to the
     underlying HTTP request object as a unicode string.
-    
+
     Under Python 2.4 this causes no problems as that implementation simply
     sends all the request data over the network as-is (and treats all unicode
     data as bytes anyway).
-    
+
     Under Python 2.7 this causes the httplib HTTP request implementation to
     convert all of its data to unicode, and do so by simply assuming that data
     contains only ASCII characters. If any other characters are encountered, it
     fails with an exception like "UnicodeDecodeError: 'ascii' codec can't
     decode byte 0xd0 in position 290: ordinal not in range(128)".
-    
+
     Under Python 3.x the httplib HTTP request implementation automatically
     converts its received URL to a bytes object (assuming it contains only
     ASCII characters), thus avoiding the need to convert all the other request
     data.
-    
+
     Current test implementation can not trigger this httplib behaviour without
     actually attempting to send the request to some address. On the other hand,
     we want this test to pass even on computers not connected to a network so
     me mark it as passed if the test reaches the sending phase and fails. We
     also attempt to make the send fail on any computer by using an invalid
     server address and setting the network operation timeout to 0.
-    
+
     IDEA: Use a custom transport which calls the underlying urllib library
     operation instead of suds's HttpTransport. Our transport would then use an
     additional handler in its urllib handler chain, collecting the prepared
@@ -177,9 +177,9 @@ def test_sending_unicode_data():
 def test_sending_unicode_location():
     """
     Suds should refuse to send HTTP requests with a target location string
-    containing non-ASCII characters. URLs are supposed to consist of 
+    containing non-ASCII characters. URLs are supposed to consist of
     characters only.
-    
+
     """
     wsdl = suds.byte_str("""\
 <?xml version="1.0" encoding="utf-8"?>
