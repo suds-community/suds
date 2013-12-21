@@ -181,7 +181,7 @@ def test_sending_unicode_location():
     characters only.
 
     """
-    wsdl = suds.byte_str("""\
+    wsdl = suds.byte_str(u"""\
 <?xml version="1.0" encoding="utf-8"?>
 <wsdl:definitions targetNamespace="myNamespace"
   xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
