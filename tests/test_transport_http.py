@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
 
 """
@@ -261,6 +260,12 @@ def test_sending_unicode_location():
     pytest.raises(UnicodeEncodeError, client.service.f, "plonker")
 
 
+def _check_Authorization_header(request, username, password):
+    assert len(request.headers) == 1
+    assert request.headers["Authorization"] == _encode_basic_credentials(
+        username, password)
+
+
 def _encode_basic_credentials(username, password):
     """
       Encodes user credentials as used in basic HTTP authentication.
@@ -269,14 +274,8 @@ def _encode_basic_credentials(username, password):
     header.
 
     """
-    data = suds.byte_str('%s:%s' % (username, password))
-    return "Basic %s" % base64.b64encode(data).decode('utf-8')
-
-
-def _check_Authorization_header(request, username, password):
-    assert len(request.headers) == 1
-    assert request.headers['Authorization'] == _encode_basic_credentials(
-        username, password)
+    data = suds.byte_str("%s:%s" % (username, password))
+    return "Basic %s" % base64.b64encode(data).decode("utf-8")
 
 
 def _wsdl_with_url(url):
