@@ -213,51 +213,16 @@ def test_sending_unicode_location():
     characters only.
 
     """
-    wsdl = suds.byte_str(u"""\
-<?xml version="1.0" encoding="utf-8"?>
-<wsdl:definitions targetNamespace="myNamespace"
-  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-  xmlns:tns="myNamespace"
-  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <wsdl:types>
-    <xsd:schema targetNamespace="myNamespace">
-      <xsd:element name="fRequest" type="xsd:string"/>
-      <xsd:element name="fResponse" type="xsd:string"/>
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fInputMessage">
-    <wsdl:part name="parameters" element="tns:fRequest"/>
-  </wsdl:message>
-  <wsdl:message name="fOutputMessage">
-    <wsdl:part name="parameters" element="tns:fResponse"/>
-  </wsdl:message>
-  <wsdl:portType name="Port">
-    <wsdl:operation name="f">
-      <wsdl:input message="tns:fInputMessage"/>
-      <wsdl:output message="tns:fOutputMessage"/>
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="Binding" type="tns:Port">
-    <soap:binding style="document"
-      transport="http://schemas.xmlsoap.org/soap/http"/>
-    <wsdl:operation name="f">
-      <soap:operation/>
-      <wsdl:input><soap:body use="literal"/></wsdl:input>
-      <wsdl:output><soap:body use="literal"/></wsdl:output>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="Service">
-    <wsdl:port name="Port" binding="tns:Binding">
-      <soap:address location="http://Дмитровский-район-152312306:9999/svc"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>""")
-
-    store = suds.store.DocumentStore(wsdl=wsdl)
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    url = u"http://Дмитровский-район-152312306:9999/svc"
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        timeout=0)
-    pytest.raises(UnicodeEncodeError, client.service.f, "plonker")
+        transport=transport)
+    pytest.raises(UnicodeEncodeError, client.service.f)
 
 
 def _check_Authorization_header(request, username, password):
