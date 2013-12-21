@@ -39,6 +39,11 @@ import base64
 import urllib2
 
 
+class MyException(Exception):
+    """Local exception used in this test module."""
+    pass
+
+
 def test_authenticated_http():
     t = suds.transport.http.HttpAuthenticated(username="Habul AfuFa",
         password="preCious")
@@ -86,6 +91,34 @@ def test_authenticated_http_add_credentials_to_request():
     r = MockRequest()
     t.addcredentials(r)
     _check_Authorization_header(r, username, password)
+
+
+def test_http_request_URL():
+    """Make sure suds makes a HTTP request targeted at an expected URL."""
+
+    class MockURLOpener:
+        """
+        Mock suds HTTP transport URL opener object asserting that it got passed
+        a request with an expected URL and then raising an exception to
+        interrupt the current network operation.
+
+        """
+
+        def __init__(self, expectedURL):
+            self.expectedURL = expectedURL
+
+        def open(self, request, timeout=None):
+            assert request.get_full_url() == self.expectedURL
+            raise MyException
+
+    url = "http://my little URL"
+
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener(url)
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        transport=transport)
+    pytest.raises(MyException, client.service.f)
 
 
 def test_sending_unicode_data():
@@ -244,3 +277,36 @@ def _check_Authorization_header(request, username, password):
     assert len(request.headers) == 1
     assert request.headers['Authorization'] == _encode_basic_credentials(
         username, password)
+
+
+def _wsdl_with_url(url):
+    """
+    Return a WSDL schema with the given URL and a single operation f.
+
+    Included operation takes no parameters and returns no values.
+
+    """
+    return suds.byte_str(u"""\
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions targetNamespace="myNamespace"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns="myNamespace"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <xsd:schema/>
+  </wsdl:types>
+  <wsdl:portType name="Port">
+    <wsdl:operation name="f"/>
+  </wsdl:portType>
+  <wsdl:binding name="Binding" type="tns:Port">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f"/>
+  </wsdl:binding>
+  <wsdl:service name="Service">
+    <wsdl:port name="Port" binding="tns:Binding">
+      <soap:address location="%s"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""" % (url,))
