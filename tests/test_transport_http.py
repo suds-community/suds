@@ -257,9 +257,6 @@ def _wsdl_with_url(url):
   xmlns:tns="myNamespace"
   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <wsdl:types>
-    <xsd:schema/>
-  </wsdl:types>
   <wsdl:portType name="Port">
     <wsdl:operation name="f"/>
   </wsdl:portType>
