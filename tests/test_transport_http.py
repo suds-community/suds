@@ -166,19 +166,14 @@ def test_sending_unicode_data():
   <wsdl:types>
     <xsd:schema targetNamespace="myNamespace">
       <xsd:element name="fRequest" nillable="true" type="xsd:string"/>
-      <xsd:element name="fResponse" nillable="true" type="xsd:string"/>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fInputMessage">
     <wsdl:part name="parameters" element="tns:fRequest"/>
   </wsdl:message>
-  <wsdl:message name="fOutputMessage">
-    <wsdl:part name="parameters" element="tns:fResponse"/>
-  </wsdl:message>
   <wsdl:portType name="Port">
     <wsdl:operation name="f">
       <wsdl:input message="tns:fInputMessage"/>
-      <wsdl:output message="tns:fOutputMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="Binding" type="tns:Port">
@@ -187,7 +182,6 @@ def test_sending_unicode_data():
     <wsdl:operation name="f">
       <soap:operation/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
-      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="Service">
