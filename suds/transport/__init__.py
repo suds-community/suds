@@ -102,7 +102,6 @@ class Transport:
     def __init__(self):
         from suds.transport.options import Options
         self.options = Options()
-        del Options
 
     def open(self, request):
         """
