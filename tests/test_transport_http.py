@@ -138,7 +138,7 @@ def test_http_request_URL_with_a_missing_protocol_identifier(url):
     pytest.raises(exceptionClass, client.service.f)
 
 
-def test_sending_unicode_data():
+def test_sending_unicode_data(monkeypatch):
     """
     Original suds implementation passed its request location URL to the
     underlying HTTP request object as a unicode string.
@@ -158,30 +158,73 @@ def test_sending_unicode_data():
     ASCII characters), thus avoiding the need to convert all the other request
     data.
 
-    Current test implementation can not trigger this httplib behaviour without
-    actually attempting to send the request to some address. On the other hand,
-    we want this test to pass even on computers not connected to a network so
-    me mark it as passed if the test reaches the sending phase and fails. We
-    also attempt to make the send fail on any computer by using an invalid
-    server address and setting the network operation timeout to 0.
-
-    IDEA: Use a custom transport which calls the underlying urllib library
-    operation instead of suds's HttpTransport. Our transport would then use an
-    additional handler in its urllib handler chain, collecting the prepared
-    request data and aborting the whole operation just before that data gets
-    sent over the network. This would allow us to test that this data both got
-    constructed and that got constructed correctly and not require us to fake
-    sending it over the network at all.
+    In order to trigger the problematic httplib behaviour we need to make suds
+    attempt to send a HTTP request over the network. On the other hand, we want
+    this test to work even on computers not connected to a network so we
+    monkey-patch the underlying network socket APIs, log all the data suds
+    attempt to send over the network and consider the test run successful once
+    suds attempt to read back data from the network.
 
     """
-    url = "http://some-invalid-address-152312306:9999/svc"
+    def callOnce(f):
+        """Method decorator making sure its function only gets called once."""
+        def wrapper(self, *args, **kwargs):
+            fTag = "_%s__%s_called" % (self.__class__.__name__, f.__name__)
+            assert not hasattr(self, fTag)
+            setattr(self, fTag, True)
+            return f(self, *args, **kwargs)
+        return wrapper
+
+    class Mocker:
+        def __init__(self, expectedHost, expectedPort):
+            self.expectedHost = expectedHost
+            self.expectedPort = expectedPort
+            self.sentData = suds.byte_str()
+            self.hostAddress = object()
+        @callOnce
+        def getaddrinfo(self, host, port, *args, **kwargs):
+            assert host == self.expectedHost
+            assert port == self.expectedPort
+            return [(None, None, None, None, self.hostAddress)]
+        @callOnce
+        def socket(self, *args, **kwargs):
+            self.socket = MockSocket(self)
+            return self.socket
+
+    class MockSocketReader:
+        @callOnce
+        def readline(self, *args, **kwargs):
+            raise MyException
+
+    class MockSocket:
+        def __init__(self, mocker):
+            self.__mocker = mocker
+        @callOnce
+        def connect(self, address):
+            assert address is self.__mocker.hostAddress
+        @callOnce
+        def makefile(self, *args, **kwargs):
+            return MockSocketReader()
+        def sendall(self, data):
+            # Python 2.4 urllib implementation calls this function twice - once
+            # for sending the HTTP request headers and once for its body.
+            self.__mocker.sentData += data
+        @callOnce
+        def settimeout(self, *args, **kwargs):
+            assert not hasattr(self, "settimeout_called")
+            self.settimeout_called = True
+
+    host = "an-easily-recognizable-host-name-214894932"
+    port = 9999
+    mocker = Mocker(host, port)
+    monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
+    monkeypatch.setattr("socket.socket", mocker.socket)
+    url = "http://%s:%s/svc" % (host, port)
     store = suds.store.DocumentStore(wsdl=_wsdl_with_input_data(url))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        timeout=0)
-    # Expected to raise an exception complaining that a non-blocking socket
-    # operation could not be completed immediately or, in case there is no
-    # network, that the server's address could not be resolved.
-    pytest.raises(urllib2.URLError, client.service.f, u"Дмитровский район")
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
+    data = u"Дмитровский район"
+    pytest.raises(MyException, client.service.f, data)
+    assert data.encode("utf-8") in mocker.sentData
 
 
 def test_sending_unicode_location():
