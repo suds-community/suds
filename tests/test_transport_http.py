@@ -35,6 +35,7 @@ import suds.transport.http
 import pytest
 
 import base64
+import sys
 import urllib2
 
 
@@ -92,32 +93,49 @@ def test_authenticated_http_add_credentials_to_request():
     _check_Authorization_header(r, username, password)
 
 
-def test_http_request_URL():
+@pytest.mark.parametrize("url", (
+    "http://my little URL",
+    "https://my little URL",
+    "xxx://my little URL",
+    "xxx:my little URL",
+    "xxx:"))
+def test_http_request_URL(url):
     """Make sure suds makes a HTTP request targeted at an expected URL."""
-
     class MockURLOpener:
-        """
-        Mock suds HTTP transport URL opener object asserting that it got passed
-        a request with an expected URL and then raising an exception to
-        interrupt the current network operation.
-
-        """
-
-        def __init__(self, expectedURL):
-            self.expectedURL = expectedURL
-
         def open(self, request, timeout=None):
-            assert request.get_full_url() == self.expectedURL
+            assert request.get_full_url() == url
             raise MyException
-
-    url = "http://my little URL"
-
     transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener(url)
+    transport.urlopener = MockURLOpener()
     store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
     pytest.raises(MyException, client.service.f)
+
+
+@pytest.mark.parametrize("url", (
+    "my no-protocol URL",
+    ":my no-protocol URL"))
+def test_http_request_URL_with_a_missing_protocol_identifier(url):
+    """
+    Test suds reporting URLs with a missing protocol identifier.
+
+    Python urllib library makes this check under Python 3.x, but does not under
+    earlier Python versions.
+
+    """
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        transport=transport)
+    exceptionClass = ValueError
+    if sys.version_info < (3, 0):
+        exceptionClass = MyException
+    pytest.raises(exceptionClass, client.service.f)
 
 
 def test_sending_unicode_data():
@@ -165,7 +183,7 @@ def test_sending_unicode_data():
   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <wsdl:types>
     <xsd:schema targetNamespace="myNamespace">
-      <xsd:element name="fRequest" nillable="true" type="xsd:string"/>
+      <xsd:element name="fRequest" type="xsd:string"/>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fInputMessage">
@@ -221,8 +239,8 @@ def test_sending_unicode_location():
 
 def _check_Authorization_header(request, username, password):
     assert len(request.headers) == 1
-    assert request.headers["Authorization"] == _encode_basic_credentials(
-        username, password)
+    header = request.headers["Authorization"]
+    assert header == _encode_basic_credentials(username, password)
 
 
 def _encode_basic_credentials(username, password):
