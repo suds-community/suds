@@ -107,7 +107,7 @@ def test_http_request_URL(url):
             raise MyException
     transport = suds.transport.http.HttpTransport()
     transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
     pytest.raises(MyException, client.service.f)
@@ -129,7 +129,7 @@ def test_http_request_URL_with_a_missing_protocol_identifier(url):
             raise MyException
     transport = suds.transport.http.HttpTransport()
     transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
     exceptionClass = ValueError
@@ -174,7 +174,62 @@ def test_sending_unicode_data():
     sending it over the network at all.
 
     """
-    wsdl = suds.byte_str("""\
+    url = "http://some-invalid-address-152312306:9999/svc"
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_input_data(url))
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        timeout=0)
+    # Expected to raise an exception complaining that a non-blocking socket
+    # operation could not be completed immediately or, in case there is no
+    # network, that the server's address could not be resolved.
+    pytest.raises(urllib2.URLError, client.service.f, u"Дмитровский район")
+
+
+def test_sending_unicode_location():
+    """
+    Suds should refuse to send HTTP requests with a target location string
+    containing non-ASCII characters. URLs are supposed to consist of
+    characters only.
+
+    """
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    url = u"http://Дмитровский-район-152312306:9999/svc"
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        transport=transport)
+    pytest.raises(UnicodeEncodeError, client.service.f)
+
+
+def _check_Authorization_header(request, username, password):
+    assert len(request.headers) == 1
+    header = request.headers["Authorization"]
+    assert header == _encode_basic_credentials(username, password)
+
+
+def _encode_basic_credentials(username, password):
+    """
+      Encodes user credentials as used in basic HTTP authentication.
+
+      This is the value expected to be added to the 'Authorization' HTTP
+    header.
+
+    """
+    data = suds.byte_str("%s:%s" % (username, password))
+    return "Basic %s" % base64.b64encode(data).decode("utf-8")
+
+
+def _wsdl_with_input_data(url):
+    """
+    Return a WSDL schema with a single operation f taking a single parameter.
+
+    Included operation takes a single string parameter and returns no values.
+    Externally specified URL is used as the web service location.
+
+    """
+    return suds.byte_str(u"""\
 <?xml version="1.0" encoding="utf-8"?>
 <wsdl:definitions targetNamespace="myNamespace"
   xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -204,62 +259,18 @@ def test_sending_unicode_data():
   </wsdl:binding>
   <wsdl:service name="Service">
     <wsdl:port name="Port" binding="tns:Binding">
-      <soap:address location="http://some-invalid-address-152312306:9999/svc"/>
+      <soap:address location="%s"/>
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>""")
-
-    store = suds.store.DocumentStore(wsdl=wsdl)
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        timeout=0)
-    # Expected to raise an exception complaining that a non-blocking socket
-    # operation could not be completed immediately or, in case there is no
-    # network, that the server's address could not be resolved.
-    pytest.raises(urllib2.URLError, client.service.f, u"Дмитровский район")
+</wsdl:definitions>""" % (url,))
 
 
-def test_sending_unicode_location():
+def _wsdl_with_no_input_data(url):
     """
-    Suds should refuse to send HTTP requests with a target location string
-    containing non-ASCII characters. URLs are supposed to consist of
-    characters only.
+    Return a WSDL schema with a single operation f taking no parameters.
 
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
-    url = u"http://Дмитровский-район-152312306:9999/svc"
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_url(url))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        transport=transport)
-    pytest.raises(UnicodeEncodeError, client.service.f)
-
-
-def _check_Authorization_header(request, username, password):
-    assert len(request.headers) == 1
-    header = request.headers["Authorization"]
-    assert header == _encode_basic_credentials(username, password)
-
-
-def _encode_basic_credentials(username, password):
-    """
-      Encodes user credentials as used in basic HTTP authentication.
-
-      This is the value expected to be added to the 'Authorization' HTTP
-    header.
-
-    """
-    data = suds.byte_str("%s:%s" % (username, password))
-    return "Basic %s" % base64.b64encode(data).decode("utf-8")
-
-
-def _wsdl_with_url(url):
-    """
-    Return a WSDL schema with the given URL and a single operation f.
-
-    Included operation takes no parameters and returns no values.
+    Included operation returns no values. Externally specified URL is used as
+    the web service location.
 
     """
     return suds.byte_str(u"""\
