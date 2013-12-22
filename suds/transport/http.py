@@ -181,6 +181,10 @@ class HttpTransport(Transport):
         """
         Returns the given request's URL, properly encoded for use with urllib.
 
+        URLs are allowed to be strings (unicode or not, but no Python 3 bytes
+        or bytearray objects) containing ASCII characters only. We raise a
+        UnicodeEncodeError exception if they contain any non-ASCII characters.
+
         Python 2.7 httplib implementation expects the URL passed to it to not
         be a unicode string. If it is, then passing it to the underlying
         httplib Request object will cause that object to forcefully convert all
@@ -188,18 +192,30 @@ class HttpTransport(Transport):
         raising a UnicodeDecodeError exception if it does not (caused by simple
         unicode + string concatenation).
 
+        Python 3.x httplib.client implementation must be given a string and not
+        a bytes object and the given string is internally converted to a bytes
+        object using an explicitly specified ASCII encoding.
+
         Additional notes:
-          * URLs in general may contain ASCII characters only.
           * Python 2.4 httplib implementation does not really care about this
             as it does not use the internal optimization present in the Python
             2.7 implementation causing all the requested data to be converted
             to unicode.
-          * Python 3.x httplib.client module implementation converts the URL
-            passed to it to a bytes object internally, using an explicitly
-            specified ASCII encoding.
 
         """
-        return request.url.encode('ascii')
+        url = request.url
+        try:
+            # Will raise AttributeError for Python 3.x bytes objects.
+            encodedURL = url.encode('ascii')
+        except UnicodeError, u:
+            # Different Python versions (e.g. 2.x vs. 3.x) raise different
+            # UnicodeError exception subclasses here when asked to encode a
+            # non-ascii script using the 'ascii' codec.
+            raise UnicodeEncodeError(u.encoding, u.object, u.start, u.end,
+                "URL may contain ASCII characters only.")
+        if sys.version_info < (3,0):
+            return encodedURL
+        return url
 
 
 class HttpAuthenticated(HttpTransport):
