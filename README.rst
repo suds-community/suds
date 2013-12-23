@@ -69,6 +69,74 @@ Installation troubleshooting:
 Release notes
 =================================================
 
+version 0.6 (development)
+-------------------------
+
+* Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+  original suds Python library development project's Subversion repository.
+
+  * Last officially packaged & released suds Python library version - 0.4.1.
+
+* Supported Python versions.
+
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Tested in the following environments:
+
+    * Python 2.4.3/x86, on Windows 7/SP1/x64.
+    * Python 2.4.4/x86, on Windows 7/SP1/x64.
+    * Python 2.7.6/x64, on Windows 7/SP1/x64.
+    * Python 3.2.5/x64, on Windows 7/SP1/x64.
+    * Python 3.3.3/x86, on Windows 7/SP1/x64.
+    * Python 3.3.3/x64, on Windows 7/SP1/x64.
+
+* Fixed sending HTTP request containing non-ASCII unicode data using Python 2.7.
+
+  * Many thanks to mduggan1 and Alexey Sveshnikov for reporting the issue and
+    suggesting patches.
+
+* Improved HTTPTransport related unit tests.
+* Added explicit tests for URL parameters being passed as unicode or single-byte
+  strings under Python 2 but only unicode strings under Python 3, and improved
+  how such invalid parameter values are reported.
+
+  * This behaviour matches urllib implementation differences between Python 3
+    and earlier Python interpreter versions.
+  * Many thanks to Mesut Tasci for reporting a related issue and preparing the
+    initial patch for it.
+
+* Setup improvements.
+
+  * Fixed setup to work with soft links in the current working folder path
+    (contributed by ryanpetrello).
+  * Project now installed as a zipped egg folder.
+  * No longer attempts to work around Python 2.4.3 issues with urllib HTTPS
+    downloads since now PyPI updated all of its links to HTTPS and the patch
+    would need to become much more complex to deal with this, while making the
+    setup much more difficult to understand and maintain.
+
+    * On the other hand, this is now an extremely old Python version, so the
+      change is not expected to have much impact. Anyone still using this
+      version will just have to work around the issue manually, e.g. by
+      downloading the necessary packages and running their setup procedures
+      directly.
+
+  * 'long_description' field content wrapped to 72 characters, since PKG-INFO
+    package distribution metadata file stores this text with an 8 space
+    indentation.
+
+* Cleaned up support for running test scripts directly as Python scripts.
+
+  * May now be passed pytest command-line options.
+  * Now return an exit code indicating the test result (0=success, !0=failure).
+
+* Corrected a typo in the BuildError exception message.
+* Added a basic development script for running the project's full test suite
+  using multiple Python interpreter versions under Windows.
+* Updated documented project links to use HTTP instead of HTTPS protocol.
+
 version 0.5 (2013-11-25)
 ------------------------
 
