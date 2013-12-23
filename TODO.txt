@@ -712,7 +712,17 @@ PRIORETIZED:
 (+)     * Fix setup.py current working folder path comparison so it works with
 (+)       links in the path. Contributed by ryanpetrello.
 
-(01.12.2013.)
+(23.12.2013.)
+
+(+) * (Jurko) Prepare a basic development script for running the full suds test
+(+)   suite using multiple Python interpreter versions.
+
+(24.12.2013.)
+
+    * (Jurko) Clean up the project's basic development script for running the
+      full suds test suite using multiple Python interpreter versions.
+        * Reimplement in Python.
+        * Name better.
 
     * (Jurko) Find a cleaner way to install suds tests. Currently they get
       installed into a top-level 'tests' folder and so may cause conflicts with

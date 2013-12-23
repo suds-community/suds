@@ -142,6 +142,10 @@ TOP-LEVEL FILES & FOLDERS:
     * 'HACKING.txt', 'LICENSE.txt', 'README.txt', 'TODO.txt'.
         * Internal project documentation.
 
+    * 'run_all_tests.cmd'.
+        * Basic development script for running the full project test suite using
+          multiple Python interpreter versions on a Windows development machine.
+
     * 'setup.cfg'.
         * Basic project Python configuration.
 
