@@ -69,8 +69,8 @@ Installation troubleshooting:
 Release notes
 =================================================
 
-version 0.5 (development)
--------------------------
+version 0.5 (2013-11-25)
+------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
   original suds Python library development project's Subversion repository.
