@@ -181,9 +181,17 @@ class HttpTransport(Transport):
         """
         Returns the given request's URL, properly encoded for use with urllib.
 
-        URLs are allowed to be strings (unicode or not, but no Python 3 bytes
-        or bytearray objects) containing ASCII characters only. We raise a
-        UnicodeEncodeError exception if they contain any non-ASCII characters.
+        URLs are allowed to be:
+            under Python 2.x: unicode strings, single-byte strings;
+            under Python 3.x: unicode strings.
+        In any case, they are allowed to contain ASCII characters only. We
+        raise a UnicodeError derived exception if they contain any non-ASCII
+        characters (UnicodeEncodeError or UnicodeDecodeError depending on
+        whether the URL was specified as a unicode or a single-byte string).
+
+        Python 3.x httplib.client implementation must be given a unicode string
+        and not a bytes object and the given string is internally converted to
+        a bytes object using an explicitly specified ASCII encoding.
 
         Python 2.7 httplib implementation expects the URL passed to it to not
         be a unicode string. If it is, then passing it to the underlying
@@ -192,30 +200,27 @@ class HttpTransport(Transport):
         raising a UnicodeDecodeError exception if it does not (caused by simple
         unicode + string concatenation).
 
-        Python 3.x httplib.client implementation must be given a string and not
-        a bytes object and the given string is internally converted to a bytes
-        object using an explicitly specified ASCII encoding.
-
-        Additional notes:
-          * Python 2.4 httplib implementation does not really care about this
-            as it does not use the internal optimization present in the Python
-            2.7 implementation causing all the requested data to be converted
-            to unicode.
+        Python 2.4 httplib implementation does not really care about this as it
+        does not use the internal optimization present in the Python 2.7
+        implementation causing all the requested data to be converted to
+        unicode.
 
         """
         url = request.url
-        try:
-            # Will raise AttributeError for Python 3.x bytes objects.
-            encodedURL = url.encode('ascii')
-        except UnicodeError, u:
-            # Different Python versions (e.g. 2.x vs. 3.x) raise different
-            # UnicodeError exception subclasses here when asked to encode a
-            # non-ascii script using the 'ascii' codec.
-            raise UnicodeEncodeError(u.encoding, u.object, u.start, u.end,
-                "URL may contain ASCII characters only.")
-        if sys.version_info < (3,0):
-            return encodedURL
-        return url
+        py2 = sys.version_info < (3, 0)
+        if py2 and isinstance(url, str):
+            encodedURL = url
+            decodedURL = url.decode("ascii")
+        else:
+            # On Python3, calling encode() on a bytes or a bytearray object
+            # raises an AttributeError exception.
+            assert py2 or not isinstance(url, bytes)
+            assert py2 or not isinstance(url, bytearray)
+            decodedURL = url
+            encodedURL = url.encode("ascii")
+        if py2:
+            return encodedURL  # Python 2 urllib - single-byte URL string.
+        return decodedURL  # Python 3 urllib - unicode URL string.
 
 
 class HttpAuthenticated(HttpTransport):
