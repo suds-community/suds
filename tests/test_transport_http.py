@@ -227,7 +227,7 @@ def test_sending_unicode_data(monkeypatch):
     assert data.encode("utf-8") in mocker.sentData
 
 
-def test_sending_unicode_location():
+def test_sending_non_ascii_location():
     """
     Suds should refuse to send HTTP requests with a target location string
     containing non-ASCII characters. URLs are supposed to consist of
@@ -244,6 +244,65 @@ def test_sending_unicode_location():
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
     pytest.raises(UnicodeEncodeError, client.service.f)
+
+
+@pytest.mark.skipif(sys.version_info >= (3, 0),
+    reason="Python 2 specific functionality")
+@pytest.mark.parametrize(("urlString", "expectedException"), (
+    ("http://jorgula", MyException),
+    ("http://jorgula_\xe7", UnicodeDecodeError)))
+def test_sending_py2_bytes_location(urlString, expectedException):
+    """
+    Suds should accept single-byte string URL values under Python 2, but should
+    still report an error if those strings contain any non-ASCII characters.
+
+    """
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data("http://x"))
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        transport=transport)
+    client.options.location = suds.byte_str(urlString)
+    pytest.raises(expectedException, client.service.f)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 0),
+    reason="requires at least Python 3")
+@pytest.mark.parametrize("urlString", (
+    "http://jorgula",
+    "http://jorgula_\xe7"))
+def test_sending_py3_bytes_location(urlString):
+    """
+    Suds should refuse to send HTTP requests with a target location specified
+    as either a Python 3 bytes or bytearray object.
+
+    """
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data("http://x"))
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        transport=transport)
+
+    expectedException = AssertionError
+    if sys.flags.optimize:
+        expectedException = AttributeError
+
+    for url in (bytes(urlString, encoding="utf-8"),
+        bytearray(urlString, encoding="utf-8")):
+        # Under Python 3.x we can not use the client's 'location' option to set
+        # a bytes URL as it accepts only strings and in Python 3.x all strings
+        # are unicode strings. Therefore, we use an ugly hack, modifying suds's
+        # internal web service description structure to force it to think it
+        # has a bytes object specified as a location for its 'f' web service
+        # operation.
+        client.sd[0].ports[0][0].methods['f'].location = url
+        pytest.raises(expectedException, client.service.f)
 
 
 def _check_Authorization_header(request, username, password):
