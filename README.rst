@@ -11,17 +11,17 @@ again.
 
 **Forked project information**
 
-* Project site: https://bitbucket.org/jurko/suds
+* Project site: http://bitbucket.org/jurko/suds
 * Epydocs documentation: needs to be built from sources
 * Official releases can be downloaded from:
 
-  * BitBucket - https://bitbucket.org/jurko/suds/downloads
+  * BitBucket - http://bitbucket.org/jurko/suds/downloads
   * PyPI - http://pypi.python.org/pypi/suds-jurko
 
 **Original suds Python library development project information**
 
-* Project site: https://fedorahosted.org/suds
-* Documentation: https://fedorahosted.org/suds/wiki/Documentation
+* Project site: http://fedorahosted.org/suds
+* Documentation: http://fedorahosted.org/suds/wiki/Documentation
 * Epydocs: http://jortel.fedorapeople.org/suds/doc
 
 For development notes see the ``HACKING.txt`` document included in the
