@@ -70,12 +70,12 @@ class Document(Binding):
             n += 1
             # Skip non-existing by-choice arguments.
             # Implementation notes:
-            #   * This functionality might be better placed inside the mkparam()
-            #     function but to do that we would first need to understand more
-            #     thoroughly how different Binding subclasses in suds work and
-            #     how they would be affected by this change.
-            #   * If caller actually wishes to pass an empty choice parameter he
-            #     can specify its value explicitly as an empty string.
+            #   * This functionality might be better placed inside the
+            #     mkparam() function but to do that we would first need to
+            #     understand more thoroughly how different Binding subclasses
+            #     in suds work and how they would be affected by this change.
+            #   * If caller actually wishes to pass an empty choice parameter
+            #     he can specify its value explicitly as an empty string.
             if len(pd) > 2 and pd[2] and value is None:
                 continue
             p = self.mkparam(method, pd, value)
