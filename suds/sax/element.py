@@ -22,10 +22,6 @@ from suds import *
 from suds.sax import *
 from suds.sax.text import Text
 from suds.sax.attribute import Attribute
-import sys
-if sys.version_info < (2, 4, 0):
-    from sets import Set as set
-    del sys
 
 
 class Element(UnicodeMixin):
