@@ -717,7 +717,34 @@ PRIORETIZED:
 (+) * (Jurko) Prepare a basic development script for running the full suds test
 (+)   suite using multiple Python interpreter versions.
 
-(24.12.2013.)
+(26.12.2013.)
+
+(+) * (Jurko) Process patches sent in by Bouke Haarsma on BitBucket.
+(+)     * Unicode logging issue.
+(+)         * Research.
+(+)         * Prepare tests.
+
+(27.12.2013.)
+
+    * (Jurko) Process patches sent in by Bouke Haarsma on BitBucket.
+        * Unicode logging issue.
+            * Merge.
+            * Thorough code review.
+            * Update release notes.
+        * Making sure all web service operation parameters are consumed.
+            * Research.
+            * Prepare tests.
+            * Merge.
+            * Thorough code review.
+            * Update release notes.
+
+    * (Jurko) Process decimal type support patch sent in by pendletongp on
+      BitBucket.
+        * Research.
+        * Prepare tests.
+        * Merge.
+        * Thorough code review.
+        * Update release notes.
 
     * (Jurko) Clean up the project's basic development script for running the
       full suds test suite using multiple Python interpreter versions.
