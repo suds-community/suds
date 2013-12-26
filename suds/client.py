@@ -108,7 +108,8 @@ class Client(UnicodeMixin):
         options = Options()
         options.transport = HttpAuthenticated()
         self.options = options
-        options.cache = ObjectCache(days=1)
+        if "cache" not in kwargs:
+            kwargs["cache"] = ObjectCache(days=1)
         self.set_options(**kwargs)
         reader = DefinitionsReader(options, Definitions)
         self.wsdl = reader.open(url)
