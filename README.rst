@@ -97,6 +97,8 @@ version 0.6 (development)
   * Many thanks to mduggan1 and Alexey Sveshnikov for reporting the issue and
     suggesting patches.
 
+* Fixed unicode data logging issue (contributed by Bouke Haarsma).
+* Added unit tests for transport related Request & Reply classes.
 * Improved HTTPTransport related unit tests.
 * Added explicit tests for URL parameters being passed as unicode or single-byte
   strings under Python 2 but only unicode strings under Python 3, and improved

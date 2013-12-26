@@ -723,14 +723,14 @@ PRIORETIZED:
 (+)     * Unicode logging issue.
 (+)         * Research.
 (+)         * Prepare tests.
+(+)         * Merge.
+(+)             * Thorough code review.
+(+)             * Implement a cleaner fix for both Reply & Request classes.
+(+)         * Update release notes.
 
 (27.12.2013.)
 
     * (Jurko) Process patches sent in by Bouke Haarsma on BitBucket.
-        * Unicode logging issue.
-            * Merge.
-            * Thorough code review.
-            * Update release notes.
         * Making sure all web service operation parameters are consumed.
             * Research.
             * Prepare tests.
