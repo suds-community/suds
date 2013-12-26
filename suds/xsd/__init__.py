@@ -15,11 +15,8 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 
-from logging import getLogger
 from suds import *
 from suds.sax import Namespace, splitPrefix
-
-log = getLogger(__name__)
 
 
 def qualify(ref, resolvers, defns=Namespace.default):

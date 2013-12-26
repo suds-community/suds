@@ -18,7 +18,6 @@
 Provides base classes for XML->object I{unmarshalling}.
 """
 
-from logging import getLogger
 from suds import *
 from suds.umx import *
 from suds.umx.attrlist import AttrList
@@ -26,9 +25,8 @@ from suds.sax.text import Text
 from suds.sudsobject import Factory, merge
 
 
-log = getLogger(__name__)
+reserved = {'class':'cls', 'def':'dfn'}
 
-reserved = { 'class':'cls', 'def':'dfn', }
 
 class Core:
     """

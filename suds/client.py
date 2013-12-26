@@ -42,9 +42,9 @@ import sudsobject
 from cookielib import CookieJar
 from copy import deepcopy
 import httplib
-from logging import getLogger
 from urlparse import urlparse
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

@@ -25,7 +25,6 @@ from suds.sax.element import Element
 
 from datetime import datetime as dt
 from datetime import timedelta
-from logging import getLogger
 import os
 from tempfile import gettempdir as tmp
 try:
@@ -33,6 +32,7 @@ try:
 except Exception:
     import pickle
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

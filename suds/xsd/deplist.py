@@ -18,9 +18,9 @@
 The I{depsolve} module defines a class for performing dependency solving.
 """
 
-from logging import getLogger
 from suds import *
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

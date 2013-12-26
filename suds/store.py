@@ -22,9 +22,6 @@ document content to be distributed alongside the suds library.
 """
 
 import suds
-from logging import getLogger
-
-log = getLogger(__name__)
 
 
 soap5_encoding_schema = suds.byte_str("""\

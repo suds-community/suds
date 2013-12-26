@@ -20,11 +20,12 @@ designed for collecting and reporting performance metrics.
 """
 
 import time
-from logging import getLogger
 from suds import *
 from math import modf
 
+from logging import getLogger
 log = getLogger(__name__)
+
 
 class Timer:
 
