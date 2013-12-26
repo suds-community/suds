@@ -133,8 +133,7 @@ class PathResolver(Resolver):
         if result is None:
             log.error('(%s) not-found', name)
             raise PathResolver.BadPath(name)
-        else:
-            log.debug('found (%s) as (%s)', name, Repr(result))
+        log.debug('found (%s) as (%s)', name, Repr(result))
         return result
 
     def branch(self, root, parts):
@@ -155,9 +154,8 @@ class PathResolver(Resolver):
             if result is None:
                 log.error('(%s) not-found', name)
                 raise PathResolver.BadPath(name)
-            else:
-                result = result.resolve(nobuiltin=True)
-                log.debug('found (%s) as (%s)', name, Repr(result))
+            result = result.resolve(nobuiltin=True)
+            log.debug('found (%s) as (%s)', name, Repr(result))
         return result
 
     def leaf(self, parent, parts):
@@ -280,8 +278,7 @@ class TreeResolver(Resolver):
             popped = self.stack.pop()
             log.debug('pop: (%s)\n%s', Repr(popped), Repr(self.stack))
             return popped
-        else:
-            log.debug('stack empty, not-popped')
+        log.debug('stack empty, not-popped')
         return None
 
     def depth(self):
@@ -297,8 +294,7 @@ class TreeResolver(Resolver):
         log.debug('searching parent (%s) for (%s)', Repr(parent), name)
         if name.startswith('@'):
             return parent.get_attribute(name[1:])
-        else:
-            return parent.get_child(name)
+        return parent.get_child(name)
 
 
 class NodeResolver(TreeResolver):
