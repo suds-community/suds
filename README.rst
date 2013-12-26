@@ -98,6 +98,19 @@ version 0.6 (development)
     suggesting patches.
 
 * Fixed unicode data logging issue (contributed by Bouke Haarsma).
+* suds.transport.Request object string representation cleaned up a bit - added
+  a missing space before the URL to make it consistent with how all the other
+  Request & Reply data is represented in such strings.
+* Fixed issue with suds client failing to be create its default cache object
+  (e.g. because a folder it needs is write protected) and thus preventing the
+  client from being created without any chance for the user to specify an
+  alternative cache.
+
+  * The default client cache is now instantiated only if user does not
+    explicitly specify some other alternate cache (or even None to disable the
+    whole data caching system).
+  * Many thanks to Arthur Clune for reporting the issue.
+
 * Added unit tests for transport related Request & Reply classes.
 * Improved HTTPTransport related unit tests.
 * Added explicit tests for URL parameters being passed as unicode or single-byte
