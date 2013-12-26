@@ -434,7 +434,7 @@ def test_named_parameter():
 
 
 def test_optional_parameter_handling():
-    """Missing non-optional parameters should get passed as empty values."""
+    """Missing optional parameters should not get passed at all."""
     service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
