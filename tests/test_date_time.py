@@ -1,17 +1,16 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
@@ -26,16 +25,14 @@ if __name__ == "__main__":
     __init__.runUsingPyTest(globals())
 
 
-from suds.sax.date import (Date, DateTime, Time, UtcTimezone,
-    FixedOffsetTimezone)
+from suds.sax.date import (FixedOffsetTimezone, Date, DateTime, Time,
+    UtcTimezone)
 from suds.xsd.sxbuiltin import XDate, XDateTime, XTime
 import tests
 
 import pytest
 
 import datetime
-
-tests.setup_logging()
 
 
 class _Dummy:
@@ -45,98 +42,98 @@ class _Dummy:
 
 """Invalid date strings reused for both date & datetime testing."""
 _invalid_date_strings = (
-        "",
-        "abla",
-        "12",
-        "12-01",
-        "-12-01",
-        "1900-01",
-        "+1900-10-01",  # Plus sign not allowed.
-        "1900-13-01",  # Invalid month.
-        "1900-02-30",  # Invalid day.
-        "2001-02-29",  # Not a leap year.
-        "2100-02-29",  # Not a leap year.
-        " 1900-01-01",
-        "1900- 01-01",
-        "1900-01 -01",
-        "1900-01-01 ",
-        "1900-13-011",
-        "1900-01-01X",
-        "1900-01-01T",  # 'T' is a date/time separator for DateTime.
-        # Invalid time zone indicators.
-            "1900-01-01 +17:00",
-            "1900-01-01+ 17:00",
-            "1900-01-01*17:00",
-            "1900-01-01 17:00",
-            "1900-01-01+17:",
-            "1900-01-01+170",
-            "1900-01-01+1730",
-            "1900-01-01+170:00",
-            "1900-01-01+17:00:00",
-            "1900-01-01-:4",
-            "1900-01-01-2a:00",
-            "1900-01-01-222:00",
-            "1900-01-01-12:000"
-            "1900-01-01+00:60",
-            "1900-01-01-00:99")
+    "",
+    "abla",
+    "12",
+    "12-01",
+    "-12-01",
+    "1900-01",
+    "+1900-10-01",  # Plus sign not allowed.
+    "1900-13-01",  # Invalid month.
+    "1900-02-30",  # Invalid day.
+    "2001-02-29",  # Not a leap year.
+    "2100-02-29",  # Not a leap year.
+    " 1900-01-01",
+    "1900- 01-01",
+    "1900-01 -01",
+    "1900-01-01 ",
+    "1900-13-011",
+    "1900-01-01X",
+    "1900-01-01T",  # 'T' is a date/time separator for DateTime.
+    # Invalid time zone indicators.
+        "1900-01-01 +17:00",
+        "1900-01-01+ 17:00",
+        "1900-01-01*17:00",
+        "1900-01-01 17:00",
+        "1900-01-01+17:",
+        "1900-01-01+170",
+        "1900-01-01+1730",
+        "1900-01-01+170:00",
+        "1900-01-01+17:00:00",
+        "1900-01-01-:4",
+        "1900-01-01-2a:00",
+        "1900-01-01-222:00",
+        "1900-01-01-12:000"
+        "1900-01-01+00:60",
+        "1900-01-01-00:99")
 
 """Invalid date strings reused for both time & datetime testing."""
 _invalid_time_strings = (
-        "",
-        "bunga",
-        "12",
-        "::",
-        "12:",
-        "12:01",
-        "12:01:",
-        "12:01: 00",
-        "12:01:  00",
-        "23: 01:00",
-        " 23:01:00",
-        "23 :01:00",
-        "23::00",
-        "23:000:00",
-        "023:00:00",
-        "23:00:000",
-        "25:01:00",
-        "-1:01:00",
-        "24:01:00",
-        "23:-1:00",
-        "23:61:00",
-        "23:60:00",
-        "23:59:-1",
-        "23:59:61",
-        "23:59:60",
-        "7.59.13",
-        "7-59-13",
-        "-0:01:00",
-        "23:-0:00",
-        "23:59:-0",
-        "23:59:6.a",
-        "23:59:6.",
-        "23:59:6:0",
-        "23:59:6.12x",
-        "23:59:6.12x45",
-        "23:59:6.999999 ",
-        "23:59:6.999999x",
-        "T23:59:6",
-        # Invalid time zone indicators.
-            "13:27:04 -10:00",
-            "13:27:04- 10:00",
-            "13:27:04*17:00",
-            "13:27:04 17:00",
-            "13:27:04-003",
-            "13:27:04-003:00",
-            "13:27:04+00:002",
-            "13:27:04-13:60",
-            "13:27:04-121",
-            "13:27:04-1210",
-            "13:27:04-121:00",
-            "13:27:04+12:",
-            "13:27:04+12:00:00",
-            "13:27:04-:13"
-            "13:27:04-24:00"
-            "13:27:04+99:00")
+    "",
+    "bunga",
+    "12",
+    "::",
+    "12:",
+    "12:01",
+    "12:01:",
+    "12:01: 00",
+    "12:01:  00",
+    "23: 01:00",
+    " 23:01:00",
+    "23 :01:00",
+    "23::00",
+    "23:000:00",
+    "023:00:00",
+    "23:00:000",
+    "25:01:00",
+    "-1:01:00",
+    "24:01:00",
+    "23:-1:00",
+    "23:61:00",
+    "23:60:00",
+    "23:59:-1",
+    "23:59:61",
+    "23:59:60",
+    "7.59.13",
+    "7-59-13",
+    "-0:01:00",
+    "23:-0:00",
+    "23:59:-0",
+    "23:59:6.a",
+    "23:59:6.",
+    "23:59:6:0",
+    "23:59:6.12x",
+    "23:59:6.12x45",
+    "23:59:6.999999 ",
+    "23:59:6.999999x",
+    "T23:59:6",
+    # Invalid time zone indicators.
+        "13:27:04 -10:00",
+        "13:27:04- 10:00",
+        "13:27:04*17:00",
+        "13:27:04 17:00",
+        "13:27:04-003",
+        "13:27:04-003:00",
+        "13:27:04+00:002",
+        "13:27:04-13:60",
+        "13:27:04-121",
+        "13:27:04-1210",
+        "13:27:04-121:00",
+        "13:27:04+12:",
+        "13:27:04+12:00:00",
+        "13:27:04-:13"
+        "13:27:04-24:00"
+        "13:27:04+99:00")
 
 
 class TestDate:
