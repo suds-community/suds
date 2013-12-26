@@ -25,14 +25,12 @@ if __name__ == "__main__":
     __init__.runUsingPyTest(globals())
 
 
-from suds.sax.date import UtcTimezone, FixedOffsetTimezone
+from suds.sax.date import FixedOffsetTimezone, UtcTimezone
 import tests
 
 import pytest
 
 import datetime
-
-tests.setup_logging()
 
 
 class TestFixedOffsetTimezone:
