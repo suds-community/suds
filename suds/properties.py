@@ -18,10 +18,6 @@
 Properties classes.
 """
 
-from logging import getLogger
-
-log = getLogger(__name__)
-
 
 class AutoLinker(object):
     """

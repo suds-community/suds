@@ -20,9 +20,9 @@ that are primarily used for the highly dynamic interactions with
 wsdl/xsd defined types.
 """
 
-from logging import getLogger
 from suds import *
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

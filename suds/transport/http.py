@@ -18,18 +18,18 @@ Contains classes for basic HTTP transport implementations.
 
 """
 
-from suds.transport import *
 from suds.properties import Unskin
-from urlparse import urlparse
-from cookielib import CookieJar
-from logging import getLogger
+from suds.transport import *
 
 import base64
+from cookielib import CookieJar
 import httplib
 import socket
 import sys
 import urllib2
+from urlparse import urlparse
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

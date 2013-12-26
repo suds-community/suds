@@ -18,12 +18,10 @@ Contains classes for authenticated HTTP transport implementations.
 
 """
 
-import urllib2
 from suds.transport import *
 from suds.transport.http import HttpTransport
-from logging import getLogger
 
-log = getLogger(__name__)
+import urllib2
 
 
 class HttpAuthenticated(HttpTransport):

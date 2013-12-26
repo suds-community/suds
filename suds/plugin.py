@@ -20,8 +20,8 @@ of suds plugins.
 """
 
 from suds import *
-from logging import getLogger
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

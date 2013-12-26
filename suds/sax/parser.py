@@ -34,13 +34,9 @@ from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.text import Text
 
-from logging import getLogger
 import sys
 from xml.sax import make_parser, InputSource, ContentHandler
 from xml.sax.handler import feature_external_ges
-
-
-log = getLogger(__name__)
 
 
 class Handler(ContentHandler):

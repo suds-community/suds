@@ -18,11 +18,9 @@
 Provides classes for handling soap multirefs.
 """
 
-from logging import getLogger
 from suds import *
 from suds.sax.element import Element
 
-log = getLogger(__name__)
 
 soapenc = (None, 'http://schemas.xmlsoap.org/soap/encoding/')
 
@@ -83,6 +81,8 @@ class MultiRef:
         id = href.getValue()
         ref = self.catalog.get(id)
         if ref is None:
+            import logging
+            log = logging.getLogger(__name__)
             log.error('soap multiref: %s, not-resolved', id)
             return
         node.append(ref.children)

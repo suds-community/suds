@@ -18,12 +18,13 @@
 The I{service definition} provides a textual representation of a service.
 """
 
-from logging import getLogger
 from suds import *
 import suds.metrics as metrics
 from suds.sax import Namespace
 
+from logging import getLogger
 log = getLogger(__name__)
+
 
 class ServiceDefinition(UnicodeMixin):
     """
