@@ -76,7 +76,7 @@ def test_request_as_string(message):
     request = Request("my url", message)
     request.headers["aaa"] = 1
     expected = u"""\
-URL:my url
+URL: my url
 HEADERS: %s
 MESSAGE:
 %s""" % (request.headers, message)

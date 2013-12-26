@@ -727,16 +727,34 @@ PRIORETIZED:
 (+)             * Thorough code review.
 (+)             * Implement a cleaner fix for both Reply & Request classes.
 (+)         * Update release notes.
+(+) * (Jurko) Fix possible typo in the suds.transport.Request string/unicode
+(+)   representation where there seems to be a missing space after a colon just
+(+)   before the URL information.
 
 (27.12.2013.)
 
-    * (Jurko) Process patches sent in by Bouke Haarsma on BitBucket.
-        * Making sure all web service operation parameters are consumed.
-            * Research.
-            * Prepare tests.
-            * Merge.
-            * Thorough code review.
-            * Update release notes.
+    * (Jurko) Remove unnecessary logger objects.
+
+    * (Jurko) Process the project issue #2 reported on BitBucket by Arthur
+      Clune, related to not being able to set the option cache location if the
+      default cache location is not a writeable folder.
+        * Research.
+        * Prepare tests.
+            * Default cache.
+            * Default ObjectCache instance should be created only if no other
+              cache has been explicitly specified during suds.client.Client()
+              construction.
+        * Fix.
+        * Update release notes.
+        * Report back & close the project issue on BitBucket.
+
+    * (Jurko) Process patch sent in by Bouke Haarsma on BitBucket to 'make sure
+      all web service operation parameters are consumed'.
+        * Research.
+        * Prepare tests.
+        * Merge.
+        * Thorough code review.
+        * Update release notes.
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
