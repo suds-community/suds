@@ -616,7 +616,7 @@ def test_wrapped_parameter():
       </xsd:complexType>
       <xsd:element name="Wrapper" type="ns:WrapperType" />""", "Wrapper")
 
-    #   Make sure suds library inteprets our WSDL definitions as wrapped or
+    #   Make sure suds library interprets our WSDL definitions as wrapped or
     # bare input interfaces as expected.
     assert not _isInputWrapped(client_bare_single, "f")
     assert not _isInputWrapped(client_bare_multiple_simple, "f")
