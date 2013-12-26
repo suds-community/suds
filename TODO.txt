@@ -730,10 +730,9 @@ PRIORETIZED:
 (+) * (Jurko) Fix possible typo in the suds.transport.Request string/unicode
 (+)   representation where there seems to be a missing space after a colon just
 (+)   before the URL information.
+(+) * (Jurko) Remove unnecessary logger objects.
 
 (27.12.2013.)
-
-    * (Jurko) Remove unnecessary logger objects.
 
     * (Jurko) Process the project issue #2 reported on BitBucket by Arthur
       Clune, related to not being able to set the option cache location if the
