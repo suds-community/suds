@@ -24,7 +24,6 @@ from suds.sudsobject import footprint
 from suds.sudsobject import Object, Property
 from suds.sax.element import Element
 from suds.sax.text import Text
-from copy import deepcopy
 
 
 class Matcher:
