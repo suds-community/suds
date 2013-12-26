@@ -109,6 +109,8 @@ version 0.6 (development)
   * Many thanks to Mesut Tasci for reporting a related issue and preparing the
     initial patch for it.
 
+* Removed partial support for pre-2.4 Python versions since such old Python
+  versions are no longer officially supported nor are they tested anywhere.
 * Setup improvements.
 
   * Fixed setup to work with soft links in the current working folder path
