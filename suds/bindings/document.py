@@ -57,9 +57,6 @@ class Document(Binding):
 
     """
     def bodycontent(self, method, args, kwargs):
-        if args and kwargs:
-            raise Exception("Don't mix positional and keyword arguments in "
-                            "service calls")
         if not len(method.soap.input.body.parts):
             return ()
         wrapped = method.soap.input.body.wrapped
@@ -69,7 +66,7 @@ class Document(Binding):
         else:
             root = []
         args = list(args)
-        for pd_idx, pd in enumerate(self.param_defs(method)):
+        for pd in self.param_defs(method):
             if args:
                 value = args.pop(0)
             else:
@@ -92,12 +89,13 @@ class Document(Binding):
                 ns = pd[1].namespace('ns0')
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
-        if args:
-            raise Exception("Not all positional arguments have been consumed "
-                            "(%d remaining)" % len(args))
         if kwargs:
-            raise Exception("The following keyword arguments have not been "
-                            "consumed: '%s'" % "', '".join(kwargs.keys()))
+            raise TypeError("%s() got an unexpected keyword argument '%s'" %
+                            (method.name, kwargs.keys()[0]))
+        if args:
+            params = self.param_defs(method)
+            raise TypeError("%s() takes at most %d arguments (%d given)" %
+                            (method.name, len(params), len(params) + len(args)))
         return root
 
     def replycontent(self, method, body):

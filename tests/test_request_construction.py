@@ -185,52 +185,6 @@ def test_element_references_to_different_namespaces():
 </SOAP-ENV:Envelope>""")
 
 
-def test_extra_parameters():
-    """
-    Extra input parameters should get silently ignored and not added to the
-    constructed SOAP request.
-
-    """
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
-      <xsd:element name="Wrapper">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="aString" type="xsd:string" />
-            <xsd:element name="anInteger" type="xsd:integer" />
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
-
-    # Unnamed parameters.
-    _check_request(service.f("something", 0, "extra1", "extra2"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>something</ns0:aString>
-         <ns0:anInteger>0</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-
-    # Named parameters.
-    _check_request(service.f("something", extra="1", anInteger=7), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>something</ns0:aString>
-         <ns0:anInteger>7</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-
-
 def test_invalid_argument_type_handling():
     """
     Input parameters of invalid type get silently pushed into the constructed
@@ -556,16 +510,6 @@ def test_twice_wrapped_parameter():
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Elemento="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2/>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
     _check_request(client.service.f(Wrapper2="A B C"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -573,16 +517,6 @@ def test_twice_wrapped_parameter():
    <ns1:Body>
       <ns0:Wrapper1>
          <ns0:Wrapper2>A B C</ns0:Wrapper2>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Wrapper1="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2/>
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
@@ -659,19 +593,6 @@ def test_wrapped_parameter():
     _check_request(call_single(client_wrapped_unnamed), expected_xml)
     _check_request(call_single(client_wrapped_named), expected_xml)
 
-    #   Suds library's automatic structure unwrapping prevents us from
-    # specifying the external wrapper structure directly.
-    _check_request(client_wrapped_unnamed.service.f(Wrapper="A"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:Elemento/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-
     #   Multiple parameter web service operations are never automatically
     # unwrapped.
     data = ("Unga", "Bunga")
@@ -696,6 +617,26 @@ def test_wrapped_parameter():
       <ns0:Elemento2>%s</ns0:Elemento2>
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % data)
+
+
+def test_too_many_parameters_handling():
+    """Too many arguments should be rejected."""
+    service_from_wsdl = lambda wsdl: \
+        tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True).service
+
+    service = service_from_wsdl(tests.wsdl_input("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="a" type="xsd:integer" />
+            <xsd:element name="b" type="xsd:integer" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"))
+
+    print pytest.raises(TypeError, service.f, 1, 2, 3)
+    print pytest.raises(TypeError, service.f, 1, 2, c=3)
+    print pytest.raises(TypeError, service.f, a=1, b=2, c=3)
 
 
 def _check_request(request, expected_xml):
