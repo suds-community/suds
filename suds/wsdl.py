@@ -20,7 +20,6 @@ The primary class is I{Definitions} as it represents the root element
 found in the document.
 """
 
-from logging import getLogger
 from suds import *
 from suds.sax.element import Element
 from suds.bindings.document import Document
@@ -30,11 +29,14 @@ from suds.xsd.schema import Schema, SchemaCollection
 from suds.xsd.query import ElementQuery
 from suds.sudsobject import Object, Facade, Metadata
 from suds.reader import DocumentReader
-from urlparse import urljoin
+
 import re
 import soaparray
+from urlparse import urljoin
 
+from logging import getLogger
 log = getLogger(__name__)
+
 
 wsdlns = (None, "http://schemas.xmlsoap.org/wsdl/")
 soapns = (None, 'http://schemas.xmlsoap.org/wsdl/soap/')

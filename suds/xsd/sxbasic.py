@@ -19,7 +19,6 @@ The I{sxbasic} module provides classes that represent
 I{basic} schema objects.
 """
 
-from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.xsd.sxbase import *
@@ -29,7 +28,7 @@ from suds.transport import TransportError
 from suds.reader import DocumentReader
 from urlparse import urljoin
 
-
+from logging import getLogger
 log = getLogger(__name__)
 
 

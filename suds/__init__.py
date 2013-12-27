@@ -50,7 +50,7 @@ class TypeNotFound(Exception):
 
 class BuildError(Exception):
     msg = """
-        An error occured while building an instance of (%s). As a result the
+        An error occurred while building an instance of (%s). As a result the
         object you requested could not be constructed. It is recommended that
         you construct the type manually using a Suds object. Please open a
         ticket with a description of this error.

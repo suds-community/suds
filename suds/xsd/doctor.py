@@ -19,11 +19,11 @@ The I{doctor} module provides classes for fixing broken (sick)
 schema(s).
 """
 
-from logging import getLogger
 from suds.sax import Namespace
 from suds.sax.element import Element
 from suds.plugin import DocumentPlugin, DocumentContext
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

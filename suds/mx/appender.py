@@ -18,16 +18,13 @@
 Provides appender classes for I{marshalling}.
 """
 
-from logging import getLogger
 from suds import *
 from suds.mx import *
 from suds.sudsobject import footprint
 from suds.sudsobject import Object, Property
 from suds.sax.element import Element
 from suds.sax.text import Text
-from copy import deepcopy
 
-log = getLogger(__name__)
 
 class Matcher:
     """

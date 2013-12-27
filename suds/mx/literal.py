@@ -27,7 +27,6 @@ from suds.sax.element import Element
 from suds.sudsobject import Factory
 
 from logging import getLogger
-
 log = getLogger(__name__)
 
 

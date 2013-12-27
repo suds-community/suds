@@ -87,30 +87,6 @@ exec(read_python_code(os.path.join("suds", "version.py")))
 extra_setup_params = {}
 extra_setup_cmdclass = {}
 
-if sys.version_info < (2, 4, 4):
-    # Python 2.4.3 seems to have issues with setuptools collecting its
-    # requirement packages from PyPI using HTTPS. This has been encountered
-    # using Python 2.4.3/x86 on Windows 7/SP1/x64 with setuptools 0.7.2. The
-    # same issue does not occur when using Python 2.4.4/x86 in the same
-    # environment.
-    #
-    # As a workaround we replace setuptools's PackageIndex class with one that
-    # always uses the HTTP transfer protocol instead of HTTPS when dealing with
-    # this Python version.
-    #
-    # Note that this workaround affects only setuptools's automated requirement
-    # package downloading. Any requirement packages can still be installed
-    # manually by the user, using a suitable package index source URL.
-    import setuptools.package_index
-    OriginalPackageIndex = setuptools.package_index.PackageIndex
-    class NoHTTPSPackageIndex(OriginalPackageIndex):
-        def __init__(self, *args, **kwargs):
-            OriginalPackageIndex.__init__(self, *args, **kwargs)
-            cue = "https:"
-            if self.index_url.lower().startswith(cue):
-                self.index_url = "http:" + self.index_url[len(cue):]
-    setuptools.package_index.PackageIndex = NoHTTPSPackageIndex
-
 if sys.version_info >= (2, 5):
     # distutils.setup() 'obsoletes' parameter not introduced until Python 2.5.
     extra_setup_params["obsoletes"] = ["suds"]
@@ -134,21 +110,22 @@ Lightweight SOAP client (Jurko's fork).
 ---------------------------------------
 
   Based on the original 'suds' project by Jeff Ortel (jortel at redhat
-dot com) hosted at 'https://fedorahosted.org/suds'.
+dot com) hosted at 'http://fedorahosted.org/suds'.
 
-  'Suds' is a lightweight SOAP-based web service client for Python licensed
-under LGPL (see the LICENSE.txt file included in the distribution).
+  'Suds' is a lightweight SOAP-based web service client for Python
+licensed under LGPL (see the LICENSE.txt file included in the
+distribution).
 
-  This is hopefully just a temporary fork of the original suds Python library
-project created because the original project development seems to have stalled.
-Should be reintegrated back into the original project if it ever gets revived
-again.
+  This is hopefully just a temporary fork of the original suds Python
+library project created because the original project development seems
+to have stalled. Should be reintegrated back into the original project
+if it ever gets revived again.
 
 """
 
 package_name = "suds-jurko"
 version_tag = pkg_resources.safe_version(__version__)
-project_url = "https://bitbucket.org/jurko/suds"
+project_url = "http://bitbucket.org/jurko/suds"
 base_download_url = project_url + "/downloads"
 download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
 download_url = "%s/%s" % (base_download_url, download_distribution_name)

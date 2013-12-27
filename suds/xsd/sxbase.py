@@ -18,12 +18,12 @@
 The I{sxbase} module provides I{base} classes representing schema objects.
 """
 
-from logging import getLogger
 from suds import *
 from suds.xsd import *
 from suds.sax.element import Element
 from suds.sax import Namespace
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

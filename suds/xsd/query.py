@@ -24,7 +24,6 @@ from suds.xsd import qualify, isqref
 from suds.xsd.sxbuiltin import Factory
 
 from logging import getLogger
-
 log = getLogger(__name__)
 
 

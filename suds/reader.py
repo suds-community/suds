@@ -20,15 +20,11 @@ caching system.
 """
 
 
-from suds.sax.parser import Parser
-from suds.transport import Request
 from suds.cache import Cache, NoCache
-from suds.store import DocumentStore
 from suds.plugin import PluginContainer
-from logging import getLogger
-
-
-log = getLogger(__name__)
+from suds.sax.parser import Parser
+from suds.store import DocumentStore
+from suds.transport import Request
 
 
 class Reader:
