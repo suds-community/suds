@@ -18,8 +18,8 @@
 """
 Suds Python library request construction related unit tests.
 
-  Suds provides the user with an option to automatically 'hide' wrapper
-elements simple types and allow the user to specify such parameters without
+Suds provides the user with an option to automatically 'hide' wrapper elements
+around simple types and allow the user to specify such parameters without
 explicitly creating those wrappers. For example: function taking a parameter of
 type X, where X is a sequence containing only a single simple data type (e.g.
 string or integer) will be callable by directly passing it that internal simple
@@ -179,12 +179,8 @@ def test_element_references_to_different_namespaces():
 
 
 def test_extra_parameters():
-    """Extra input arguments should be rejected."""
-    def service_from_wsdl(wsdl):
-        client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
-        return client.service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
+    """Extra input parameters should be rejected."""
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -202,7 +198,7 @@ def test_extra_parameters():
     pytest.raises(TypeError, service.f, 3, aString="one", anInteger=3)
 
 
-def test_invalid_argument_type_handling():
+def test_invalid_input_parameter_type_handling():
     """
     Input parameters of invalid type get silently pushed into the constructed
     SOAP request as strings, even though the constructed SOAP request does not
@@ -271,10 +267,7 @@ def test_invalid_argument_type_handling():
 
 def test_missing_parameters():
     """Missing non-optional parameters should get passed as empty values."""
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -346,9 +339,6 @@ def test_missing_parameters():
 
 
 def test_named_parameter():
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
     class Tester:
         def __init__(self, service, expected_xml):
             self.service = service
@@ -358,7 +348,7 @@ def test_named_parameter():
             _check_request(self.service.f(*args, **kwargs), self.expected_xml)
 
     # Test different ways to make the same web service operation call.
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -385,7 +375,7 @@ def test_named_parameter():
 
     #   The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -413,10 +403,7 @@ def test_named_parameter():
 
 def test_optional_parameter_handling():
     """Missing optional parameters should not get passed at all."""
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -677,3 +664,8 @@ def _isInputWrapped(client, method_name):
     assert len(client.wsdl.bindings) == 1
     operation = client.wsdl.bindings.values()[0].operations[method_name]
     return operation.soap.input.body.wrapped
+
+
+def _service_from_wsdl(wsdl):
+    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    return client.service
