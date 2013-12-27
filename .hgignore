@@ -1,0 +1,14 @@
+syntax: regexp
+
+# Root folders - 'setup.py install' artifacts.
+^build/
+^dist/
+^[^/]+.egg-info/
+
+# Precompiled Python modules.
+/__pycache__$
+\.pyc$
+\.pyo$
+
+# Backup files.
+\.bak$

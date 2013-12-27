@@ -1,0 +1,938 @@
+PRIORETIZED:
+=================================================
+
+(21.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Add todo list.
+(+)     * Document how to access this forked project's development sources &
+(+)       released files.
+(+)         * Jurko's Mercurial repository hosted at BitBucket and accessible
+(+)           from 'https://bitbucket.org/jurko/suds'.
+(+)             * Already documented in README.
+(+)             * Add more details to HACKING.
+(+)         * Suds library Python 3 patches hosted in a Mercurial patch queue
+(+)           repository at BitBucket and accessible from
+(+)           'https://bitbucket.org/bernh/suds-python-3-patches'.
+(+)             * Already documented in HACKING.
+(+) * (Jurko) Minor stylistic changes & typo corrections.
+(+)     * Code.
+(+)         * 'tranparent' --> 'transparent'.
+(+)         * 'if  tns' --> 'if tns'.
+(+)         * 'docuemnt' --> 'document'.
+(+)         * '('restriction', 'any', 'list',)' --> '('restriction', 'any',
+(+)           'list')'.
+(+)             * And other unnecessary trailing tuple commas.
+(+)         * 'Qualfied' --> 'Qualified'.
+(+)         * 'Resolveds' --> 'Resolves'.
+(+)         * 'describe a port and it's list of methods' --> 'describe a port
+(+)           and its list of methods'.
+(+)         * 'dependancies' --> 'dependencies'.
+(+)         * 'imcoming' --> 'incoming'.
+(+)         * 'relavent' --> 'relevant'.
+(+)         * 'indicat' --> 'inidcat'.
+
+(22.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Rename top level project documentation files to use the .txt extension
+(+)       to make them friendlier to Windows users.
+(+)     * Research release procedure.
+(+)         * Open PyPI account.
+(+)         * How to prepare a source distribution package.
+(+)             * Change author information.
+(+)             * Include tests.
+(+)             * Include all the top-level documentation files.
+(+)                 * 'README'.
+(+)                 * 'LICENSE'.
+(+)                 * 'HACKING'.
+(+)                 * 'TODO'.
+(+)             * Note the original project author in the package description.
+(+)             * Include correct license information.
+(+)             * See what the difference between author and maintainer
+(+)               information is and where it can be seen.
+(+)         * Try using 'setuptools_hg' to simplify specifying the project
+(+)           sources.
+(+)             * Failed when used under Python 3.
+(+)         * How to upload the prepared distribution packages.
+(+)             * Should upload a source distribution only.
+
+(23.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Research release procedure.
+(+)         * How to upload the prepared distribution packages.
+(+)             * PyPI.
+
+(24.12.2011.)
+
+(+) * (Jurko) Prepare for the initial forked project release.
+(+)     * Research release procedure.
+(+)         * How to upload the prepared distribution packages.
+(+)             * BitBucket.
+(+)         * Document the project's official download URL.
+(+)     * Document how to access this forked project's development sources &
+(+)       released files.
+(+)         * Released project packages accessible from PyPI & BitBucket.
+(+)         * Installing the project using distribute or pip.
+(+)     * Document release procedure.
+(+)         * Version identification.
+(+)             * Remove the '(development)' suffix for official release builds.
+(+)             * Format '<base-suds-version> jurko #', e.g. '0.4.1 jurko 1'.
+(+)         * Tag in Hg.
+(+)             * Name the tag like 'release-<version-info>', e.g.
+(+)               'release-0.4.1 jurko 1'.
+(+)         * Prepare official releases based only on tagged commits.
+(+)             * Prepare source distribution package, register the new release
+(+)               at PyPI and upload the prepared source package.
+(+)                 * Run 'setup.py sdist register upload'.
+(+)             * Upload the prepared source package to the project site.
+(+)             * Archive the prepared source release locally if needed.
+(+)         * Next development version identification.
+(+)             * Bump up the forked project version counter.
+(+)             * Add back the '(development)' suffix.
+(+)     * Commit all local changes.
+(+) * (Jurko) Constructing a SOAP request containing data stored in a sequence
+(+)   inside a choice.
+(+)     * Test scenario (syntax not precise).
+(+)         <choice>
+(+)             <element "a" - string />
+(+)             <element "s">
+(+)                 <sequence>
+(+)                     <element "s1" - string />
+(+)                     <element "s2" - string />
+(+)                 </sequence>
+(+)             </element>
+(+)         </choice>
+(+)     * When 's' is None and 'a' is not - 'a' should be used.
+(+)     * When 'a' is None and 's' is not - 's' should be used.
+(+)     * When 's' is used, all of its subelements should be used independent of
+(+)       whether they are None or not.
+(+)     * Add related test.
+(+) * (Jurko) Prepare the '0.4.1 jurko 1' release.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+(+) * (Jurko) Fix getting a suds.client object's string representation when the
+(+)   client is initialized with the following WSDL. Calling 'str(client)'
+(+)   reports 'IndexError: list index out of range'.
+(+)     * WSDL.
+(+)         <?xml version='1.0' encoding='UTF-8'?>
+(+)         <wsdl:definitions targetNamespace="my-namespace"
+(+)         xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+(+)         xmlns:ns="my-namespace"
+(+)         xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+(+)           <wsdl:types>
+(+)             <xsd:schema targetNamespace="my-namespace"
+(+)             elementFormDefault="qualified"
+(+)             attributeFormDefault="unqualified"
+(+)             xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+(+)               <xsd:element name="Elemento">
+(+)                 <xsd:complexType>
+(+)                   <xsd:sequence>
+(+)                     <xsd:element name="x1" type="xsd:string" />
+(+)                     <xsd:element name="x2">
+(+)                       <xsd:complexType>
+(+)                         <xsd:choice>
+(+)                           <xsd:element name="u1" type="xsd:string" />
+(+)                           <xsd:element name="u2" type="xsd:string" />
+(+)                           <xsd:element name="u3" type="xsd:string" />
+(+)                         </xsd:choice>
+(+)                       </xsd:complexType>
+(+)                     </xsd:element>
+(+)                     <xsd:element name="x3" type="xsd:string" />
+(+)                   </xsd:sequence>
+(+)                 </xsd:complexType>
+(+)               </xsd:element>
+(+)             </xsd:schema>
+(+)           </wsdl:types>
+(+)           <wsdl:message name="fRequestMessage">
+(+)             <wsdl:part name="parameters" element="ns:Elemento" />
+(+)           </wsdl:message>
+(+)           <wsdl:portType name="dummyPortType">
+(+)             <wsdl:operation name="f">
+(+)               <wsdl:input message="ns:fRequestMessage" />
+(+)             </wsdl:operation>
+(+)           </wsdl:portType>
+(+)           <wsdl:binding name="dummy" type="ns:dummyPortType">
+(+)             <soap:binding style="document"
+(+)             transport="http://schemas.xmlsoap.org/soap/http" />
+(+)             <wsdl:operation name="f">
+(+)               <soap:operation soapAction="f" style="document" />
+(+)               <wsdl:input><soap:body use="literal" /></wsdl:input>
+(+)               <wsdl:output><soap:body use="literal" /></wsdl:output>
+(+)             </wsdl:operation>
+(+)           </wsdl:binding>
+(+)           <wsdl:service name="dummy">
+(+)             <wsdl:port name="dummy" binding="ns:dummy">
+(+)               <soap:address location="https://localhost/dummy" />
+(+)             </wsdl:port>
+(+)           </wsdl:service>
+(+)         </wsdl:definitions>
+(+)     * Research.
+(+)         * Caused by undocumented suds.client.Client behaviour - it was
+(+)           expecting a specifically formatted suds.__build__ string which was
+(+)           not the case with the forked project release.
+(+)     * Add a test.
+(+)     * Fix.
+(+)     * Plan preparing a patched release.
+(+) * (Jurko) Prepare the '0.4.1 jurko 2' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+
+(25.12.2011.)
+
+(+) * (Jurko) Printing out a list of function parameters should not print an
+(+)   additional trailing comma after the last parameter.
+(+)     * Research.
+(+)         * suds.servicedefinition.ServiceDescription.description() code needs
+(+)           to be changed.
+(+)     * Prepare test.
+(+)     * Update code.
+(+) * (Jurko) 'suds.xsd.xsbasic.Enumeration' objects should list their value in
+(+)   their string representation.
+(+)     * Research.
+(+)     * Prepare test.
+(+)     * Update code.
+(+) * (Jurko) 'suds.sudsobject.Metadata' __unicode__()/__str__()/__repr__()
+(+)   functions should not raise an AttributeError.
+(+)     * Research.
+(+)         * There should be no need to access a 'suds.sudsobject.Metadata'
+(+)           object's __metadata__ member as done for 'suds.sudsobjects.Facade'
+(+)           class instances.
+(+)     * Prepare test.
+(+)     * Update code.
+
+(26.12.2011.)
+
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Research.
+(+)         * Base class resolve() behaviour.
+(+)         * Other resolve() functions in suds.
+(+)         * 'resolve()' related caching.
+(+)     * Clean up the SchemaObject resolve() implementations.
+(+)         * Caching not needed in TypedContent base classes.
+(+)     * Document.
+(+)         * Returns the same XSD node when the node does not have an
+(+)           explicitly specified external type.
+(+)         * When called for an XSD node with an explicitly specified external
+(+)           type returns that type's XSD node.
+(+) * (Jurko) Clean up suds.xsd.sxbasic.TypedContent.resolve().
+(+)     * Research WSDL structure related to the resolving type references.
+(+)         * 'type'.
+(+)         * 'ref'.
+(+)     * Prepare additional resolve() tests.
+(+)         * 'ref'.
+(+)             * Valid.
+(+)             * Recursive.
+(+)             * Invalid.
+(+)         * References to nodes referencing other nodes.
+(+)             * There seems to be no way to do this in WSDL so seems no
+(+)               reason to keep the complicated and potentially buggy
+(+)               recursive resolve() implementation.
+(+)     * Refactor the resolve() implementation to remove recursion.
+(+)         * Todo items obsoleted by this refactoring.
+(+)             * Prevent possible endless resolve() loops due to resolve()
+(+)               directly or indirectly returning the same TypedContent
+(+)               instance.
+(+)     * Refactor to cache the final resolved type instead of a possibly only
+(+)       partially resolved one when resolving without allowing resolving to
+(+)       builtin types.
+(+)         * Research.
+(+)         * Prepare test.
+(+)         * Update code.
+(+) * (Jurko) Check and remove detected potential unused imports if they are no
+(+)   longer needed.
+(+)     * splitPrefix.
+(+)     * DefinitionsReader.
+(+) * (Jurko) Prepare the '0.4.1 jurko 3' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+(+) * (Jurko) Look into suds.xsd.sxbase.SchemaObject.unbounded(). It seems to
+(+)   return True even when the object is bounded with a max value greater than
+(+)   1.
+(+)     * Research.
+(+)     * Add tests.
+(+)         * 'min'.
+(+)         * 'max'.
+(+)         * 'optional'.
+(+)         * 'required'.
+(+)         * 'unbounded'.
+(+)     * Update code - rename unbounded to multi_occurrence.
+
+(27.12.2011.)
+
+(+) * (Jurko) Get calling a web service operation taking no parameters to work
+(+)   correctly.
+(+)     * Research.
+(+)         * Seems to work fine. The original problem triggering this task
+(+)           seems to have been caused by an invalid WSDL.
+(+)     * Add a task to add more detailed test cases for this.
+
+(17.04.2012.)
+
+(+) * (Jurko) Merge upstream changes from the original suds development
+(+)   repository.
+(+) * (Jurko) Update embedded author values so they do not include non-ASCII
+(+)   characters causing problems with the 'distribute' based setup procedure
+(+)   which erroneously assumes they have been prepared using the user's local
+(+)   code-page.
+(+) * (Jurko) Process received pull requests on BitBucket.
+(+) * (Jurko) Prepare the '0.4.1 jurko 4' release.
+(+)     * Update release notes.
+(+)     * Follow the documented release procedure.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+
+(28.02.2013.)
+
+(+) * (Jurko) Merge changes prepared by Juraj Ivanèiæ.
+(+)     * Update the original Hg repository containing Python 3 related fixes.
+(+) * (Jurko) Process received pull requests.
+
+(01.03.2013.)
+
+(+) * (Jurko) Sync with external related repositories.
+(+)     * 'https://bitbucket.org/palday/suds'.
+
+(27.03.2013.)
+
+(+) * (Jurko) Fix buggy Python 3 support patch related to reading the cache
+(+)   version.
+(+)     * The cache version file should be read as a text and not as a binary
+(+)       file.
+(+) * (Jurko) Fix test_enumeration_type_string_should_contain_its_value test
+(+)   under Python 2.
+(+) * (Jurko) Test & fix Python 2.4 compatibility.
+(+) * (Jurko) Fix input/output binding usage.
+(+)     * Incorrect binding was being used in several places.
+(+)     * Some of the uses related to processing the SOAP Fault error reporting
+(+)       element seem to be 'fake', needed only because of a a bit messy
+(+)       design. Planned to be fixed soon.
+
+(28.03.2013.)
+
+(+) * (Jurko) Add web service reply processing related unit tests.
+(+) * (Jurko) Remove undocumented, untested & unused binding.replyfilter
+(+)   functionality.
+(+) * (Jurko) Remove seeming unused SoapClient last_sent() and last_received()
+(+)   functionality.
+(+) * (Jurko) Add a test for unicode Fault data processing.
+(+) * (Jurko) Merge SoapClient failed() & succeeded() functions into the same
+(+)   process_reply() function.
+(+) * (Jurko) Make binding classes no longer have anything to do with method
+(+)   independent Fault element processing.
+(+) * (Jurko) Make reply XML processing check the namespace used for Envelope &
+(+)   Body elements.
+(+) * (Jurko) Make SOAP Fault processing check the namespaces used for all
+(+)   relevant tags.
+(+) * (Jurko) Make HTTP status code 200 XML replies containing a Fault element
+(+)   consistently reported as SOAP faults (plus issue a warning about the
+(+)   non-standard HTTP status code) both when reporting such faults using
+(+)   exceptions or by returning a (status, reason) tuple.
+(+)     * Currently this is done only when reporting them using exceptions.
+(+) * (Jurko) Make plugins received() & parsed() calls now process both success
+(+)   & error replies.
+(+) * (Jurko) SOAP fault reports with invalid Fault structure should not cause
+(+)   suds code to break with an 'invalid attribute' exception.
+(+) * (Jurko) SOAP fault reports with no <detail> tag (optional) should not
+(+)   cause suds code to break with an 'invalid attribute' exception when run
+(+)   with the suds 'faults' option set to false.
+(+) * (Jurko) Clean up message reply processing return codes with suds 'faults'
+(+)   option set to both true & false.
+(+) * (Jurko) Reorganize SimClient injection keywords.
+(+)     * 'msg' - request message.
+(+)     * 'reply' - reply message ('msg' must not be set).
+(+)     * 'status' - HTTP status code acompanying the 'reply' message.
+(+)     * 'description' - description string acompanying the 'reply' message.
+(+) * (Jurko) Check failing tests.
+(+)     * All tests now pass except for ones related to SOAP Fault unicode
+(+)       faultstring processing.
+
+(29.03.2013.)
+
+(+) * (Jurko) Sync with external related repositories.
+(+)     * 'https://bitbucket.org/blarghmatey/suds-blarghmatey'.
+(+) * (Jurko) Additional SOAP web service reply tests.
+(+) * (Jurko) Fix detected unicode problems.
+(+)     * Remove invalid WebFault fix merged from an external source.
+(+)     * All suds exception classes now contain unicode description messages.
+(+)     * Undo a hasty unicode related WebFault fix merged from an external
+(+)       source in revision 16b084e8eea6511981d171e63cada98b58720c38.
+(+)     * Rename smart_str class to byte_str and make it accept only string
+(+)       parameters.
+(+)     * Clean Python2/3 compatibility DocumentStore fix.
+(+)         * Now contains raw data instead of unicode strings.
+(+)         * This also fixes a problem where unicode data read from the
+(+)           DocumentStore would fail to be encoded using the default encoding,
+(+)           which would then get reported as 'document not found'.
+(+)     * SAX parser now accepts only byte string content instead of also
+(+)       accepting unicode strings containing latin1 characters only.
+(+)     * Make tests now specify their fixed wsdl & reply content as byte
+(+)       strings only.
+(+)     * Make all tests pass.
+(+)         * Python 2.4.
+(+)         * Python 2.7.3.
+(+)         * Python 3.2.3.
+(+) * (Jurko) Remove Python 2/3 unicode encoding compatibility support assuming
+(+)   that its encoded unicode representations contain only latin1 characters.
+(+)     * SoapClient 'location' cleanup.
+(+)         * Should be stored as a unicode object instead of being converted
+(+)           from its byte representation assuming it was encoded using a
+(+)           specific encoding, e.g. if read from a WSDL schema, it should be
+(+)           decoded the same as the rest of the WSDL schema.
+(+)     * Remove str2bytes() & bytes2str().
+(+) * (Jurko) Remove the str_to_utf8_in_py2() Python 2/3 unicode encoding
+(+)   compatibility support function as it no longer seems to be needed.
+(+) * (Jurko) Add tests for web service operation input & output element types.
+
+(30.03.2013.)
+
+(+) * (Jurko) Improve suds tests.
+
+(31.03.2013.)
+
+(+) * (Jurko) Add tests for wrapped suds operation input & output data.
+
+(01.04.2013.)
+
+(+) * (Jurko) Add tests for wrapped suds operation output data.
+(+) * (Jurko) Merge patches sent in by Juraj Ivanèiæ from PKE sistemi.
+(+)     * Add tests for disabled wrapped suds operation input & output data
+(+)       support.
+(+)     * Add code for disabling suds library wrapped parameter support.
+
+(02.04.2013.)
+
+(+) * (Jurko) Restriction support cleanup based on patches sent in by Juraj
+(+)   Ivanèiæ from PKE sistemi.
+(+)     * Research.
+(+)         * Not enough time to research this thoroughly and come up with a
+(+)           complete and well tested solution.
+(+)     * Prepare and commit related tests.
+(+)         * Mark the tests as 'expected to fail' & comment the reasons.
+(+)     * Commit as a separate unfinished private branch.
+(+) * (Jurko) Prepare the '0.4.1 jurko 5' release.
+(+)     * Update release notes.
+
+(08.05.2013.)
+
+(+) * (Jurko) Make suds construct SOAP requests with correct element namespaces
+(+)   when their XSD schema definition nodes reference other nodes with a
+(+)   different namespace.
+(+)     * Research.
+(+)     * Add test.
+(+)     * Implement.
+(+)     * Report back to Jens Arm from KabelDeutschland who reported the issue.
+(+) * (Jurko) Support specifying a custom DocumentStore instance for a specific
+(+)   Client.
+(+)     * Support.
+(+)     * Update test code adding documents to the global DocumentStore instance
+(+)       to use a local one instead.
+(+)     * Cleanup.
+(+)         * DocumentStore.open() can return the bytes object directly instead
+(+)           of having to wrap it inside a BytesIO instance.
+(+)         * Remove unnecessary Cache functions.
+(+)             * getf() should be left in the FileCache class only.
+(+)             * putf() should be removed completely.
+(+)     * Add tests.
+(+)         * Separate DocumentStore instances must not share content.
+(+)         * Not specifying a DocumentStore instance uses the default global
+(+)           one.
+(+)         * Default content.
+(+)         * Updating content.
+(+)         * Accessing existing content.
+(+)         * Accessing missing content.
+
+(17.06.2013.)
+
+(+) * (Jurko) Upgrade the setup procedure to use the latest setuptools 0.7.2
+(+)   release instead of the now deprecated 'distribute' Python package.
+(+)     * Research.
+(+)     * Implement.
+
+(18.06.2013.)
+
+(+) * (Jurko) Upgrade the setup procedure to use the latest setuptools 0.7.2
+(+)   release instead of the now deprecated 'distribute' Python package.
+(+)     * Add automated setuptools installation (downloaded on-demand from
+(+)       PyPI).
+(+)     * Fix issues with installing on Python 2.4.
+(+)     * Add project installation troubleshooting notes to the main readme.
+(+) * (Jurko) See how to allow using the setup script's 'test' option to run the
+(+)   project's pytest based test suite.
+
+(19.06.2013.)
+
+(+) * (Jurko) Resolve test failures caused by suds generating slightly different
+(+)   SOAP requests when using Python 3.3.
+(+)     * Tests should not depend on the order in which XML attributes are
+(+)       specified for a single XML element where this is not necessary.
+
+(11.11.2013.)
+
+(+) * (Jurko) Prepare the '0.4.1 jurko 5' release.
+(+)     * Follow the documented release procedure.
+(+)         * Update release notes.
+(+)         * Update version information.
+(+)         * Tag in Hg.
+(+)         * Upload the source package.
+(+)             * Project site.
+(+)             * PyPI.
+
+(18.11.2013.)
+
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Research.
+(+)         * Suds assumes that all timezones have a full-hour offset from the
+(+)           UTC timeone and does not work correctly with those that do not.
+(+)             * This seems to be a suds specific problem and not a more
+(+)               general Python issue as some information on the net implies.
+(+)         * FixedOffsetTimezone.
+(+)             * datetime.tzinfo subclass.
+(+)             * Used only in test code.
+(+)             * Represents fixed offset timezones with no daylight saving
+(+)               time.
+(+)     * Start morphing the current suds & test code base towards the suggested
+(+)       patched code.
+
+(19.11.2013.)
+
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Research.
+(+)     * Prepare date/time string parsing tests.
+
+(20.11.2013.)
+
+(+) * (Jurko) Start documenting the upcoming suds 0.4.1 jurko 6 release.
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Research.
+(+)     * Implement parsing.
+(+)     * DateTime no longer derived from Date & Time.
+(+)     * Date constructed from datetime.datetime should hold a datetime.date.
+(+)     * Research.
+(+)         * See if sax.date.Date("1900-01-01+02:00") should hold a timezone
+(+)           aware date object.
+(+)             * Related test: TestDate.testStringToValue().
+(+)         * Timezone data.
+(+)             * See when we need to specify timezone information.
+(+)                 * In tests when we create DateTime/Time objects.
+(+)                 * Default timezone when parsing web service responses.
+(+)                     * YAGNI - for now left to user code reading specific
+(+)                       DateTime/Time objects.
+(+)                 * Default timezone when constructing web service requests.
+(+)                     * YAGNI - for now left to user code creating specific
+(+)                       DateTime/Time objects.
+(+)     * Implement.
+(+)         * Contained datetime.DateTime/Time objects should hold their
+(+)           timezone information.
+(+)     * Research.
+(+)         * Test TestDate.testStringToValue_failure() fails on Python 2 but
+(+)           passed on Python 3.
+(+)             * Fixed by the latest implementation changes.
+
+(21.11.2013.)
+
+(+) * (Jurko) Fix suds time-zone handling according to a pull request received
+(+)   on bitbucket from MDuggan1.
+(+)     * Check for feedback from users requesting this patch.
+(+)     * Add tests.
+(+)         * FixedOffsetTimezone class.
+(+)     * Fix FixedOffsetTimezone.tzname() output string formatting bug with
+(+)       negative timezone offsets.
+(+)     * Add tests.
+(+)         * UtcTimezone class.
+(+) * (Jurko) Remove support for timezone specifiers including seconds as such
+(+)   are not supported by either Python or the XSD data types specification.
+(+)     * Add/update tests.
+(+)         * Input like "+10:10:10" should be rejected.
+(+)         * Timezone offset timedelta objects containing more detailed than
+(+)           minute information.
+(+)     * Remove support.
+(+) * (Jurko) Add tests making sure timezone indicator strings without a colon
+(+)   between hours and minutes are not accepted.
+(+)     * This leads to border cases like "+121" where you do not know whether
+(+)       this represents "+01:21" or "+12:01".
+
+(22.11.2013.)
+
+(+) * (Jurko) Remove date/time related test code duplication.
+(+)     * Date, DateTime & Time classes.
+(+)         * Clean up test function names.
+(+)         * Test construction from unexpected objects.
+(+)         * Test construction from datetime.date/datetime/time objects.
+(+)         * str() tests.
+(+)     * XDate & Date class.
+(+)     * XDateTime & DateTime class.
+(+)     * XTime & Time class.
+(+)     * Timezone handling checks in XDateTime & XTime classes.
+
+(23.11.2013.)
+
+(+) * (Jurko) Make converting datetime/time to string output subsecond
+(+)   information without trailing zeroes.
+(+)     * Test.
+(+)     * Implement.
+(+)     * Discard as the implementation complexity seems way too great and the
+(+)       gain does not seem to reciprocate the cost.
+(+) * (Jurko) Update the project's versioning scheme to no longer have pip
+(+)   detect suds-jurko releases as 'prerelease' only due to our version tag
+(+)   formatting.
+(+)     * Accept that the original suds project has died and continue with the
+(+)       natural version number progression.
+(+) * (Jurko) Plan a new release.
+(+) * (Jurko) Update used setuptools version.
+(+) * (Jurko) Remove unused project files inherited from the original suds
+(+)   project.
+
+(25.11.2013.)
+
+(+) * (Jurko) Test the project with different Python installations.
+(+)     * Python 2.4.3/x86, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * 'pytest'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * Run tests.
+(+)     * Python 2.4.4/x86, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * 'pytest'.
+(+)             * Describe encountered problems in 'HACKING.txt'.
+(+)         * Run tests.
+(+)     * Python 2.7.6/x64, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+)     * Python 3.2.5/x64, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+)     * Python 3.3.3/x86, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+)     * Python 3.3.3/x64, on Windows 7/SP1/x64.
+(+)         * Install.
+(+)         * 'setuptools'.
+(+)         * 'pip'.
+(+)         * 'pytest'.
+(+)         * Run tests.
+(+) * (Jurko) Document the test environment setup in HACKING.txt.
+(+) * (Jurko) Prepare a new suds-jurko 0.5 release.
+
+(28.11.2013.)
+
+(+) * (Jurko) Look into a reported problem with how unicode data gets encoded
+(+)   inside a suds SOAP request with Python 2. Reported by Alexey Sveshnikov
+(+)   and mduggan1.
+(+)     * Get a reproducible use case from Alexey Sveshnikov.
+(+)     * Research.
+(+)         * Data in HTTP requests needs to be encoded as defined by the
+(+)           Content-Type header given in that request (ISO-8859-1 being the
+(+)           default).
+(+)         * Suds set the "Content-Type=text/xml; charset=utf-8" HTTP request
+(+)           header for all of its SOAP requests.
+(+)         * Python's http module (used internally by the urllib module) add
+(+)           the given message data to its existing data. Suds gives its
+(+)           message data to urllib as an utf-8 encoded bytes object. If
+(+)           existing message data is unicode, it will attempt to forcefully
+(+)           convert the given message data to unicode assuming all it contains
+(+)           is ASCII characters.
+(+)         * Suds message data is already a utf-8 encoded bytes object.
+(+)         * With Python-3 httplib's previous message data is a bytes and not a
+(+)           string object.
+(+)         * The reason why httplib's message content is converted to unicode
+(+)           is that with Python 2 the initial header is a unicode object
+(+)           u'POST /service HTTP/1.1' while with Python 3 it is a bytes object
+(+)           b'POST /service HTTP/1.1'.
+(+)             * Python 2.
+(+)                 * Affects Python 2.7.
+(+)                 * Does not affect Python 2.4.
+(+)             * Python 3.
+(+)                 * Its httplib Request object automatically converts the
+(+)                   passed URL to a bytes object (assumes it contains only
+(+)                   ASCII characters) which then prevents all the other
+(+)                   request data from being forcibly converted to unicode.
+
+(29.11.2013.)
+
+(+) * (Jurko) Look into a reported problem with how unicode data gets encoded
+(+)   inside a suds SOAP request with Python 2. Reported by Alexey Sveshnikov
+(+)   and mduggan1.
+(+)     * Reduce the reproducible use case.
+(+)         * Should not require an external web service.
+(+)         * Integrate into regular suds-jurko tests.
+(+)     * Make the reproducible test case not attempt to connect to the network
+(+)       if the test passes.
+(+)     * Fix the issue.
+(+)     * Confirm with Alexey Sveshnikov that it is ok with him to make the
+(+)       reproducible use case public.
+(+)     * Close related project pull requests on 'bitbucket.org'.
+(+) * (Jurko) Add a test for handling actual non-ASCII unicode service location
+(+)   data.
+
+(30.11.2013.)
+
+(+) * (Jurko) See if the suds HttpTransport.open() method ever gets called.
+(+)     * Yup, transport open() methods get called from DocumentReader, e.g.
+(+)       when downloading a WSDL schema from the net.
+(+)     * It seems like Transport's open() & send() methods might be megreable,
+(+)       but that would first require further research. For now - YAGNI.
+(+) * (Jurko) Process pull requests received on 'bitbucket.org'.
+(+)     * Fix setup.py current working folder path comparison so it works with
+(+)       links in the path. Contributed by ryanpetrello.
+
+(23.12.2013.)
+
+(+) * (Jurko) Prepare a basic development script for running the full suds test
+(+)   suite using multiple Python interpreter versions.
+
+(26.12.2013.)
+
+(+) * (Jurko) Process patches sent in by Bouke Haarsma on BitBucket.
+(+)     * Unicode logging issue.
+(+)         * Research.
+(+)         * Prepare tests.
+(+)         * Merge.
+(+)             * Thorough code review.
+(+)             * Implement a cleaner fix for both Reply & Request classes.
+(+)         * Update release notes.
+(+) * (Jurko) Fix possible typo in the suds.transport.Request string/unicode
+(+)   representation where there seems to be a missing space after a colon just
+(+)   before the URL information.
+(+) * (Jurko) Remove unnecessary logger objects.
+(+) * (Jurko) Process the project issue #2 reported on BitBucket by Arthur
+(+)   Clune, related to not being able to set the option cache location if the
+(+)   default cache location is not a writeable folder.
+(+)     * Research.
+(+)     * Prepare tests.
+(+)         * Default cache.
+(+)         * Default ObjectCache instance should be created only if no other
+(+)           cache has been explicitly specified during suds.client.Client()
+(+)           construction.
+(+)     * Fix.
+(+)     * Update release notes.
+(+)     * Report back & close the project issue on BitBucket.
+
+(27.12.2013.)
+
+    * (Jurko) Process patch sent in by Bouke Haarsma on BitBucket to 'make sure
+      all web service operation parameters are consumed'.
+        * Research.
+        * Prepare tests.
+        * Merge.
+        * Thorough code review.
+        * Update release notes.
+
+    * (Jurko) Process decimal type support patch sent in by pendletongp on
+      BitBucket.
+        * Research.
+        * Prepare tests.
+        * Merge.
+        * Thorough code review.
+        * Update release notes.
+
+    * (Jurko) Clean up the project's basic development script for running the
+      full suds test suite using multiple Python interpreter versions.
+        * Reimplement in Python.
+        * Name better.
+
+    * (Jurko) Find a cleaner way to install suds tests. Currently they get
+      installed into a top-level 'tests' folder and so may cause conflicts with
+      some other 'tests' package that might exist in the target Python
+      environment.
+        * Ideas to consider.
+            * Placing the 'tests' folder under the 'suds' folder.
+            * Placing the top level suds folder outside the egg folder (similar
+              to how this is done for the pytest package), not having the egg
+              folder added to the Python path and leaving the tests folder
+              inside the egg folder.
+
+NON PRIORETIZED:
+=================================================
+
+    * Optionally make suds check that the input parameters passed to its web
+      service proxy operations actually match their respective WSDL definitions.
+        * Current suds behaviour.
+            * Extra parameters are ignored.
+            * Parameters of invalid type are simply added into the generated
+              SOAP request as strings and left up to the web service
+              implementation to deal with and report as an error if the
+              constructed SOAP request turns out to be invalid.
+        * Having a local client-side check could make catching client side
+          programming bugs easier.
+        * Ideas.
+            * Make sure given values fit their respective type value domains,
+              e.g. integers, strings, regular expressions, restrictions, complex
+              types where a builtin was expected, complex type of an unexpected
+              structure, etc.
+            * Extra parameters are reported as errors.
+            * Missing non-optional parameters are reported as errors.
+            * Input message part has both element & type specified.
+
+    * See how invalid schemas containing a ref-cycle are handled.
+        * They should be reported as invalid either when dereferencing them
+          (e.g. to determine an element's target namespace) or when building the
+          internal schema object tree and should not cause us to go into endless
+          recursion.
+
+    * See how multi-occurrence input parameter elements are supposed to be
+      supported.
+        * With automated parameter unwrapping support.
+        * Without automated parameter unwrapping support.
+
+    * Clean up & correct the choice support implementation.
+        * Choice parameters seem to be supported only for document/literal style
+          input parameters only.
+            * Add tests for this.
+            * Fix.
+        * See the currently disabled
+          'xxxtest_choice_parameter_implementation_inconsistencies' unit test
+          demonstrating a problem with the current implementation.
+
+    * SoapClient 'location' cleanup.
+        * URL quoting, especially if specified externally by the caller instead
+          of having been read from a valid WSDL schema.
+
+    * See how input parameter element for a document/literal web service
+      operation style gets handled when that element has 2 occurrences.
+        * See how this affects suds library's automated input data unwrapping.
+        * See how this sort of data is supposed to be entered anyway.
+
+    * FileCache class fixes.
+        * Remove incorrectly created cache files, e.g. if it gets created but
+          then writing to it fails.
+        * Make sure reading a cache file does not crash the whole Python
+          interpreter process.
+            * Encountered when trying to read an empty cache file using a debug
+              Python version 3.2.3 on Windows 7 - triggered an internal Python
+              assertion failure.
+
+    * Look into the 'suds.null' class.
+        * Research.
+            * See sources (grep for 'null'), old release notes (README.txt) and
+              commit messages.
+            * What it is for.
+            * Whether it can be replaced with None.
+            * If it serves some purpose see if it should be used for identifying
+              missing 'choice' structure members as well.
+
+    * Make it simpler to run Py3 tests.
+        * Current status.
+            * May be run without additional pytest options by running 'setup.py
+              test' from the root project folder.
+                * This method will automatically download & install pytest from
+                  PyPI if needed, but will leave them installed in the project's
+                  root folder.
+            * May be run from the root project folder by first building the
+              project to a temporary location: 'setup.py build & pytest build'.
+                * This method allows specifying additional pytest command-line
+                  arguments.
+        * Do some more thinking on this and, when done, update related HACKING
+          notes.
+
+    * Generate suds Python library documentation (epydoc).
+        * Research.
+            * HTML.
+            * PDF.
+        * Decide how to generate & distribute this documentation.
+        * Update project HACKING notes to note the external software required
+          for generating the documentation.
+        * Update release procedure to include releasing the documentation.
+
+    * Research.
+        * Test how optional elements under a choice work.
+            * There are some comments & an additional patch related to this at
+              'https://fedorahosted.org/suds/ticket/342'.
+        * Default element values.
+            * What they actually mean.
+                * From from 'http://www.w3.org/TR/xmlschema-0'.
+                    * If the element does not appear it is not provided; if it
+                      does appear and it is empty, its value is the specified
+                      default value; otherwise its value is that given.
+            * How elements with default values inside a choice structure should
+              be handled.
+        * See what the suds.sudsobjects.Facade class is for.
+        * How to implement test cases requiring a test web service.
+        * See how to connect to a web service via a Proxy server requiring NTLM
+          authentication.
+            * There are some projects seen on the net implementing a NTLM
+              authentication handler for urllib.
+            * Testing this will require implementing a proxy server requiring
+              NTLM authentication and a web service or at least a web service
+              requiring NTLM authentication.
+        * Using pylint.
+
+    * Implement an urllib connection handler allowing connecting using HTTPS
+      with client authentication.
+        * Prepare a test (will require a test web service).
+        * Implement.
+
+    * Prepare additional test cases.
+        * Loading a wsdl from a file as in suds.client.Client(
+          "file://localhost/Folder/aaa.wsdl").
+            * Path not containing spaces.
+            * Path containing spaces.
+        * Invalid element reference.
+        * Handing schema imports.
+            * With the same target namespace.
+            * With a different target namespace.
+        * Prepared SOAP operation invocation requests.
+            * With choice parameters.
+        * Calling a web service operation with no parameters.
+            * RPC binding style.
+            * Document binding style.
+
+    * Process ideas collected from external projects using suds.
+        * Alternative choice implementation that would not automatically expand
+          all choice function parameters but instead take some more generic
+          'choice' object parameter.
+            * This object would then know which of its data members is
+              'currently specified'.
+        * See whether the Marshaller class should know about choice elements and
+          not add XML nodes for elements with the value 'None' if they are
+          contained directly inside a choice.
+            * For some more background information on this see Marshaller
+              related release notes & commit messages inherited from the
+              original 'suds' development project.
+        * See if the class 'suds.xsd.sxbasic.Complex' function sequence() should
+          return True if its only child is a sequence node.
+        * Typo corrections for the original project web site.
+            * 'docuemnt' --> 'document'.
+            * 'becuase' --> 'because'.
+
+    * See whether standard and/or suds supports specifying message part
+      parameter element directly from an external schema.
+        * For example, 'integer' or 'string' elements defined in the
+          'http://schemas.xmlsoap.org/soap/encoding/' namespace (stored
+          internally by suds in the store.py module).
