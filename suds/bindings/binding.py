@@ -33,9 +33,7 @@ from suds.options import Options
 from suds.plugin import PluginContainer
 
 from copy import deepcopy
-from logging import getLogger
 
-log = getLogger(__name__)
 
 envns = ('SOAP-ENV', 'http://schemas.xmlsoap.org/soap/envelope/')
 

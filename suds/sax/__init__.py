@@ -17,7 +17,7 @@
 """
 The sax module contains a collection of classes that provide a (D)ocument
 (O)bject (M)odel representation of an XML document. The goal is to provide an
-easy, intuative interface for managing XML documents. Although, the term, DOM,
+easy, intuitive interface for managing XML documents. Although, the term, DOM,
 is used above, this model is B{far} better.
 
 XML namespaces in suds are represented using a (2) element tuple containing the

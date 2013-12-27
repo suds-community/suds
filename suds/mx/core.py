@@ -18,7 +18,6 @@
 Provides I{marshaller} core classes.
 """
 
-from logging import getLogger
 from suds import *
 from suds.mx import *
 from suds.mx.appender import ContentAppender
@@ -26,7 +25,7 @@ from suds.sax.element import Element
 from suds.sax.document import Document
 from suds.sudsobject import Property
 
-
+from logging import getLogger
 log = getLogger(__name__)
 
 

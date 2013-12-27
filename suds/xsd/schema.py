@@ -23,7 +23,6 @@ transparent referenced type resolution and targeted denormalization.
 """
 
 
-import suds.metrics
 from suds import *
 from suds.xsd import *
 from suds.xsd.sxbuiltin import *
@@ -33,8 +32,8 @@ from suds.xsd.sxbase import SchemaObject
 from suds.xsd.deplist import DepList
 from suds.sax.element import Element
 from suds.sax import splitPrefix, Namespace
-from logging import getLogger
 
+from logging import getLogger
 log = getLogger(__name__)
 
 

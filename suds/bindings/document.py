@@ -22,10 +22,6 @@ from suds import *
 from suds.bindings.binding import Binding
 from suds.sax.element import Element
 
-from logging import getLogger
-
-log = getLogger(__name__)
-
 
 class Document(Binding):
     """
@@ -40,16 +36,16 @@ class Document(Binding):
     a full I{document} view.
 
     More detailed description:
-    
+
     An interface is considered I{wrapped} if:
       - There is exactly one message part in that interface.
       - The message part resolves to an element of a non-builtin type.
     Otherwise it is considered I{bare}.
-    
+
     I{Bare} interface is Interpreted directly as specified in the WSDL schema,
     with each message part represented by a single parameter in the suds
     library web service operation proxy interface (input or output).
-    
+
     I{Wrapped} interface is interpreted without the external wrapping document
     structure, with each of its contained elements passed through suds
     library's web service operation proxy interface (input or output)
@@ -74,12 +70,12 @@ class Document(Binding):
 
             # Skip non-existing by-choice arguments.
             # Implementation notes:
-            #   * This functionality might be better placed inside the mkparam()
-            #     function but to do that we would first need to understand more
-            #     thoroughly how different Binding subclasses in suds work and
-            #     how they would be affected by this change.
-            #   * If caller actually wishes to pass an empty choice parameter he
-            #     can specify its value explicitly as an empty string.
+            #   * This functionality might be better placed inside the
+            #     mkparam() function but to do that we would first need to
+            #     understand more thoroughly how different Binding subclasses
+            #     in suds work and how they would be affected by this change.
+            #   * If caller actually wishes to pass an empty choice parameter
+            #     he can specify its value explicitly as an empty string.
             if len(pd) > 2 and pd[2] and value is None:
                 continue
             p = self.mkparam(method, pd, value)
@@ -123,7 +119,7 @@ class Document(Binding):
         Expand list parameters into individual parameters each with the type
         information. This is because in document arrays are simply
         multi-occurrence elements.
-        
+
         """
         if isinstance(object, (list, tuple)):
             tags = []

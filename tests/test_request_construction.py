@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
 
 """
@@ -30,14 +29,8 @@ then passing that wrapper object instead.
 """
 
 if __name__ == "__main__":
-    try:
-        import pytest
-        pytest.main(["--pyargs", __file__])
-    except ImportError:
-        print("'py.test' unit testing framework not available. Can not run "
-            "'%s' directly as a script." % (__file__,))
-    import sys
-    sys.exit(-2)
+    import __init__
+    __init__.runUsingPyTest(globals())
 
 
 import suds
@@ -182,6 +175,52 @@ def test_element_references_to_different_namespaces():
          <ns2:external>--E--</ns2:external>
       </ns1:fRequest>
    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>""")
+
+
+def test_extra_parameters():
+    """
+    Extra input parameters should get silently ignored and not added to the
+    constructed SOAP request.
+
+    """
+    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
+        prettyxml=True).service
+
+    service = service_from_wsdl(tests.wsdl_input("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="aString" type="xsd:string" />
+            <xsd:element name="anInteger" type="xsd:integer" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper"))
+
+    # Unnamed parameters.
+    _check_request(service.f("something", 0, "extra1", "extra2"), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper>
+         <ns0:aString>something</ns0:aString>
+         <ns0:anInteger>0</ns0:anInteger>
+      </ns0:Wrapper>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+
+    # Named parameters.
+    _check_request(service.f("something", extra="1", anInteger=7), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper>
+         <ns0:aString>something</ns0:aString>
+         <ns0:anInteger>7</ns0:anInteger>
+      </ns0:Wrapper>
+   </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
 
@@ -395,7 +434,7 @@ def test_named_parameter():
 
 
 def test_optional_parameter_handling():
-    """Missing non-optional parameters should get passed as empty values."""
+    """Missing optional parameters should not get passed at all."""
     service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
         prettyxml=True).service
 
@@ -510,6 +549,16 @@ def test_twice_wrapped_parameter():
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
+    _check_request(client.service.f(Elemento="A B C"), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper1>
+         <ns0:Wrapper2/>
+      </ns0:Wrapper1>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
     _check_request(client.service.f(Wrapper2="A B C"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -517,6 +566,16 @@ def test_twice_wrapped_parameter():
    <ns1:Body>
       <ns0:Wrapper1>
          <ns0:Wrapper2>A B C</ns0:Wrapper2>
+      </ns0:Wrapper1>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+    _check_request(client.service.f(Wrapper1="A B C"), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper1>
+         <ns0:Wrapper2/>
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
@@ -557,7 +616,7 @@ def test_wrapped_parameter():
       </xsd:complexType>
       <xsd:element name="Wrapper" type="ns:WrapperType" />""", "Wrapper")
 
-    #   Make sure suds library inteprets our WSDL definitions as wrapped or
+    #   Make sure suds library interprets our WSDL definitions as wrapped or
     # bare input interfaces as expected.
     assert not _isInputWrapped(client_bare_single, "f")
     assert not _isInputWrapped(client_bare_multiple_simple, "f")
@@ -592,6 +651,19 @@ def test_wrapped_parameter():
 </SOAP-ENV:Envelope>""" % data
     _check_request(call_single(client_wrapped_unnamed), expected_xml)
     _check_request(call_single(client_wrapped_named), expected_xml)
+
+    #   Suds library's automatic structure unwrapping prevents us from
+    # specifying the external wrapper structure directly.
+    _check_request(client_wrapped_unnamed.service.f(Wrapper="A"), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:Wrapper>
+         <ns0:Elemento/>
+      </ns0:Wrapper>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
 
     #   Multiple parameter web service operations are never automatically
     # unwrapped.

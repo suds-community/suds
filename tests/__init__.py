@@ -1,17 +1,16 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 import suds.client
@@ -121,12 +120,25 @@ def compare_xml_to_string(lhs, rhs):
     compare_xml(lhs, suds.sax.parser.Parser().parse(string=suds.byte_str(rhs)))
 
 
-def setup_logging():
-    if sys.version_info < (2, 5):
-        fmt = '%(asctime)s [%(levelname)s] @%(filename)s:%(lineno)d\n%(message)s\n'
-    else:
-        fmt = '%(asctime)s [%(levelname)s] %(funcName)s() @%(filename)s:%(lineno)d\n%(message)s\n'
-    logging.basicConfig(level=logging.INFO, format=fmt)
+def runUsingPyTest(callerGlobals):
+    """Run the caller test script using the pytest testing framework."""
+    # Trick setuptools into not recognizing we are referencing __file__ here.
+    # If setuptools detects __file__ usage in a module, any package containing
+    # this module will be installed as an actual folder instead of a zipped
+    # archive. This __file__ usage is safe since it is used only when a script
+    # has been run directly, and that can not be done from a zipped package
+    # archive.
+    filename = callerGlobals.get("file".join(["__"] * 2))
+    if not filename:
+        sys.exit("Internal error: can not determine test script name.")
+    try:
+        import pytest
+    except ImportError:
+        filename = filename or "<unknown-script>"
+        sys.exit("'py.test' unit testing framework not available. Can not run "
+            "'%s' directly as a script." % (filename,))
+    exitCode = pytest.main(["--pyargs", filename] + sys.argv[1:])
+    sys.exit(exitCode)
 
 
 def wsdl_input(schema_content, *args):

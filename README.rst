@@ -11,17 +11,17 @@ again.
 
 **Forked project information**
 
-* Project site: https://bitbucket.org/jurko/suds
+* Project site: http://bitbucket.org/jurko/suds
 * Epydocs documentation: needs to be built from sources
 * Official releases can be downloaded from:
 
-  * BitBucket - https://bitbucket.org/jurko/suds/downloads
+  * BitBucket - http://bitbucket.org/jurko/suds/downloads
   * PyPI - http://pypi.python.org/pypi/suds-jurko
 
 **Original suds Python library development project information**
 
-* Project site: https://fedorahosted.org/suds
-* Documentation: https://fedorahosted.org/suds/wiki/Documentation
+* Project site: http://fedorahosted.org/suds
+* Documentation: http://fedorahosted.org/suds/wiki/Documentation
 * Epydocs: http://jortel.fedorapeople.org/suds/doc
 
 For development notes see the ``HACKING.txt`` document included in the
@@ -60,27 +60,102 @@ Installation troubleshooting:
   installation.
 * Releases prior to ``0.4.1. jurko 5`` will fail if the ``distribute`` Python
   package is not already installed on the system.
-* Python 2.4.3 on Windows has been seen to have problems using automated
-  ``setuptools`` Python package downloads via the HTTPS protocol. The same does
-  not occur when using Python version 2.4.4.
-
-  * This mostly affects newer ``setuptools``/``distribute`` Python package
-    versions which use the HTTPS protocol by default.
-  * Our package installation attempts to workaround this problem by switching to
-    using the HTTP protocol internally when necessary.
-  * If this occurs, install the required packages manually from their sources or
-    by using ``easy_install``/``pip`` and specifying that they should use the
-    HTTP protocol instead of HTTPS, e.g.::
-
-      easy_install -i "http://pypi.python.org/simple" ...
-      pip install -i "http://pypi.python.org/simple" ...
+* Python 2.4.3 on Windows has problems using automated ``setuptools`` Python
+  package downloads via the HTTPS protocol, and therefore does not work
+  correctly with PyPI which uses HTTPS links to all of its packages. The same
+  does not occur when using Python version 2.4.4.
 
 
 Release notes
 =================================================
 
-version 0.5 (development)
+version 0.6 (development)
 -------------------------
+
+* Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+  original suds Python library development project's Subversion repository.
+
+  * Last officially packaged & released suds Python library version - 0.4.1.
+
+* Supported Python versions.
+
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python 2to3 tool
+    during the setup procedure.
+  * Tested in the following environments:
+
+    * Python 2.4.3/x86, on Windows 7/SP1/x64.
+    * Python 2.4.4/x86, on Windows 7/SP1/x64.
+    * Python 2.7.6/x64, on Windows 7/SP1/x64.
+    * Python 3.2.5/x64, on Windows 7/SP1/x64.
+    * Python 3.3.3/x86, on Windows 7/SP1/x64.
+    * Python 3.3.3/x64, on Windows 7/SP1/x64.
+
+* Fixed sending HTTP request containing non-ASCII unicode data using Python 2.7.
+
+  * Many thanks to mduggan1 and Alexey Sveshnikov for reporting the issue and
+    suggesting patches.
+
+* Fixed unicode data logging issue (contributed by Bouke Haarsma).
+* suds.transport.Request object string representation cleaned up a bit - added
+  a missing space before the URL to make it consistent with how all the other
+  Request & Reply data is represented in such strings.
+* Fixed issue with suds client failing to be create its default cache object
+  (e.g. because a folder it needs is write protected) and thus preventing the
+  client from being created without any chance for the user to specify an
+  alternative cache.
+
+  * The default client cache is now instantiated only if user does not
+    explicitly specify some other alternate cache (or even None to disable the
+    whole data caching system).
+  * Many thanks to Arthur Clune for reporting the issue.
+
+* Added unit tests for transport related Request & Reply classes.
+* Improved HTTPTransport related unit tests.
+* Added explicit tests for URL parameters being passed as unicode or single-byte
+  strings under Python 2 but only unicode strings under Python 3, and improved
+  how such invalid parameter values are reported.
+
+  * This behaviour matches urllib implementation differences between Python 3
+    and earlier Python interpreter versions.
+  * Many thanks to Mesut Tasci for reporting a related issue and preparing the
+    initial patch for it.
+
+* Removed partial support for pre-2.4 Python versions since such old Python
+  versions are no longer officially supported nor are they tested anywhere.
+* Setup improvements.
+
+  * Fixed setup to work with soft links in the current working folder path
+    (contributed by ryanpetrello).
+  * Project now installed as a zipped egg folder.
+  * No longer attempts to work around Python 2.4.3 issues with urllib HTTPS
+    downloads since now PyPI updated all of its links to HTTPS and the patch
+    would need to become much more complex to deal with this, while making the
+    setup much more difficult to understand and maintain.
+
+    * On the other hand, this is now an extremely old Python version, so the
+      change is not expected to have much impact. Anyone still using this
+      version will just have to work around the issue manually, e.g. by
+      downloading the necessary packages and running their setup procedures
+      directly.
+
+  * 'long_description' field content wrapped to 72 characters, since PKG-INFO
+    package distribution metadata file stores this text with an 8 space
+    indentation.
+
+* Cleaned up support for running test scripts directly as Python scripts.
+
+  * May now be passed pytest command-line options.
+  * Now return an exit code indicating the test result (0=success, !0=failure).
+
+* Corrected a typo in the BuildError exception message.
+* Added a basic development script for running the project's full test suite
+  using multiple Python interpreter versions under Windows.
+* Updated documented project links to use HTTP instead of HTTPS protocol.
+
+version 0.5 (2013-11-25)
+------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
   original suds Python library development project's Subversion repository.

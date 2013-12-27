@@ -25,9 +25,6 @@ from suds.sax.date import *
 from suds.xsd.sxbase import XBuiltin
 
 import datetime as dt
-from logging import getLogger
-
-log = getLogger(__name__)
 
 
 class XString(XBuiltin):

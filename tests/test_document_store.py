@@ -24,14 +24,8 @@ Implemented using the 'pytest' testing framework.
 """
 
 if __name__ == "__main__":
-    try:
-        import pytest
-        pytest.main(["--pyargs", __file__])
-    except ImportError:
-        print("'py.test' unit testing framework not available. Can not run "
-            "'%s' directly as a script." % (__file__,))
-    import sys
-    sys.exit(-2)
+    import __init__
+    __init__.runUsingPyTest(globals())
 
 
 import suds

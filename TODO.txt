@@ -712,7 +712,60 @@ PRIORETIZED:
 (+)     * Fix setup.py current working folder path comparison so it works with
 (+)       links in the path. Contributed by ryanpetrello.
 
-(01.12.2013.)
+(23.12.2013.)
+
+(+) * (Jurko) Prepare a basic development script for running the full suds test
+(+)   suite using multiple Python interpreter versions.
+
+(26.12.2013.)
+
+(+) * (Jurko) Process patches sent in by Bouke Haarsma on BitBucket.
+(+)     * Unicode logging issue.
+(+)         * Research.
+(+)         * Prepare tests.
+(+)         * Merge.
+(+)             * Thorough code review.
+(+)             * Implement a cleaner fix for both Reply & Request classes.
+(+)         * Update release notes.
+(+) * (Jurko) Fix possible typo in the suds.transport.Request string/unicode
+(+)   representation where there seems to be a missing space after a colon just
+(+)   before the URL information.
+(+) * (Jurko) Remove unnecessary logger objects.
+(+) * (Jurko) Process the project issue #2 reported on BitBucket by Arthur
+(+)   Clune, related to not being able to set the option cache location if the
+(+)   default cache location is not a writeable folder.
+(+)     * Research.
+(+)     * Prepare tests.
+(+)         * Default cache.
+(+)         * Default ObjectCache instance should be created only if no other
+(+)           cache has been explicitly specified during suds.client.Client()
+(+)           construction.
+(+)     * Fix.
+(+)     * Update release notes.
+(+)     * Report back & close the project issue on BitBucket.
+
+(27.12.2013.)
+
+    * (Jurko) Process patch sent in by Bouke Haarsma on BitBucket to 'make sure
+      all web service operation parameters are consumed'.
+        * Research.
+        * Prepare tests.
+        * Merge.
+        * Thorough code review.
+        * Update release notes.
+
+    * (Jurko) Process decimal type support patch sent in by pendletongp on
+      BitBucket.
+        * Research.
+        * Prepare tests.
+        * Merge.
+        * Thorough code review.
+        * Update release notes.
+
+    * (Jurko) Clean up the project's basic development script for running the
+      full suds test suite using multiple Python interpreter versions.
+        * Reimplement in Python.
+        * Name better.
 
     * (Jurko) Find a cleaner way to install suds tests. Currently they get
       installed into a top-level 'tests' folder and so may cause conflicts with
