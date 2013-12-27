@@ -179,34 +179,10 @@ def test_element_references_to_different_namespaces():
 
 
 def test_extra_parameters():
-    """Too many arguments should be rejected."""
+    """Extra input arguments should be rejected."""
     def service_from_wsdl(wsdl):
         client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
         return client.service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
-      <xsd:element name="Wrapper">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="a" type="xsd:integer" />
-            <xsd:element name="b" type="xsd:integer" />
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
-
-    pytest.raises(TypeError, service.f, 1, 2, 3)
-    pytest.raises(TypeError, service.f, 1, 2, c=3)
-    pytest.raises(TypeError, service.f, a=1, b=2, c=3)
-
-
-def test_extra_parameters_old():
-    """
-    Extra input parameters should get silently ignored and not added to the
-    constructed SOAP request.
-
-    """
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
 
     service = service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
@@ -218,31 +194,12 @@ def test_extra_parameters_old():
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
 
-    # Unnamed parameters.
-    _check_request(service.f("something", 0, "extra1", "extra2"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>something</ns0:aString>
-         <ns0:anInteger>0</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-
-    # Named parameters.
-    _check_request(service.f("something", extra="1", anInteger=7), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>something</ns0:aString>
-         <ns0:anInteger>7</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+    pytest.raises(TypeError, service.f, "one", 2, 3)
+    pytest.raises(TypeError, service.f, "one", 2, "extra")
+    pytest.raises(TypeError, service.f, "one", 2, x=3)
+    pytest.raises(TypeError, service.f, aString="one", anInteger=2, x=3)
+    pytest.raises(TypeError, service.f, aString="one", x=3, anInteger=2)
+    pytest.raises(TypeError, service.f, 3, aString="one", anInteger=3)
 
 
 def test_invalid_argument_type_handling():
