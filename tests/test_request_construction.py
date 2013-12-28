@@ -502,48 +502,38 @@ def test_twice_wrapped_parameter():
 
     assert _isInputWrapped(client, "f")
 
-    #   The following calls are actually illegal and result in incorrectly
-    # generated SOAP requests.
-    _check_request(client.service.f("A B C"), """\
+    # Web service operation calls made with 'valid' parameters.
+    #
+    # These calls are actually illegal and result in incorrectly generated SOAP
+    # requests not matching the relevant WSDL schema. To make them valid we
+    # would need to pass a more complex value instead of a simple string, but
+    # the current simpler solution is good enough for what we want to test
+    # here.
+    value = "A B C"
+    expectedRequest = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
       <ns0:Wrapper1>
-         <ns0:Wrapper2>A B C</ns0:Wrapper2>
+         <ns0:Wrapper2>%s</ns0:Wrapper2>
       </ns0:Wrapper1>
    </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Elemento="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2/>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Wrapper2="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2>A B C</ns0:Wrapper2>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Wrapper1="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2/>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+</SOAP-ENV:Envelope>""" % (value,)
+    _check_request(client.service.f(value), expectedRequest)
+    _check_request(client.service.f(Wrapper2=value), expectedRequest)
+
+    # Web service operation calls made with 'invalid' parameters.
+    def testInvalidParameter(**kwargs):
+        assert len(kwargs) == 1
+        element = kwargs.keys()[0]
+        expected = "f() got an unexpected keyword argument '%s'" % (element,)
+        try:
+            client.service.f(**kwargs)
+        except TypeError, e:
+            assert str(e) == expected
+    testInvalidParameter(Elemento="A B C")
+    testInvalidParameter(Wrapper1="A B C")
 
 
 def test_wrapped_parameter():
