@@ -94,7 +94,7 @@ class TestExtraParameters:
 
         expected = "f() takes 2 positional arguments but 3 were given"
         self.expect_error(expected, "one", 2, 3)
-        self.expect_error(expected, "one", 2, "boom")
+        self.expect_error(expected, "one", 2, "three")
 
         expected = "f() got an unexpected keyword argument 'x'"
         self.expect_error(expected, "one", 2, x=3)
@@ -103,7 +103,7 @@ class TestExtraParameters:
         self.expect_error(expected, x=3, aString="one", anInteger=2)
 
         expected = "f() got multiple values for argument 'aString'"
-        self.expect_error(expected, 3, aString="one", anInteger=3)
+        self.expect_error(expected, 1, aString="two", anInteger=3)
 
 
 # TODO: Update the current restriction type output parameter handling so such
