@@ -697,5 +697,12 @@ def _isInputWrapped(client, method_name):
 
 
 def _service_from_wsdl(wsdl):
+    """
+    Construct a suds Client service instance used in tests in this module.
+
+    The constructed Client instance only prepares web service operation
+    invocation requests and does not attempt to actually send them.
+
+    """
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     return client.service
