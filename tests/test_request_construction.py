@@ -84,6 +84,39 @@ class TestExtraParameters:
         assert not hasattr(self, "service")
         self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
 
+    def test_function_with_a_single_parameter(self):
+        """
+        Test how extra parameters are handled in an operation taking a single
+        input parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="param" type="xsd:integer" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 positional argument but 2 were given"
+        self.expect_error(expected, 1, 2)
+        self.expect_error(expected, 1, "two")
+
+        expected = "f() takes 1 positional argument but 3 were given"
+        self.expect_error(expected, 1, "two", 666)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, 1, x=666)
+        self.expect_error(expected, param=1, x=666)
+        self.expect_error(expected, x=666, param=2)
+
+        expected = "f() got multiple values for argument 'param'"
+        self.expect_error(expected, 1, param=2)
+        self.expect_error(expected, None, param=1)
+        self.expect_error(expected, 1, param=None)
+
+        expected = "f() got an unexpected keyword argument '"
+        self.expect_error_containing(expected, 1, x=2, y=3, z=4)
+
     def test_function_with_multiple_parameters(self):
         """
         Test how extra parameters are handled in an operation taking more than
@@ -115,6 +148,29 @@ class TestExtraParameters:
 
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, "one", 2, x=3, y=4, z=5)
+
+    def test_function_with_no_parameters(self):
+        """
+        Test how extra parameters are handled in an operation taking no input
+        parameters.
+
+        """
+        self.init_function_params("")
+
+        expected = "f() takes 0 positional arguments but 1 was given"
+        self.expect_error(expected, 1)
+
+        expected = "f() takes 0 positional arguments but 2 were given"
+        self.expect_error(expected, 1, "two")
+
+        expected = "f() takes 0 positional arguments but 5 were given"
+        self.expect_error(expected, 1, "two", 3, "four", object())
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, x=3)
+
+        expected = "f() got an unexpected keyword argument '"
+        self.expect_error_containing(expected, x=1, y=2, z=3)
 
 
 # TODO: Update the current restriction type output parameter handling so such
