@@ -104,6 +104,8 @@ class TestExtraParameters:
 
         expected = "f() got multiple values for argument 'aString'"
         self.expect_error(expected, 1, aString="two", anInteger=3)
+        self.expect_error(expected, None, 1, aString="two")
+        self.expect_error(expected, "one", 2, aString=None)
 
 
 # TODO: Update the current restriction type output parameter handling so such
