@@ -190,12 +190,24 @@ def test_extra_parameters():
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
 
-    pytest.raises(TypeError, service.f, "one", 2, 3)
-    pytest.raises(TypeError, service.f, "one", 2, "extra")
-    pytest.raises(TypeError, service.f, "one", 2, x=3)
-    pytest.raises(TypeError, service.f, aString="one", anInteger=2, x=3)
-    pytest.raises(TypeError, service.f, aString="one", x=3, anInteger=2)
-    pytest.raises(TypeError, service.f, 3, aString="one", anInteger=3)
+    def test(expected, *args, **kwargs):
+        try:
+            service.f(*args, **kwargs)
+        except TypeError, e:
+            assert str(e) == expected
+
+    expected = "f() takes at most 2 arguments (3 given)"
+    test(expected, "one", 2, 3)
+    test(expected, "one", 2, "boom")
+
+    expected = "f() got an unexpected keyword argument 'x'"
+    test(expected, "one", 2, x=3)
+    test(expected, aString="one", anInteger=2, x=3)
+    test(expected, aString="one", x=3, anInteger=2)
+    test(expected, x=3, aString="one", anInteger=2)
+
+    expected = "f() got an unexpected keyword argument 'aString'"
+    test(expected, 3, aString="one", anInteger=3)
 
 
 def test_invalid_input_parameter_type_handling():
