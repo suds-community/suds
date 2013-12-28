@@ -96,9 +96,19 @@ class Document(Binding):
                 msg = "%s() got an unexpected keyword argument '%s'"
             raise TypeError(msg % (method.name, arg_name))
         if args:
-            msg = "%s() takes %d positional arguments but %d were given"
+            def plural_suffix(count):
+                if count == 1:
+                    return ""
+                return "s"
+            def plural_was_were(count):
+                if count == 1:
+                    return "was"
+                return "were"
             expected = len(params)
             given = expected + len(args)
+            msg = "".join(["%s() takes %d positional argument",
+                plural_suffix(expected), " but %d ", plural_was_were(given),
+                " given"])
             raise TypeError(msg % (method.name, expected, given))
         return root
 
