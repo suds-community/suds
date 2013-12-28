@@ -63,6 +63,7 @@ class Document(Binding):
             root = []
         args = list(args)
         params = self.param_defs(method)
+        params_used = set()
         for pd in params:
             if args:
                 value = args.pop(0)
@@ -86,11 +87,16 @@ class Document(Binding):
                 ns = pd[1].namespace('ns0')
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
+            params_used.add(pd[0])
         if kwargs:
-            msg = "%s() got an unexpected keyword argument '%s'"
-            raise TypeError(msg % (method.name, kwargs.keys()[0]))
+            arg_name = kwargs.keys()[0]
+            if arg_name in params_used:
+                msg = "%s() got multiple values for argument '%s'"
+            else:
+                msg = "%s() got an unexpected keyword argument '%s'"
+            raise TypeError(msg % (method.name, arg_name))
         if args:
-            msg = "%s() takes at most %d arguments (%d given)"
+            msg = "%s() takes %d positional arguments but %d were given"
             expected = len(params)
             given = expected + len(args)
             raise TypeError(msg % (method.name, expected, given))

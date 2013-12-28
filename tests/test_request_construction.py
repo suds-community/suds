@@ -196,7 +196,7 @@ def test_extra_parameters():
         except TypeError, e:
             assert str(e) == expected
 
-    expected = "f() takes at most 2 arguments (3 given)"
+    expected = "f() takes 2 positional arguments but 3 were given"
     test(expected, "one", 2, 3)
     test(expected, "one", 2, "boom")
 
@@ -206,7 +206,7 @@ def test_extra_parameters():
     test(expected, aString="one", x=3, anInteger=2)
     test(expected, x=3, aString="one", anInteger=2)
 
-    expected = "f() got an unexpected keyword argument 'aString'"
+    expected = "f() got multiple values for argument 'aString'"
     test(expected, 3, aString="one", anInteger=3)
 
 
