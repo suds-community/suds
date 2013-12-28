@@ -609,16 +609,10 @@ def test_wrapped_parameter():
 
     #   Suds library's automatic structure unwrapping prevents us from
     # specifying the external wrapper structure directly.
-    _check_request(client_wrapped_unnamed.service.f(Wrapper="A"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:Elemento/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+    try:
+        client_wrapped_unnamed.service.f(Wrapper="A")
+    except TypeError, e:
+        assert str(e) == "f() got an unexpected keyword argument 'Wrapper'"
 
     #   Multiple parameter web service operations are never automatically
     # unwrapped.
