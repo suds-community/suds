@@ -178,36 +178,70 @@ def test_element_references_to_different_namespaces():
 </SOAP-ENV:Envelope>""")
 
 
-def test_extra_parameters():
-    """Extra input parameters should be rejected."""
-    service = _service_from_wsdl(tests.wsdl_input("""\
-      <xsd:element name="Wrapper">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="aString" type="xsd:string" />
-            <xsd:element name="anInteger" type="xsd:integer" />
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+class TestExtraParameters:
+    """
+    Extra input parameters should be rejected correctly.
 
-    def test(expected, *args, **kwargs):
+    Parameters should be treated as regular Python function arguments.
+
+    """
+
+    def expect_error(self, expected_error_text, *args, **kwargs):
         try:
-            service.f(*args, **kwargs)
+            self.service.f(*args, **kwargs)
         except TypeError, e:
-            assert str(e) == expected
+            assert str(e) == expected_error_text
 
-    expected = "f() takes 2 positional arguments but 3 were given"
-    test(expected, "one", 2, 3)
-    test(expected, "one", 2, "boom")
+    def init_function_params(self, params):
+        """
+        Initialize a test in this group with the given parameter definition.
 
-    expected = "f() got an unexpected keyword argument 'x'"
-    test(expected, "one", 2, x=3)
-    test(expected, aString="one", anInteger=2, x=3)
-    test(expected, aString="one", x=3, anInteger=2)
-    test(expected, x=3, aString="one", anInteger=2)
+        Constructs a complete WSDL schema based on the given function parameter
+        definition (used to define a single function named 'f'), and creates a
+        suds Client object to be used for testing suds's web service operation
+        invocation.
 
-    expected = "f() got multiple values for argument 'aString'"
-    test(expected, 3, aString="one", anInteger=3)
+        May only be invoked once per test.
+
+        """
+        # Using an empty 'xsd:element' XML element here when passed an empty
+        # params string seems to cause suds not to recognize the web service
+        # operation described in the given WSDL schema as using 'wrapped' input
+        # parameters. Whether or not this is the correct behaviour is not up to
+        # the tests in this test group to decide so we make sure we at least
+        # add a single space as the element's data.
+        if not params:
+            params = " "
+        input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
+        assert not hasattr(self, "service")
+        self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
+
+    def test_function_with_multiple_parameters(self):
+        """
+        Test how extra parameters are handled in an operation taking more than
+        one input parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", 2, 3)
+        self.expect_error(expected, "one", 2, "boom")
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", 2, x=3)
+        self.expect_error(expected, aString="one", anInteger=2, x=3)
+        self.expect_error(expected, aString="one", x=3, anInteger=2)
+        self.expect_error(expected, x=3, aString="one", anInteger=2)
+
+        expected = "f() got multiple values for argument 'aString'"
+        self.expect_error(expected, 3, aString="one", anInteger=3)
 
 
 def test_invalid_input_parameter_type_handling():
