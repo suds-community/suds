@@ -62,7 +62,8 @@ class Document(Binding):
         else:
             root = []
         args = list(args)
-        for pd in self.param_defs(method):
+        params = self.param_defs(method)
+        for pd in params:
             if args:
                 value = args.pop(0)
             else:
@@ -86,12 +87,13 @@ class Document(Binding):
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
         if kwargs:
-            raise TypeError("%s() got an unexpected keyword argument '%s'" %
-                            (method.name, kwargs.keys()[0]))
+            msg = "%s() got an unexpected keyword argument '%s'"
+            raise TypeError(msg % (method.name, kwargs.keys()[0]))
         if args:
-            params = self.param_defs(method)
-            raise TypeError("%s() takes at most %d arguments (%d given)" %
-                            (method.name, len(params), len(params) + len(args)))
+            msg = "%s() takes at most %d arguments (%d given)"
+            expected = len(params)
+            given = expected + len(args)
+            raise TypeError(msg % (method.name, expected, given))
         return root
 
     def replycontent(self, method, body):
