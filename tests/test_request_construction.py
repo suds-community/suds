@@ -54,6 +54,12 @@ class TestExtraParameters:
         except TypeError, e:
             assert str(e) == expected_error_text
 
+    def expect_error_containing(self, expected_error_text, *args, **kwargs):
+        try:
+            self.service.f(*args, **kwargs)
+        except TypeError, e:
+            assert expected_error_text in str(e)
+
     def init_function_params(self, params):
         """
         Initialize a test in this group with the given parameter definition.
@@ -106,6 +112,9 @@ class TestExtraParameters:
         self.expect_error(expected, 1, aString="two", anInteger=3)
         self.expect_error(expected, None, 1, aString="two")
         self.expect_error(expected, "one", 2, aString=None)
+
+        expected = "f() got an unexpected keyword argument '"
+        self.expect_error_containing(expected, "one", 2, x=3, y=4, z=5)
 
 
 # TODO: Update the current restriction type output parameter handling so such
