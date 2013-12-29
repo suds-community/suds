@@ -63,12 +63,24 @@ class Document(Binding):
             root = []
         args = list(args)
         params = self.param_defs(method)
-        params_used = set()
+        params_given = set()
+        params_required = 0
+        params_possible = 0
         for pd in params:
             if args:
                 value = args.pop(0)
+                params_given.add(pd[0])
             else:
-                value = kwargs.pop(pd[0], None)
+                try:
+                    value = kwargs.pop(pd[0])
+                except KeyError:
+                    value = None
+                else:
+                    params_given.add(pd[0])
+
+            params_possible += 1
+            if not pd[1].optional():
+                params_required += 1
 
             # Skip non-existing by-choice arguments.
             # Implementation notes:
@@ -87,10 +99,9 @@ class Document(Binding):
                 ns = pd[1].namespace('ns0')
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
-            params_used.add(pd[0])
         if kwargs:
             arg_name = kwargs.keys()[0]
-            if arg_name in params_used:
+            if arg_name in params_given:
                 msg = "%s() got multiple values for argument '%s'"
             else:
                 msg = "%s() got an unexpected keyword argument '%s'"
@@ -104,12 +115,14 @@ class Document(Binding):
                 if count == 1:
                     return "was"
                 return "were"
-            expected = len(params)
-            given = expected + len(args)
-            msg = "".join(["%s() takes %d positional argument",
-                plural_suffix(expected), " but %d ", plural_was_were(given),
-                " given"])
-            raise TypeError(msg % (method.name, expected, given))
+            expected = params_required
+            if params_required != params_possible:
+                expected = "%d to %d" % (params_required, params_possible)
+            given = len(params_given) + len(args)
+            msg_parts = ["%s() takes %s argument" % (method.name, expected),
+                plural_suffix(expected), " but %d " % (given,),
+                plural_was_were(given), " given"]
+            raise TypeError("".join(msg_parts))
         return root
 
     def replycontent(self, method, body):
