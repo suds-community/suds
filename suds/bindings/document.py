@@ -63,6 +63,7 @@ class Document(Binding):
             root = []
         args = list(args)
         params = self.param_defs(method)
+        params_count = len(args) + len(kwargs)
         params_given = set()
         params_required = 0
         params_possible = 0
@@ -118,7 +119,8 @@ class Document(Binding):
             expected = params_required
             if params_required != params_possible:
                 expected = "%d to %d" % (params_required, params_possible)
-            given = len(params_given) + len(args)
+            assert params_count == len(params_given) + len(args)
+            given = params_count
             msg_parts = ["%s() takes %s argument" % (method.name, expected),
                 plural_suffix(expected), " but %d " % (given,),
                 plural_was_were(given), " given"]
