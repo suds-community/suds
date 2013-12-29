@@ -142,6 +142,39 @@ class TestExtraParameters:
         expected = "f() got multiple values for argument 'aString'"
         self.expect_error(expected, "one", aString="two")
 
+    def test_function_with_a_single_parameter(self):
+        """
+        Test how extra parameters are handled in an operation taking a single
+        input parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="param" type="xsd:integer" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 positional argument but 2 were given"
+        self.expect_error(expected, 1, 2)
+        self.expect_error(expected, 1, "two")
+
+        expected = "f() takes 1 positional argument but 3 were given"
+        self.expect_error(expected, 1, "two", 666)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, 1, x=666)
+        self.expect_error(expected, param=1, x=666)
+        self.expect_error(expected, x=666, param=2)
+
+        expected = "f() got multiple values for argument 'param'"
+        self.expect_error(expected, 1, param=2)
+        self.expect_error(expected, None, param=1)
+        self.expect_error(expected, 1, param=None)
+
+        expected = "f() got an unexpected keyword argument '"
+        self.expect_error_containing(expected, 1, x=2, y=3, z=4)
+
     def test_function_with_multiple_choice_parameters(self):
         """
         When reporting extra input parameters passed to a function taking a
@@ -186,39 +219,6 @@ class TestExtraParameters:
         self.expect_error(expected, "one", aString1="two", anInteger2=3)
         self.expect_error(expected, "one", "two", aString2="three")
 
-    def test_function_with_a_single_parameter(self):
-        """
-        Test how extra parameters are handled in an operation taking a single
-        input parameter.
-
-        """
-        self.init_function_params("""\
-          <xsd:complexType>
-            <xsd:sequence>
-              <xsd:element name="param" type="xsd:integer" />
-            </xsd:sequence>
-          </xsd:complexType>""")
-
-        expected = "f() takes 1 positional argument but 2 were given"
-        self.expect_error(expected, 1, 2)
-        self.expect_error(expected, 1, "two")
-
-        expected = "f() takes 1 positional argument but 3 were given"
-        self.expect_error(expected, 1, "two", 666)
-
-        expected = "f() got an unexpected keyword argument 'x'"
-        self.expect_error(expected, 1, x=666)
-        self.expect_error(expected, param=1, x=666)
-        self.expect_error(expected, x=666, param=2)
-
-        expected = "f() got multiple values for argument 'param'"
-        self.expect_error(expected, 1, param=2)
-        self.expect_error(expected, None, param=1)
-        self.expect_error(expected, 1, param=None)
-
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, 1, x=2, y=3, z=4)
-
     def test_function_with_multiple_parameters(self):
         """
         Test how extra parameters are handled in an operation taking more than
@@ -244,7 +244,7 @@ class TestExtraParameters:
         self.expect_error(expected, x=3, aString="one", anInteger=2)
 
         expected = "f() got multiple values for argument 'aString'"
-        self.expect_error(expected, 1, aString="two", anInteger=3)
+        self.expect_error(expected, "one", aString="two", anInteger=3)
         self.expect_error(expected, None, 1, aString="two")
         self.expect_error(expected, "one", 2, aString=None)
 
