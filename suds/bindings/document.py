@@ -127,13 +127,10 @@ class Document(Binding):
         if not wrapped:
             return pts
         result = []
-        # wrapped
         for p in pts:
-            resolved = p[1].resolve()
-            for child, ancestry in resolved:
-                if child.isattr():
-                    continue
-                result.append((child.name, child, self.bychoice(ancestry)))
+            for child, ancestry in p[1].resolve():
+                if not child.isattr():
+                    result.append((child.name, child, self.bychoice(ancestry)))
         return result
 
     def returned_types(self, method):
