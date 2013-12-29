@@ -57,18 +57,28 @@ class TestExtraParameters:
     """
 
     def expect_error(self, expected_error_text, *args, **kwargs):
-        try:
-            self.service.f(*args, **kwargs)
-            pytest.fail("Expected exception not raised.")
-        except TypeError, e:
-            assert str(e) == expected_error_text
+        """
+        Assert that an expected TypeError exception is raised from a test
+        function call with the given input parameters. Caught exception is
+        considered expected if its string representation matches the given
+        expected error text.
+
+        """
+        def assertion(exception):
+            assert expected_error_text == str(exception)
+        self._expect_error(assertion, *args, **kwargs)
 
     def expect_error_containing(self, expected_error_text, *args, **kwargs):
-        try:
-            self.service.f(*args, **kwargs)
-            pytest.fail("Expected exception not raised.")
-        except TypeError, e:
-            assert expected_error_text in str(e)
+        """
+        Assert that an expected TypeError exception is raised from a test
+        function call with the given input parameters. Caught exception is
+        considered expected if its string representation contains the given
+        expected error text as a substring.
+
+        """
+        def assertion(exception):
+            assert expected_error_text in str(exception)
+        self._expect_error(assertion, *args, **kwargs)
 
     def init_function_params(self, params):
         """
@@ -263,6 +273,19 @@ class TestExtraParameters:
 
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, x=1, y=2, z=3)
+
+    def _expect_error(self, assertion, *args, **kwargs):
+        """
+        Assert that an expected TypeError exception is raised from a test
+        function call with the given input parameters. Caught exception is
+        tested using the given assertion function.
+
+        """
+        try:
+            self.service.f(*args, **kwargs)
+            pytest.fail("Expected exception not raised.")
+        except TypeError, e:
+            assertion(e)
 
 
 # TODO: Update the current restriction type output parameter handling so such
