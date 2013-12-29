@@ -44,7 +44,15 @@ class TestExtraParameters:
     """
     Extra input parameters should be rejected correctly.
 
-    Parameters should be treated as regular Python function arguments.
+    Non-choice parameters should be treated as regular Python function
+    arguments.
+
+    Parameters belonging to a single choice parameter structure should be
+    counted as a single parameter and only one of those values may be specified
+    in a single call.
+
+    Positional parameters representing a value from a single choice parameter
+    group should be mapped to the first element in that group.
 
     """
 
@@ -83,6 +91,88 @@ class TestExtraParameters:
         input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
         assert not hasattr(self, "service")
         self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
+
+    def test_function_with_a_single_choice_parameter(self):
+        """
+        When reporting extra input parameters passed to a function taking a
+        choice parameter group - all elements belonging to that choice
+        parameter group should be counted as a single parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 positional argument but 2 were given"
+        self.expect_error(expected, "one", 2)
+
+        expected = "f() takes 1 positional argument but 3 were given"
+        self.expect_error(expected, "one", 2, 3)
+        self.expect_error(expected, "one", 2, "three")
+
+        expected = ("f() got multiple arguments belonging to a single choice "
+            "parameter group.")
+        self.expect_error(expected, aString="one", anInteger=2)
+        self.expect_error(expected, anInteger=1, aString="two")
+        self.expect_error(expected, "one", anInteger=2)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", x=666)
+        self.expect_error(expected, aString="one", x=666)
+        self.expect_error(expected, anInteger=1, x=666)
+        self.expect_error(expected, x=666, aString="one")
+        self.expect_error(expected, x=666, anInteger=1)
+
+        expected = "f() got multiple values for argument 'aString'"
+        self.expect_error(expected, "one", aString="two")
+
+    def test_function_with_multiple_choice_parameters(self):
+        """
+        When reporting extra input parameters passed to a function taking a
+        choice parameter group - all elements belonging to that choice
+        parameter group should be counted as a single parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+                <xsd:choice>
+                  <xsd:element name="aString1" type="xsd:string" />
+                  <xsd:element name="anInteger1" type="xsd:integer" />
+                </xsd:choice>
+                <xsd:choice>
+                  <xsd:element name="aString2" type="xsd:string" />
+                  <xsd:element name="anInteger2" type="xsd:integer" />
+                </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", "two", "three")
+
+        expected = ("f() got multiple arguments belonging to a single choice "
+            "parameter group.")
+        self.expect_error(expected, aString1="one", anInteger1=2, anInteger2=3)
+        self.expect_error(expected, aString1="one", aString2="2", anInteger2=3)
+        self.expect_error(expected, anInteger1=1, aString2="two", anInteger2=3)
+        self.expect_error(expected, "one", anInteger1=2, aString2="three")
+        self.expect_error(expected, "one", "two", anInteger1=3)
+        self.expect_error(expected, "one", "two", anInteger2=3)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", "two", x=666)
+        self.expect_error(expected, aString1="one", anInteger2=2, x=666)
+        self.expect_error(expected, anInteger1=1, x=666, aString2="two")
+        self.expect_error(expected, x=666, aString1="one", aString2="two")
+        self.expect_error(expected, x=666, anInteger1=1, anInteger2=2)
+
+        expected = "f() got multiple values for argument 'aString1'"
+        self.expect_error(expected, "one", aString1="two", anInteger2=3)
+        self.expect_error(expected, "one", "two", aString2="three")
 
     def test_function_with_a_single_parameter(self):
         """
