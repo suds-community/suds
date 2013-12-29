@@ -59,12 +59,14 @@ class TestExtraParameters:
     def expect_error(self, expected_error_text, *args, **kwargs):
         try:
             self.service.f(*args, **kwargs)
+            pytest.fail("Expected exception not raised.")
         except TypeError, e:
             assert str(e) == expected_error_text
 
     def expect_error_containing(self, expected_error_text, *args, **kwargs):
         try:
             self.service.f(*args, **kwargs)
+            pytest.fail("Expected exception not raised.")
         except TypeError, e:
             assert expected_error_text in str(e)
 
