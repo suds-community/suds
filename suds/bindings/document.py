@@ -104,8 +104,7 @@ class Document(Binding):
         """
         tag = wrapper[1].name
         ns = wrapper[1].namespace('ns0')
-        d = Element(tag, ns=ns)
-        return d
+        return Element(tag, ns=ns)
 
     def mkparam(self, method, pdef, object):
         """
