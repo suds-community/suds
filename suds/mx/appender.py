@@ -42,9 +42,8 @@ class Matcher:
 
     def __eq__(self, x):
         if self.cls is None:
-            return ( x is None )
-        else:
-            return isinstance(x, self.cls)
+            return x is None
+        return isinstance(x, self.cls)
 
 
 class ContentAppender:
@@ -63,25 +62,15 @@ class ContentAppender:
         """
         self.default = PrimativeAppender(marshaller)
         self.appenders = (
-            (Matcher(None),
-                NoneAppender(marshaller)),
-            (Matcher(null),
-                NoneAppender(marshaller)),
-            (Matcher(Property),
-                PropertyAppender(marshaller)),
-            (Matcher(Object),
-                ObjectAppender(marshaller)),
-            (Matcher(Element),
-                ElementAppender(marshaller)),
-            (Matcher(Text),
-                TextAppender(marshaller)),
-            (Matcher(list),
-                ListAppender(marshaller)),
-            (Matcher(tuple),
-                ListAppender(marshaller)),
-            (Matcher(dict),
-                DictAppender(marshaller)),
-        )
+            (Matcher(None), NoneAppender(marshaller)),
+            (Matcher(null), NoneAppender(marshaller)),
+            (Matcher(Property), PropertyAppender(marshaller)),
+            (Matcher(Object), ObjectAppender(marshaller)),
+            (Matcher(Element), ElementAppender(marshaller)),
+            (Matcher(Text), TextAppender(marshaller)),
+            (Matcher(list), ListAppender(marshaller)),
+            (Matcher(tuple), ListAppender(marshaller)),
+            (Matcher(dict), DictAppender(marshaller)))
 
     def append(self, parent, content):
         """
@@ -92,9 +81,9 @@ class ContentAppender:
         @type content: L{Content}
         """
         appender = self.default
-        for a in self.appenders:
-            if a[0] == content.value:
-                appender = a[1]
+        for matcher, candidate_appender in self.appenders:
+            if matcher == content.value:
+                appender = candidate_appender
                 break
         appender.append(parent, content)
 
