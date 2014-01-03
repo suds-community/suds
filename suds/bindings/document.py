@@ -99,7 +99,7 @@ class Document(Binding):
 
             params_possible += 1
             if is_choice_param:
-                if choice is None:
+                if not choice:
                     choice = Choice()
                 # A choice is considered optional if any of its elements are
                 # optional. This means that we do not know whether to count the
@@ -134,13 +134,7 @@ class Document(Binding):
                 # use case.
                 params_specified.add(pd[0])
 
-            if is_choice_param:
-                if value is not None:
-                    if choice.value_defined():
-                        msg = ("%s() got multiple arguments belonging to a "
-                            "single choice parameter group.")
-                        raise TypeError(msg % (method.name,))
-                    choice.set_value_defined()
+            if choice:
                 # Skip non-existing by-choice arguments.
                 # Implementation notes:
                 #   * This functionality might be better placed inside the
@@ -152,6 +146,11 @@ class Document(Binding):
                 #     providing an empty string value for it.
                 if value is None:
                     continue
+                if choice.value_defined():
+                    msg = ("%s() got multiple arguments belonging to a single "
+                        "choice parameter group.")
+                    raise TypeError(msg % (method.name,))
+                choice.set_value_defined()
             p = self.mkparam(method, pd, value)
             if p is None:
                 continue
@@ -167,7 +166,7 @@ class Document(Binding):
                 msg = "%s() got an unexpected keyword argument '%s'"
             raise TypeError(msg % (method.name, arg_name))
         if args:
-            if choice is not None and not choice.optional():
+            if choice and not choice.optional():
                 params_required += 1
             def plural_suffix(count):
                 if count == 1:
