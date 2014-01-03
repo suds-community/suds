@@ -81,6 +81,14 @@ class TestExtraParameters:
             assert expected_error_text in str(exception)
         self._expect_error(assertion, *args, **kwargs)
 
+    def expect_no_error(self, *args, **kwargs):
+        """
+        Assert that a test function call with the given input parameters does
+        not raise an exception.
+
+        """
+        self.service.f(*args, **kwargs)
+
     def init_function_params(self, params):
         """
         Initialize a test in this group with the given parameter definition.
@@ -104,6 +112,43 @@ class TestExtraParameters:
         input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
         assert not hasattr(self, "service")
         self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
+
+    def test_choice_parameter_containing_a_sequence(self):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group containing a sequence subgroup.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+                <xsd:choice>
+                  <xsd:element name="a" type="xsd:integer" />
+                  <xsd:sequence>
+                    <xsd:element name="b1" type="xsd:integer" />
+                    <xsd:element name="b2" type="xsd:integer" />
+                  </xsd:sequence>
+                </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 to 3 arguments but 5 were given"
+        self.expect_error(expected, 1, None, None, "4", "5")
+
+        expected = ("f() got multiple arguments belonging to a single choice "
+            "parameter group.")
+        self.expect_error(expected, 1, 2)
+        self.expect_error(expected, a=1, b1=2)
+        self.expect_error(expected, a=1, b2=2)
+        self.expect_error(expected, a=1, b1=None, b2=2)
+        self.expect_error(expected, a=1, b1=2, b2=3)
+        self.expect_error(expected, 1, 2, 3)
+        self.expect_error(expected, 1, 2, b2=3)
+        self.expect_error(expected, 1, b1=2, b2=3)
+
+        self.expect_no_error(1)
+        self.expect_no_error(a=1)
+        self.expect_no_error(1, b1=None, b2=None)
 
     def test_multiple_consecutive_choice_parameters(self):
         """
