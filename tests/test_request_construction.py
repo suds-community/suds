@@ -305,8 +305,9 @@ class TestExtraParameters:
         self.expect_error(expected, aString1="one", aString2="2", anInteger2=3)
         self.expect_error(expected, anInteger1=1, aString2="two", anInteger2=3)
         self.expect_error(expected, "one", anInteger1=2, aString2="three")
-        self.expect_error(expected, "one", "two", anInteger1=3)
-        self.expect_error(expected, "one", "two", anInteger2=3)
+        self.expect_error(expected, "one", aString2="two", anInteger1=3)
+        self.expect_error(expected, "one", None, "two", 3)
+        self.expect_error(expected, "one", None, "two", anInteger2=3)
 
         expected = "f() got an unexpected keyword argument 'x'"
         self.expect_error(expected, "one", None, "two", x=666)
@@ -317,7 +318,7 @@ class TestExtraParameters:
 
         expected = "f() got multiple values for argument 'aString1'"
         self.expect_error(expected, "one", aString1="two", anInteger2=3)
-        self.expect_error(expected, "one", None, "two", aString2="three")
+        self.expect_error(expected, "one", None, "two", aString1="three")
 
         expected = "f() got multiple values for argument 'anInteger1'"
         self.expect_error(expected, None, 2, "three", anInteger1=22)
