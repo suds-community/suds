@@ -62,12 +62,17 @@ class Document(Binding):
 
             """
             def __init__(self, id):
-                self.__id = id
+                self.__init_id(id)
                 self.__value_defined = False
                 self.__optional = False
 
             def matches(self, id):
-                return self.__id == id
+                if len(id) < len(self.__id):
+                    return False
+                for old, new in zip(self.__id, id):
+                    if old is not new:
+                        return False
+                return True
 
             def mark_as_optional(self):
                 self.__optional = True
@@ -81,6 +86,13 @@ class Document(Binding):
 
             def value_defined(self):
                 return self.__value_defined
+
+            def __init_id(self, id):
+                for n, x in enumerate(reversed(id)):
+                    if x.choice():
+                        self.__id = id[:len(id) + 1 - n]
+                        return
+                assert False, "Given ancestry does not represent a choice."
 
         def is_choice_in_ancestry(ancestry):
             """
