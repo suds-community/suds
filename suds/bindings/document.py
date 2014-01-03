@@ -96,7 +96,7 @@ class Document(Binding):
     def document(self, wrapper):
         """
         Get the document root. For I{document/literal}, this is the name of the
-        wrapper element qualifed by the schema's target namespace.
+        wrapper element qualified by the schema's target namespace.
         @param wrapper: The method name.
         @type wrapper: L{xsd.sxbase.SchemaObject}
         @return: A root element.

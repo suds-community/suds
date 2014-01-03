@@ -62,7 +62,7 @@ class RPC(Binding):
     def method(self, method):
         """
         Get the document root.  For I{rpc/(literal|encoded)}, this is the
-        name of the method qualifed by the schema tns.
+        name of the method qualified by the schema tns.
         @param method: A service method.
         @type method: I{service.Method}
         @return: A root element.
