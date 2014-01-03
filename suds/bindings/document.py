@@ -114,6 +114,10 @@ class Document(Binding):
                 if is_optional_param:
                     choice.mark_as_optional()
             else:
+                if choice:
+                    if not choice.optional():
+                        params_required += 1
+                    choice = None
                 if not is_optional_param:
                     params_required += 1
 
