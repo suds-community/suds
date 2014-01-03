@@ -57,8 +57,8 @@ class Document(Binding):
             """
             Single choice input parameter group.
 
-            Tracks information about a single choice input parameter group
-            while processing received input parameter values.
+            Tracks information about a single encountered choice input
+            parameter group while processing received input parameter values.
 
             """
             def __init__(self, id):
