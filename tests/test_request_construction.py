@@ -47,12 +47,13 @@ class TestExtraParameters:
     Non-choice parameters should be treated as regular Python function
     arguments.
 
-    Parameters belonging to a single choice parameter structure should be
-    counted as a single parameter and only one of those values may be specified
-    in a single call.
+    Parameters belonging to a single choice parameter structure may each be
+    specified but at most one one of those may have its value set to something
+    other than None.
 
-    Positional parameters representing a value from a single choice parameter
-    group should be mapped to the first element in that group.
+    Positional arguments are mapped to choice group parameters the same as done
+    for a simple sequence group - each in turn, except that at most one of them
+    may be given a value other than None.
 
     """
 
@@ -104,11 +105,10 @@ class TestExtraParameters:
         assert not hasattr(self, "service")
         self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
 
-    def test_function_with_a_single_choice_parameter(self):
+    def test_function_with_a_single_nonoptional_choice_parameter(self):
         """
-        When reporting extra input parameters passed to a function taking a
-        choice parameter group - all elements belonging to that choice
-        parameter group should be counted as a single parameter.
+        Test reporting extra input parameters passed to a function taking a
+        single non-optional choice parameter group.
 
         """
         self.init_function_params("""\
@@ -119,12 +119,13 @@ class TestExtraParameters:
             </xsd:choice>
           </xsd:complexType>""")
 
-        expected = "f() takes 1 argument but 2 were given"
-        self.expect_error(expected, "one", 2)
+        expected = "f() takes 1 to 2 arguments but 3 were given"
+        self.expect_error(expected, "one", None, 3)
+        self.expect_error(expected, "one", None, None)
 
-        expected = "f() takes 1 argument but 3 were given"
-        self.expect_error(expected, "one", 2, 3)
-        self.expect_error(expected, "one", 2, "three")
+        expected = "f() takes 1 to 2 arguments but 4 were given"
+        self.expect_error(expected, "one", None, 3, 4)
+        self.expect_error(expected, None, 2, "three", 4)
 
         expected = ("f() got multiple arguments belonging to a single choice "
             "parameter group.")
@@ -141,6 +142,9 @@ class TestExtraParameters:
 
         expected = "f() got multiple values for argument 'aString'"
         self.expect_error(expected, "one", aString="two")
+        self.expect_error(expected, "one", None, aString="two")
+        self.expect_error(expected, None, aString="two")
+        self.expect_error(expected, None, None, aString="two")
 
     def test_function_with_a_single_nonoptional_parameter(self):
         """
@@ -175,6 +179,75 @@ class TestExtraParameters:
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, 1, x=2, y=3, z=4)
 
+    @pytest.mark.parametrize("choice", (
+        # Explicitly marked as optional and containing only non-optional
+        # elements.
+        pytest.mark.xfail(reason="suds does not yet support minOccurs/"
+            "maxOccurs attributes on all/choice/sequence order indicator "
+            "elements")(
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>"""),
+        # Not explicitly marked as optional but containing at least one
+        # non-optional element.
+        """\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        # Explicitly marked as optional and containing at least one
+        # non-optional element.
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>"""))
+    def test_function_with_a_single_optional_choice_parameter(self, choice):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        single optional choice parameter group.
+
+        """
+        self.init_function_params(choice)
+        expected = "f() takes 0 to 2 arguments but 3 were given"
+        self.expect_error(expected, "one", None, 3)
+
     def test_function_with_a_single_optional_parameter(self):
         """
         Test how extra parameters are handled in an operation taking a single
@@ -204,9 +277,8 @@ class TestExtraParameters:
 
     def test_function_with_multiple_choice_parameters(self):
         """
-        When reporting extra input parameters passed to a function taking a
-        choice parameter group - all elements belonging to that choice
-        parameter group should be counted as a single parameter.
+        Test reporting extra input parameters passed to a function taking
+        multiple choice parameter groups.
 
         """
         self.init_function_params("""\
@@ -218,13 +290,14 @@ class TestExtraParameters:
                 </xsd:choice>
                 <xsd:choice>
                   <xsd:element name="aString2" type="xsd:string" />
-                  <xsd:element name="anInteger2" type="xsd:integer" />
+                  <xsd:element name="anInteger2" type="xsd:integer"
+                    minOccurs="0" />
                 </xsd:choice>
             </xsd:sequence>
           </xsd:complexType>""")
 
-        expected = "f() takes 2 arguments but 3 were given"
-        self.expect_error(expected, "one", "two", "three")
+        expected = "f() takes 1 to 4 arguments but 5 were given"
+        self.expect_error(expected, None, 2, "three", None, "five")
 
         expected = ("f() got multiple arguments belonging to a single choice "
             "parameter group.")
@@ -236,7 +309,7 @@ class TestExtraParameters:
         self.expect_error(expected, "one", "two", anInteger2=3)
 
         expected = "f() got an unexpected keyword argument 'x'"
-        self.expect_error(expected, "one", "two", x=666)
+        self.expect_error(expected, "one", None, "two", x=666)
         self.expect_error(expected, aString1="one", anInteger2=2, x=666)
         self.expect_error(expected, anInteger1=1, x=666, aString2="two")
         self.expect_error(expected, x=666, aString1="one", aString2="two")
@@ -244,7 +317,17 @@ class TestExtraParameters:
 
         expected = "f() got multiple values for argument 'aString1'"
         self.expect_error(expected, "one", aString1="two", anInteger2=3)
-        self.expect_error(expected, "one", "two", aString2="three")
+        self.expect_error(expected, "one", None, "two", aString2="three")
+
+        expected = "f() got multiple values for argument 'anInteger1'"
+        self.expect_error(expected, None, 2, "three", anInteger1=22)
+
+        expected = "f() got multiple values for argument 'aString2'"
+        self.expect_error(expected, None, 2, None, aString2=22)
+        self.expect_error(expected, None, 2, None, None, aString2=22)
+
+        expected = "f() got multiple values for argument 'anInteger2'"
+        self.expect_error(expected, None, 2, None, None, anInteger2=22)
 
     def test_function_with_multiple_optional_parameters(self):
         """
