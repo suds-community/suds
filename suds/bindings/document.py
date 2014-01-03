@@ -53,6 +53,31 @@ class Document(Binding):
 
     """
     def bodycontent(self, method, args, kwargs):
+        class Choice:
+            """
+            Single choice input parameter group.
+
+            Tracks information about a single choice input parameter group
+            while processing received input parameter values.
+
+            """
+            def __init__(self):
+                self.__value_defined = False
+                self.__optional = False
+
+            def mark_as_optional(self):
+                self.__optional = True
+
+            def optional(self):
+                return self.__optional
+
+            def set_value_defined(self):
+                assert not self.value_defined()
+                self.__value_defined = True
+
+            def value_defined(self):
+                return self.__value_defined
+
         if not len(method.soap.input.body.parts):
             return ()
         wrapped = method.soap.input.body.wrapped
@@ -65,9 +90,7 @@ class Document(Binding):
         params = self.param_defs(method)
         params_count = len(args) + len(kwargs)
         params_specified = set()
-        params_have_choice = False
-        params_choice_value_defined = False
-        params_choice_optional = False
+        choice = None
         params_required = 0
         params_possible = 0
         for pd in params:
@@ -76,7 +99,8 @@ class Document(Binding):
 
             params_possible += 1
             if is_choice_param:
-                params_have_choice = True
+                if choice is None:
+                    choice = Choice()
                 # A choice is considered optional if any of its elements are
                 # optional. This means that we do not know whether to count the
                 # whole choice structure as a single required parameter or not
@@ -88,7 +112,7 @@ class Document(Binding):
                 # supported in suds for neither all, choice nor sequence order
                 # indicators.
                 if is_optional_param:
-                    params_choice_optional = True
+                    choice.mark_as_optional()
             else:
                 if not is_optional_param:
                     params_required += 1
@@ -112,11 +136,11 @@ class Document(Binding):
 
             if is_choice_param:
                 if value is not None:
-                    if params_choice_value_defined:
+                    if choice.value_defined():
                         msg = ("%s() got multiple arguments belonging to a "
                             "single choice parameter group.")
                         raise TypeError(msg % (method.name,))
-                    params_choice_value_defined = True
+                    choice.set_value_defined()
                 # Skip non-existing by-choice arguments.
                 # Implementation notes:
                 #   * This functionality might be better placed inside the
@@ -143,7 +167,7 @@ class Document(Binding):
                 msg = "%s() got an unexpected keyword argument '%s'"
             raise TypeError(msg % (method.name, arg_name))
         if args:
-            if params_have_choice and not params_choice_optional:
+            if choice is not None and not choice.optional():
                 params_required += 1
             def plural_suffix(count):
                 if count == 1:
