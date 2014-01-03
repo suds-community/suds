@@ -1942,15 +1942,23 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     method_name, method_params = methods[0]
     assert method_name == "f"
 
-    param_name, param_element, param_choice = method_params[0]
+    param_name, param_element, param_ancestry = method_params[0]
     assert param_name == "a"
     assert param_element is param_in_1
-    assert param_choice == False
+    assert len(param_ancestry) == 3
+    assert type(param_ancestry[0]) is suds.xsd.sxbasic.Element
+    assert param_ancestry[0].name == "f"
+    assert type(param_ancestry[1]) is suds.xsd.sxbasic.Complex
+    assert type(param_ancestry[2]) is suds.xsd.sxbasic.Sequence
 
-    param_name, param_element, param_choice = method_params[1]
+    param_name, param_element, param_ancestry = method_params[1]
     assert param_name == "b"
     assert param_element is param_in_2
-    assert param_choice == False
+    assert len(param_ancestry) == 3
+    assert type(param_ancestry[0]) is suds.xsd.sxbasic.Element
+    assert param_ancestry[0].name == "f"
+    assert type(param_ancestry[1]) is suds.xsd.sxbasic.Complex
+    assert type(param_ancestry[2]) is suds.xsd.sxbasic.Sequence
 
 
 def test_wsdl_schema_content():
