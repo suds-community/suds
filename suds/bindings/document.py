@@ -64,35 +64,70 @@ class Document(Binding):
         args = list(args)
         params = self.param_defs(method)
         params_count = len(args) + len(kwargs)
-        params_given = set()
+        params_specified = set()
+        params_have_choice = False
+        params_choice_value_defined = False
+        params_choice_optional = False
         params_required = 0
         params_possible = 0
         for pd in params:
+            is_choice_param = len(pd) > 2 and pd[2]
+            is_optional_param = pd[1].optional()
+
+            params_possible += 1
+            if is_choice_param:
+                params_have_choice = True
+                # A choice is considered optional if any of its elements are
+                # optional. This means that we do not know whether to count the
+                # whole choice structure as a single required parameter or not
+                # until after we are done processing all of its contained
+                # elements.
+                #
+                # We should also check whether the whole choice element has
+                # been explicitly marked as optional, but this is not currently
+                # supported in suds for neither all, choice nor sequence order
+                # indicators.
+                if is_optional_param:
+                    params_choice_optional = True
+            else:
+                if not is_optional_param:
+                    params_required += 1
+
+            value_specified = True
+            value = None
             if args:
                 value = args.pop(0)
-                params_given.add(pd[0])
             else:
                 try:
                     value = kwargs.pop(pd[0])
                 except KeyError:
-                    value = None
-                else:
-                    params_given.add(pd[0])
+                    value_specified = False
 
-            params_possible += 1
-            if not pd[1].optional():
-                params_required += 1
+            if value_specified:
+                # Note that since params_specified is a set, it tracks all
+                # same-named input parameters as one. This is not a problem, in
+                # and of itself, as the rest of suds also does not support this
+                # use case.
+                params_specified.add(pd[0])
 
-            # Skip non-existing by-choice arguments.
-            # Implementation notes:
-            #   * This functionality might be better placed inside the
-            #     mkparam() function but to do that we would first need to
-            #     understand more thoroughly how different Binding subclasses
-            #     in suds work and how they would be affected by this change.
-            #   * If caller actually wishes to pass an empty choice parameter
-            #     he can specify its value explicitly as an empty string.
-            if len(pd) > 2 and pd[2] and value is None:
-                continue
+            if is_choice_param:
+                if value is not None:
+                    if params_choice_value_defined:
+                        msg = ("%s() got multiple arguments belonging to a "
+                            "single choice parameter group.")
+                        raise TypeError(msg % (method.name,))
+                    params_choice_value_defined = True
+                # Skip non-existing by-choice arguments.
+                # Implementation notes:
+                #   * This functionality might be better placed inside the
+                #     mkparam() function but to do that we would first need to
+                #     understand more thoroughly how different Binding
+                #     subclasses in suds work and how they would be affected by
+                #     this change.
+                #   * An empty choice parameter can be specified by explicitly
+                #     providing an empty string value for it.
+                if value is None:
+                    continue
             p = self.mkparam(method, pd, value)
             if p is None:
                 continue
@@ -102,12 +137,14 @@ class Document(Binding):
             root.append(p)
         if kwargs:
             arg_name = kwargs.keys()[0]
-            if arg_name in params_given:
+            if arg_name in params_specified:
                 msg = "%s() got multiple values for argument '%s'"
             else:
                 msg = "%s() got an unexpected keyword argument '%s'"
             raise TypeError(msg % (method.name, arg_name))
         if args:
+            if params_have_choice and not params_choice_optional:
+                params_required += 1
             def plural_suffix(count):
                 if count == 1:
                     return ""
@@ -119,7 +156,6 @@ class Document(Binding):
             expected = params_required
             if params_required != params_possible:
                 expected = "%d to %d" % (params_required, params_possible)
-            assert params_count == len(params_given) + len(args)
             given = params_count
             msg_parts = ["%s() takes %s argument" % (method.name, expected),
                 plural_suffix(expected), " but %d " % (given,),
