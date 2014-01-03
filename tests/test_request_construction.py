@@ -59,10 +59,10 @@ class TestExtraParameters:
 
     def expect_error(self, expected_error_text, *args, **kwargs):
         """
-        Assert that an expected TypeError exception is raised from a test
-        function call with the given input parameters. Caught exception is
-        considered expected if its string representation matches the given
-        expected error text.
+        Assert an expected TypeError exception is raised from a test function
+        call with the given input parameters. Caught exception is considered
+        expected if its string representation matches the given expected error
+        text.
 
         """
         def assertion(exception):
@@ -71,10 +71,10 @@ class TestExtraParameters:
 
     def expect_error_containing(self, expected_error_text, *args, **kwargs):
         """
-        Assert that an expected TypeError exception is raised from a test
-        function call with the given input parameters. Caught exception is
-        considered expected if its string representation contains the given
-        expected error text as a substring.
+        Assert an expected TypeError exception is raised from a test function
+        call with the given input parameters. Caught exception is considered
+        expected if its string representation contains the given expected error
+        text as a substring.
 
         """
         def assertion(exception):
@@ -83,8 +83,8 @@ class TestExtraParameters:
 
     def expect_no_error(self, *args, **kwargs):
         """
-        Assert that a test function call with the given input parameters does
-        not raise an exception.
+        Assert a test function call with the given input parameters does not
+        raise an exception.
 
         """
         self.service.f(*args, **kwargs)
@@ -558,9 +558,9 @@ class TestExtraParameters:
 
     def _expect_error(self, assertion, *args, **kwargs):
         """
-        Assert that an expected TypeError exception is raised from a test
-        function call with the given input parameters. Caught exception is
-        tested using the given assertion function.
+        Assert an expected TypeError exception is raised from a test function
+        call with the given input parameters. Caught exception is tested using
+        the given assertion function.
 
         """
         try:
