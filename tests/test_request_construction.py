@@ -275,10 +275,10 @@ class TestExtraParameters:
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, "one", x=3, y=4, z=5)
 
-    def test_function_with_multiple_choice_parameters(self):
+    def test_function_with_multiple_consecutive_choice_parameters(self):
         """
         Test reporting extra input parameters passed to a function taking
-        multiple choice parameter groups.
+        multiple choice parameter groups directly following each other.
 
         """
         self.init_function_params("""\
@@ -386,6 +386,72 @@ class TestExtraParameters:
 
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, "one", 2, x=3, y=4, z=5)
+
+    def test_function_with_multiple_separated_choice_parameters(self):
+        """
+        Test reporting extra input parameters passed to a function taking
+        multiple choice parameter groups with at least one non-choice separator
+        element between them.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+                <xsd:choice>
+                  <xsd:element name="s1" type="xsd:string" />
+                  <xsd:element name="i1" type="xsd:integer" />
+                </xsd:choice>
+                <xsd:element name="separator" type="xsd:string" />
+                <xsd:choice>
+                  <xsd:element name="s2" type="xsd:string" />
+                  <xsd:element name="i2" type="xsd:integer"
+                    minOccurs="0" />
+                </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 to 5 arguments but 6 were given"
+        self.expect_error(expected, None, 2, "three", "four", None, "six")
+
+        expected = ("f() got multiple arguments belonging to a single choice "
+            "parameter group.")
+        self.expect_error(expected, s1="one", i1=2, separator="", i2=3)
+        self.expect_error(expected, s1="one", separator="", s2="2", i2=3)
+        self.expect_error(expected, i1=1, separator="", s2="two", i2=3)
+        self.expect_error(expected, "one", 2, "", "three")
+        self.expect_error(expected, "one", 2, separator="", s2="three")
+        self.expect_error(expected, "one", i1=2, separator="", s2="three")
+        self.expect_error(expected, "one", None, "", "two", 3)
+        self.expect_error(expected, "one", None, "", "two", i2=3)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", None, "", "two", x=666)
+        self.expect_error(expected, s1="one", separator="", i2=2, x=666)
+        self.expect_error(expected, i1=1, separator="", x=666, s2="two")
+        self.expect_error(expected, x=666, s1="one", separator="", s2="two")
+        self.expect_error(expected, x=666, i1=1, separator="", i2=2)
+
+        expected = "f() got multiple values for argument 's1'"
+        self.expect_error(expected, "one", s1="two", separator="", i2=3)
+        self.expect_error(expected, "one", None, "", "two", s1="three")
+
+        expected = "f() got multiple values for argument 'i1'"
+        self.expect_error(expected, None, 2, "", "three", i1=22)
+
+        expected = "f() got multiple values for argument 'separator'"
+        self.expect_error(expected, "one", None, "", "two", separator=None)
+        self.expect_error(expected, "one", None, None, "two", separator=None)
+        self.expect_error(expected, "1", None, "", "2", separator="x")
+        self.expect_error(expected, "1", None, None, "2", separator="x")
+        self.expect_error(expected, "1", None, "x", "2", separator=None)
+        self.expect_error(expected, "1", None, "x", "2", separator="y")
+
+        expected = "f() got multiple values for argument 's2'"
+        self.expect_error(expected, None, 2, "", None, s2=22)
+        self.expect_error(expected, None, 2, "", None, None, s2=22)
+
+        expected = "f() got multiple values for argument 'i2'"
+        self.expect_error(expected, None, 2, "", None, None, i2=22)
 
     def test_function_with_no_parameters(self):
         """
