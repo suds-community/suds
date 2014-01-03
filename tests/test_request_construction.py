@@ -122,13 +122,13 @@ class TestExtraParameters:
         self.init_function_params("""\
           <xsd:complexType>
             <xsd:sequence>
-                <xsd:choice>
-                  <xsd:element name="a" type="xsd:integer" />
-                  <xsd:sequence>
-                    <xsd:element name="b1" type="xsd:integer" />
-                    <xsd:element name="b2" type="xsd:integer" />
-                  </xsd:sequence>
-                </xsd:choice>
+              <xsd:choice>
+                <xsd:element name="a" type="xsd:integer" />
+                <xsd:sequence>
+                  <xsd:element name="b1" type="xsd:integer" />
+                  <xsd:element name="b2" type="xsd:integer" />
+                </xsd:sequence>
+              </xsd:choice>
             </xsd:sequence>
           </xsd:complexType>""")
 
@@ -159,15 +159,15 @@ class TestExtraParameters:
         self.init_function_params("""\
           <xsd:complexType>
             <xsd:sequence>
-                <xsd:choice>
-                  <xsd:element name="aString1" type="xsd:string" />
-                  <xsd:element name="anInteger1" type="xsd:integer" />
-                </xsd:choice>
-                <xsd:choice>
-                  <xsd:element name="aString2" type="xsd:string" />
-                  <xsd:element name="anInteger2" type="xsd:integer"
-                    minOccurs="0" />
-                </xsd:choice>
+              <xsd:choice>
+                <xsd:element name="aString1" type="xsd:string" />
+                <xsd:element name="anInteger1" type="xsd:integer" />
+              </xsd:choice>
+              <xsd:choice>
+                <xsd:element name="aString2" type="xsd:string" />
+                <xsd:element name="anInteger2" type="xsd:integer"
+                  minOccurs="0" />
+              </xsd:choice>
             </xsd:sequence>
           </xsd:complexType>""")
 
@@ -273,16 +273,16 @@ class TestExtraParameters:
         self.init_function_params("""\
           <xsd:complexType>
             <xsd:sequence>
-                <xsd:choice>
-                  <xsd:element name="s1" type="xsd:string" />
-                  <xsd:element name="i1" type="xsd:integer" />
-                </xsd:choice>
-                <xsd:element name="separator" type="xsd:string" />
-                <xsd:choice>
-                  <xsd:element name="s2" type="xsd:string" />
-                  <xsd:element name="i2" type="xsd:integer"
-                    minOccurs="0" />
-                </xsd:choice>
+              <xsd:choice>
+                <xsd:element name="s1" type="xsd:string" />
+                <xsd:element name="i1" type="xsd:integer" />
+              </xsd:choice>
+              <xsd:element name="separator" type="xsd:string" />
+              <xsd:choice>
+                <xsd:element name="s2" type="xsd:string" />
+                <xsd:element name="i2" type="xsd:integer"
+                  minOccurs="0" />
+              </xsd:choice>
             </xsd:sequence>
           </xsd:complexType>""")
 
