@@ -61,9 +61,13 @@ class Document(Binding):
             while processing received input parameter values.
 
             """
-            def __init__(self):
+            def __init__(self, id):
+                self.__id = id
                 self.__value_defined = False
                 self.__optional = False
+
+            def matches(self, id):
+                return self.__id == id
 
             def mark_as_optional(self):
                 self.__optional = True
@@ -77,6 +81,20 @@ class Document(Binding):
 
             def value_defined(self):
                 return self.__value_defined
+
+        def is_choice_in_ancestry(ancestry):
+            """
+            The ancestry contains a <choice> order indicator element.
+
+            @param ancestry: A list of ancestors.
+            @type ancestry: list
+            @return: True if the given ancestry contains a <choice>.
+            @rtype: boolean
+            """
+            for x in (ancestry or []):
+                if x.choice():
+                    return True
+            return False
 
         if not len(method.soap.input.body.parts):
             return ()
@@ -94,13 +112,23 @@ class Document(Binding):
         params_required = 0
         params_possible = 0
         for pd in params:
-            is_choice_param = len(pd) > 2 and pd[2]
+            # We get additional ancestry information for unwrapped parameters.
+            ancestry = None
+            is_unwrapped_param = len(pd) > 2
+            if is_unwrapped_param:
+                ancestry = pd[2]
+            is_choice_param = is_choice_in_ancestry(ancestry)
             is_optional_param = pd[1].optional()
 
             params_possible += 1
+
+            if choice and not choice.matches(ancestry):
+                if not choice.optional():
+                    params_required += 1
+                choice = None
             if is_choice_param:
                 if not choice:
-                    choice = Choice()
+                    choice = Choice(ancestry)
                 # A choice is considered optional if any of its elements are
                 # optional. This means that we do not know whether to count the
                 # whole choice structure as a single required parameter or not
@@ -114,10 +142,6 @@ class Document(Binding):
                 if is_optional_param:
                     choice.mark_as_optional()
             else:
-                if choice:
-                    if not choice.optional():
-                        params_required += 1
-                    choice = None
                 if not is_optional_param:
                     params_required += 1
 
@@ -237,7 +261,7 @@ class Document(Binding):
             for child, ancestry in resolved:
                 if child.isattr():
                     continue
-                result.append((child.name, child, self.bychoice(ancestry)))
+                result.append((child.name, child, ancestry))
         return result
 
     def returned_types(self, method):
@@ -253,16 +277,3 @@ class Document(Binding):
         else:
             result += rts
         return result
-
-    def bychoice(self, ancestry):
-        """
-        The ancestry contains a <choice/>
-        @param ancestry: A list of ancestors.
-        @type ancestry: list
-        @return: True if contains <choice/>
-        @rtype: boolean
-        """
-        for x in ancestry:
-            if x.choice():
-                return True
-        return False
