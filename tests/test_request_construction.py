@@ -148,6 +148,9 @@ class TestExtraParameters:
 
         self.expect_no_error(1)
         self.expect_no_error(a=1)
+        self.expect_no_error(None, 1, 2)
+        self.expect_no_error(b1=2, b2=3)
+        self.expect_no_error(None, b1=2, b2=3)
         self.expect_no_error(1, b1=None, b2=None)
 
     def test_multiple_consecutive_choice_parameters(self):
