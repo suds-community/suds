@@ -113,7 +113,7 @@ class TestExtraParameters:
         assert not hasattr(self, "service")
         self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
 
-    def test_choice_parameter_containing_a_sequence(self):
+    def test_choice_containing_a_sequence(self):
         """
         Test reporting extra input parameters passed to a function taking a
         choice parameter group containing a sequence subgroup.
@@ -180,7 +180,7 @@ class TestExtraParameters:
         self.expect_no_error(1, 2)
         self.expect_no_error(None, None, 1, 2)
 
-    def test_multiple_consecutive_choice_parameters(self):
+    def test_multiple_consecutive_choices(self):
         """
         Test reporting extra input parameters passed to a function taking
         multiple choice parameter groups directly following each other.
@@ -292,7 +292,7 @@ class TestExtraParameters:
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, "one", 2, x=3, y=4, z=5)
 
-    def test_multiple_separated_choice_parameters(self):
+    def test_multiple_separated_choices(self):
         """
         Test reporting extra input parameters passed to a function taking
         multiple choice parameter groups with at least one non-choice separator
@@ -414,7 +414,7 @@ class TestExtraParameters:
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, "one", three="3", x=5, y=6, z=7)
 
-    def test_single_nonoptional_choice_parameter(self):
+    def test_single_nonoptional_choice(self):
         """
         Test reporting extra input parameters passed to a function taking a
         single non-optional choice parameter group.
@@ -546,7 +546,7 @@ class TestExtraParameters:
               <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
             </xsd:choice>
           </xsd:complexType>"""))
-    def test_single_optional_choice_parameter(self, choice):
+    def test_single_optional_choice(self, choice):
         """
         Test reporting extra input parameters passed to a function taking a
         single optional choice parameter group.
