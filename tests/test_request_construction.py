@@ -115,10 +115,10 @@ class TestExtraParameters:
         assert not hasattr(self, "service")
         self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
 
-    def test_choice_containing_a_sequence(self):
+    def test_choice_containing_a_nonempty_sequence(self):
         """
         Test reporting extra input parameters passed to a function taking a
-        choice parameter group containing a sequence subgroup.
+        choice parameter group containing a non-empty sequence subgroup.
 
         """
         self.init_function_params("""\
@@ -153,6 +153,33 @@ class TestExtraParameters:
         self.expect_no_error(b1=2, b2=3)
         self.expect_no_error(None, b1=2, b2=3)
         self.expect_no_error(1, b1=None, b2=None)
+
+    @pytest.mark.parametrize("test_args_required", (
+        pytest.mark.xfail(reason="empty choice member items not supported")(
+            True),
+        False))
+    def test_choice_containing_an_empty_sequence(self, test_args_required):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group containing an empty sequence subgroup.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="a" type="xsd:integer" />
+              <xsd:sequence>
+              </xsd:sequence>
+            </xsd:choice>
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 to 1 arguments but 3 were given"
+        if not test_args_required:
+            expected = [expected, "f() takes 1 argument but 3 were given"]
+        self.expect_error(expected, 1, None, None)
+
+        self.expect_no_error()
+        self.expect_no_error(1)
 
     def test_choice_with_more_than_one_required_argument(self):
         """
