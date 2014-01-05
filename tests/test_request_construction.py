@@ -153,6 +153,34 @@ class TestExtraParameters:
         self.expect_no_error(None, b1=2, b2=3)
         self.expect_no_error(1, b1=None, b2=None)
 
+    def test_choice_with_more_than_one_required_argument(self):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group with more than one required argument.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:choice>
+                <xsd:sequence>
+                  <xsd:element name="a1" type="xsd:integer" />
+                  <xsd:element name="a2" type="xsd:integer" />
+                </xsd:sequence>
+                <xsd:sequence>
+                  <xsd:element name="b1" type="xsd:integer" />
+                  <xsd:element name="b2" type="xsd:integer" />
+                </xsd:sequence>
+              </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 to 4 arguments but 5 were given"
+        self.expect_error(expected, 1, 2, None, None, "5")
+
+        self.expect_no_error(1, 2)
+        self.expect_no_error(None, None, 1, 2)
+
     def test_multiple_consecutive_choice_parameters(self):
         """
         Test reporting extra input parameters passed to a function taking
