@@ -207,6 +207,22 @@ class TestExtraParameters:
         self.expect_no_error(1, 2)
         self.expect_no_error(None, None, 1, 2)
 
+    def test_empty_sequence(self):
+        """
+        Test reporting extra input parameters passed to a function whose input
+        parameter structure has been defined as an empty sequence.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence />
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 arguments but 1 was given"
+        self.expect_error(expected, None)
+
+        self.expect_no_error()
+
     def test_multiple_consecutive_choices(self):
         """
         Test reporting extra input parameters passed to a function taking
