@@ -380,6 +380,6 @@ class ChoiceFrame(Frame):
     def __update_has_value_for_item(self, item_has_value):
         if item_has_value:
             if self.has_value():
-                self._error("got multiple arguments belonging to a single "
-                    "choice parameter group")
+                self._error("got multiple values for a single choice "
+                    "parameter")
             self._has_value = True
