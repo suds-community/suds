@@ -136,7 +136,7 @@ class TestExtraParameters:
         self.expect_error(expected, 1, None, None, "4", "5")
 
         expected = ("f() got multiple arguments belonging to a single choice "
-            "parameter group.")
+            "parameter group")
         self.expect_error(expected, 1, 2)
         self.expect_error(expected, a=1, b1=2)
         self.expect_error(expected, a=1, b2=2)
@@ -206,7 +206,7 @@ class TestExtraParameters:
         self.expect_error(expected, None, 2, "three", None, "five")
 
         expected = ("f() got multiple arguments belonging to a single choice "
-            "parameter group.")
+            "parameter group")
         self.expect_error(expected, aString1="one", anInteger1=2, anInteger2=3)
         self.expect_error(expected, aString1="one", aString2="2", anInteger2=3)
         self.expect_error(expected, anInteger1=1, aString2="two", anInteger2=3)
@@ -321,7 +321,7 @@ class TestExtraParameters:
         self.expect_error(expected, None, 2, "three", "four", None, "six")
 
         expected = ("f() got multiple arguments belonging to a single choice "
-            "parameter group.")
+            "parameter group")
         self.expect_error(expected, s1="one", i1=2, separator="", i2=3)
         self.expect_error(expected, s1="one", separator="", s2="2", i2=3)
         self.expect_error(expected, i1=1, separator="", s2="two", i2=3)
@@ -440,7 +440,7 @@ class TestExtraParameters:
         self.expect_error(expected, None, 2, "three", 4)
 
         expected = ("f() got multiple arguments belonging to a single choice "
-            "parameter group.")
+            "parameter group")
         self.expect_error(expected, aString="one", anInteger=2)
         self.expect_error(expected, anInteger=1, aString="two")
         self.expect_error(expected, "one", anInteger=2)

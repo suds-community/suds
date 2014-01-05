@@ -381,5 +381,5 @@ class ChoiceFrame(Frame):
         if item_has_value:
             if self.has_value():
                 self._error("got multiple arguments belonging to a single "
-                    "choice parameter group.")
+                    "choice parameter group")
             self._has_value = True
