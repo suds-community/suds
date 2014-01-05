@@ -49,11 +49,8 @@ class TestExtraParameters:
 
     Parameters belonging to a single choice parameter structure may each be
     specified but at most one one of those may have its value set to something
-    other than None.
-
-    Positional arguments are mapped to choice group parameters the same as done
-    for a simple sequence group - each in turn, except that at most one of them
-    may be given a value other than None.
+    other than None. Positional arguments are mapped to choice group parameters
+    the same as done for a simple all/sequence group - each in turn.
 
     """
 
