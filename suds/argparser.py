@@ -160,7 +160,7 @@ class ArgParser:
         if self.__kwargs:
             param_name = self.__kwargs.keys()[0]
             if param_name in self.__params_with_arguments:
-                msg = "got multiple values for argument '%s'"
+                msg = "got multiple values for parameter '%s'"
             else:
                 msg = "got an unexpected keyword argument '%s'"
             self.__error(msg % (param_name,))
