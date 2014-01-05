@@ -157,18 +157,16 @@ class TestExtraParameters:
         """
         self.init_function_params("""\
           <xsd:complexType>
-            <xsd:sequence>
-              <xsd:choice>
-                <xsd:sequence>
-                  <xsd:element name="a1" type="xsd:integer" />
-                  <xsd:element name="a2" type="xsd:integer" />
-                </xsd:sequence>
-                <xsd:sequence>
-                  <xsd:element name="b1" type="xsd:integer" />
-                  <xsd:element name="b2" type="xsd:integer" />
-                </xsd:sequence>
-              </xsd:choice>
-            </xsd:sequence>
+            <xsd:choice>
+              <xsd:sequence>
+                <xsd:element name="a1" type="xsd:integer" />
+                <xsd:element name="a2" type="xsd:integer" />
+              </xsd:sequence>
+              <xsd:sequence>
+                <xsd:element name="b1" type="xsd:integer" />
+                <xsd:element name="b2" type="xsd:integer" />
+              </xsd:sequence>
+            </xsd:choice>
           </xsd:complexType>""")
 
         expected = "f() takes 2 to 4 arguments but 5 were given"
