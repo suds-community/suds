@@ -488,8 +488,7 @@ class TestExtraParameters:
         # Explicitly marked as optional and containing only non-optional
         # elements.
         pytest.mark.xfail(reason="suds does not yet support minOccurs/"
-            "maxOccurs attributes on all/choice/sequence order indicator "
-            "elements")(
+            "maxOccurs attributes on all/choice/sequence order indicators")(
         """\
           <xsd:complexType>
             <xsd:choice minOccurs="0">
