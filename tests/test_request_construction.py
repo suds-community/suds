@@ -222,18 +222,18 @@ class TestExtraParameters:
         self.expect_error(expected, x=666, aString1="one", aString2="two")
         self.expect_error(expected, x=666, anInteger1=1, anInteger2=2)
 
-        expected = "f() got multiple values for argument 'aString1'"
+        expected = "f() got multiple values for parameter 'aString1'"
         self.expect_error(expected, "one", aString1="two", anInteger2=3)
         self.expect_error(expected, "one", None, "two", aString1="three")
 
-        expected = "f() got multiple values for argument 'anInteger1'"
+        expected = "f() got multiple values for parameter 'anInteger1'"
         self.expect_error(expected, None, 2, "three", anInteger1=22)
 
-        expected = "f() got multiple values for argument 'aString2'"
+        expected = "f() got multiple values for parameter 'aString2'"
         self.expect_error(expected, None, 2, None, aString2=22)
         self.expect_error(expected, None, 2, None, None, aString2=22)
 
-        expected = "f() got multiple values for argument 'anInteger2'"
+        expected = "f() got multiple values for parameter 'anInteger2'"
         self.expect_error(expected, None, 2, None, None, anInteger2=22)
 
     def test_multiple_optional_parameters(self):
@@ -254,7 +254,7 @@ class TestExtraParameters:
         self.expect_error(expected, "one", 2, 3)
         self.expect_error(expected, "one", 2, "three")
 
-        expected = "f() got multiple values for argument 'aString'"
+        expected = "f() got multiple values for parameter 'aString'"
         self.expect_error(expected, "one", aString="two", anInteger=3)
         self.expect_error(expected, None, 1, aString="two")
         self.expect_error(expected, "one", 2, aString=None)
@@ -286,7 +286,7 @@ class TestExtraParameters:
         self.expect_error(expected, aString="one", x=3, anInteger=2)
         self.expect_error(expected, x=3, aString="one", anInteger=2)
 
-        expected = "f() got multiple values for argument 'aString'"
+        expected = "f() got multiple values for parameter 'aString'"
         self.expect_error(expected, "one", aString="two", anInteger=3)
         self.expect_error(expected, None, 1, aString="two")
         self.expect_error(expected, "one", 2, aString=None)
@@ -338,14 +338,14 @@ class TestExtraParameters:
         self.expect_error(expected, x=666, s1="one", separator="", s2="two")
         self.expect_error(expected, x=666, i1=1, separator="", i2=2)
 
-        expected = "f() got multiple values for argument 's1'"
+        expected = "f() got multiple values for parameter 's1'"
         self.expect_error(expected, "one", s1="two", separator="", i2=3)
         self.expect_error(expected, "one", None, "", "two", s1="three")
 
-        expected = "f() got multiple values for argument 'i1'"
+        expected = "f() got multiple values for parameter 'i1'"
         self.expect_error(expected, None, 2, "", "three", i1=22)
 
-        expected = "f() got multiple values for argument 'separator'"
+        expected = "f() got multiple values for parameter 'separator'"
         self.expect_error(expected, "one", None, "", "two", separator=None)
         self.expect_error(expected, "one", None, None, "two", separator=None)
         self.expect_error(expected, "1", None, "", "2", separator="x")
@@ -353,11 +353,11 @@ class TestExtraParameters:
         self.expect_error(expected, "1", None, "x", "2", separator=None)
         self.expect_error(expected, "1", None, "x", "2", separator="y")
 
-        expected = "f() got multiple values for argument 's2'"
+        expected = "f() got multiple values for parameter 's2'"
         self.expect_error(expected, None, 2, "", None, s2=22)
         self.expect_error(expected, None, 2, "", None, None, s2=22)
 
-        expected = "f() got multiple values for argument 'i2'"
+        expected = "f() got multiple values for parameter 'i2'"
         self.expect_error(expected, None, 2, "", None, None, i2=22)
 
     def test_no_parameters(self):
@@ -405,10 +405,10 @@ class TestExtraParameters:
         expected = "f() takes 2 to 4 arguments but 5 were given"
         self.expect_error(expected, "one", None, "three", "four", None)
 
-        expected = "f() got multiple values for argument 'one'"
+        expected = "f() got multiple values for parameter 'one'"
         self.expect_error(expected, "one", three="three", one=None)
 
-        expected = "f() got multiple values for argument 'three'"
+        expected = "f() got multiple values for parameter 'three'"
         self.expect_error(expected, "one", None, "three", "four", three="3")
         self.expect_error(expected, "one", None, None, "four", three="3")
         self.expect_error(expected, "one", None, "three", "four", three=None)
@@ -452,7 +452,7 @@ class TestExtraParameters:
         self.expect_error(expected, x=666, aString="one")
         self.expect_error(expected, x=666, anInteger=1)
 
-        expected = "f() got multiple values for argument 'aString'"
+        expected = "f() got multiple values for parameter 'aString'"
         self.expect_error(expected, "one", aString="two")
         self.expect_error(expected, "one", None, aString="two")
         self.expect_error(expected, None, aString="two")
@@ -483,7 +483,7 @@ class TestExtraParameters:
         self.expect_error(expected, param=1, x=666)
         self.expect_error(expected, x=666, param=2)
 
-        expected = "f() got multiple values for argument 'param'"
+        expected = "f() got multiple values for parameter 'param'"
         self.expect_error(expected, 1, param=2)
         self.expect_error(expected, None, param=1)
         self.expect_error(expected, 1, param=None)
@@ -579,7 +579,7 @@ class TestExtraParameters:
         expected = "f() takes 0 to 1 arguments but 5 were given"
         self.expect_error(expected, "one", 2, "three", object(), None)
 
-        expected = "f() got multiple values for argument 'param'"
+        expected = "f() got multiple values for parameter 'param'"
         self.expect_error(expected, "one", param="two")
         self.expect_error(expected, None, param="one")
         self.expect_error(expected, "one", param=None)
