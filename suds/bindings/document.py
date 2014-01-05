@@ -14,7 +14,8 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Provides classes for the (WS) SOAP I{document/literal}.
+Provides classes for the (WS) SOAP I{document/literal} binding.
+
 """
 
 from suds import *
@@ -41,7 +42,7 @@ class Document(Binding):
       - The message part resolves to an element of a non-builtin type.
     Otherwise it is considered I{bare}.
 
-    I{Bare} interface is Interpreted directly as specified in the WSDL schema,
+    I{Bare} interface is interpreted directly as specified in the WSDL schema,
     with each message part represented by a single parameter in the suds
     library web service operation proxy interface (input or output).
 
@@ -81,7 +82,7 @@ class Document(Binding):
             if p is None:
                 continue
             if not wrapped:
-                ns = pd[1].namespace('ns0')
+                ns = pd[1].namespace("ns0")
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
         return root
@@ -102,7 +103,7 @@ class Document(Binding):
         @rtype: L{Element}
         """
         tag = wrapper[1].name
-        ns = wrapper[1].namespace('ns0')
+        ns = wrapper[1].namespace("ns0")
         return Element(tag, ns=ns)
 
     def mkparam(self, method, pdef, object):
