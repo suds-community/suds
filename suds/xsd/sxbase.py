@@ -190,10 +190,7 @@ class SchemaObject(UnicodeMixin):
         @return: True if optional, else False
         @rtype: boolean
         """
-        min = self.min
-        if min is None:
-            min = '1'
-        return min == '0'
+        return self.min == '0'
 
     def required(self):
         """
