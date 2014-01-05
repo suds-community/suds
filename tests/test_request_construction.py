@@ -56,10 +56,10 @@ class TestExtraParameters:
 
     def expect_error(self, expected_error_text, *args, **kwargs):
         """
-        Assert an expected TypeError exception is raised from a test function
-        call with the given input parameters. Caught exception is considered
-        expected if its string representation matches the given expected error
-        text.
+        Assert a test function call raises an expected TypeError exception.
+
+        Caught exception is considered expected if its string representation
+        matches the given expected error text.
 
         """
         def assertion(exception):
@@ -68,10 +68,10 @@ class TestExtraParameters:
 
     def expect_error_containing(self, expected_error_text, *args, **kwargs):
         """
-        Assert an expected TypeError exception is raised from a test function
-        call with the given input parameters. Caught exception is considered
-        expected if its string representation contains the given expected error
-        text as a substring.
+        Assert a test function call raises an expected TypeError exception.
+
+        Caught exception is considered expected if its string representation
+        contains the given expected error text as a substring.
 
         """
         def assertion(exception):
@@ -80,8 +80,7 @@ class TestExtraParameters:
 
     def expect_no_error(self, *args, **kwargs):
         """
-        Assert a test function call with the given input parameters does not
-        raise an exception.
+        Assert a test function call does not raise an exception.
 
         """
         self.service.f(*args, **kwargs)
