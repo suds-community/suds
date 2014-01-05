@@ -81,7 +81,7 @@ class Core:
     def node(self, content):
         """
         Create and return an XML node.
-        @param content: The content for which proccessing has been suspended.
+        @param content: The content for which processing has been suspended.
         @type content: L{Object}
         @return: An element.
         @rtype: L{Element}
@@ -91,7 +91,7 @@ class Core:
     def start(self, content):
         """
         Appending this content has started.
-        @param content: The content for which proccessing has started.
+        @param content: The content for which processing has started.
         @type content: L{Content}
         @return: True to continue appending
         @rtype: boolean
@@ -101,7 +101,7 @@ class Core:
     def suspend(self, content):
         """
         Appending this content has suspended.
-        @param content: The content for which proccessing has been suspended.
+        @param content: The content for which processing has been suspended.
         @type content: L{Content}
         """
         pass
@@ -109,7 +109,7 @@ class Core:
     def resume(self, content):
         """
         Appending this content has resumed.
-        @param content: The content for which proccessing has been resumed.
+        @param content: The content for which processing has been resumed.
         @type content: L{Content}
         """
         pass
@@ -119,7 +119,7 @@ class Core:
         Appending this content has ended.
         @param parent: The parent node ending.
         @type parent: L{Element}
-        @param content: The content for which proccessing has ended.
+        @param content: The content for which processing has ended.
         @type content: L{Content}
         """
         pass

@@ -1,21 +1,21 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Provides classes for the (WS) SOAP I{document/literal}.
+Provides classes for the (WS) SOAP I{document/literal} binding.
+
 """
 
 from suds import *
@@ -43,7 +43,7 @@ class Document(Binding):
       - The message part resolves to an element of a non-builtin type.
     Otherwise it is considered I{bare}.
 
-    I{Bare} interface is Interpreted directly as specified in the WSDL schema,
+    I{Bare} interface is interpreted directly as specified in the WSDL schema,
     with each message part represented by a single parameter in the suds
     library web service operation proxy interface (input or output).
 
@@ -107,16 +107,15 @@ class Document(Binding):
     def document(self, wrapper):
         """
         Get the document root. For I{document/literal}, this is the name of the
-        wrapper element qualifed by the schema's target namespace.
+        wrapper element qualified by the schema's target namespace.
         @param wrapper: The method name.
         @type wrapper: L{xsd.sxbase.SchemaObject}
         @return: A root element.
         @rtype: L{Element}
         """
         tag = wrapper[1].name
-        ns = wrapper[1].namespace('ns0')
-        d = Element(tag, ns=ns)
-        return d
+        ns = wrapper[1].namespace("ns0")
+        return Element(tag, ns=ns)
 
     def mkparam(self, method, pdef, object):
         """
@@ -139,13 +138,10 @@ class Document(Binding):
         if not wrapped:
             return pts
         result = []
-        # wrapped
         for p in pts:
-            resolved = p[1].resolve()
-            for child, ancestry in resolved:
-                if child.isattr():
-                    continue
-                result.append((child.name, child, ancestry))
+            for child, ancestry in p[1].resolve():
+                if not child.isattr():
+                    result.append((child.name, child, ancestry))
         return result
 
     def returned_types(self, method):

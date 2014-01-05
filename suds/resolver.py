@@ -185,7 +185,7 @@ class PathResolver(Resolver):
           - fully ns qualified name (eg: {http://myns-uri}Person)
         @param name: The name of an object in the schema.
         @type name: str
-        @return: A qualifed name.
+        @return: A qualified name.
         @rtype: qname
         """
         m = self.altp.match(name)
@@ -198,7 +198,7 @@ class PathResolver(Resolver):
         """
         Split the string on (.) while preserving any (.) inside the
         '{}' alternalte syntax for full ns qualification.
-        @param s: A plain or qualifed name.
+        @param s: A plain or qualified name.
         @type s: str
         @return: A list of the name's parts.
         @rtype: [str,..]
