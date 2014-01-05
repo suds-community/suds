@@ -61,9 +61,15 @@ class TestExtraParameters:
         Caught exception is considered expected if its string representation
         matches the given expected error text.
 
+        Expected error text may be given directly or as a list/tuple containing
+        valid alternatives.
+
         """
         def assertion(exception):
-            assert expected_error_text == str(exception)
+            if expected_error_text.__class__ in (list, tuple):
+                assert str(exception) in expected_error_text
+            else:
+                assert str(exception) == expected_error_text
         self._expect_error(assertion, *args, **kwargs)
 
     def expect_error_containing(self, expected_error_text, *args, **kwargs):
