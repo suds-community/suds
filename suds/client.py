@@ -136,7 +136,7 @@ class Client(UnicodeMixin):
         """
         Add I{static} mapping of an XML namespace prefix to a namespace.
         This is useful for cases when a wsdl and referenced schemas make heavy
-        use of namespaces and those namespaces are subject to changed.
+        use of namespaces and those namespaces are subject to change.
         @param prefix: An XML namespace prefix.
         @type prefix: str
         @param uri: An XML namespace URI.
