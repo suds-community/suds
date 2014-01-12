@@ -39,6 +39,41 @@ import tests
 import pytest
 
 
+class MockParamProcessor:
+    """
+    Mock parameter processor that gets passed ArgParser results.
+
+    Collects received parameter information so it may be checked after
+    ArgParser completes its work.
+
+    """
+
+    def __init__(self):
+        self.params_ = []
+
+    def params(self):
+        return self.params_
+
+    def process(self, param_name, param_type, in_choice_context, value):
+        self.params_.append((param_name, param_type, in_choice_context, value))
+
+
+class MockParamType:
+    """
+    Represents a web service operation parameter type.
+
+    Implements parts of the suds library's web service operation parameter type
+    interface required by the ArgParser functionality.
+
+    """
+
+    def __init__(self, optional):
+        self.optional_ = optional
+
+    def optional(self):
+        return self.optional_
+
+
 @pytest.mark.parametrize("binding_style", (
     "document",
     #TODO: Suds library's RPC binding implementation should be updated to use
@@ -99,3 +134,113 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     pytest.raises(MyException, client.service.f)
     pytest.raises(MyException, client.service.f, "x")
     pytest.raises(MyException, client.service.f, "x", "y")
+
+
+@pytest.mark.parametrize(("param_count", "args"), (
+    (2, (1, 2, 3)),
+    (2, ("2", 2, None)),
+    (3, (object(), 2, None, None)),
+    (3, (None, 2, None, None, "5"))))
+def test_extra_positional_argument_when_expecting_multiple(param_count, args):
+    """
+    Test passing extra positional arguments for an operation expecting more
+    than one.
+
+    """
+    params = []
+    for i in range(param_count):
+        param_name = "p%d" % (i,)
+        param_type = MockParamType(False)
+        params.append((param_name, param_type))
+    param_processor = MockParamProcessor()
+    arg_parser = ArgParser("fru-fru", False, args, {}, param_processor.process)
+    for param_name, param_type in params:
+        arg_parser.process_parameter(param_name, param_type)
+    expected = "fru-fru() takes %d arguments but %d were given" % (param_count,
+        len(args))
+    _expect_error(expected, arg_parser.finish)
+    assert arg_parser.active()
+    assert len(param_processor.params()) == param_count
+    processed_params = param_processor.params()
+    for expected_param, param, value in zip(params, processed_params, args):
+        assert param[0] is expected_param[0]
+        assert param[1] is expected_param[1]
+        assert not param[2]
+        assert param[3] is value
+
+
+@pytest.mark.parametrize(("args", "reported_arg_count"), (
+    ((1,), "1 was"),
+    ((1, 2), "2 were"),
+    ((1, 2, None), "3 were")))
+def test_extra_positional_argument_when_expecting_none(args,
+        reported_arg_count):
+    """
+    Test passing extra positional arguments for an operation expecting none.
+
+    """
+    param_processor = MockParamProcessor()
+    arg_parser = ArgParser("f", False, args, {}, param_processor.process)
+    expected = "f() takes 0 arguments but %s given" % (reported_arg_count,)
+    _expect_error(expected, arg_parser.finish)
+    assert arg_parser.active()
+    assert not param_processor.params()
+
+
+@pytest.mark.parametrize("args", (
+    (1, 2),
+    ("2", 2, None),
+    (object(), 2, None, None),
+    (None, 2, None, None, "5")))
+def test_extra_positional_argument_when_expecting_one(args):
+    """
+    Test passing extra positional arguments for an operation expecting one.
+
+    """
+    param_processor = MockParamProcessor()
+    arg_parser = ArgParser("gr", False, args, {}, param_processor.process)
+    param_type = MockParamType(False)
+    arg_parser.process_parameter("p1", param_type)
+    expected = "gr() takes 1 argument but %d were given" % (len(args),)
+    _expect_error(expected, arg_parser.finish)
+    assert arg_parser.active()
+    assert len(param_processor.params()) == 1
+    processed_param = param_processor.params()[0]
+    assert processed_param[0] is "p1"
+    assert processed_param[1] is param_type
+    assert not processed_param[2]
+    assert processed_param[3] is args[0]
+
+
+def _expect_error(expected_error_text, test_function, *args, **kwargs):
+    """
+    Assert a test function call raises an expected TypeError exception.
+
+    Caught exception is considered expected if its string representation
+    matches the given expected error text.
+
+    Expected error text may be given directly or as a list/tuple containing
+    valid alternatives.
+
+    """
+    def assertion(exception):
+        if expected_error_text.__class__ in (list, tuple):
+            assert str(exception) in expected_error_text
+        else:
+            assert str(exception) == expected_error_text
+    _expect_error_worker(assertion, test_function, *args, **kwargs)
+
+
+def _expect_error_worker(assertion, test_function, *args, **kwargs):
+    """
+    Assert a test function call raises an expected TypeError exception.
+
+    Test function is invoked using the given input parameters and the caught
+    exception is tested using the given assertion function.
+
+    """
+    try:
+        test_function(*args, **kwargs)
+        pytest.fail("Expected exception not raised.")
+    except TypeError, e:
+        assertion(e)
