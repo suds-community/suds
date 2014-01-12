@@ -187,22 +187,26 @@ def test_extra_positional_argument_when_expecting_none(args,
     assert not param_processor.params()
 
 
-@pytest.mark.parametrize("args", (
-    (1, 2),
-    ("2", 2, None),
-    (object(), 2, None, None),
-    (None, 2, None, None, "5")))
-def test_extra_positional_argument_when_expecting_one(args):
+@pytest.mark.parametrize(("optional", "args"),
+    [(o, a) for o in (False, True) for a in (
+        (1, 2),
+        ("2", 2, None),
+        (object(), 2, None, None),
+        (None, 2, None, None, "5"))])
+def test_extra_positional_argument_when_expecting_one(optional, args):
     """
     Test passing extra positional arguments for an operation expecting one.
 
     """
     param_processor = MockParamProcessor()
     arg_parser = ArgParser("gr", False, args, {}, param_processor.process)
-    param_type = MockParamType(False)
+    param_type = MockParamType(optional)
     arg_parser.process_parameter("p1", param_type)
-    expected = "gr() takes 1 argument but %d were given" % (len(args),)
+
+    takes = {True:"0 to 1 arguments", False:"1 argument"}[optional]
+    expected = "gr() takes %s but %d were given" % (takes, len(args))
     _expect_error(TypeError, expected, arg_parser.finish)
+
     assert arg_parser.active()
     assert len(param_processor.params()) == 1
     processed_param = param_processor.params()[0]
