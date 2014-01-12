@@ -76,22 +76,6 @@ class TestExtraParameters:
                 assert str(exception) == expected_error_text
         self._expect_error(assertion, *args, **kwargs)
 
-    def expect_error_containing(self, expected_error_text, *args, **kwargs):
-        """
-        Assert a test function call raises an expected TypeError exception.
-
-        Caught exception is considered expected if its string representation
-        contains the given expected error text as a substring.
-
-        Web service operation 'f' invoker is used as the default test function.
-        An alternate test function may be specified using the 'test_function'
-        keyword argument.
-
-        """
-        def assertion(exception):
-            assert expected_error_text in str(exception)
-        self._expect_error(assertion, *args, **kwargs)
-
     def expect_no_error(self, *args, **kwargs):
         """
         Assert a test function call does not raise an exception.
@@ -312,8 +296,9 @@ class TestExtraParameters:
         self.expect_error(expected, None, 1, aString="two")
         self.expect_error(expected, "one", 2, aString=None)
 
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, "one", 2, x=3, y=4, z=5)
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", 2, x=3, y=4, z=5)
 
     def test_multiple_parameters(self):
         """
@@ -344,8 +329,9 @@ class TestExtraParameters:
         self.expect_error(expected, None, 1, aString="two")
         self.expect_error(expected, "one", 2, aString=None)
 
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, "one", 2, x=3, y=4, z=5)
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", 2, x=3, y=4, z=5)
 
     def test_multiple_separated_choices(self):
         """
@@ -432,8 +418,9 @@ class TestExtraParameters:
         expected = "f() got an unexpected keyword argument 'x'"
         self.expect_error(expected, x=3)
 
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, x=1, y=2, z=3)
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, x=1, y=2, z=3)
 
     def test_nonoptional_and_optional_parameters(self):
         """
@@ -466,8 +453,9 @@ class TestExtraParameters:
         self.expect_error(expected, "one", None, "three", "four", three=None)
         self.expect_error(expected, "one", None, "three", four="4", three=None)
 
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, "one", three="3", x=5, y=6, z=7)
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", three="3", x=5, y=6, z=7)
 
     def test_reported_operation_name(self):
         """
@@ -569,8 +557,9 @@ class TestExtraParameters:
         self.expect_error(expected, None, param=1)
         self.expect_error(expected, 1, param=None)
 
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, 1, x=2, y=3, z=4)
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, 1, x=2, y=3, z=4)
 
     @pytest.mark.parametrize("choice", (
         # Explicitly marked as optional and containing only non-optional
@@ -664,8 +653,9 @@ class TestExtraParameters:
         self.expect_error(expected, None, param="one")
         self.expect_error(expected, "one", param=None)
 
-        expected = "f() got an unexpected keyword argument '"
-        self.expect_error_containing(expected, "one", x=3, y=4, z=5)
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", x=3, y=4, z=5)
 
     def _expect_error(self, assertion, *args, **kwargs):
         """
