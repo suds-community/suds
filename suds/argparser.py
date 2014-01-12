@@ -99,7 +99,8 @@ class ArgParser:
         See the ArgParser class description for more detailed information.
 
         """
-        assert self.active()
+        if not self.active():
+            raise RuntimeError("finish() called on an inactive ArgParser.")
         bottom = self.__stack[0]
         self.__pop_frames_above(bottom)
         self.__check_for_extra_arguments()
@@ -131,8 +132,15 @@ class ArgParser:
         See the ArgParser class description for more detailed information.
 
         """
-        assert self.active()
-        assert self.__wrapped or ancestry is None
+        if not self.active():
+            raise RuntimeError("process_parameter() called on an inactive "
+                "ArgParser.")
+        if self.__wrapped and not ancestry:
+            raise RuntimeError("Automatically unwrapped interfaces require "
+                "ancestry information specified for all their parameters.")
+        if not self.__wrapped and (ancestry is not None):
+            raise RuntimeError("Only automatically unwrapped interfaces may "
+                "have their parameter ancestry information specified.")
         param_optional = param_type.optional()
         has_argument, value = self.__get_param_value(param_name)
         if has_argument:
@@ -247,7 +255,15 @@ class ArgParser:
         stack = self.__stack
         if len(stack) == 1:
             return stack[0], ancestry
-        assert stack[1].id() is ancestry[0]
+        if stack[1].id() is not ancestry[0]:
+            # This failing indicates that someone changed the logic detecting
+            # whether a particular web service operation may have its
+            # parameters automatically unwrapped. Currently it requires that
+            # the operation have only a single input parameter to unwrap, thus, 
+            # all unwrapped parameters come from that unwrapped parameter and
+            # so share the same ancestry.
+            raise RuntimeError("All automatically unwrapped parameter's need "
+                "to share the same ancestry.")
         previous = stack[0]
         for frame, n in zip(stack[1:], xrange(len(ancestry))):
             if frame.id() is not ancestry[n]:
