@@ -136,29 +136,67 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     pytest.raises(MyException, client.service.f, "x", "y")
 
 
-@pytest.mark.parametrize(("param_count", "args"), (
-    (2, (1, 2, 3)),
-    (2, ("2", 2, None)),
-    (3, (object(), 2, None, None)),
-    (3, (None, 2, None, None, "5"))))
-def test_extra_positional_argument_when_expecting_multiple(param_count, args):
+@pytest.mark.parametrize(("param_optional", "args"), (
+    # Operations taking no parameters.
+    ((), (1,)),
+    ((), (1, 2)),
+    ((), (1, 2, None)),
+    # Operations taking a single parameter.
+    ((True,), (1, 2)),
+    ((False,), (1, 2)),
+    ((True,), ("2", 2, None)),
+    ((False,), ("2", 2, None)),
+    ((True,),  (object(), 2, None, None)),
+    ((False,), (object(), 2, None, None)),
+    ((True,), (None, 2, None, None, "5")),
+    ((False,), (None, 2, None, None, "5")),
+    # Operations taking multiple parameters.
+    ((True, True), (1, 2, 3)),
+    ((False, True), (1, 2, 3)),
+    ((True, False), (1, 2, 3)),
+    ((False, False), (1, 2, 3)),
+    ((False, True), ("2", 2, None)),
+    ((False, False), ("2", 2, None)),
+    ((True, True), ("2", 2, None)),
+    ((True, True, True), (object(), 2, None, None)),
+    ((False, False, False), (object(), 2, None, None)),
+    ((True, False, False), (None, 2, None, None, "5")),
+    ((True, False, True), (None, 2, None, None, "5")),
+    ((True, True, True), (None, 2, None, None, "5"))))
+def test_extra_positional_arguments(param_optional, args):
     """
     Test passing extra positional arguments for an operation expecting more
     than one.
 
     """
+    param_count = len(param_optional)
     params = []
-    for i in range(param_count):
+    expected_args_min = 0
+    for i, optional in enumerate(param_optional):
+        if not optional:
+            expected_args_min += 1
         param_name = "p%d" % (i,)
-        param_type = MockParamType(False)
+        param_type = MockParamType(optional)
         params.append((param_name, param_type))
     param_processor = MockParamProcessor()
     arg_parser = ArgParser("fru-fru", False, args, {}, param_processor.process)
     for param_name, param_type in params:
         arg_parser.process_parameter(param_name, param_type)
-    expected = "fru-fru() takes %d arguments but %d were given" % (param_count,
-        len(args))
+
+    takes_plural_suffix = "s"
+    if expected_args_min == param_count:
+        takes = param_count
+        if param_count == 1:
+            takes_plural_suffix = ""
+    else:
+        takes = "%d to %d" % (expected_args_min, param_count)
+    was_were = "were"
+    if len(args) == 1:
+        was_were = "was"
+    expected = "fru-fru() takes %s argument%s but %d %s given" % (takes,
+        takes_plural_suffix, len(args), was_were)
     _expect_error(TypeError, expected, arg_parser.finish)
+
     assert arg_parser.active()
     assert len(param_processor.params()) == param_count
     processed_params = param_processor.params()
@@ -167,53 +205,6 @@ def test_extra_positional_argument_when_expecting_multiple(param_count, args):
         assert param[1] is expected_param[1]
         assert not param[2]
         assert param[3] is value
-
-
-@pytest.mark.parametrize(("args", "reported_arg_count"), (
-    ((1,), "1 was"),
-    ((1, 2), "2 were"),
-    ((1, 2, None), "3 were")))
-def test_extra_positional_argument_when_expecting_none(args,
-        reported_arg_count):
-    """
-    Test passing extra positional arguments for an operation expecting none.
-
-    """
-    param_processor = MockParamProcessor()
-    arg_parser = ArgParser("f", False, args, {}, param_processor.process)
-    expected = "f() takes 0 arguments but %s given" % (reported_arg_count,)
-    _expect_error(TypeError, expected, arg_parser.finish)
-    assert arg_parser.active()
-    assert not param_processor.params()
-
-
-@pytest.mark.parametrize(("optional", "args"),
-    [(o, a) for o in (False, True) for a in (
-        (1, 2),
-        ("2", 2, None),
-        (object(), 2, None, None),
-        (None, 2, None, None, "5"))])
-def test_extra_positional_argument_when_expecting_one(optional, args):
-    """
-    Test passing extra positional arguments for an operation expecting one.
-
-    """
-    param_processor = MockParamProcessor()
-    arg_parser = ArgParser("gr", False, args, {}, param_processor.process)
-    param_type = MockParamType(optional)
-    arg_parser.process_parameter("p1", param_type)
-
-    takes = {True:"0 to 1 arguments", False:"1 argument"}[optional]
-    expected = "gr() takes %s but %d were given" % (takes, len(args))
-    _expect_error(TypeError, expected, arg_parser.finish)
-
-    assert arg_parser.active()
-    assert len(param_processor.params()) == 1
-    processed_param = param_processor.params()[0]
-    assert processed_param[0] is "p1"
-    assert processed_param[1] is param_type
-    assert not processed_param[2]
-    assert processed_param[3] is args[0]
 
 
 @pytest.mark.parametrize(("wrapped", "ancestry"), (
