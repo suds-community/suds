@@ -39,18 +39,25 @@ import tests
 import pytest
 
 
-class MyException(Exception):
-    """Exception raised as a part of tests implemented in this module."""
-    pass
-
-
-def test_document_binding_uses_ArgParser(monkeypatch):
+@pytest.mark.parametrize("binding_style", (
+    "document",
+    #TODO: Suds library's RPC binding implementation should be updated to use
+    # the ArgParser functionality. This will remove code duplication between
+    # different binding implementations and make their features more balanced.
+    pytest.mark.xfail(reason="Not yet implemented.")("rpc")
+    ))
+def test_binding_uses_ArgParser(monkeypatch, binding_style):
     """
-    Calling document binding web service operations should use the generic
-    ArgParser functionality.
+    Calling web service operations should use the generic ArgParser
+    functionality independent of the operation's specific binding style.
 
     """
-    monkeypatch.setattr(ArgParser, "__init__", _raise_my_exception)
+    class MyException(Exception):
+        pass
+    def raise_my_exception(*args, **kwargs):
+        raise MyException
+    monkeypatch.setattr(ArgParser, "__init__", raise_my_exception)
+
     wsdl = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
@@ -77,7 +84,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     <soap:binding style="document"
     transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="f">
-      <soap:operation soapAction="my-soap-action" style="document" />
+      <soap:operation soapAction="my-soap-action" style="%s" />
       <wsdl:input><soap:body use="literal" /></wsdl:input>
     </wsdl:operation>
   </wsdl:binding>
@@ -87,12 +94,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+""" % (binding_style,))
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     pytest.raises(MyException, client.service.f)
     pytest.raises(MyException, client.service.f, "x")
     pytest.raises(MyException, client.service.f, "x", "y")
-
-
-def _raise_my_exception(*args, **kwargs):
-    raise MyException
