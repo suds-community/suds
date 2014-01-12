@@ -158,7 +158,7 @@ def test_extra_positional_argument_when_expecting_multiple(param_count, args):
         arg_parser.process_parameter(param_name, param_type)
     expected = "fru-fru() takes %d arguments but %d were given" % (param_count,
         len(args))
-    _expect_error(expected, arg_parser.finish)
+    _expect_error(TypeError, expected, arg_parser.finish)
     assert arg_parser.active()
     assert len(param_processor.params()) == param_count
     processed_params = param_processor.params()
@@ -182,7 +182,7 @@ def test_extra_positional_argument_when_expecting_none(args,
     param_processor = MockParamProcessor()
     arg_parser = ArgParser("f", False, args, {}, param_processor.process)
     expected = "f() takes 0 arguments but %s given" % (reported_arg_count,)
-    _expect_error(expected, arg_parser.finish)
+    _expect_error(TypeError, expected, arg_parser.finish)
     assert arg_parser.active()
     assert not param_processor.params()
 
@@ -202,7 +202,7 @@ def test_extra_positional_argument_when_expecting_one(args):
     param_type = MockParamType(False)
     arg_parser.process_parameter("p1", param_type)
     expected = "gr() takes 1 argument but %d were given" % (len(args),)
-    _expect_error(expected, arg_parser.finish)
+    _expect_error(TypeError, expected, arg_parser.finish)
     assert arg_parser.active()
     assert len(param_processor.params()) == 1
     processed_param = param_processor.params()[0]
@@ -212,9 +212,10 @@ def test_extra_positional_argument_when_expecting_one(args):
     assert processed_param[3] is args[0]
 
 
-def _expect_error(expected_error_text, test_function, *args, **kwargs):
+def _expect_error(expected_exception, expected_error_text, test_function,
+        *args, **kwargs):
     """
-    Assert a test function call raises an expected TypeError exception.
+    Assert a test function call raises an expected exception.
 
     Caught exception is considered expected if its string representation
     matches the given expected error text.
@@ -228,12 +229,14 @@ def _expect_error(expected_error_text, test_function, *args, **kwargs):
             assert str(exception) in expected_error_text
         else:
             assert str(exception) == expected_error_text
-    _expect_error_worker(assertion, test_function, *args, **kwargs)
+    _expect_error_worker(expected_exception, assertion, test_function, *args,
+        **kwargs)
 
 
-def _expect_error_worker(assertion, test_function, *args, **kwargs):
+def _expect_error_worker(expected_exception, assertion, test_function, *args,
+        **kwargs):
     """
-    Assert a test function call raises an expected TypeError exception.
+    Assert a test function call raises an expected exception.
 
     Test function is invoked using the given input parameters and the caught
     exception is tested using the given assertion function.
@@ -242,5 +245,5 @@ def _expect_error_worker(assertion, test_function, *args, **kwargs):
     try:
         test_function(*args, **kwargs)
         pytest.fail("Expected exception not raised.")
-    except TypeError, e:
+    except expected_exception, e:
         assertion(e)
