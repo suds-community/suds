@@ -212,6 +212,29 @@ def test_extra_positional_argument_when_expecting_one(args):
     assert processed_param[3] is args[0]
 
 
+@pytest.mark.parametrize(("wrapped", "ancestry"), (
+    (False, [object()]),
+    (True, []),
+    (True, None)))
+def test_inconsistent_wrapped_and_ancestry(wrapped, ancestry):
+    """
+    Parameter ancestry information should be sent for automatically unwrapped
+    web service operation interfaces and only for them.
+
+    """
+    expected_error_message = {
+        True:"Automatically unwrapped interfaces require ancestry information "
+            "specified for all their parameters.",
+        False:"Only automatically unwrapped interfaces may have their "
+            "parameter ancestry information specified."}
+    def do_nothing(*args, **kwargs):
+        pass
+    arg_parser = ArgParser("gr", wrapped, range(10), {}, do_nothing)
+    param_info = ["p0", MockParamType(False), ancestry]
+    m = expected_error_message[wrapped]
+    _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
+
+
 def _expect_error(expected_exception, expected_error_text, test_function,
         *args, **kwargs):
     """
