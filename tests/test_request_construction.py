@@ -64,6 +64,10 @@ class TestExtraParameters:
         Expected error text may be given directly or as a list/tuple containing
         valid alternatives.
 
+        Web service operation 'f' invoker is used as the default test function.
+        An alternate test function may be specified using the 'test_function'
+        keyword argument.
+
         """
         def assertion(exception):
             if expected_error_text.__class__ in (list, tuple):
@@ -79,6 +83,10 @@ class TestExtraParameters:
         Caught exception is considered expected if its string representation
         contains the given expected error text as a substring.
 
+        Web service operation 'f' invoker is used as the default test function.
+        An alternate test function may be specified using the 'test_function'
+        keyword argument.
+
         """
         def assertion(exception):
             assert expected_error_text in str(exception)
@@ -91,14 +99,17 @@ class TestExtraParameters:
         """
         self.service.f(*args, **kwargs)
 
-    def init_function_params(self, params):
+    def init_function_params(self, params, **kwargs):
         """
         Initialize a test in this group with the given parameter definition.
 
         Constructs a complete WSDL schema based on the given function parameter
-        definition (used to define a single function named 'f'), and creates a
-        suds Client object to be used for testing suds's web service operation
-        invocation.
+        definition (defines a single web service operation named 'f' by
+        default), and creates a suds Client object to be used for testing
+        suds's web service operation invocation.
+
+        An alternate operation name may be given using the 'operation_name'
+        keyword argument.
 
         May only be invoked once per test.
 
@@ -113,7 +124,8 @@ class TestExtraParameters:
             params = " "
         input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
         assert not hasattr(self, "service")
-        self.service = _service_from_wsdl(tests.wsdl_input(input, "Wrapper"))
+        wsdl = tests.wsdl_input(input, "Wrapper", **kwargs)
+        self.service = _service_from_wsdl(wsdl)
 
     def test_choice_containing_a_nonempty_sequence(self):
         """
@@ -457,6 +469,36 @@ class TestExtraParameters:
         expected = "f() got an unexpected keyword argument '"
         self.expect_error_containing(expected, "one", three="3", x=5, y=6, z=7)
 
+    def test_reported_operation_name(self):
+        """
+        Test how the called web service operation name is reported in extra
+        parameter error messages.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="one" type="xsd:string" />
+              <xsd:element name="two" type="xsd:string" />
+            </xsd:choice>
+          </xsd:complexType>""", operation_name="willy_nilly")
+
+        def expect_error(*args, **kwargs):
+            test_function = self.service.willy_nilly
+            self.expect_error(test_function=test_function, *args, **kwargs)
+
+        expected = "willy_nilly() takes 1 to 2 arguments but 3 were given"
+        expect_error(expected, "one", None, "three")
+
+        expected = "willy_nilly() got multiple values for parameter 'one'"
+        expect_error(expected, "one", one=None)
+
+        expected = "willy_nilly() got an unexpected keyword argument 'x'"
+        expect_error(expected, "one", x=5)
+
+        e = "willy_nilly() got multiple values for a single choice parameter"
+        expect_error(e, "one", "two")
+
     def test_single_nonoptional_choice(self):
         """
         Test reporting extra input parameters passed to a function taking a
@@ -627,13 +669,22 @@ class TestExtraParameters:
 
     def _expect_error(self, assertion, *args, **kwargs):
         """
-        Assert an expected TypeError exception is raised from a test function
-        call with the given input parameters. Caught exception is tested using
-        the given assertion function.
+        Assert a test function call raises an expected TypeError exception.
+
+        Test function is invoked using the given input parameters and the
+        caught exception is tested using the given assertion function.
+
+        Web service operation 'f' invoker is used as the default test function.
+        An alternate test function may be specified using the 'test_function'
+        keyword argument.
 
         """
         try:
-            self.service.f(*args, **kwargs)
+            test_function = kwargs.pop("test_function")
+        except KeyError:
+            test_function = self.service.f
+        try:
+            test_function(*args, **kwargs)
             pytest.fail("Expected exception not raised.")
         except TypeError, e:
             assertion(e)
