@@ -222,12 +222,60 @@ def test_inconsistent_wrapped_and_ancestry(wrapped, ancestry):
             "specified for all their parameters.",
         False:"Only automatically unwrapped interfaces may have their "
             "parameter ancestry information specified."}
-    def do_nothing(*args, **kwargs):
-        pass
-    arg_parser = ArgParser("gr", wrapped, range(10), {}, do_nothing)
+    arg_parser = ArgParser("gr", wrapped, range(10), {}, _do_nothing)
     param_info = ["p0", MockParamType(False), ancestry]
     m = expected_error_message[wrapped]
     _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
+
+
+@pytest.mark.parametrize(("param_names", "args", "kwargs"), (
+    ([], (), {"x":5}),
+    ([], (None, 1, 2, 7), {"x":5}),
+    ([], (), {"x":1, "y":2, "z":3}),
+    (["a"], (), {"x":None}),
+    ([["a"]], (), {"x":None}),
+    (["a"], (1,), {"x":None}),
+    ([["a"]], (1,), {"x":None}),
+    (["a"], (), {"a":"spank me", "x":5}),
+    (["a"], (), {"x":5, "a":"spank me"}),
+    (["a"], (), {"a":"spank me", "x":5, "wuwu":None}),
+    (["a", "b", "c"], (1, 2), {"w":666}),
+    (["a", ["b"], ["c"]], (1,), {"c":None, "w":666}),
+    (["a", "b", ["c"]], (None,), {"b":None, "_":666})))
+def test_unexpected_keyword_argument(param_names, args, kwargs):
+    """
+    Test how unexpected keyword arguments are reported.
+
+    This report takes precedence over any extra positional argument errors.
+
+    Optional parameters are marked by specifying their names as single element
+    lists or tuples.
+
+    """
+    extra_kwargs = dict(kwargs)
+    arg_parser = ArgParser("pUFf", False, args, kwargs, _do_nothing)
+    for param_name in param_names:
+        optional = False
+        if param_name.__class__ in (tuple, list):
+            optional = True
+            param_name = param_name[0]
+        arg_parser.process_parameter(param_name, MockParamType(optional))
+        extra_kwargs.pop(param_name, None)
+
+    message = "pUFf() got an unexpected keyword argument '%s'"
+    expected = [message % (x,) for x in extra_kwargs]
+    if len(expected) == 1:
+        expected = expected[0]
+
+    _expect_error(TypeError, expected, arg_parser.finish)
+
+
+def _do_nothing(*args, **kwargs):
+    """
+    Function used as a generic do-nothing callback where needed during testing.
+
+    """
+    pass
 
 
 def _expect_error(expected_exception, expected_error_text, test_function,
