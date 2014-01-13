@@ -186,7 +186,7 @@ class ArgParser:
             if args_required != args_allowed:
                 expected = "%d to %d" % (args_required, args_allowed)
             given = self.__args_count
-            msg_parts = ["takes %s argument" % (expected,),
+            msg_parts = ["takes %s positional argument" % (expected,),
                 plural_suffix(expected), " but %d " % (given,),
                 plural_was_were(given), " given"]
             self.__error("".join(msg_parts))

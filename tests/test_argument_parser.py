@@ -193,7 +193,7 @@ def test_extra_positional_arguments(param_optional, args):
     was_were = "were"
     if len(args) == 1:
         was_were = "was"
-    expected = "fru-fru() takes %s argument%s but %d %s given" % (takes,
+    expected = "fru-fru() takes %s positional argument%s but %d %s given" % (takes,
         takes_plural_suffix, len(args), was_were)
     _expect_error(TypeError, expected, arg_parser.finish)
 
