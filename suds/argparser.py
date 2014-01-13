@@ -216,7 +216,8 @@ class ArgParser:
         frame_class = Frame
         if ancestry_item is not None and ancestry_item.choice():
             frame_class = ChoiceFrame
-        return frame_class(ancestry_item, self.__error)
+        return frame_class(ancestry_item, self.__error,
+            self.__extra_parameter_errors)
 
     def __get_param_value(self, name):
         """
@@ -331,7 +332,7 @@ class Frame:
 
     """
 
-    def __init__(self, id, error):
+    def __init__(self, id, error, extra_parameter_errors):
         """
         Construct a new Frame instance.
 
@@ -341,6 +342,7 @@ class Frame:
         assert self.__class__ != Frame or not id or not id.choice()
         self.__id = id
         self._error = error
+        self._extra_parameter_errors = extra_parameter_errors
         self._args_allowed = 0
         self._args_required = 0
         self._has_value = False
@@ -392,9 +394,9 @@ class ChoiceFrame(Frame):
 
     """
 
-    def __init__(self, id, error):
+    def __init__(self, id, error, extra_parameter_errors):
         assert id.choice()
-        Frame.__init__(self, id, error)
+        Frame.__init__(self, id, error, extra_parameter_errors)
         self.__has_item = False
 
     def _process_item(self, has_value, args_allowed, args_required):
@@ -411,7 +413,7 @@ class ChoiceFrame(Frame):
 
     def __update_has_value_for_item(self, item_has_value):
         if item_has_value:
-            if self.has_value():
+            if self.has_value() and self._extra_parameter_errors:
                 self._error("got multiple values for a single choice "
                     "parameter")
             self._has_value = True
