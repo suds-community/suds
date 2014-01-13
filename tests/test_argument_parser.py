@@ -229,6 +229,46 @@ def test_inconsistent_wrapped_and_ancestry(wrapped, ancestry):
 
 
 @pytest.mark.parametrize(("param_names", "args", "kwargs"), (
+    (["a"], (1,), {"a":5}),
+    ([["a"]], (1,), {"a":5}),
+    (["a"], (None, 1, 2, 7), {"a":5}),
+    ([["a"]], (None, 1, 2, 7), {"a":5}),
+    (["a", ["b"], "c"], (None, None, None), {"a":1, "b":2, "c":3}),
+    ([["a"], ["b"], ["c"]], (None, None, None), {"a":1, "b":2, "c":3}),
+    (["a"], ("x",), {"a":None}),
+    (["a", ["b"], ["c"]], (1,), {"a":None}),
+    (["a", "b", ["c"]], (None, 2), {"b":None})))
+def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
+    """
+    Test how multiple value for a single parameter errors are reported.
+
+    This report takes precedence over any extra positional argument errors.
+
+    Optional parameters are marked by specifying their names as single element
+    lists or tuples.
+
+    """
+    duplicates = []
+    args_count = len(args)
+    arg_parser = ArgParser("q", False, args, kwargs, _do_nothing)
+    for n, param_name in enumerate(param_names):
+        optional = False
+        if param_name.__class__ in (tuple, list):
+            optional = True
+            param_name = param_name[0]
+        arg_parser.process_parameter(param_name, MockParamType(optional))
+        if n < args_count and param_name in kwargs:
+            duplicates.append(param_name)
+
+    message = "q() got multiple values for parameter '%s'"
+    expected = [message % (x,) for x in duplicates]
+    if len(expected) == 1:
+        expected = expected[0]
+
+    _expect_error(TypeError, expected, arg_parser.finish)
+
+
+@pytest.mark.parametrize(("param_names", "args", "kwargs"), (
     ([], (), {"x":5}),
     ([], (None, 1, 2, 7), {"x":5}),
     ([], (), {"x":1, "y":2, "z":3}),
