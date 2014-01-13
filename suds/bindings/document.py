@@ -91,7 +91,8 @@ class Document(Binding):
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
 
-        arg_parser = ArgParser(method.name, wrapped, args, kwargs, add_param)
+        arg_parser = ArgParser(method.name, wrapped, args, kwargs, add_param,
+            self.options().extraArgumentErrors)
         for pdef in self.param_defs(method):
             arg_parser.process_parameter(*pdef)
         arg_parser.finish()
