@@ -164,7 +164,7 @@ class ArgParser:
     def __check_for_extra_arguments(self):
         """
         Report an error in case any extra arguments are detected.
-        
+
         Does nothing if reporting extra arguments as exceptions has not been
         enabled.
 
@@ -276,7 +276,7 @@ class ArgParser:
             # This failing indicates that someone changed the logic detecting
             # whether a particular web service operation may have its
             # parameters automatically unwrapped. Currently it requires that
-            # the operation have only a single input parameter to unwrap, thus, 
+            # the operation have only a single input parameter to unwrap, thus,
             # all unwrapped parameters come from that unwrapped parameter and
             # so share the same ancestry.
             raise RuntimeError("All automatically unwrapped parameter's need "
