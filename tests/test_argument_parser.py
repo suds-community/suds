@@ -39,6 +39,22 @@ import tests
 import pytest
 
 
+class MockAncestor:
+    """
+    Represents a web service operation parameter ancestry item.
+
+    Implements parts of the suds library's web service operation ancestry item
+    interface required by the ArgParser functionality.
+
+    """
+
+    def __init__(self, is_choice=False):
+        self.__is_choice = is_choice
+
+    def choice(self):
+        return self.__is_choice
+
+
 class MockParamProcessor:
     """
     Mock parameter processor that gets passed ArgParser results.
@@ -277,30 +293,32 @@ def test_not_reporting_extra_argument_errors():
     implemented.
 
     """
+    x = MockAncestor()
+    c = MockAncestor(is_choice=True)
     params = [
-        ("p1", MockParamType(False)),
-        ("p2", MockParamType(True)),
-        ("p3", MockParamType(False))]
+        ("p1", MockParamType(False), [x]),
+        ("p2", MockParamType(True), [x, c]),
+        ("p3", MockParamType(False), [x, c])]
     args = (1, 2, 3, 4, 5)
     kwargs = {"p1":"p1", "p3":"p3", "x":666}
     original_args = tuple(args)
     original_kwargs = dict(kwargs)
     param_processor = MockParamProcessor()
-    arg_parser = ArgParser("w", False, args, kwargs, param_processor.process,
+    arg_parser = ArgParser("w", True, args, kwargs, param_processor.process,
         False)
-    for param_name, param_type in params:
-        arg_parser.process_parameter(param_name, param_type)
+    for param_name, param_type, param_ancestry in params:
+        arg_parser.process_parameter(param_name, param_type, param_ancestry)
     args_required, args_allowed = arg_parser.finish()
 
     assert not arg_parser.active()
-    assert args_required == 2
+    assert args_required == 1
     assert args_allowed == 3
     processed_params = param_processor.params()
     assert len(processed_params) == len(params)
     for expected_param, param, value in zip(params, processed_params, args):
         assert param[0] is expected_param[0]
         assert param[1] is expected_param[1]
-        assert not param[2]
+        assert param[2] == (c in expected_param[2])
         assert param[3] is value
 
 
