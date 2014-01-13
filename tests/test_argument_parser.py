@@ -290,9 +290,11 @@ def test_not_reporting_extra_argument_errors():
         False)
     for param_name, param_type in params:
         arg_parser.process_parameter(param_name, param_type)
-    arg_parser.finish()
+    args_required, args_allowed = arg_parser.finish()
 
     assert not arg_parser.active()
+    assert args_required == 2
+    assert args_allowed == 3
     processed_params = param_processor.params()
     assert len(processed_params) == len(params)
     for expected_param, param, value in zip(params, processed_params, args):

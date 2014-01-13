@@ -100,16 +100,18 @@ class ArgParser:
         Whether this method succeeds or not, after it exits, the ArgParser
         instance will be marked as inactive.
 
+        Returns an informative 2-tuple containing the number of required &
+        allowed arguments.
+
         See the ArgParser class description for more detailed information.
 
         """
         if not self.active():
             raise RuntimeError("finish() called on an inactive ArgParser.")
-        bottom = self.__stack[0]
+        sentinel_frame = self.__stack[0]
         try:
             try:
-                self.__pop_frames_above(bottom)
-                self.__check_for_extra_arguments()
+                self.__pop_frames_above(sentinel_frame)
                 self.__pop_top_frame()
             except Exception:
                 self.__stack = []
@@ -117,6 +119,10 @@ class ArgParser:
         finally:
             assert not self.__stack
             assert not self.active()
+        args_required = sentinel_frame.args_required()
+        args_allowed = sentinel_frame.args_allowed()
+        self.__check_for_extra_arguments(args_required, args_allowed)
+        return args_required, args_allowed
 
     def process_parameter(self, param_name, param_type, ancestry=None):
         """
@@ -161,24 +167,17 @@ class ArgParser:
         self.__external_param_processor(param_name, param_type,
             self.__in_choice_context(), value)
 
-    def __check_for_extra_arguments(self):
+    def __check_for_extra_arguments(self, args_required, args_allowed):
         """
         Report an error in case any extra arguments are detected.
 
         Does nothing if reporting extra arguments as exceptions has not been
         enabled.
 
-        May only be called after the argument processing has completed, all the
-        regular context frames have been popped off the stack and the only
-        remaining frame there is the sentinel holding the final processing
-        results.
+        May only be called after the argument processing has completed.
 
         """
-        assert len(self.__stack) == 1
-        sentinel_frame = self.__stack[0]
-        args_required = sentinel_frame.args_required()
-        args_allowed = sentinel_frame.args_allowed()
-
+        assert not self.active()
         if not self.__extra_parameter_errors:
             return
 
