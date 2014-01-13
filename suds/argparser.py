@@ -97,16 +97,26 @@ class ArgParser:
         have been successfully processed and, afterwards, no further parameter
         processing is allowed.
 
+        Whether this method succeeds or not, after it exits, the ArgParser
+        instance will be marked as inactive.
+
         See the ArgParser class description for more detailed information.
 
         """
         if not self.active():
             raise RuntimeError("finish() called on an inactive ArgParser.")
         bottom = self.__stack[0]
-        self.__pop_frames_above(bottom)
-        self.__check_for_extra_arguments()
-        self.__pop_top_frame()
-        assert not self.__stack
+        try:
+            try:
+                self.__pop_frames_above(bottom)
+                self.__check_for_extra_arguments()
+                self.__pop_top_frame()
+            except Exception:
+                self.__stack = []
+                raise
+        finally:
+            assert not self.__stack
+            assert not self.active()
 
     def process_parameter(self, param_name, param_type, ancestry=None):
         """

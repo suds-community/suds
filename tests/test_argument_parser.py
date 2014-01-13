@@ -198,7 +198,7 @@ def test_extra_positional_arguments(param_optional, args):
         takes_plural_suffix, len(args), was_were)
     _expect_error(TypeError, expected, arg_parser.finish)
 
-    assert arg_parser.active()
+    assert not arg_parser.active()
     assert len(param_processor.params()) == param_count
     processed_params = param_processor.params()
     for expected_param, param, value in zip(params, processed_params, args):
