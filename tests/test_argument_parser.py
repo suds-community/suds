@@ -179,7 +179,8 @@ def test_extra_positional_arguments(param_optional, args):
         param_type = MockParamType(optional)
         params.append((param_name, param_type))
     param_processor = MockParamProcessor()
-    arg_parser = ArgParser("fru-fru", False, args, {}, param_processor.process)
+    arg_parser = ArgParser("fru-fru", False, args, {}, param_processor.process,
+        True)
     for param_name, param_type in params:
         arg_parser.process_parameter(param_name, param_type)
 
@@ -222,7 +223,7 @@ def test_inconsistent_wrapped_and_ancestry(wrapped, ancestry):
             "specified for all their parameters.",
         False:"Only automatically unwrapped interfaces may have their "
             "parameter ancestry information specified."}
-    arg_parser = ArgParser("gr", wrapped, range(10), {}, _do_nothing)
+    arg_parser = ArgParser("gr", wrapped, range(10), {}, _do_nothing, False)
     param_info = ["p0", MockParamType(False), ancestry]
     m = expected_error_message[wrapped]
     _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
@@ -250,7 +251,7 @@ def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
     """
     duplicates = []
     args_count = len(args)
-    arg_parser = ArgParser("q", False, args, kwargs, _do_nothing)
+    arg_parser = ArgParser("q", False, args, kwargs, _do_nothing, True)
     for n, param_name in enumerate(param_names):
         optional = False
         if param_name.__class__ in (tuple, list):
@@ -266,6 +267,39 @@ def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
         expected = expected[0]
 
     _expect_error(TypeError, expected, arg_parser.finish)
+
+
+def test_not_reporting_extra_argument_errors():
+    """
+    When ArgParser has been configured not to report extra argument errors as
+    exceptions, it should simply ignore any such extra arguments. This matches
+    the suds library behaviour from before extra argument error reporting was
+    implemented.
+
+    """
+    params = [
+        ("p1", MockParamType(False)),
+        ("p2", MockParamType(True)),
+        ("p3", MockParamType(False))]
+    args = (1, 2, 3, 4, 5)
+    kwargs = {"p1":"p1", "p3":"p3", "x":666}
+    original_args = tuple(args)
+    original_kwargs = dict(kwargs)
+    param_processor = MockParamProcessor()
+    arg_parser = ArgParser("w", False, args, kwargs, param_processor.process,
+        False)
+    for param_name, param_type in params:
+        arg_parser.process_parameter(param_name, param_type)
+    arg_parser.finish()
+
+    assert not arg_parser.active()
+    processed_params = param_processor.params()
+    assert len(processed_params) == len(params)
+    for expected_param, param, value in zip(params, processed_params, args):
+        assert param[0] is expected_param[0]
+        assert param[1] is expected_param[1]
+        assert not param[2]
+        assert param[3] is value
 
 
 @pytest.mark.parametrize(("param_names", "args", "kwargs"), (
@@ -293,7 +327,7 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
 
     """
     extra_kwargs = dict(kwargs)
-    arg_parser = ArgParser("pUFf", False, args, kwargs, _do_nothing)
+    arg_parser = ArgParser("pUFf", False, args, kwargs, _do_nothing, True)
     for param_name in param_names:
         optional = False
         if param_name.__class__ in (tuple, list):

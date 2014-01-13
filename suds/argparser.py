@@ -66,7 +66,7 @@ class ArgParser:
     """
 
     def __init__(self, method_name, wrapped, args, kwargs,
-            external_param_processor):
+            external_param_processor, extra_parameter_errors):
         """
         Constructs a new ArgParser instance.
 
@@ -77,6 +77,7 @@ class ArgParser:
         self.__method_name = method_name
         self.__wrapped = wrapped
         self.__external_param_processor = external_param_processor
+        self.__extra_parameter_errors = extra_parameter_errors
         self.__args = list(args)
         self.__kwargs = kwargs
         self.__args_count = len(args) + len(kwargs)
@@ -153,6 +154,9 @@ class ArgParser:
     def __check_for_extra_arguments(self):
         """
         Report an error in case any extra arguments are detected.
+        
+        Does nothing if reporting extra arguments as exceptions has not been
+        enabled.
 
         May only be called after the argument processing has completed, all the
         regular context frames have been popped off the stack and the only
@@ -164,6 +168,9 @@ class ArgParser:
         sentinel_frame = self.__stack[0]
         args_required = sentinel_frame.args_required()
         args_allowed = sentinel_frame.args_allowed()
+
+        if not self.__extra_parameter_errors:
+            return
 
         if self.__kwargs:
             param_name = self.__kwargs.keys()[0]
