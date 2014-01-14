@@ -425,20 +425,20 @@ def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
     params = []
     for param_name, param_optional, param_ancestry_def in param_defs:
         ancestry = []
-        param_ancestor_ids = set()
-        for id in param_ancestry_def:
+        for n, id in enumerate(param_ancestry_def):
             is_choice = False
             if id.__class__ is list:
                 assert len(id) == 1, "bad test input"
                 id = id[0]
                 is_choice = True
-            assert id not in param_ancestor_ids, "bad test input"
-            param_ancestor_ids.add(id)
-            ancestor = ancestor_map.get(id, None)
-            if ancestor:
-                assert ancestor.choice() == is_choice, "bad test input"
+            try:
+                ancestor, ancestry_def = ancestor_map[id]
+            except KeyError:
+                ancestor = MockAncestor(is_choice)
+                ancestor_map[id] = (ancestor, param_ancestry_def[:n])
             else:
-                ancestor = ancestor_map[id] = MockAncestor(is_choice)
+                assert ancestor.choice() == is_choice, "bad test input"
+                assert ancestry_def == param_ancestry_def[:n], "bad test input"
             ancestry.append(ancestor)
         params.append((param_name, MockParamType(param_optional), ancestry))
 
