@@ -388,7 +388,9 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
 
 
 @pytest.mark.parametrize(("expect_required", "expect_allowed", "param_defs"), (
+    # No parameters.
     (0, 0, []),
+    # Single parameter.
     (1, 1, [("p1", False, [1, 2, 3, 4])]),
     (0, 1, [("p1", True, [1, 2, 3, 4])]),
     (1, 1, [("p1", False, [1, 2, 3, [4]])]),
@@ -397,6 +399,11 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
     (0, 1, [("p1", True, [1, [2], 3, 4])]),
     (1, 1, [("p1", False, [1, [2], 3, [4]])]),
     (0, 1, [("p1", True, [1, [2], 3, [4]])]),
+    # Choice containing a non-empty sequence.
+    (1, 3, [
+        ("a", False, [1, 2, 3, [4]]),
+        ("b1", False, [1, 2, 3, [4], 5]),
+        ("b2", False, [1, 2, 3, [4], 5])]),
     ))
 def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
     """
