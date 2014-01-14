@@ -399,11 +399,133 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
     (0, 1, [("p1", True, [1, [2], 3, 4])]),
     (1, 1, [("p1", False, [1, [2], 3, [4]])]),
     (0, 1, [("p1", True, [1, [2], 3, [4]])]),
+    # Multiple parameters.
+    (4, 4, [
+        ("a", False, [1]),
+        ("b", False, [1]),
+        ("c", False, [1]),
+        ("d", False, [1])]),
+    (0, 4, [
+        ("a", True, [1]),
+        ("b", True, [1]),
+        ("c", True, [1]),
+        ("d", True, [1])]),
+    (2, 4, [
+        ("a", True, [1]),
+        ("b", False, [1]),
+        ("c", True, [1]),
+        ("d", False, [1])]),
+    (2, 4, [
+        ("a", False, [1]),
+        ("b", True, [1]),
+        ("c", False, [1]),
+        ("d", True, [1])]),
+    (3, 4, [
+        ("a", False, [1]),
+        ("b", False, [1]),
+        ("c", False, [1]),
+        ("d", True, [1])]),
+    (3, 4, [
+        ("a", True, [1]),
+        ("b", False, [1]),
+        ("c", False, [1]),
+        ("d", False, [1])]),
+    # Choice containing only simple members.
+    (1, 2, [
+        ("a", False, [[1]]),
+        ("b", False, [[1]])]),
+    (0, 2, [
+        ("a", True, [[1]]),
+        ("b", False, [[1]])]),
+    (0, 2, [
+        ("a", False, [[1]]),
+        ("b", True, [[1]])]),
+    (0, 2, [
+        ("a", True, [[1]]),
+        ("b", True, [[1]])]),
     # Choice containing a non-empty sequence.
     (1, 3, [
         ("a", False, [1, 2, 3, [4]]),
         ("b1", False, [1, 2, 3, [4], 5]),
         ("b2", False, [1, 2, 3, [4], 5])]),
+    # Choice with more than one required parameter.
+    (2, 4, [
+        ("a1", False, [[1], 2]),
+        ("a2", False, [[1], 2]),
+        ("b1", False, [[1], 3]),
+        ("b2", False, [[1], 3])]),
+    (2, 5, [
+        ("a1", False, [[1], 2]),
+        ("a2", False, [[1], 2]),
+        ("b1", False, [[1], 3]),
+        ("b2", False, [[1], 3]),
+        ("b3", False, [[1], 3])]),
+    (2, 5, [
+        ("a1", False, [[1], 2]),
+        ("a2", False, [[1], 2]),
+        ("a3", False, [[1], 2]),
+        ("b1", False, [[1], 3]),
+        ("b2", False, [[1], 3])]),
+    (3, 6, [
+        ("a1", False, [[1], 2]),
+        ("a2", False, [[1], 2]),
+        ("a3", False, [[1], 2]),
+        ("b1", False, [[1], 3]),
+        ("b2", False, [[1], 3]),
+        ("b3", False, [[1], 3])]),
+    (2, 6, [
+        ("a1", False, [[1], 2]),
+        ("a2", True, [[1], 2]),
+        ("a3", False, [[1], 2]),
+        ("b1", False, [[1], 3]),
+        ("b2", False, [[1], 3]),
+        ("b3", False, [[1], 3])]),
+    # Sequence containing multiple choices.
+    (2, 4, [
+        ("a1", False, [0, [1]]),
+        ("a2", False, [0, [1]]),
+        ("b1", False, [0, [2]]),
+        ("b2", False, [0, [2]])]),
+    (1, 4, [
+        ("a1", False, [0, [1]]),
+        ("a2", False, [0, [1]]),
+        ("b1", False, [0, [2]]),
+        ("b2", True, [0, [2]])]),
+    (3, 5, [
+        ("a1", False, [0, [1]]),
+        ("a2", False, [0, [1]]),
+        ("x", False, [0]),
+        ("b1", False, [0, [2]]),
+        ("b2", False, [0, [2]])]),
+    # Choice containing optional parameters.
+    (0, 3, [
+        ("a", False, [1, [2]]),
+        ("b", True, [1, [2]]),
+        ("c", False, [1, [2]])]),
+    (0, 3, [
+        ("a", False, [1, [2]]),
+        ("b1", True, [1, [2], 3]),
+        ("b2", True, [1, [2], 3])]),
+    (1, 3, [
+        ("a", False, [1, [2]]),
+        ("b1", False, [1, [2], 3]),
+        ("b2", True, [1, [2], 3])]),
+    # Choices within choices next to choices.
+    (3, 14, [
+        ("p01", False, [1]),
+        ("p02", False, [1, [2], 3]),
+        ("p03", False, [1, [2], 3]),
+        ("p04", False, [1, [2], 4, 5, 6]),
+        ("p05", False, [1, [2], 4, 5, 6, [7]]),
+        ("p06", False, [1, [2], 4, 5, 6, [7], [8]]),
+        ("p07", False, [1, [2], 4, 5, 6, [7], 9]),
+        ("p08", False, [1, [2], 4, 5, 6, [7], 9]),
+        ("p09", False, [1, [2], 4, [10], 11]),
+        ("p10", False, [1, [2], 4, [10], 11]),
+        ("p11", False, [1, [2], 4, [10], 12]),
+        ("p12", False, [1, [2], 4, [10], 12]),
+        ("p13", False, [1, [2], 4, [10], 12]),
+        ("p14", False, [1, [2], 4, [13]])]),
     ))
 def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
     """
