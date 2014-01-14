@@ -321,26 +321,6 @@ def test_not_reporting_extra_argument_errors():
         assert param[3] is value
 
 
-def test_unwrapped_parameters_must_share_ancestry():
-    """
-    ArgParser should only accept parameters with shared ancestry when
-    processing parameters for an operation with automatically unwrapped
-    parameters.
-
-    """
-    a1 = MockAncestor()
-    a2 = MockAncestor()
-    param_type = MockParamType(True)
-
-    arg_parser = ArgParser("w", True, (), {}, _do_nothing, False)
-    arg_parser.process_parameter("p1", param_type, [a1])
-
-    m = ("All automatically unwrapped parameter's need to share the same "
-        "ancestry.")
-    param_info = ("p2", param_type, [a2])
-    _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
-
-
 @pytest.mark.parametrize(("param_names", "args", "kwargs"), (
     ([], (), {"x":5}),
     ([], (None, 1, 2, 7), {"x":5}),
@@ -385,6 +365,26 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
 
     _expect_error(TypeError, expected, arg_parser.finish)
     assert not arg_parser.active()
+
+
+def test_unwrapped_parameters_must_share_ancestry():
+    """
+    ArgParser should only accept parameters with shared ancestry when
+    processing parameters for an operation with automatically unwrapped
+    parameters.
+
+    """
+    a1 = MockAncestor()
+    a2 = MockAncestor()
+    param_type = MockParamType(True)
+
+    arg_parser = ArgParser("w", True, (), {}, _do_nothing, False)
+    arg_parser.process_parameter("p1", param_type, [a1])
+
+    m = ("All automatically unwrapped parameter's need to share the same "
+        "ancestry.")
+    param_info = ("p2", param_type, [a2])
+    _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
 
 
 @pytest.mark.parametrize(("expect_required", "expect_allowed", "param_defs"), (
