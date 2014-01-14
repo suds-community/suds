@@ -70,8 +70,9 @@ class ArgParser:
         """
         Constructs a new ArgParser instance.
 
-        Passed args & kwargs objects are considered owned by the new argument
-        parser instance and may be modified internally during parsing.
+        Passed args & kwargs objects are copied internally so their original
+        instances are not modified during parsing nor is the parsing affected
+        by their external changes.
 
         """
         self.__method_name = method_name
@@ -79,7 +80,7 @@ class ArgParser:
         self.__external_param_processor = external_param_processor
         self.__extra_parameter_errors = extra_parameter_errors
         self.__args = list(args)
-        self.__kwargs = kwargs
+        self.__kwargs = dict(kwargs)
         self.__args_count = len(args) + len(kwargs)
         self.__params_with_arguments = set()
         self.__stack = []
