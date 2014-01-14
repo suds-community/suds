@@ -387,6 +387,78 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
     assert not arg_parser.active()
 
 
+@pytest.mark.parametrize(("expect_required", "expect_allowed", "param_defs"), (
+    (0, 0, []),
+    (1, 1, [("p1", False, [1, 2, 3, 4])]),
+    (0, 1, [("p1", True, [1, 2, 3, 4])]),
+    (1, 1, [("p1", False, [1, 2, 3, [4]])]),
+    (0, 1, [("p1", True, [1, 2, 3, [4]])]),
+    (1, 1, [("p1", False, [1, [2], 3, 4])]),
+    (0, 1, [("p1", True, [1, [2], 3, 4])]),
+    (1, 1, [("p1", False, [1, [2], 3, [4]])]),
+    (0, 1, [("p1", True, [1, [2], 3, [4]])]),
+    ))
+def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
+    """
+    Test required & allowed argument count for unwrapped parameters.
+
+    Expected 'param_defs' structure - list of 3-tuples containing the
+    following:
+      * Parameter name (string).
+      * Optional (boolean).
+      * Ancestry (list).
+        * Contains integers and/or single element lists containing an integer.
+          * Integers represent non-choice ancestry items.
+          * Single element lists represent choice ancestry items.
+        * Integer values represent ancestry item ids - different integer values
+          represent separate ancestry items.
+
+    """
+    ancestor_map = {}
+    params = []
+    for param_name, param_optional, param_ancestry_def in param_defs:
+        ancestry = []
+        param_ancestor_ids = set()
+        for id in param_ancestry_def:
+            is_choice = False
+            if id.__class__ is list:
+                assert len(id) == 1, "bad test input"
+                id = id[0]
+                is_choice = True
+            assert id not in param_ancestor_ids, "bad test input"
+            param_ancestor_ids.add(id)
+            ancestor = ancestor_map.get(id, None)
+            if ancestor:
+                assert ancestor.choice() == is_choice, "bad test input"
+            else:
+                ancestor = ancestor_map[id] = MockAncestor(is_choice)
+            ancestry.append(ancestor)
+        params.append((param_name, MockParamType(param_optional), ancestry))
+
+    param_processor = MockParamProcessor()
+    args = list(range(666, 666 + len(params)))
+    arg_parser = ArgParser("w", True, args, {}, param_processor.process, False)
+    for param_name, param_type, param_ancestry in params:
+        arg_parser.process_parameter(param_name, param_type, param_ancestry)
+    args_required, args_allowed = arg_parser.finish()
+
+    assert not arg_parser.active()
+    assert args_required == expect_required
+    assert args_allowed == expect_allowed
+    processed_params = param_processor.params()
+    assert len(processed_params) == len(params)
+    for expected_param, param, value in zip(params, processed_params, args):
+        assert param[0] is expected_param[0]
+        assert param[1] is expected_param[1]
+        expected_in_choice_context = False
+        for x in expected_param[2]:
+            if x.choice():
+                expected_in_choice_context = True
+                break
+        assert param[2] == expected_in_choice_context
+        assert param[3] is value
+
+
 def _do_nothing(*args, **kwargs):
     """
     Function used as a generic do-nothing callback where needed during testing.
