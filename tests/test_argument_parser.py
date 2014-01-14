@@ -443,7 +443,7 @@ def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
         params.append((param_name, MockParamType(param_optional), ancestry))
 
     param_processor = MockParamProcessor()
-    args = list(range(666, 666 + len(params)))
+    args = [object() for x in params]
     arg_parser = ArgParser("w", True, args, {}, param_processor.process, False)
     for param_name, param_type, param_ancestry in params:
         arg_parser.process_parameter(param_name, param_type, param_ancestry)
