@@ -239,7 +239,7 @@ def test_inconsistent_wrapped_and_ancestry(wrapped, ancestry):
             "specified for all their parameters.",
         False:"Only automatically unwrapped interfaces may have their "
             "parameter ancestry information specified."}
-    arg_parser = ArgParser("gr", wrapped, range(10), {}, _do_nothing, False)
+    arg_parser = ArgParser("gr", wrapped, (), {}, _do_nothing, False)
     param_info = ["p0", MockParamType(False), ancestry]
     m = expected_error_message[wrapped]
     _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
@@ -273,9 +273,9 @@ def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
         if param_name.__class__ in (tuple, list):
             optional = True
             param_name = param_name[0]
-        arg_parser.process_parameter(param_name, MockParamType(optional))
         if n < args_count and param_name in kwargs:
             duplicates.append(param_name)
+        arg_parser.process_parameter(param_name, MockParamType(optional))
 
     message = "q() got multiple values for parameter '%s'"
     expected = [message % (x,) for x in duplicates]
@@ -283,6 +283,7 @@ def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
         expected = expected[0]
 
     _expect_error(TypeError, expected, arg_parser.finish)
+    assert not arg_parser.active()
 
 
 def test_not_reporting_extra_argument_errors():
@@ -299,13 +300,11 @@ def test_not_reporting_extra_argument_errors():
         ("p1", MockParamType(False), [x]),
         ("p2", MockParamType(True), [x, c]),
         ("p3", MockParamType(False), [x, c])]
-    args = (1, 2, 3, 4, 5)
+    args = list(range(5))
     kwargs = {"p1":"p1", "p3":"p3", "x":666}
-    original_args = tuple(args)
-    original_kwargs = dict(kwargs)
     param_processor = MockParamProcessor()
-    arg_parser = ArgParser("w", True, args, kwargs, param_processor.process,
-        False)
+    param_process_func = param_processor.process
+    arg_parser = ArgParser("w", True, args, kwargs, param_process_func, False)
     for param_name, param_type, param_ancestry in params:
         arg_parser.process_parameter(param_name, param_type, param_ancestry)
     args_required, args_allowed = arg_parser.finish()
@@ -346,22 +345,26 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
     lists or tuples.
 
     """
-    extra_kwargs = dict(kwargs)
+    arg_count = len(args)
     arg_parser = ArgParser("pUFf", False, args, kwargs, _do_nothing, True)
-    for param_name in param_names:
+    for n, param_name in enumerate(param_names):
         optional = False
         if param_name.__class__ in (tuple, list):
             optional = True
             param_name = param_name[0]
+        if n < arg_count:
+            assert param_name not in kwargs
+        else:
+            kwargs.pop(param_name, None)
         arg_parser.process_parameter(param_name, MockParamType(optional))
-        extra_kwargs.pop(param_name, None)
 
     message = "pUFf() got an unexpected keyword argument '%s'"
-    expected = [message % (x,) for x in extra_kwargs]
+    expected = [message % (x,) for x in kwargs]
     if len(expected) == 1:
         expected = expected[0]
 
     _expect_error(TypeError, expected, arg_parser.finish)
+    assert not arg_parser.active()
 
 
 def _do_nothing(*args, **kwargs):
