@@ -141,13 +141,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert re.search(" ordering\[\] = ", metadata_string)
 
 
-def test_empty_invalid_wsdl():
-    try:
-        tests.client_from_wsdl(suds.byte_str(""))
-    except xml.sax.SAXParseException, e:
-        assert e.getMessage() == "no element found"
-    else:
-        pytest.fail("Expected exception xml.sax.SAXParseException not raised.")
+def test_empty_invalid_wsdl(monkeypatch):
+    wsdl = suds.byte_str("")
+    monkeypatch.delitem(locals(), "e", False)
+    e = pytest.raises(xml.sax.SAXParseException, tests.client_from_wsdl, wsdl)
+    assert e.value.getMessage() == "no element found"
 
 
 def test_empty_valid_wsdl():
@@ -1336,13 +1334,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     pytest.raises(suds.TypeNotFound, client.factory.create, "NonExistingType")
 
 
-def test_parameter_referencing_missing_element():
-    try:
-        tests.client_from_wsdl(tests.wsdl_input("", "missingElement"))
-    except suds.TypeNotFound, e:
-        assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
-    else:
-        pytest.fail("Expected exception suds.TypeNotFound not raised.")
+def test_parameter_referencing_missing_element(monkeypatch):
+    wsdl = tests.wsdl_input("", "missingElement")
+    monkeypatch.delitem(locals(), "e", False)
+    e = pytest.raises(suds.TypeNotFound, tests.client_from_wsdl, wsdl).value
+    assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
 
 
 # TODO: Update the current restriction type input parameter handling so they get
