@@ -22,7 +22,7 @@ Suds library prepares web service operation invocation functions that construct
 actual web service operation invocation requests based on the parameters they
 receive and their web service operation's definition.
 
-ArgParser class implements generic argument parsing and validation, not
+The module tested here implements generic argument parsing and validation, not
 specific to a particular web service operation binding.
 
 """
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
 
 import suds
-from suds.argparser import ArgParser
+import suds.argparser
 import tests
 
 import pytest
@@ -44,7 +44,7 @@ class MockAncestor:
     Represents a web service operation parameter ancestry item.
 
     Implements parts of the suds library's web service operation ancestry item
-    interface required by the ArgParser functionality.
+    interface required by the argument parser functionality.
 
     """
 
@@ -57,10 +57,10 @@ class MockAncestor:
 
 class MockParamProcessor:
     """
-    Mock parameter processor that gets passed ArgParser results.
+    Mock parameter processor that gets passed argument parsing results.
 
-    Collects received parameter information so it may be checked after
-    ArgParser completes its work.
+    Collects received parameter information so it may be checked after argument
+    parsing has completed.
 
     """
 
@@ -79,7 +79,8 @@ class MockParamType:
     Represents a web service operation parameter type.
 
     Implements parts of the suds library's web service operation parameter type
-    interface required by the ArgParser functionality.
+    interface required by the argument parsing implementation tested in this
+    module.
 
     """
 
@@ -93,21 +94,22 @@ class MockParamType:
 @pytest.mark.parametrize("binding_style", (
     "document",
     #TODO: Suds library's RPC binding implementation should be updated to use
-    # the ArgParser functionality. This will remove code duplication between
-    # different binding implementations and make their features more balanced.
+    # the argument parsing functionality. This will remove code duplication
+    # between different binding implementations and make their features more
+    # balanced.
     pytest.mark.xfail(reason="Not yet implemented.")("rpc")
     ))
-def test_binding_uses_ArgParser(monkeypatch, binding_style):
+def test_binding_uses_argument_parsing(monkeypatch, binding_style):
     """
-    Calling web service operations should use the generic ArgParser
+    Calling web service operations should use the generic argument parsing
     functionality independent of the operation's specific binding style.
 
     """
     class MyException(Exception):
         pass
-    def raise_my_exception(*args, **kwargs):
+    def raise_exception(*args, **kwargs):
         raise MyException
-    monkeypatch.setattr(ArgParser, "__init__", raise_my_exception)
+    monkeypatch.setattr(suds.argparser._ArgParser, "__init__", raise_exception)
 
     wsdl = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -195,10 +197,6 @@ def test_extra_positional_arguments(param_optional, args):
         param_type = MockParamType(optional)
         params.append((param_name, param_type))
     param_processor = MockParamProcessor()
-    arg_parser = ArgParser("fru-fru", False, args, {}, param_processor.process,
-        True)
-    for param_name, param_type in params:
-        arg_parser.process_parameter(param_name, param_type)
 
     takes_plural_suffix = "s"
     if expected_args_min == param_count:
@@ -212,9 +210,9 @@ def test_extra_positional_arguments(param_optional, args):
         was_were = "was"
     expected = "fru-fru() takes %s positional argument%s but %d %s given" % (
         takes, takes_plural_suffix, len(args), was_were)
-    _expect_error(TypeError, expected, arg_parser.finish)
+    _expect_error(TypeError, expected, suds.argparser.parse_args, "fru-fru",
+        params, args, {}, param_processor.process, True)
 
-    assert not arg_parser.active()
     assert len(param_processor.params()) == param_count
     processed_params = param_processor.params()
     for expected_param, param, value in zip(params, processed_params, args):
@@ -222,27 +220,6 @@ def test_extra_positional_arguments(param_optional, args):
         assert param[1] is expected_param[1]
         assert not param[2]
         assert param[3] is value
-
-
-@pytest.mark.parametrize(("wrapped", "ancestry"), (
-    (False, [object()]),
-    (True, []),
-    (True, None)))
-def test_inconsistent_wrapped_and_ancestry(wrapped, ancestry):
-    """
-    Parameter ancestry information should be sent for automatically unwrapped
-    web service operation interfaces and only for them.
-
-    """
-    expected_error_message = {
-        True:"Automatically unwrapped interfaces require ancestry information "
-            "specified for all their parameters.",
-        False:"Only automatically unwrapped interfaces may have their "
-            "parameter ancestry information specified."}
-    arg_parser = ArgParser("gr", wrapped, (), {}, _do_nothing, False)
-    param_info = ["p0", MockParamType(False), ancestry]
-    m = expected_error_message[wrapped]
-    _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
 
 
 @pytest.mark.parametrize(("param_names", "args", "kwargs"), (
@@ -265,9 +242,9 @@ def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
     lists or tuples.
 
     """
+    params = []
     duplicates = []
     args_count = len(args)
-    arg_parser = ArgParser("q", False, args, kwargs, _do_nothing, True)
     for n, param_name in enumerate(param_names):
         optional = False
         if param_name.__class__ in (tuple, list):
@@ -275,15 +252,13 @@ def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
             param_name = param_name[0]
         if n < args_count and param_name in kwargs:
             duplicates.append(param_name)
-        arg_parser.process_parameter(param_name, MockParamType(optional))
-
+        params.append((param_name, MockParamType(optional)))
     message = "q() got multiple values for parameter '%s'"
     expected = [message % (x,) for x in duplicates]
     if len(expected) == 1:
         expected = expected[0]
-
-    _expect_error(TypeError, expected, arg_parser.finish)
-    assert not arg_parser.active()
+    _expect_error(TypeError, expected, suds.argparser.parse_args, "q", params,
+        args, kwargs, _do_nothing, True)
 
 
 def test_not_reporting_extra_argument_errors():
@@ -303,13 +278,9 @@ def test_not_reporting_extra_argument_errors():
     args = list(range(5))
     kwargs = {"p1":"p1", "p3":"p3", "x":666}
     param_processor = MockParamProcessor()
-    param_process_func = param_processor.process
-    arg_parser = ArgParser("w", True, args, kwargs, param_process_func, False)
-    for param_name, param_type, param_ancestry in params:
-        arg_parser.process_parameter(param_name, param_type, param_ancestry)
-    args_required, args_allowed = arg_parser.finish()
+    args_required, args_allowed = suds.argparser.parse_args("w", params, args,
+        kwargs, param_processor.process, False)
 
-    assert not arg_parser.active()
     assert args_required == 1
     assert args_allowed == 3
     processed_params = param_processor.params()
@@ -345,8 +316,8 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
     lists or tuples.
 
     """
+    params = []
     arg_count = len(args)
-    arg_parser = ArgParser("pUFf", False, args, kwargs, _do_nothing, True)
     for n, param_name in enumerate(param_names):
         optional = False
         if param_name.__class__ in (tuple, list):
@@ -356,35 +327,13 @@ def test_unexpected_keyword_argument(param_names, args, kwargs):
             assert param_name not in kwargs
         else:
             kwargs.pop(param_name, None)
-        arg_parser.process_parameter(param_name, MockParamType(optional))
-
+        params.append((param_name, MockParamType(optional)))
     message = "pUFf() got an unexpected keyword argument '%s'"
     expected = [message % (x,) for x in kwargs]
     if len(expected) == 1:
         expected = expected[0]
-
-    _expect_error(TypeError, expected, arg_parser.finish)
-    assert not arg_parser.active()
-
-
-def test_unwrapped_parameters_must_share_ancestry():
-    """
-    ArgParser should only accept parameters with shared ancestry when
-    processing parameters for an operation with automatically unwrapped
-    parameters.
-
-    """
-    a1 = MockAncestor()
-    a2 = MockAncestor()
-    param_type = MockParamType(True)
-
-    arg_parser = ArgParser("w", True, (), {}, _do_nothing, False)
-    arg_parser.process_parameter("p1", param_type, [a1])
-
-    m = ("All automatically unwrapped parameter's need to share the same "
-        "ancestry.")
-    param_info = ("p2", param_type, [a2])
-    _expect_error(RuntimeError, m, arg_parser.process_parameter, *param_info)
+    _expect_error(TypeError, expected, suds.argparser.parse_args, "pUFf",
+        params, args, kwargs, _do_nothing, True)
 
 
 @pytest.mark.parametrize(("expect_required", "expect_allowed", "param_defs"), (
@@ -563,15 +512,11 @@ def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
                 assert ancestry_def == param_ancestry_def[:n], "bad test input"
             ancestry.append(ancestor)
         params.append((param_name, MockParamType(param_optional), ancestry))
-
     param_processor = MockParamProcessor()
     args = [object() for x in params]
-    arg_parser = ArgParser("w", True, args, {}, param_processor.process, False)
-    for param_name, param_type, param_ancestry in params:
-        arg_parser.process_parameter(param_name, param_type, param_ancestry)
-    args_required, args_allowed = arg_parser.finish()
+    args_required, args_allowed = suds.argparser.parse_args("w", params, args,
+        {}, param_processor.process, False)
 
-    assert not arg_parser.active()
     assert args_required == expect_required
     assert args_allowed == expect_allowed
     processed_params = param_processor.params()
