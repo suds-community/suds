@@ -19,7 +19,7 @@ Provides classes for the (WS) SOAP I{document/literal} binding.
 """
 
 from suds import *
-from suds.argparser import ArgParser
+from suds.argparser import parse_args
 from suds.bindings.binding import Binding
 from suds.sax.element import Element
 
@@ -91,11 +91,8 @@ class Document(Binding):
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
 
-        arg_parser = ArgParser(method.name, wrapped, args, kwargs, add_param,
-            self.options().extraArgumentErrors)
-        for pdef in self.param_defs(method):
-            arg_parser.process_parameter(*pdef)
-        arg_parser.finish()
+        parse_args(method.name, self.param_defs(method), args, kwargs,
+            add_param, self.options().extraArgumentErrors)
 
         return root
 

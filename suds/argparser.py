@@ -19,154 +19,124 @@
 """
 Suds web service operation invocation function argument parser.
 
-See the ArgParser class description for more detailed information.
+See the parse_args() function description for more detailed information.
 
 """
 
-__all__ = ["ArgParser"]
+__all__ = ["parse_args"]
 
 
-class ArgParser:
+def parse_args(method_name, param_defs, args, kwargs, external_param_processor,
+    extra_parameter_errors):
     """
-    Argument parser for suds web service operation invocation functions.
+    Parse arguments for suds web service operation invocation functions.
 
     Suds prepares Python function objects for invoking web service operations.
-    This parser implements generic binding agnostic part of processing the
+    This function implements generic binding agnostic part of processing the
     arguments passed when calling those function objects.
 
-    Expects to be passed the web service operation's parameter definitions in
-    order (process_parameter() method) and, based on that, extracts the values
-    for those parameter from the arguments provided in the web service
-    operation invocation call.
+    Expects to be passed the web service operation's parameter definitions
+    (parameter name, type & optional ancestry information) in order and, based
+    on that, extracts the values for those parameter from the arguments
+    provided in the web service operation invocation call.
 
-    After all the web service operation's parameters have been processed, the
-    argument processing is completed by calling the argument parser's finish()
-    method.
+    Ancestry information describes parameters constructed based on suds
+    library's automatic input parameter structure unwrapping. It is expected to
+    include the parameter's XSD schema 'ancestry' context, i.e. a list of all
+    the parent XSD schema tags containing the parameter's <element> tag. Such
+    ancestry context provides detailed information about how the parameter's
+    value is expected to be used, especially in relation to other input
+    parameters, e.g. at most one parameter value may be specified for
+    parameters directly belonging to the same choice input group.
+
+    Rules on acceptable ancestry items:
+      * Ancestry item's choice() method must return whether the item
+        represents a <choice> XSD schema tag.
+      * Passed ancestry items are used 'by address' internally and the same XSD
+        schema tag is expected to be identified by the exact same ancestry item
+        object during the whole argument processing.
 
     During processing, each parameter's definition and value, together with any
     additional pertinent information collected from the encountered parameter
     definition structure, is passed on to the provided external parameter
     processor function. There that information is expected to be used to
     construct the actual binding specific web service operation invocation
-    request. Note that, depending on the input parameter structure, needed
-    parameter information may not be available until some later time (e.g.
-    after some later parameter processing has been completed) and so forwarding
-    that information to the external parameter processor function may not occur
-    directly during that parameter's processing, but will occur in the final
-    finish() method call at the latest.
+    request.
 
-    Performs generic, binding agnostic, argument checking and raises a
-    TypeError exception in case any errors are detected. The exceptions raised
-    have been constructed to make them as similar as possible to their
-    respective exceptions raised during regular Python function argument
-    checking.
+    Raises a TypeError exception in case any argument related errors are
+    detected. The exceptions raised have been constructed to make them as
+    similar as possible to their respective exceptions raised during regular
+    Python function argument checking.
 
     Does not support multiple same-named input parameters.
 
     """
+    arg_parser = _ArgParser(method_name, param_defs, external_param_processor)
+    return arg_parser(args, kwargs, extra_parameter_errors)
 
-    def __init__(self, method_name, wrapped, args, kwargs,
-            external_param_processor, extra_parameter_errors):
-        """
-        Constructs a new ArgParser instance.
 
-        Passed args & kwargs objects are copied internally so their original
-        instances are not modified during parsing nor is the parsing affected
-        by their external changes.
+class _ArgParser:
+    """Internal argument parser implementation function object."""
 
-        """
+    def __init__(self, method_name, param_defs, external_param_processor):
         self.__method_name = method_name
-        self.__wrapped = wrapped
+        self.__param_defs = param_defs
         self.__external_param_processor = external_param_processor
-        self.__extra_parameter_errors = extra_parameter_errors
-        self.__args = list(args)
-        self.__kwargs = dict(kwargs)
-        self.__args_count = len(args) + len(kwargs)
-        self.__params_with_arguments = set()
         self.__stack = []
-        self.__push_frame(None)
 
-    def active(self):
-        """Return whether argument processing is still unfinished."""
-        return bool(self.__stack)
-
-    def finish(self):
+    def __call__(self, args, kwargs, extra_parameter_errors):
         """
-        Finish the argument processing.
+        Runs the main argument parsing operation.
 
-        May only be called after all the web service operation's parameters
-        have been successfully processed and, afterwards, no further parameter
-        processing is allowed.
-
-        Whether this method succeeds or not, after it exits, the ArgParser
-        instance will be marked as inactive.
+        Passed args & kwargs objects are not modified during parsing.
 
         Returns an informative 2-tuple containing the number of required &
         allowed arguments.
 
-        See the ArgParser class description for more detailed information.
+        """
+        assert not self.active(), "recursive argument parsing not allowed"
+        self.__init_run(args, kwargs, extra_parameter_errors)
+        try:
+            self.__process_parameters()
+            return self.__all_parameters_processed()
+        finally:
+            self.__cleanup_run()
+            assert not self.active()
+
+    def active(self):
+        """
+        Return whether this object is currently running argument processing.
+
+        Used to avoid recursively entering argument processing from within an
+        external parameter processor.
 
         """
-        if not self.active():
-            raise RuntimeError("finish() called on an inactive ArgParser.")
+        return bool(self.__stack)
+
+    def __all_parameters_processed(self):
+        """
+        Finish the argument processing.
+
+        Should be called after all the web service operation's parameters have
+        been successfully processed and, afterwards, no further parameter
+        processing is allowed.
+
+        Returns a 2-tuple containing the number of required & allowed
+        arguments.
+
+        See the _ArgParser class description for more detailed information.
+
+        """
+        assert self.active()
         sentinel_frame = self.__stack[0]
-        try:
-            try:
-                self.__pop_frames_above(sentinel_frame)
-                self.__pop_top_frame()
-            except Exception:
-                self.__stack = []
-                raise
-        finally:
-            assert not self.__stack
-            assert not self.active()
+        self.__pop_frames_above(sentinel_frame)
+        assert len(self.__stack) == 1
+        self.__pop_top_frame()
+        assert not self.active()
         args_required = sentinel_frame.args_required()
         args_allowed = sentinel_frame.args_allowed()
         self.__check_for_extra_arguments(args_required, args_allowed)
         return args_required, args_allowed
-
-    def process_parameter(self, param_name, param_type, ancestry=None):
-        """
-        Collect arguments for the given web service operation input parameter.
-
-        Definitions for regular web service parameters, i.e. those defined
-        directly as message parts in the web service operation's WSDL schema,
-        are expected to include no additional 'ancestry' information.
-
-        Parameter definitions for parameters constructed based on suds
-        library's automatic input parameter structure unwrapping, are expected
-        to include the parameter's XSD schema 'ancestry' context, i.e. a list
-        of all the parent XSD schema tags containing the parameter's <element>
-        tag. Such ancestry context provides detailed information about how the
-        parameter's value is expected to be used.
-
-        Rules on acceptable ancestry items:
-          * Ancestry item's choice() method must return whether the item
-            represents a <choice> XSD schema tag.
-          * Passed ancestry items are used 'by address' internally and the same
-            XSD schema tag is expected to be identified by the exact same
-            ancestry item object during the whole argument processing.
-
-        See the ArgParser class description for more detailed information.
-
-        """
-        if not self.active():
-            raise RuntimeError("process_parameter() called on an inactive "
-                "ArgParser.")
-        if self.__wrapped and not ancestry:
-            raise RuntimeError("Automatically unwrapped interfaces require "
-                "ancestry information specified for all their parameters.")
-        if not self.__wrapped and (ancestry is not None):
-            raise RuntimeError("Only automatically unwrapped interfaces may "
-                "have their parameter ancestry information specified.")
-        param_optional = param_type.optional()
-        has_argument, value = self.__get_param_value(param_name)
-        if has_argument:
-            self.__params_with_arguments.add(param_name)
-        self.__update_context(ancestry)
-        self.__stack[-1].process_parameter(param_optional, value is not None)
-        self.__external_param_processor(param_name, param_type,
-            self.__in_choice_context(), value)
 
     def __check_for_extra_arguments(self, args_required, args_allowed):
         """
@@ -175,7 +145,7 @@ class ArgParser:
         Does nothing if reporting extra arguments as exceptions has not been
         enabled.
 
-        May only be called after the argument processing has completed.
+        May only be called after the argument processing has been completed.
 
         """
         assert not self.active()
@@ -207,6 +177,11 @@ class ArgParser:
                 plural_suffix(expected), " but %d " % (given,),
                 plural_was_were(given), " given"]
             self.__error("".join(msg_parts))
+
+    def __cleanup_run(self):
+        """Cleans up after a completed argument parsing run."""
+        self.__stack = []
+        assert not self.active()
 
     def __error(self, message):
         """Report an argument processing error."""
@@ -243,7 +218,7 @@ class ArgParser:
         Whether we are currently processing a choice parameter group.
 
         This includes processing a parameter defined directly or indirectly
-        within such a group or not processing a parameter at the moment.
+        within such a group.
 
         May only be called during parameter processing or the result will be
         calculated based on the context left behind by the previous parameter
@@ -255,14 +230,20 @@ class ArgParser:
                 return True
         return False
 
+    def __init_run(self, args, kwargs, extra_parameter_errors):
+        """Initializes data for a new argument parsing run."""
+        assert not self.active()
+        self.__args = list(args)
+        self.__kwargs = dict(kwargs)
+        self.__extra_parameter_errors = extra_parameter_errors
+        self.__args_count = len(args) + len(kwargs)
+        self.__params_with_arguments = set()
+        self.__stack = []
+        self.__push_frame(None)
+
     def __match_ancestry(self, ancestry):
         """
         Find frames matching the given ancestry.
-
-        If any frames have already been pushed to the current frame stack,
-        except for the initial sentry frame, expects the given ancestry to
-        match at least one of those frames. In other words, passed ancestries
-        must all be related and lead back to the same root.
 
         Returns a tuple containing the following:
           * Topmost frame matching the given ancestry or the bottom-most sentry
@@ -273,15 +254,6 @@ class ArgParser:
         stack = self.__stack
         if len(stack) == 1:
             return stack[0], ancestry
-        if stack[1].id() is not ancestry[0]:
-            # This failing indicates that someone changed the logic detecting
-            # whether a particular web service operation may have its
-            # parameters automatically unwrapped. Currently it requires that
-            # the operation have only a single input parameter to unwrap, thus,
-            # all unwrapped parameters come from that unwrapped parameter and
-            # so share the same ancestry.
-            raise RuntimeError("All automatically unwrapped parameter's need "
-                "to share the same ancestry.")
         previous = stack[0]
         for frame, n in zip(stack[1:], xrange(len(ancestry))):
             if frame.id() is not ancestry[n]:
@@ -301,19 +273,42 @@ class ArgParser:
         if self.__stack:
             self.__stack[-1].process_subframe(popped)
 
+    def __process_parameter(self, param_name, param_type, ancestry=None):
+        """Collect values for a given web service operation input parameter."""
+        assert self.active()
+        param_optional = param_type.optional()
+        has_argument, value = self.__get_param_value(param_name)
+        if has_argument:
+            self.__params_with_arguments.add(param_name)
+        self.__update_context(ancestry)
+        self.__stack[-1].process_parameter(param_optional, value is not None)
+        self.__external_param_processor(param_name, param_type,
+            self.__in_choice_context(), value)
+
+    def __process_parameters(self):
+        """Collect values for given web service operation input parameters."""
+        for pdef in self.__param_defs:
+            self.__process_parameter(*pdef)
+
     def __push_frame(self, ancestry_item):
         """Push a new frame on top of the frame stack."""
         frame = self.__frame_factory(ancestry_item)
         self.__stack.append(frame)
 
     def __push_frames(self, ancestry):
-        """Push new frames representing given ancestry items."""
+        """
+        Push new frames representing given ancestry items.
+
+        May only be given ancestry items other than None. Ancestry item None
+        represents the internal sentinel item and should never appear in a
+        given parameter's ancestry information.
+
+        """
         for x in ancestry:
             assert x is not None
             self.__push_frame(x)
 
     def __update_context(self, ancestry):
-        assert self.__wrapped == bool(ancestry)
         if not ancestry:
             return
         match_result = self.__match_ancestry(ancestry)
@@ -324,12 +319,10 @@ class ArgParser:
 
 class Frame:
     """
-    Base ArgParser context frame.
+    Base _ArgParser context frame.
 
     When used directly, as opposed to using a derived class, may represent any
     input parameter context/ancestry item except a choice order indicator.
-
-    See the ArgParser class for more detailed information.
 
     """
 
@@ -381,7 +374,7 @@ class Frame:
 
 class ChoiceFrame(Frame):
     """
-    ArgParser context frame representing a choice order indicator.
+    _ArgParser context frame representing a choice order indicator.
 
     A choice requires as many input arguments as are needed to satisfy the
     least requiring of its items. For example, if we use I(n) to identify an
@@ -390,8 +383,6 @@ class ChoiceFrame(Frame):
 
     Accepts an argument for each of its contained elements but allows at most
     one of its directly contained items to have a defined value.
-
-    See the ArgParser class for more detailed information.
 
     """
 
