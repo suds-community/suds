@@ -534,10 +534,7 @@ def test_unwrapped_arg_counts(expect_required, expect_allowed, param_defs):
 
 
 def _do_nothing(*args, **kwargs):
-    """
-    Function used as a generic do-nothing callback where needed during testing.
-
-    """
+    """Do-nothing function used as a callback where needed during testing."""
     pass
 
 
@@ -553,26 +550,11 @@ def _expect_error(expected_exception, expected_error_text, test_function,
     valid alternatives.
 
     """
-    def assertion(exception):
-        if expected_error_text.__class__ in (list, tuple):
-            assert str(exception) in expected_error_text
-        else:
-            assert str(exception) == expected_error_text
-    _expect_error_worker(expected_exception, assertion, test_function, *args,
-        **kwargs)
-
-
-def _expect_error_worker(expected_exception, assertion, test_function, *args,
-        **kwargs):
-    """
-    Assert a test function call raises an expected exception.
-
-    Test function is invoked using the given input parameters and the caught
-    exception is tested using the given assertion function.
-
-    """
+    e = pytest.raises(expected_exception, test_function, *args, **kwargs).value
     try:
-        test_function(*args, **kwargs)
-        pytest.fail("Expected exception not raised.")
-    except expected_exception, e:
-        assertion(e)
+        if expected_error_text.__class__ in (list, tuple):
+            assert str(e) in expected_error_text
+        else:
+            assert str(e) == expected_error_text
+    finally:
+        del e

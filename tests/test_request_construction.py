@@ -69,12 +69,18 @@ class TestExtraParameters:
         keyword argument.
 
         """
-        def assertion(exception):
+        try:
+            test_function = kwargs.pop("test_function")
+        except KeyError:
+            test_function = self.service.f
+        e = pytest.raises(TypeError, test_function, *args, **kwargs).value
+        try:
             if expected_error_text.__class__ in (list, tuple):
-                assert str(exception) in expected_error_text
+                assert str(e) in expected_error_text
             else:
-                assert str(exception) == expected_error_text
-        self._expect_error(assertion, *args, **kwargs)
+                assert str(e) == expected_error_text
+        finally:
+            del e
 
     def expect_no_error(self, *args, **kwargs):
         """
@@ -659,28 +665,6 @@ class TestExtraParameters:
         expected = [message % (x,) for x in "xyz"]
         self.expect_error(expected, "one", x=3, y=4, z=5)
 
-    def _expect_error(self, assertion, *args, **kwargs):
-        """
-        Assert a test function call raises an expected TypeError exception.
-
-        Test function is invoked using the given input parameters and the
-        caught exception is tested using the given assertion function.
-
-        Web service operation 'f' invoker is used as the default test function.
-        An alternate test function may be specified using the 'test_function'
-        keyword argument.
-
-        """
-        try:
-            test_function = kwargs.pop("test_function")
-        except KeyError:
-            test_function = self.service.f
-        try:
-            test_function(*args, **kwargs)
-            pytest.fail("Expected exception not raised.")
-        except TypeError, e:
-            assertion(e)
-
 
 # TODO: Update the current restriction type output parameter handling so such
 # parameters get converted to the correct Python data type based on the
@@ -1150,15 +1134,18 @@ def test_twice_wrapped_parameter():
         assert len(kwargs) == 1
         element = kwargs.keys()[0]
         expected = "f() got an unexpected keyword argument '%s'" % (element,)
+        e = pytest.raises(TypeError, client.service.f, **kwargs).value
         try:
-            client.service.f(**kwargs)
-        except TypeError, e:
             assert str(e) == expected
+        finally:
+            del e
     testInvalidParameter(Elemento="A B C")
     testInvalidParameter(Wrapper1="A B C")
 
 
-def test_wrapped_parameter():
+def test_wrapped_parameter(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     # Prepare web service proxies.
     client = lambda *args : tests.client_from_wsdl(tests.wsdl_input(*args),
         nosend=True, prettyxml=True)
@@ -1231,10 +1218,8 @@ def test_wrapped_parameter():
 
     #   Suds library's automatic structure unwrapping prevents us from
     # specifying the external wrapper structure directly.
-    try:
-        client_wrapped_unnamed.service.f(Wrapper="A")
-    except TypeError, e:
-        assert str(e) == "f() got an unexpected keyword argument 'Wrapper'"
+    e = pytest.raises(TypeError, client_wrapped_unnamed.service.f, Wrapper="A")
+    assert str(e.value) == "f() got an unexpected keyword argument 'Wrapper'"
 
     #   Multiple parameter web service operations are never automatically
     # unwrapped.
