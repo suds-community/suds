@@ -289,7 +289,7 @@ def test_fault_reply_with_unicode_faultstring():
         client.service.f(__inject=dict(reply=fault_xml,
             status=httplib.INTERNAL_SERVER_ERROR))
     except suds.WebFault, e:
-        e.fault.faultstring = unicode_string
+        assert e.fault.faultstring == unicode_string
         assert e.document.__class__ is suds.sax.document.Document
     else:
         pytest.fail("Expected WebFault exception not raised.")
