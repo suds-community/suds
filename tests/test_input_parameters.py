@@ -262,6 +262,62 @@ def test_unwrapped_parameter_part_name(part_name):
     _expect_params(param_defs, expected_param_defs)
 
 
+@pytest.mark.parametrize("part_name", ("uno", "due", "quatro"))
+def test_builtin_typed_element_parameter(part_name):
+    """
+    Test correctly recognizing web service operation input structure defined
+    by a built-in typed element.
+
+    """
+    wsdl = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="MyElement" type="xsd:integer" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="%s" element="ns:MyElement" />
+  </wsdl:message>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f">
+      <wsdl:input message="ns:fRequestMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="document" />
+      <wsdl:input><soap:body use="literal" /></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="unga-bunga-location" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""" % (part_name,))
+    client = tests.client_from_wsdl(wsdl, nosend=True)
+
+    # Collect references to required WSDL model content.
+    method = client.wsdl.services[0].ports[0].methods["f"]
+    assert not method.soap.input.body.wrapped
+    binding = method.binding.input
+    assert binding.__class__ is suds.bindings.document.Document
+    my_element = client.wsdl.schema.elements["MyElement", "my-namespace"]
+
+    param_defs = binding.param_defs(method)
+    _expect_params(param_defs, [("MyElement", my_element)])
+
+
 @pytest.mark.parametrize("part_name", ("parameters", "pipi"))
 def test_explicitly_wrapped_parameter(part_name):
     """
