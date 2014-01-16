@@ -224,6 +224,7 @@ def test_unwrapped_parameter(xsd_type):
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
+    assert method.soap.input.body.wrapped
     binding = method.binding.input
     assert binding.__class__ is suds.bindings.document.Document
     wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
@@ -248,6 +249,7 @@ def test_unwrapped_parameter_part_name(part_name):
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
+    assert method.soap.input.body.wrapped
     binding = method.binding.input
     assert binding.__class__ is suds.bindings.document.Document
     wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
@@ -273,6 +275,7 @@ def test_explicitly_wrapped_parameter(part_name):
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
+    assert not method.soap.input.body.wrapped
     binding = method.binding.input
     assert binding.__class__ is suds.bindings.document.Document
     wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
@@ -340,6 +343,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
+    assert not method.soap.input.body.wrapped
     binding = method.binding.input
     assert binding.__class__ is suds.bindings.document.Document
     my_type = client.wsdl.schema.types["MyType", "my-namespace"]
