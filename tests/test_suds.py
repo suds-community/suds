@@ -141,13 +141,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert re.search(" ordering\[\] = ", metadata_string)
 
 
-def test_empty_invalid_wsdl():
-    try:
-        tests.client_from_wsdl(suds.byte_str(""))
-    except xml.sax.SAXParseException, e:
-        assert e.getMessage() == "no element found"
-    else:
-        pytest.fail("Expected exception xml.sax.SAXParseException not raised.")
+def test_empty_invalid_wsdl(monkeypatch):
+    wsdl = suds.byte_str("")
+    monkeypatch.delitem(locals(), "e", False)
+    e = pytest.raises(xml.sax.SAXParseException, tests.client_from_wsdl, wsdl)
+    assert e.value.getMessage() == "no element found"
 
 
 def test_empty_valid_wsdl():
@@ -1336,13 +1334,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     pytest.raises(suds.TypeNotFound, client.factory.create, "NonExistingType")
 
 
-def test_parameter_referencing_missing_element():
-    try:
-        tests.client_from_wsdl(tests.wsdl_input("", "missingElement"))
-    except suds.TypeNotFound, e:
-        assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
-    else:
-        pytest.fail("Expected exception suds.TypeNotFound not raised.")
+def test_parameter_referencing_missing_element(monkeypatch):
+    wsdl = tests.wsdl_input("", "missingElement")
+    monkeypatch.delitem(locals(), "e", False)
+    e = pytest.raises(suds.TypeNotFound, tests.client_from_wsdl, wsdl).value
+    assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
 
 
 # TODO: Update the current restriction type input parameter handling so they get
@@ -1942,15 +1938,23 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     method_name, method_params = methods[0]
     assert method_name == "f"
 
-    param_name, param_element, param_choice = method_params[0]
+    param_name, param_element, param_ancestry = method_params[0]
     assert param_name == "a"
     assert param_element is param_in_1
-    assert param_choice == False
+    assert len(param_ancestry) == 3
+    assert type(param_ancestry[0]) is suds.xsd.sxbasic.Element
+    assert param_ancestry[0].name == "f"
+    assert type(param_ancestry[1]) is suds.xsd.sxbasic.Complex
+    assert type(param_ancestry[2]) is suds.xsd.sxbasic.Sequence
 
-    param_name, param_element, param_choice = method_params[1]
+    param_name, param_element, param_ancestry = method_params[1]
     assert param_name == "b"
     assert param_element is param_in_2
-    assert param_choice == False
+    assert len(param_ancestry) == 3
+    assert type(param_ancestry[0]) is suds.xsd.sxbasic.Element
+    assert param_ancestry[0].name == "f"
+    assert type(param_ancestry[1]) is suds.xsd.sxbasic.Complex
+    assert type(param_ancestry[2]) is suds.xsd.sxbasic.Sequence
 
 
 def test_wsdl_schema_content():

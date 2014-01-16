@@ -141,16 +141,23 @@ def runUsingPyTest(callerGlobals):
     sys.exit(exitCode)
 
 
-def wsdl_input(schema_content, *args):
+def wsdl_input(schema_content, *args, **kwargs):
     """
       Returns a WSDL schema used in different suds library tests, defining a
-    single operation named f, taking an externally specified input structure
-    and returning no output.
+    single operation taking an externally specified input structure and
+    returning no output.
 
-      The first input parameter is the schema part of the WSDL, the rest of the
-    parameters identify top level input parameter elements.
+      The operation is named 'f' by default, but a custom name may be defined
+    for it by using a 'operation_name' keyword argument.
+
+      Initial input argument is the schema part of the WSDL, any remaining
+    positional arguments are interpreted as names of included top level input
+    parameter elements.
 
     """
+    operation_name = kwargs.pop("operation_name", "f")
+    assert not kwargs
+
     wsdl = ["""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
@@ -165,7 +172,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 %s
     </xsd:schema>
   </wsdl:types>
-  <wsdl:message name="fRequestMessage">""" % schema_content]
+  <wsdl:message name="fRequestMessage">""" % (schema_content,)]
 
     assert len(args) >= 1
     for arg in args:
@@ -175,15 +182,15 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     wsdl.append("""\
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
+    <wsdl:operation name="%(name)s">
       <wsdl:input message="ns:fRequestMessage" />
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
     transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
+    <wsdl:operation name="%(name)s">
+      <soap:operation soapAction="my-soap-action" style="document" />
       <wsdl:input><soap:body use="literal" /></wsdl:input>
     </wsdl:operation>
   </wsdl:binding>
@@ -193,7 +200,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+""" % {"name":operation_name})
 
     return suds.byte_str("\n".join(wsdl))
 
