@@ -433,8 +433,7 @@ class SchemaObject(UnicodeMixin):
             return '%s ...' % Repr(self)
         history.append(self)
         tab = '%*s'%(indent*3, '')
-        result  = []
-        result.append('%s<%s' % (tab, self.id))
+        result = ['%s<%s' % (tab, self.id)]
         for n in self.description():
             if not hasattr(self, n):
                 continue
