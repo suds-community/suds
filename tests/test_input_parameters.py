@@ -46,6 +46,21 @@ import tests
 import pytest
 
 
+# Test data shared between different tests in this module.
+sequence_choice_with_element_and_two_element_sequence = """\
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:choice>
+          <xsd:element name="a" type="xsd:integer" />
+          <xsd:sequence>
+            <xsd:element name="b1" type="xsd:integer" />
+            <xsd:element name="b2" type="xsd:integer" />
+          </xsd:sequence>
+        </xsd:choice>
+      </xsd:sequence>
+    </xsd:complexType>"""
+
+
 @pytest.mark.parametrize("part_name", ("parameters", "pipi"))
 def test_unwrapped_parameter(part_name):
     """
@@ -60,7 +75,8 @@ def test_unwrapped_parameter(part_name):
         \   \   \-element
 
     """
-    wsdl = _unwrappable_wsdl(part_name)
+    input_schema = sequence_choice_with_element_and_two_element_sequence
+    wsdl = _unwrappable_wsdl(part_name, input_schema)
     client = tests.client_from_wsdl(wsdl, nosend=True)
 
     # Collect references to required WSDL model content.
@@ -95,7 +111,8 @@ def test_explicitly_wrapped_parameter(part_name):
     structure which would otherwise be automatically unwrapped.
 
     """
-    wsdl = _unwrappable_wsdl(part_name)
+    input_schema = sequence_choice_with_element_and_two_element_sequence
+    wsdl = _unwrappable_wsdl(part_name, input_schema)
     client = tests.client_from_wsdl(wsdl, nosend=True, unwrap=False)
 
     # Collect references to required WSDL model content.
@@ -209,7 +226,7 @@ def _expect_params(param_defs, expected_param_defs):
         assert pdef[2:] == expected_pdef[2:]  # ancestry - optional
 
 
-def _unwrappable_wsdl(part_name):
+def _unwrappable_wsdl(part_name, param_schema):
     """
     Return a WSDL schema byte string.
 
@@ -217,16 +234,12 @@ def _unwrappable_wsdl(part_name):
     port containing a single function named 'f' taking automatically
     unwrappable input parameter using document/literal binding.
 
-    The input parameter is defined as a single named input message part
-    referencing an XSD schema element named 'Wrapper' located in the
-    'my-namespace' namespace with the following type definition:
+    The input parameter is defined as a single named input message part (name
+    given via the 'part_name' argument) referencing an XSD schema element named
+    'Wrapper' located in the 'my-namespace' namespace.
 
-      sequence
-        |-choice
-        |   |-element (a)
-        |   |-sequence
-        |   |   |-element (b1)
-        \   \   \-element (b2)
+    The wrapper element's type definition (XSD schema string) is given via the
+    'param_schema' argument.
 
     """
     return suds.byte_str("""\
@@ -241,22 +254,12 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     attributeFormDefault="unqualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Wrapper">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:choice>
-              <xsd:element name="a" type="xsd:integer" />
-              <xsd:sequence>
-                <xsd:element name="b1" type="xsd:integer" />
-                <xsd:element name="b2" type="xsd:integer" />
-              </xsd:sequence>
-            </xsd:choice>
-          </xsd:sequence>
-        </xsd:complexType>
+%(param_schema)s
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="%s" element="ns:Wrapper" />
+    <wsdl:part name="%(part_name)s" element="ns:Wrapper" />
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
@@ -276,4 +279,4 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <soap:address location="unga-bunga-location" />
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>""" % (part_name,))
+</wsdl:definitions>""" % {"param_schema":param_schema, "part_name":part_name})
