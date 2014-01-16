@@ -113,6 +113,11 @@ class Options(Skin):
             instead of sending it.
                 - type: I{bool}
                 - default: False
+        - B{unwrap} - Enable automatic parameter unwrapping when possible.
+            Enabled by default. If disabled, no input or output parameters are
+            ever automatically unwrapped.
+                - type: I{bool}
+                - default: True
     """
     def __init__(self, **kwargs):
         domain = __name__
