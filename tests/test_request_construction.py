@@ -18,8 +18,8 @@
 """
 Suds Python library request construction related unit tests.
 
-  Suds provides the user with an option to automatically 'hide' wrapper
-elements simple types and allow the user to specify such parameters without
+Suds provides the user with an option to automatically 'hide' wrapper elements
+around simple types and allow the user to specify such parameters without
 explicitly creating those wrappers. For example: function taking a parameter of
 type X, where X is a sequence containing only a single simple data type (e.g.
 string or integer) will be callable by directly passing it that internal simple
@@ -38,6 +38,632 @@ import suds.store
 import tests
 
 import pytest
+
+
+class TestExtraParameters:
+    """
+    Extra input parameters should be rejected correctly.
+
+    Non-choice parameters should be treated as regular Python function
+    arguments.
+
+    Parameters belonging to a single choice parameter structure may each be
+    specified but at most one one of those may have its value set to something
+    other than None. Positional arguments are mapped to choice group parameters
+    the same as done for a simple all/sequence group - each in turn.
+
+    """
+
+    def expect_error(self, expected_error_text, *args, **kwargs):
+        """
+        Assert a test function call raises an expected TypeError exception.
+
+        Caught exception is considered expected if its string representation
+        matches the given expected error text.
+
+        Expected error text may be given directly or as a list/tuple containing
+        valid alternatives.
+
+        Web service operation 'f' invoker is used as the default test function.
+        An alternate test function may be specified using the 'test_function'
+        keyword argument.
+
+        """
+        try:
+            test_function = kwargs.pop("test_function")
+        except KeyError:
+            test_function = self.service.f
+        e = pytest.raises(TypeError, test_function, *args, **kwargs).value
+        try:
+            if expected_error_text.__class__ in (list, tuple):
+                assert str(e) in expected_error_text
+            else:
+                assert str(e) == expected_error_text
+        finally:
+            del e
+
+    def expect_no_error(self, *args, **kwargs):
+        """
+        Assert a test function call does not raise an exception.
+
+        """
+        self.service.f(*args, **kwargs)
+
+    def init_function_params(self, params, **kwargs):
+        """
+        Initialize a test in this group with the given parameter definition.
+
+        Constructs a complete WSDL schema based on the given function parameter
+        definition (defines a single web service operation named 'f' by
+        default), and creates a suds Client object to be used for testing
+        suds's web service operation invocation.
+
+        An alternate operation name may be given using the 'operation_name'
+        keyword argument.
+
+        May only be invoked once per test.
+
+        """
+        # Using an empty 'xsd:element' XML element here when passed an empty
+        # params string seems to cause suds not to recognize the web service
+        # operation described in the given WSDL schema as using 'wrapped' input
+        # parameters. Whether or not this is the correct behaviour is not up to
+        # the tests in this test group to decide so we make sure we at least
+        # add a single space as the element's data.
+        if not params:
+            params = " "
+        input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
+        assert not hasattr(self, "service")
+        wsdl = tests.wsdl_input(input, "Wrapper", **kwargs)
+        self.service = _service_from_wsdl(wsdl)
+
+    def test_choice_containing_a_nonempty_sequence(self):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group containing a non-empty sequence subgroup.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:choice>
+                <xsd:element name="a" type="xsd:integer" />
+                <xsd:sequence>
+                  <xsd:element name="b1" type="xsd:integer" />
+                  <xsd:element name="b2" type="xsd:integer" />
+                </xsd:sequence>
+              </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 to 3 positional arguments but 5 were given"
+        self.expect_error(expected, 1, None, None, "4", "5")
+
+        expected = "f() got multiple values for a single choice parameter"
+        self.expect_error(expected, 1, 2)
+        self.expect_error(expected, a=1, b1=2)
+        self.expect_error(expected, a=1, b2=2)
+        self.expect_error(expected, a=1, b1=None, b2=2)
+        self.expect_error(expected, a=1, b1=2, b2=3)
+        self.expect_error(expected, 1, 2, 3)
+        self.expect_error(expected, 1, 2, b2=3)
+        self.expect_error(expected, 1, b1=2, b2=3)
+
+        self.expect_no_error(1)
+        self.expect_no_error(a=1)
+        self.expect_no_error(None, 1, 2)
+        self.expect_no_error(b1=2, b2=3)
+        self.expect_no_error(None, b1=2, b2=3)
+        self.expect_no_error(1, b1=None, b2=None)
+
+    @pytest.mark.parametrize("test_args_required", (
+        pytest.mark.xfail(reason="empty choice member items not supported")(
+            True),
+        False))
+    def test_choice_containing_an_empty_sequence(self, test_args_required):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group containing an empty sequence subgroup.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="a" type="xsd:integer" />
+              <xsd:sequence>
+              </xsd:sequence>
+            </xsd:choice>
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 to 1 positional arguments but 3 were given"
+        if not test_args_required:
+            expected = [expected,
+                "f() takes 1 positional argument but 3 were given"]
+        self.expect_error(expected, 1, None, None)
+
+        self.expect_no_error()
+        self.expect_no_error(1)
+
+    def test_choice_with_more_than_one_required_argument(self):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group with more than one required argument.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:sequence>
+                <xsd:element name="a1" type="xsd:integer" />
+                <xsd:element name="a2" type="xsd:integer" />
+              </xsd:sequence>
+              <xsd:sequence>
+                <xsd:element name="b1" type="xsd:integer" />
+                <xsd:element name="b2" type="xsd:integer" />
+              </xsd:sequence>
+            </xsd:choice>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 to 4 positional arguments but 5 were given"
+        self.expect_error(expected, 1, 2, None, None, "5")
+
+        self.expect_no_error(1, 2)
+        self.expect_no_error(None, None, 1, 2)
+
+    def test_empty_sequence(self):
+        """
+        Test reporting extra input parameters passed to a function whose input
+        parameter structure has been defined as an empty sequence.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence />
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 positional arguments but 1 was given"
+        self.expect_error(expected, None)
+
+        self.expect_no_error()
+
+    def test_multiple_consecutive_choices(self):
+        """
+        Test reporting extra input parameters passed to a function taking
+        multiple choice parameter groups directly following each other.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:choice>
+                <xsd:element name="aString1" type="xsd:string" />
+                <xsd:element name="anInteger1" type="xsd:integer" />
+              </xsd:choice>
+              <xsd:choice>
+                <xsd:element name="aString2" type="xsd:string" />
+                <xsd:element name="anInteger2" type="xsd:integer"
+                  minOccurs="0" />
+              </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 to 4 positional arguments but 5 were given"
+        self.expect_error(expected, None, 2, "three", None, "five")
+
+        expected = "f() got multiple values for a single choice parameter"
+        self.expect_error(expected, aString1="one", anInteger1=2, anInteger2=3)
+        self.expect_error(expected, aString1="one", aString2="2", anInteger2=3)
+        self.expect_error(expected, anInteger1=1, aString2="two", anInteger2=3)
+        self.expect_error(expected, "one", anInteger1=2, aString2="three")
+        self.expect_error(expected, "one", aString2="two", anInteger1=3)
+        self.expect_error(expected, "one", None, "two", 3)
+        self.expect_error(expected, "one", None, "two", anInteger2=3)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", None, "two", x=666)
+        self.expect_error(expected, aString1="one", anInteger2=2, x=666)
+        self.expect_error(expected, anInteger1=1, x=666, aString2="two")
+        self.expect_error(expected, x=666, aString1="one", aString2="two")
+        self.expect_error(expected, x=666, anInteger1=1, anInteger2=2)
+
+        expected = "f() got multiple values for parameter 'aString1'"
+        self.expect_error(expected, "one", aString1="two", anInteger2=3)
+        self.expect_error(expected, "one", None, "two", aString1="three")
+
+        expected = "f() got multiple values for parameter 'anInteger1'"
+        self.expect_error(expected, None, 2, "three", anInteger1=22)
+
+        expected = "f() got multiple values for parameter 'aString2'"
+        self.expect_error(expected, None, 2, None, aString2=22)
+        self.expect_error(expected, None, 2, None, None, aString2=22)
+
+        expected = "f() got multiple values for parameter 'anInteger2'"
+        self.expect_error(expected, None, 2, None, None, anInteger2=22)
+
+    def test_multiple_optional_parameters(self):
+        """
+        Test how extra parameters are handled in an operation taking multiple
+        optional parameters.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 to 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", 2, 3)
+        self.expect_error(expected, "one", 2, "three")
+
+        expected = "f() got multiple values for parameter 'aString'"
+        self.expect_error(expected, "one", aString="two", anInteger=3)
+        self.expect_error(expected, None, 1, aString="two")
+        self.expect_error(expected, "one", 2, aString=None)
+
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", 2, x=3, y=4, z=5)
+
+    def test_multiple_parameters(self):
+        """
+        Test how extra parameters are handled in an operation taking more than
+        one input parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", 2, 3)
+        self.expect_error(expected, "one", 2, "three")
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", 2, x=3)
+        self.expect_error(expected, aString="one", anInteger=2, x=3)
+        self.expect_error(expected, aString="one", x=3, anInteger=2)
+        self.expect_error(expected, x=3, aString="one", anInteger=2)
+
+        expected = "f() got multiple values for parameter 'aString'"
+        self.expect_error(expected, "one", aString="two", anInteger=3)
+        self.expect_error(expected, None, 1, aString="two")
+        self.expect_error(expected, "one", 2, aString=None)
+
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", 2, x=3, y=4, z=5)
+
+    def test_multiple_separated_choices(self):
+        """
+        Test reporting extra input parameters passed to a function taking
+        multiple choice parameter groups with at least one non-choice separator
+        element between them.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:choice>
+                <xsd:element name="s1" type="xsd:string" />
+                <xsd:element name="i1" type="xsd:integer" />
+              </xsd:choice>
+              <xsd:element name="separator" type="xsd:string" />
+              <xsd:choice>
+                <xsd:element name="s2" type="xsd:string" />
+                <xsd:element name="i2" type="xsd:integer"
+                  minOccurs="0" />
+              </xsd:choice>
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 to 5 positional arguments but 6 were given"
+        self.expect_error(expected, None, 2, "three", "four", None, "six")
+
+        expected = "f() got multiple values for a single choice parameter"
+        self.expect_error(expected, s1="one", i1=2, separator="", i2=3)
+        self.expect_error(expected, s1="one", separator="", s2="2", i2=3)
+        self.expect_error(expected, i1=1, separator="", s2="two", i2=3)
+        self.expect_error(expected, "one", 2, "", "three")
+        self.expect_error(expected, "one", 2, separator="", s2="three")
+        self.expect_error(expected, "one", i1=2, separator="", s2="three")
+        self.expect_error(expected, "one", None, "", "two", 3)
+        self.expect_error(expected, "one", None, "", "two", i2=3)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", None, "", "two", x=666)
+        self.expect_error(expected, s1="one", separator="", i2=2, x=666)
+        self.expect_error(expected, i1=1, separator="", x=666, s2="two")
+        self.expect_error(expected, x=666, s1="one", separator="", s2="two")
+        self.expect_error(expected, x=666, i1=1, separator="", i2=2)
+
+        expected = "f() got multiple values for parameter 's1'"
+        self.expect_error(expected, "one", s1="two", separator="", i2=3)
+        self.expect_error(expected, "one", None, "", "two", s1="three")
+
+        expected = "f() got multiple values for parameter 'i1'"
+        self.expect_error(expected, None, 2, "", "three", i1=22)
+
+        expected = "f() got multiple values for parameter 'separator'"
+        self.expect_error(expected, "one", None, "", "two", separator=None)
+        self.expect_error(expected, "one", None, None, "two", separator=None)
+        self.expect_error(expected, "1", None, "", "2", separator="x")
+        self.expect_error(expected, "1", None, None, "2", separator="x")
+        self.expect_error(expected, "1", None, "x", "2", separator=None)
+        self.expect_error(expected, "1", None, "x", "2", separator="y")
+
+        expected = "f() got multiple values for parameter 's2'"
+        self.expect_error(expected, None, 2, "", None, s2=22)
+        self.expect_error(expected, None, 2, "", None, None, s2=22)
+
+        expected = "f() got multiple values for parameter 'i2'"
+        self.expect_error(expected, None, 2, "", None, None, i2=22)
+
+    def test_no_parameters(self):
+        """
+        Test how extra parameters are handled in an operation taking no input
+        parameters.
+
+        """
+        self.init_function_params("")
+
+        expected = "f() takes 0 positional arguments but 1 was given"
+        self.expect_error(expected, 1)
+
+        expected = "f() takes 0 positional arguments but 2 were given"
+        self.expect_error(expected, 1, "two")
+
+        expected = "f() takes 0 positional arguments but 5 were given"
+        self.expect_error(expected, 1, "two", 3, "four", object())
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, x=3)
+
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, x=1, y=2, z=3)
+
+    def test_nonoptional_and_optional_parameters(self):
+        """
+        Test how extra parameters are handled in an operation taking both
+        non-optional and optional input parameters.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="one" type="xsd:string" />
+              <xsd:element name="two" type="xsd:string" minOccurs="0" />
+              <xsd:element name="three" type="xsd:string" />
+              <xsd:element name="four" type="xsd:string" minOccurs="0" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 2 to 4 positional arguments but 5 were given"
+        self.expect_error(expected, "one", "two", "three", "four", "five")
+
+        expected = "f() takes 2 to 4 positional arguments but 5 were given"
+        self.expect_error(expected, "one", None, "three", "four", None)
+
+        expected = "f() got multiple values for parameter 'one'"
+        self.expect_error(expected, "one", three="three", one=None)
+
+        expected = "f() got multiple values for parameter 'three'"
+        self.expect_error(expected, "one", None, "three", "four", three="3")
+        self.expect_error(expected, "one", None, None, "four", three="3")
+        self.expect_error(expected, "one", None, "three", "four", three=None)
+        self.expect_error(expected, "one", None, "three", four="4", three=None)
+
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", three="3", x=5, y=6, z=7)
+
+    def test_reported_operation_name(self):
+        """
+        Test how the called web service operation name is reported in extra
+        parameter error messages.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="one" type="xsd:string" />
+              <xsd:element name="two" type="xsd:string" />
+            </xsd:choice>
+          </xsd:complexType>""", operation_name="willy_nilly")
+
+        def expect_error(*args, **kwargs):
+            test_function = self.service.willy_nilly
+            self.expect_error(test_function=test_function, *args, **kwargs)
+
+        expected = ("willy_nilly() takes 1 to 2 positional arguments but 3 "
+            "were given")
+        expect_error(expected, "one", None, "three")
+
+        expected = "willy_nilly() got multiple values for parameter 'one'"
+        expect_error(expected, "one", one=None)
+
+        expected = "willy_nilly() got an unexpected keyword argument 'x'"
+        expect_error(expected, "one", x=5)
+
+        e = "willy_nilly() got multiple values for a single choice parameter"
+        expect_error(e, "one", "two")
+
+    def test_single_nonoptional_choice(self):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        single non-optional choice parameter group.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 to 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", None, 3)
+        self.expect_error(expected, "one", None, None)
+
+        expected = "f() takes 1 to 2 positional arguments but 4 were given"
+        self.expect_error(expected, "one", None, 3, 4)
+        self.expect_error(expected, None, 2, "three", 4)
+
+        expected = "f() got multiple values for a single choice parameter"
+        self.expect_error(expected, aString="one", anInteger=2)
+        self.expect_error(expected, anInteger=1, aString="two")
+        self.expect_error(expected, "one", anInteger=2)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, "one", x=666)
+        self.expect_error(expected, aString="one", x=666)
+        self.expect_error(expected, anInteger=1, x=666)
+        self.expect_error(expected, x=666, aString="one")
+        self.expect_error(expected, x=666, anInteger=1)
+
+        expected = "f() got multiple values for parameter 'aString'"
+        self.expect_error(expected, "one", aString="two")
+        self.expect_error(expected, "one", None, aString="two")
+        self.expect_error(expected, None, aString="two")
+        self.expect_error(expected, None, None, aString="two")
+
+    def test_single_nonoptional_parameter(self):
+        """
+        Test how extra parameters are handled in an operation taking a single
+        non-optional input parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="param" type="xsd:integer" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 1 positional argument but 2 were given"
+        self.expect_error(expected, 1, 2)
+        self.expect_error(expected, 1, "two")
+
+        expected = "f() takes 1 positional argument but 3 were given"
+        self.expect_error(expected, 1, "two", 666)
+
+        expected = "f() got an unexpected keyword argument 'x'"
+        self.expect_error(expected, 1, x=666)
+        self.expect_error(expected, param=1, x=666)
+        self.expect_error(expected, x=666, param=2)
+
+        expected = "f() got multiple values for parameter 'param'"
+        self.expect_error(expected, 1, param=2)
+        self.expect_error(expected, None, param=1)
+        self.expect_error(expected, 1, param=None)
+
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, 1, x=2, y=3, z=4)
+
+    @pytest.mark.parametrize("choice", (
+        # Explicitly marked as optional and containing only non-optional
+        # elements.
+        pytest.mark.xfail(reason="suds does not yet support minOccurs/"
+            "maxOccurs attributes on all/choice/sequence order indicators")(
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>"""),
+        # Not explicitly marked as optional but containing at least one
+        # non-optional element.
+        """\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        # Explicitly marked as optional and containing at least one
+        # non-optional element.
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>"""))
+    def test_single_optional_choice(self, choice):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        single optional choice parameter group.
+
+        """
+        self.init_function_params(choice)
+        expected = "f() takes 0 to 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", None, 3)
+
+    def test_single_optional_parameter(self):
+        """
+        Test how extra parameters are handled in an operation taking a single
+        optional input parameter.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:sequence>
+              <xsd:element name="param" type="xsd:string" minOccurs="0" />
+            </xsd:sequence>
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 to 1 positional arguments but 2 were given"
+        self.expect_error(expected, "one", 2)
+
+        expected = "f() takes 0 to 1 positional arguments but 5 were given"
+        self.expect_error(expected, "one", 2, "three", object(), None)
+
+        expected = "f() got multiple values for parameter 'param'"
+        self.expect_error(expected, "one", param="two")
+        self.expect_error(expected, None, param="one")
+        self.expect_error(expected, "one", param=None)
+
+        message = "f() got an unexpected keyword argument '%s'"
+        expected = [message % (x,) for x in "xyz"]
+        self.expect_error(expected, "one", x=3, y=4, z=5)
 
 
 # TODO: Update the current restriction type output parameter handling so such
@@ -178,53 +804,7 @@ def test_element_references_to_different_namespaces():
 </SOAP-ENV:Envelope>""")
 
 
-def test_extra_parameters():
-    """
-    Extra input parameters should get silently ignored and not added to the
-    constructed SOAP request.
-
-    """
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
-      <xsd:element name="Wrapper">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="aString" type="xsd:string" />
-            <xsd:element name="anInteger" type="xsd:integer" />
-          </xsd:sequence>
-        </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
-
-    # Unnamed parameters.
-    _check_request(service.f("something", 0, "extra1", "extra2"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>something</ns0:aString>
-         <ns0:anInteger>0</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-
-    # Named parameters.
-    _check_request(service.f("something", extra="1", anInteger=7), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>something</ns0:aString>
-         <ns0:anInteger>7</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-
-
-def test_invalid_argument_type_handling():
+def test_invalid_input_parameter_type_handling():
     """
     Input parameters of invalid type get silently pushed into the constructed
     SOAP request as strings, even though the constructed SOAP request does not
@@ -293,10 +873,7 @@ def test_invalid_argument_type_handling():
 
 def test_missing_parameters():
     """Missing non-optional parameters should get passed as empty values."""
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -368,9 +945,6 @@ def test_missing_parameters():
 
 
 def test_named_parameter():
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
     class Tester:
         def __init__(self, service, expected_xml):
             self.service = service
@@ -380,7 +954,7 @@ def test_named_parameter():
             _check_request(self.service.f(*args, **kwargs), self.expected_xml)
 
     # Test different ways to make the same web service operation call.
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -407,7 +981,7 @@ def test_named_parameter():
 
     #   The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -435,10 +1009,7 @@ def test_named_parameter():
 
 def test_optional_parameter_handling():
     """Missing optional parameters should not get passed at all."""
-    service_from_wsdl = lambda wsdl : tests.client_from_wsdl(wsdl, nosend=True,
-        prettyxml=True).service
-
-    service = service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -537,51 +1108,44 @@ def test_twice_wrapped_parameter():
 
     assert _isInputWrapped(client, "f")
 
-    #   The following calls are actually illegal and result in incorrectly
-    # generated SOAP requests.
-    _check_request(client.service.f("A B C"), """\
+    # Web service operation calls made with 'valid' parameters.
+    #
+    # These calls are actually illegal and result in incorrectly generated SOAP
+    # requests not matching the relevant WSDL schema. To make them valid we
+    # would need to pass a more complex value instead of a simple string, but
+    # the current simpler solution is good enough for what we want to test
+    # here.
+    value = "A B C"
+    expectedRequest = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
    <ns1:Body>
       <ns0:Wrapper1>
-         <ns0:Wrapper2>A B C</ns0:Wrapper2>
+         <ns0:Wrapper2>%s</ns0:Wrapper2>
       </ns0:Wrapper1>
    </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Elemento="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2/>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Wrapper2="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2>A B C</ns0:Wrapper2>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
-    _check_request(client.service.f(Wrapper1="A B C"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2/>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+</SOAP-ENV:Envelope>""" % (value,)
+    _check_request(client.service.f(value), expectedRequest)
+    _check_request(client.service.f(Wrapper2=value), expectedRequest)
+
+    # Web service operation calls made with 'invalid' parameters.
+    def testInvalidParameter(**kwargs):
+        assert len(kwargs) == 1
+        element = kwargs.keys()[0]
+        expected = "f() got an unexpected keyword argument '%s'" % (element,)
+        e = pytest.raises(TypeError, client.service.f, **kwargs).value
+        try:
+            assert str(e) == expected
+        finally:
+            del e
+    testInvalidParameter(Elemento="A B C")
+    testInvalidParameter(Wrapper1="A B C")
 
 
-def test_wrapped_parameter():
+def test_wrapped_parameter(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     # Prepare web service proxies.
     client = lambda *args : tests.client_from_wsdl(tests.wsdl_input(*args),
         nosend=True, prettyxml=True)
@@ -654,16 +1218,8 @@ def test_wrapped_parameter():
 
     #   Suds library's automatic structure unwrapping prevents us from
     # specifying the external wrapper structure directly.
-    _check_request(client_wrapped_unnamed.service.f(Wrapper="A"), """\
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:Elemento/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+    e = pytest.raises(TypeError, client_wrapped_unnamed.service.f, Wrapper="A")
+    assert str(e.value) == "f() got an unexpected keyword argument 'Wrapper'"
 
     #   Multiple parameter web service operations are never automatically
     # unwrapped.
@@ -699,3 +1255,15 @@ def _isInputWrapped(client, method_name):
     assert len(client.wsdl.bindings) == 1
     operation = client.wsdl.bindings.values()[0].operations[method_name]
     return operation.soap.input.body.wrapped
+
+
+def _service_from_wsdl(wsdl):
+    """
+    Construct a suds Client service instance used in tests in this module.
+
+    The constructed Client instance only prepares web service operation
+    invocation requests and does not attempt to actually send them.
+
+    """
+    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    return client.service
