@@ -19,6 +19,7 @@ Provides classes for the (WS) SOAP I{document/literal} binding.
 """
 
 from suds import *
+from suds.argparser import parse_args
 from suds.bindings.binding import Binding
 from suds.sax.element import Element
 
@@ -61,30 +62,38 @@ class Document(Binding):
             root = self.document(pts[0])
         else:
             root = []
-        n = 0
-        for pd in self.param_defs(method):
-            if n < len(args):
-                value = args[n]
-            else:
-                value = kwargs.get(pd[0])
-            n += 1
-            # Skip non-existing by-choice arguments.
-            # Implementation notes:
-            #   * This functionality might be better placed inside the
-            #     mkparam() function but to do that we would first need to
-            #     understand more thoroughly how different Binding subclasses
-            #     in suds work and how they would be affected by this change.
-            #   * If caller actually wishes to pass an empty choice parameter
-            #     he can specify its value explicitly as an empty string.
-            if len(pd) > 2 and pd[2] and value is None:
-                continue
-            p = self.mkparam(method, pd, value)
+
+        def add_param(param_name, param_type, in_choice_context, value):
+            """
+            Construct request data for the given input parameter.
+
+            Called by our argument parser for every input parameter, in order.
+
+            """
+            # Do not construct request data for undefined input parameters
+            # defined inside a choice order indicator. An empty choice
+            # parameter can still be included in the constructed request by
+            # explicitly providing an empty string value for it.
+            #TODO: This functionality might be better placed inside the
+            # mkparam() function but to do that we would first need to better
+            # understand how different Binding subclasses in suds work and how
+            # they would be affected by this change.
+            if in_choice_context and value is None:
+                return
+
+            # Construct request data for the current input parameter.
+            pdef = (param_name, param_type)
+            p = self.mkparam(method, pdef, value)
             if p is None:
-                continue
+                return
             if not wrapped:
-                ns = pd[1].namespace("ns0")
+                ns = param_type.namespace("ns0")
                 p.setPrefix(ns[0], ns[1])
             root.append(p)
+
+        parse_args(method.name, self.param_defs(method), args, kwargs,
+            add_param, self.options().extraArgumentErrors)
+
         return root
 
     def replycontent(self, method, body):
@@ -130,7 +139,7 @@ class Document(Binding):
         for p in pts:
             for child, ancestry in p[1].resolve():
                 if not child.isattr():
-                    result.append((child.name, child, self.bychoice(ancestry)))
+                    result.append((child.name, child, ancestry))
         return result
 
     def returned_types(self, method):
@@ -146,16 +155,3 @@ class Document(Binding):
         else:
             result += rts
         return result
-
-    def bychoice(self, ancestry):
-        """
-        The ancestry contains a <choice/>
-        @param ancestry: A list of ancestors.
-        @type ancestry: list
-        @return: True if contains <choice/>
-        @rtype: boolean
-        """
-        for x in ancestry:
-            if x.choice():
-                return True
-        return False
