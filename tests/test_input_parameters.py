@@ -62,6 +62,89 @@ class XSDType:
 
 
 # Test data shared between different tests in this module.
+
+choice_choice = XSDType("""\
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:choice>
+          <xsd:element name="aString1" type="xsd:string" />
+          <xsd:element name="anInteger1" type="xsd:integer" />
+        </xsd:choice>
+        <xsd:choice>
+          <xsd:element name="aString2" type="xsd:string" />
+          <xsd:element name="anInteger2" type="xsd:integer" minOccurs="0" />
+        </xsd:choice>
+      </xsd:sequence>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence", [
+            "choice_1", [
+                Element("aString1"),
+                Element("anInteger1")],
+            "choice_2", [
+                Element("aString2"),
+                Element("anInteger2")]]]])
+
+choice_element_choice = XSDType("""\
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:choice>
+          <xsd:element name="aString1" type="xsd:string" />
+          <xsd:element name="anInteger1" type="xsd:integer" />
+        </xsd:choice>
+        <xsd:element name="separator" type="xsd:string" />
+        <xsd:choice>
+          <xsd:element name="aString2" type="xsd:string" />
+          <xsd:element name="anInteger2" type="xsd:integer" minOccurs="0" />
+        </xsd:choice>
+      </xsd:sequence>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence", [
+            "choice_1", [
+                Element("aString1"),
+                Element("anInteger1")],
+            Element("separator"),
+            "choice_2", [
+                Element("aString2"),
+                Element("anInteger2")]]]])
+
+choice_simple_nonoptional = XSDType("""\
+    <xsd:complexType>
+      <xsd:choice>
+        <xsd:element name="aString" type="xsd:string" />
+        <xsd:element name="anInteger" type="xsd:integer" />
+      </xsd:choice>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "choice", [
+            Element("aString"),
+            Element("anInteger")]]])
+
+choice_with_element_and_two_element_sequence = XSDType("""\
+    <xsd:complexType>
+      <xsd:choice>
+        <xsd:element name="a" type="xsd:integer" />
+        <xsd:sequence>
+          <xsd:element name="b1" type="xsd:integer" />
+          <xsd:element name="b2" type="xsd:integer" />
+        </xsd:sequence>
+      </xsd:choice>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "choice", [
+            Element("a"),
+            "sequence", [
+                Element("b1"),
+                Element("b2")]]]])
+
+empty_sequence = XSDType("""\
+    <xsd:complexType>
+      <xsd:sequence />
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence"]])
+
 sequence_choice_with_element_and_two_element_sequence = XSDType("""\
     <xsd:complexType>
       <xsd:sequence>
@@ -82,19 +165,81 @@ sequence_choice_with_element_and_two_element_sequence = XSDType("""\
                     Element("b1"),
                     Element("b2")]]]]])
 
+sequence_with_five_elements = XSDType("""\
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="p1" type="xsd:string" />
+        <xsd:element name="p2" type="xsd:integer" />
+        <xsd:element name="p3" type="xsd:string" />
+        <xsd:element name="p4" type="xsd:integer" />
+        <xsd:element name="p5" type="xsd:string" />
+      </xsd:sequence>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence", [
+            Element("p1"),
+            Element("p2"),
+            Element("p3"),
+            Element("p4"),
+            Element("p5")]]])
+
+sequence_with_one_element = XSDType("""\
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="param" type="xsd:integer" />
+      </xsd:sequence>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence", [
+            Element("param")]]])
+
+sequence_with_two_elements = XSDType("""\
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="aString" type="xsd:string" />
+        <xsd:element name="anInteger" type="xsd:integer" />
+      </xsd:sequence>
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence", [
+            Element("aString"),
+            Element("anInteger")]]])
+
+
+@pytest.mark.parametrize("xsd_type", (
+    choice_choice,
+    choice_element_choice,
+    choice_simple_nonoptional,
+    choice_with_element_and_two_element_sequence,
+    empty_sequence,
+    sequence_choice_with_element_and_two_element_sequence,
+    sequence_with_five_elements,
+    sequence_with_one_element,
+    sequence_with_two_elements))
+def test_unwrapped_parameter(xsd_type):
+    """Test recognizing unwrapped web service operation input structures."""
+    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
+    wsdl = _unwrappable_wsdl("part_name", input_schema)
+    client = tests.client_from_wsdl(wsdl, nosend=True)
+
+    # Collect references to required WSDL model content.
+    method = client.wsdl.services[0].ports[0].methods["f"]
+    binding = method.binding.input
+    assert binding.__class__ is suds.bindings.document.Document
+    wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
+
+    # Construct expected parameter definitions.
+    xsd_map = sequence_choice_with_element_and_two_element_sequence.xsd_map
+    expected_param_defs = _parse_schema_model(wrapper, xsd_map)
+
+    param_defs = binding.param_defs(method)
+    _expect_params(param_defs, expected_param_defs)
+
 
 @pytest.mark.parametrize("part_name", ("parameters", "pipi"))
-def test_unwrapped_parameter(part_name):
+def test_unwrapped_parameter_part_name(part_name):
     """
-    Test correctly recognizing unwrapped web service operation input structure
-    defined as follows:
-
-      sequence
-        |-choice
-        |   |-element
-        |   |-sequence
-        |   |   |-element
-        \   \   \-element
+    Unwrapped parameter's part name should not affect its parameter definition.
 
     """
     input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
