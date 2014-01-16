@@ -126,7 +126,9 @@ def test_restriction_data_types():
         assert response == 5
 
 
-def test_builtin_data_types():
+def test_builtin_data_types(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     integer_type_mapping = {
         "byte":int,
         "int":int,
@@ -186,25 +188,22 @@ def test_builtin_data_types():
     # to the used WSDL schema.
     client = tests.client_from_wsdl(tests.wsdl_output("""\
       <xsd:element name="value" type="xsd:int" />""", "value"))
-    try:
-        client.service.f(__inject=dict(reply=suds.byte_str("""\
+    e = pytest.raises(ValueError, client.service.f, __inject=dict(
+        reply=suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
     <value xmlns="my-namespace">Fifteen</value>
   </env:Body>
-</env:Envelope>""")))
-    except ValueError, e:
-        # ValueError instance received here has different string
-        # representations depending on the Python version used:
-        #   Python 2.4:
-        #     "invalid literal for int(): Fifteen"
-        #   Python 2.7.3, 3.2.3:
-        #     "invalid literal for int() with base 10: 'Fifteen'"
-        assert re.match("invalid literal for int\(\)( with base 10)?: "
-            "('?)Fifteen\\2$", str(e))
-    else:
-        pytest.fail("Expected ValueError exception not raised.")
+</env:Envelope>"""))).value
+    # ValueError instance received here has different string representations
+    # depending on the Python version used:
+    #   Python 2.4:
+    #     "invalid literal for int(): Fifteen"
+    #   Python 2.7.3, 3.2.3:
+    #     "invalid literal for int() with base 10: 'Fifteen'"
+    assert re.match("invalid literal for int\(\)( with base 10)?: ('?)Fifteen"
+        "\\2$", str(e))
 
     # Suds returns invalid boolean values as None.
     invalid_boolean_values = ("True", "", "False", "2", "Fedora", "Z", "-1")
@@ -270,7 +269,9 @@ def test_empty_reply():
     assert reason == 'kwack'
 
 
-def test_fault_reply_with_unicode_faultstring():
+def test_fault_reply_with_unicode_faultstring(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     unicode_string = u"€ Jurko Gospodnetić ČĆŽŠĐčćžšđ"
     fault_xml = suds.byte_str(u"""\
 <?xml version="1.0"?>
@@ -285,14 +286,10 @@ def test_fault_reply_with_unicode_faultstring():
 """ % unicode_string)
 
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
-    try:
-        client.service.f(__inject=dict(reply=fault_xml,
-            status=httplib.INTERNAL_SERVER_ERROR))
-    except suds.WebFault, e:
-        assert e.fault.faultstring == unicode_string
-        assert e.document.__class__ is suds.sax.document.Document
-    else:
-        pytest.fail("Expected WebFault exception not raised.")
+    inject = dict(reply=fault_xml, status=httplib.INTERNAL_SERVER_ERROR)
+    e = pytest.raises(suds.WebFault, client.service.f, __inject=inject).value
+    assert e.fault.faultstring == unicode_string
+    assert e.document.__class__ is suds.sax.document.Document
 
     client = tests.client_from_wsdl(_wsdl__simple, faults=False)
     status, fault = client.service.f(__inject=dict(reply=fault_xml,
@@ -301,7 +298,9 @@ def test_fault_reply_with_unicode_faultstring():
     assert fault.faultstring == unicode_string
 
 
-def test_invalid_fault_namespace():
+def test_invalid_fault_namespace(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     fault_xml = suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:p="x">
@@ -317,13 +316,10 @@ def test_invalid_fault_namespace():
 </env:Envelope>
 """)
     client = tests.client_from_wsdl(_wsdl__simple, faults=False)
-    try:
-        client.service.f(__inject=dict(reply=fault_xml, status=httplib.OK))
-    except Exception, e:
-        assert e.__class__ is Exception
-        assert str(e) == "<faultcode/> not mapped to message part"
-    else:
-        pytest.fail("Expected Exception not raised.")
+    inject = dict(reply=fault_xml, status=httplib.OK)
+    e = pytest.raises(Exception, client.service.f, __inject=inject).value
+    assert e.__class__ is Exception
+    assert str(e) == "<faultcode/> not mapped to message part"
 
     for http_status in (httplib.INTERNAL_SERVER_ERROR,
         httplib.PAYMENT_REQUIRED):
@@ -359,29 +355,25 @@ def test_missing_wrapper_response():
     assert response_with_missing_wrapper is None
 
 
-def test_reply_error_with_detail_with_fault():
+def test_reply_error_with_detail_with_fault(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
 
     for http_status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
-        try:
-            client.service.f(__inject=dict(reply=_fault_reply__with_detail,
-                status=http_status))
-        except suds.WebFault, e:
-            _test_fault(e.fault, True)
-            assert e.document.__class__ is suds.sax.document.Document
-            assert str(e) == "Server raised fault: 'Dummy error.'"
-        else:
-            pytest.fail("Expected exception suds.WebFault not raised.")
+        inject = dict(reply=_fault_reply__with_detail, status=http_status)
+        e = pytest.raises(suds.WebFault, client.service.f, __inject=inject)
+        e = e.value
+        _test_fault(e.fault, True)
+        assert e.document.__class__ is suds.sax.document.Document
+        assert str(e) == "Server raised fault: 'Dummy error.'"
 
-    try:
-        client.service.f(__inject=dict(reply=_fault_reply__with_detail,
-            status=httplib.BAD_REQUEST, description="quack-quack"))
-    except Exception, e:
-        assert e.__class__ is Exception
-        assert e.args[0][0] == httplib.BAD_REQUEST
-        assert e.args[0][1] == "quack-quack"
-    else:
-        pytest.fail("Expected Exception not raised.")
+    inject = dict(reply=_fault_reply__with_detail, status=httplib.BAD_REQUEST,
+        description="quack-quack")
+    e = pytest.raises(Exception, client.service.f, __inject=inject).value
+    assert e.__class__ is Exception
+    assert e.args[0][0] == httplib.BAD_REQUEST
+    assert e.args[0][1] == "quack-quack"
 
 
 def test_reply_error_with_detail_without_fault():
@@ -405,29 +397,25 @@ def test_reply_error_with_detail_without_fault():
     assert fault == "haleluja"
 
 
-def test_reply_error_without_detail_with_fault():
+def test_reply_error_without_detail_with_fault(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     client = tests.client_from_wsdl(_wsdl__simple, faults=True)
 
     for http_status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
-        try:
-            client.service.f(__inject=dict(reply=_fault_reply__without_detail,
-                status=http_status))
-        except suds.WebFault, e:
-            _test_fault(e.fault, False)
-            assert e.document.__class__ is suds.sax.document.Document
-            assert str(e) == "Server raised fault: 'Dummy error.'"
-        else:
-            pytest.fail("Expected exception suds.WebFault not raised.")
+        inject = dict(reply=_fault_reply__without_detail, status=http_status)
+        e = pytest.raises(suds.WebFault, client.service.f, __inject=inject)
+        e = e.value
+        _test_fault(e.fault, False)
+        assert e.document.__class__ is suds.sax.document.Document
+        assert str(e) == "Server raised fault: 'Dummy error.'"
 
-    try:
-        client.service.f(__inject=dict(reply=_fault_reply__with_detail,
-            status=httplib.BAD_REQUEST, description="quack-quack"))
-    except Exception, e:
-        assert e.__class__ is Exception
-        assert e.args[0][0] == httplib.BAD_REQUEST
-        assert e.args[0][1] == "quack-quack"
-    else:
-        pytest.fail("Expected Exception not raised.")
+    inject = dict(reply=_fault_reply__with_detail, status=httplib.BAD_REQUEST,
+        description="quack-quack")
+    e = pytest.raises(Exception, client.service.f, __inject=inject).value
+    assert e.__class__ is Exception
+    assert e.args[0][0] == httplib.BAD_REQUEST
+    assert e.args[0][1] == "quack-quack"
 
 
 def test_reply_error_without_detail_without_fault():
