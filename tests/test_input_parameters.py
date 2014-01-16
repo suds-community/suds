@@ -206,62 +206,6 @@ sequence_with_two_elements = XSDType("""\
             Element("anInteger")]]])
 
 
-@pytest.mark.parametrize("xsd_type", (
-    choice_choice,
-    choice_element_choice,
-    choice_simple_nonoptional,
-    choice_with_element_and_two_element_sequence,
-    empty_sequence,
-    sequence_choice_with_element_and_two_element_sequence,
-    sequence_with_five_elements,
-    sequence_with_one_element,
-    sequence_with_two_elements))
-def test_unwrapped_parameter(xsd_type):
-    """Test recognizing unwrapped web service operation input structures."""
-    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
-    wsdl = _unwrappable_wsdl("part_name", input_schema)
-    client = tests.client_from_wsdl(wsdl, nosend=True)
-
-    # Collect references to required WSDL model content.
-    method = client.wsdl.services[0].ports[0].methods["f"]
-    assert method.soap.input.body.wrapped
-    binding = method.binding.input
-    assert binding.__class__ is suds.bindings.document.Document
-    wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
-
-    # Construct expected parameter definitions.
-    xsd_map = sequence_choice_with_element_and_two_element_sequence.xsd_map
-    expected_param_defs = _parse_schema_model(wrapper, xsd_map)
-
-    param_defs = binding.param_defs(method)
-    _expect_params(param_defs, expected_param_defs)
-
-
-@pytest.mark.parametrize("part_name", ("parameters", "pipi"))
-def test_unwrapped_parameter_part_name(part_name):
-    """
-    Unwrapped parameter's part name should not affect its parameter definition.
-
-    """
-    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
-    wsdl = _unwrappable_wsdl(part_name, input_schema)
-    client = tests.client_from_wsdl(wsdl, nosend=True)
-
-    # Collect references to required WSDL model content.
-    method = client.wsdl.services[0].ports[0].methods["f"]
-    assert method.soap.input.body.wrapped
-    binding = method.binding.input
-    assert binding.__class__ is suds.bindings.document.Document
-    wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
-
-    # Construct expected parameter definitions.
-    xsd_map = sequence_choice_with_element_and_two_element_sequence.xsd_map
-    expected_param_defs = _parse_schema_model(wrapper, xsd_map)
-
-    param_defs = binding.param_defs(method)
-    _expect_params(param_defs, expected_param_defs)
-
-
 @pytest.mark.parametrize("part_name", ("uno", "due", "quatro"))
 def test_builtin_typed_element_parameter(part_name):
     """
@@ -408,6 +352,62 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     expected_param_defs = [
         (param_name, [suds.bindings.binding.PartElement, param_name, my_type])
         for param_name in param_names]
+
+    param_defs = binding.param_defs(method)
+    _expect_params(param_defs, expected_param_defs)
+
+
+@pytest.mark.parametrize("xsd_type", (
+    choice_choice,
+    choice_element_choice,
+    choice_simple_nonoptional,
+    choice_with_element_and_two_element_sequence,
+    empty_sequence,
+    sequence_choice_with_element_and_two_element_sequence,
+    sequence_with_five_elements,
+    sequence_with_one_element,
+    sequence_with_two_elements))
+def test_unwrapped_parameter(xsd_type):
+    """Test recognizing unwrapped web service operation input structures."""
+    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
+    wsdl = _unwrappable_wsdl("part_name", input_schema)
+    client = tests.client_from_wsdl(wsdl, nosend=True)
+
+    # Collect references to required WSDL model content.
+    method = client.wsdl.services[0].ports[0].methods["f"]
+    assert method.soap.input.body.wrapped
+    binding = method.binding.input
+    assert binding.__class__ is suds.bindings.document.Document
+    wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
+
+    # Construct expected parameter definitions.
+    xsd_map = sequence_choice_with_element_and_two_element_sequence.xsd_map
+    expected_param_defs = _parse_schema_model(wrapper, xsd_map)
+
+    param_defs = binding.param_defs(method)
+    _expect_params(param_defs, expected_param_defs)
+
+
+@pytest.mark.parametrize("part_name", ("parameters", "pipi"))
+def test_unwrapped_parameter_part_name(part_name):
+    """
+    Unwrapped parameter's part name should not affect its parameter definition.
+
+    """
+    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
+    wsdl = _unwrappable_wsdl(part_name, input_schema)
+    client = tests.client_from_wsdl(wsdl, nosend=True)
+
+    # Collect references to required WSDL model content.
+    method = client.wsdl.services[0].ports[0].methods["f"]
+    assert method.soap.input.body.wrapped
+    binding = method.binding.input
+    assert binding.__class__ is suds.bindings.document.Document
+    wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
+
+    # Construct expected parameter definitions.
+    xsd_map = sequence_choice_with_element_and_two_element_sequence.xsd_map
+    expected_param_defs = _parse_schema_model(wrapper, xsd_map)
 
     param_defs = binding.param_defs(method)
     _expect_params(param_defs, expected_param_defs)
