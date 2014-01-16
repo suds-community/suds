@@ -46,8 +46,23 @@ import tests
 import pytest
 
 
+class Element:
+    """Represents elements in our XSD map test data."""
+
+    def __init__(self, name):
+        self.name = name
+
+
+class XSDType:
+    """Unwrapped parameter XSD type test data."""
+
+    def __init__(self, xsd, xsd_map):
+        self.xsd = xsd
+        self.xsd_map = xsd_map
+
+
 # Test data shared between different tests in this module.
-sequence_choice_with_element_and_two_element_sequence = """\
+sequence_choice_with_element_and_two_element_sequence = XSDType("""\
     <xsd:complexType>
       <xsd:sequence>
         <xsd:choice>
@@ -58,7 +73,14 @@ sequence_choice_with_element_and_two_element_sequence = """\
           </xsd:sequence>
         </xsd:choice>
       </xsd:sequence>
-    </xsd:complexType>"""
+    </xsd:complexType>""", [
+    "complex_type", [
+        "sequence_1", [
+            "choice", [
+                Element("a"),
+                "sequence_2", [
+                    Element("b1"),
+                    Element("b2")]]]]])
 
 
 @pytest.mark.parametrize("part_name", ("parameters", "pipi"))
@@ -75,7 +97,7 @@ def test_unwrapped_parameter(part_name):
         \   \   \-element
 
     """
-    input_schema = sequence_choice_with_element_and_two_element_sequence
+    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
     wsdl = _unwrappable_wsdl(part_name, input_schema)
     client = tests.client_from_wsdl(wsdl, nosend=True)
 
@@ -83,22 +105,11 @@ def test_unwrapped_parameter(part_name):
     method = client.wsdl.services[0].ports[0].methods["f"]
     binding = method.binding.input
     assert binding.__class__ is suds.bindings.document.Document
-
-    # Collect references to expected schema model objects.
     wrapper = client.wsdl.schema.elements["Wrapper", "my-namespace"]
-    complex_type = wrapper.rawchildren[0]
-    seq_1 = complex_type.rawchildren[0]
-    choice = seq_1.rawchildren[0]
-    element_a = choice.rawchildren[0]
-    seq_2 = choice.rawchildren[1]
-    element_b1 = seq_2.rawchildren[0]
-    element_b2 = seq_2.rawchildren[1]
 
     # Construct expected parameter definitions.
-    expected_param_defs = [
-        ("a", element_a, [wrapper, complex_type, seq_1, choice]),
-        ("b1", element_b1, [wrapper, complex_type, seq_1, choice, seq_2]),
-        ("b2", element_b2, [wrapper, complex_type, seq_1, choice, seq_2])]
+    xsd_map = sequence_choice_with_element_and_two_element_sequence.xsd_map
+    expected_param_defs = _parse_schema_model(wrapper, xsd_map)
 
     param_defs = binding.param_defs(method)
     _expect_params(param_defs, expected_param_defs)
@@ -111,7 +122,7 @@ def test_explicitly_wrapped_parameter(part_name):
     structure which would otherwise be automatically unwrapped.
 
     """
-    input_schema = sequence_choice_with_element_and_two_element_sequence
+    input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
     wsdl = _unwrappable_wsdl(part_name, input_schema)
     client = tests.client_from_wsdl(wsdl, nosend=True, unwrap=False)
 
@@ -224,6 +235,52 @@ def _expect_params(param_defs, expected_param_defs):
         else:
             assert pdef[1] is expected_pdef[1]  # type - exact instance
         assert pdef[2:] == expected_pdef[2:]  # ancestry - optional
+
+
+def _parse_schema_model(root, schema_model_map):
+    """
+    Utility function for preparing the expected parameter definition structure
+    based on an unwrapped input parameter's XSD type schema.
+
+    Parses the XSD schema definition under a given XSD schema item and returns
+    the expected parameter definition structure based on the given schema map.
+
+    The schema map describes the expected hierarchy of items in the given XSD
+    schema. Even though this information could be deduced from the XSD schema
+    itself, that would require a much more complex implementation and this is
+    supposed to be a simple testing utility.
+
+    """
+    schema_items = {}
+    param_defs = []
+    _parse_schema_model_r(schema_items, param_defs, [], root, schema_model_map)
+    return param_defs
+
+
+def _parse_schema_model_r(schema_items, param_defs, ancestry, parent,
+        schema_model_map):
+    """Recursive implementation detail for _parse_schema_model()."""
+    prev = None
+    ancestry = list(ancestry)
+    ancestry.append(parent)
+    n = 0
+    for x in schema_model_map:
+        if x.__class__ in (list, tuple):
+            assert prev is not None, "bad schema model map"
+            _parse_schema_model_r(schema_items, param_defs, ancestry, prev, x)
+            continue
+        item = parent.rawchildren[n]
+        if isinstance(x, Element):
+            x = x.name
+            prev = None
+            param_defs.append((x, item, ancestry))
+        else:
+            assert isinstance(x, str), "bad schema model map"
+            prev = item
+        assert x not in schema_items, "duplicate schema map item names"
+        schema_items[x] = item
+        n += 1
+    assert len(parent.rawchildren) == n
 
 
 def _unwrappable_wsdl(part_name, param_schema):
