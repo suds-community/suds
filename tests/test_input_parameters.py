@@ -343,8 +343,8 @@ class TestUnsupportedParameterDefinitions:
 @pytest.mark.parametrize("part_name", ("uno", "due", "quatro"))
 def test_builtin_typed_element_parameter(part_name):
     """
-    Test correctly recognizing web service operation input structure defined
-    by a built-in typed element.
+    Test correctly recognizing web service operation input structure defined by
+    a built-in typed element.
 
     """
     wsdl = suds.byte_str("""\
