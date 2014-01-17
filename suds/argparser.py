@@ -35,6 +35,14 @@ def parse_args(method_name, param_defs, args, kwargs, external_param_processor,
     This function implements generic binding agnostic part of processing the
     arguments passed when calling those function objects.
 
+    Argument parsing rules:
+      * Each input parameter element should be represented by single regular
+        Python function argument.
+      * At most one input parameter belonging to a single choice parameter
+        structure may have its value specified as something other than None.
+      * Positional arguments are mapped to choice group input parameters the
+        same as is done for a simple all/sequence group - each in turn.
+
     Expects to be passed the web service operation's parameter definitions
     (parameter name, type & optional ancestry information) in order and, based
     on that, extracts the values for those parameter from the arguments
