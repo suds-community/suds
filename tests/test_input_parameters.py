@@ -206,6 +206,140 @@ sequence_with_two_elements = XSDType("""\
             Element("anInteger")]]])
 
 
+class TestUnsupportedParameterDefinitions:
+    """
+    Tests performed on WSDL schema's containing input parameter type
+    definitions that can not be modeled using the currently implemented suds
+    library input parameter definition structure.
+
+    The tests included in this group, most of which are expected to fail,
+    should serve as an illustration of what type of input parameter definitions
+    still need to be better modeled. Once this has been done, they should be
+    refactored into separate argument parsing, input parameter definition
+    structure and binding specific request construction tests.
+
+    """
+
+    def expect_error(self, expected_error_text, *args, **kwargs):
+        """
+        Assert a test function call raises an expected TypeError exception.
+
+        Caught exception is considered expected if its string representation
+        matches the given expected error text.
+
+        Expected error text may be given directly or as a list/tuple containing
+        valid alternatives.
+
+        Web service operation 'f' invoker is used as the default test function.
+        An alternate test function may be specified using the 'test_function'
+        keyword argument.
+
+        """
+        try:
+            test_function = kwargs.pop("test_function")
+        except KeyError:
+            test_function = self.service.f
+        e = pytest.raises(TypeError, test_function, *args, **kwargs).value
+        try:
+            if expected_error_text.__class__ in (list, tuple):
+                assert str(e) in expected_error_text
+            else:
+                assert str(e) == expected_error_text
+        finally:
+            del e
+
+    def init_function_params(self, params, **kwargs):
+        """
+        Initialize a test in this group with the given parameter definition.
+
+        Constructs a complete WSDL schema based on the given function parameter
+        definition (defines a single web service operation named 'f' by
+        default), and creates a suds Client object to be used for testing
+        suds's web service operation invocation.
+
+        An alternate operation name may be given using the 'operation_name'
+        keyword argument.
+
+        May only be invoked once per test.
+
+        """
+        input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
+        assert not hasattr(self, "service")
+        wsdl = tests.wsdl_input(input, "Wrapper", **kwargs)
+        client = tests.client_from_wsdl(wsdl, nosend=True)
+        self.service = client.service
+
+    @pytest.mark.parametrize("test_args_required", (
+        pytest.mark.xfail(reason="empty choice member items not supported")(
+            True),
+        False))
+    def test_choice_containing_an_empty_sequence(self, test_args_required):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        choice parameter group containing an empty sequence subgroup.
+
+        """
+        self.init_function_params("""\
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="a" type="xsd:integer" />
+              <xsd:sequence>
+              </xsd:sequence>
+            </xsd:choice>
+          </xsd:complexType>""")
+
+        expected = "f() takes 0 to 1 positional arguments but 3 were given"
+        if not test_args_required:
+            expected = [expected,
+                "f() takes 1 positional argument but 3 were given"]
+        self.expect_error(expected, 1, None, None)
+
+    @pytest.mark.parametrize("choice", (
+        # Explicitly marked as optional and containing only non-optional
+        # elements.
+        pytest.mark.xfail(reason="suds does not yet support minOccurs/"
+            "maxOccurs attributes on all/choice/sequence order indicators")(
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>"""),
+        # Explicitly marked as optional and containing at least one
+        # non-optional element.
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>""",
+        """\
+          <xsd:complexType>
+            <xsd:choice minOccurs="0">
+              <xsd:element name="aString" type="xsd:string" minOccurs="0" />
+              <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            </xsd:choice>
+          </xsd:complexType>"""))
+    def test_choice_explicitly_marked_as_optional(self, choice):
+        """
+        Test reporting extra input parameters passed to a function taking a
+        single optional choice parameter group.
+
+        """
+        self.init_function_params(choice)
+        expected = "f() takes 0 to 2 positional arguments but 3 were given"
+        self.expect_error(expected, "one", None, 3)
+
+
 @pytest.mark.parametrize("part_name", ("uno", "due", "quatro"))
 def test_builtin_typed_element_parameter(part_name):
     """
