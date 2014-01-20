@@ -49,9 +49,9 @@ def test_bare_input_restriction_types():
       <xsd:element name="Elemento">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="alfa" />
-            <xsd:enumeration value="beta" />
-            <xsd:enumeration value="gamma" />
+            <xsd:enumeration value="alfa"/>
+            <xsd:enumeration value="beta"/>
+            <xsd:enumeration value="gamma"/>
           </xsd:restriction>
         </xsd:simpleType>
       </xsd:element>""", "Elemento"))
@@ -59,12 +59,12 @@ def test_bare_input_restriction_types():
     client_named = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:simpleType name="MyType">
         <xsd:restriction base="xsd:string">
-          <xsd:enumeration value="alfa" />
-          <xsd:enumeration value="beta" />
-          <xsd:enumeration value="gamma" />
+          <xsd:enumeration value="alfa"/>
+          <xsd:enumeration value="beta"/>
+          <xsd:enumeration value="gamma"/>
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType"/>""", "Elemento"))
 
     assert not _isInputWrapped(client_unnamed, "f")
     assert not _isInputWrapped(client_named, "f")
@@ -75,7 +75,7 @@ def test_disabling_automated_simple_interface_unwrapping():
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="Elemento" type="xsd:string" />
+            <xsd:element name="Elemento" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"), nosend=True, prettyxml=True, unwrap=False)
@@ -190,17 +190,17 @@ def test_invalid_input_parameter_type_handling():
     client = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:complexType name="Freakazoid">
         <xsd:sequence>
-          <xsd:element name="freak1" type="xsd:string" />
-          <xsd:element name="freak2" type="xsd:string" />
-          <xsd:element name="freak3" type="xsd:string" />
+          <xsd:element name="freak1" type="xsd:string"/>
+          <xsd:element name="freak2" type="xsd:string"/>
+          <xsd:element name="freak3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="p1" type="xsd:string" />
-            <xsd:element name="anInteger" type="xsd:integer" />
-            <xsd:element name="p2" type="xsd:string" />
+            <xsd:element name="p1" type="xsd:string"/>
+            <xsd:element name="anInteger" type="xsd:integer"/>
+            <xsd:element name="p2" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"), nosend=True, prettyxml=True)
@@ -251,8 +251,8 @@ def test_missing_parameters():
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="aString" type="xsd:string" />
-            <xsd:element name="anInteger" type="xsd:integer" />
+            <xsd:element name="aString" type="xsd:string"/>
+            <xsd:element name="anInteger" type="xsd:integer"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
@@ -332,8 +332,8 @@ def test_named_parameter():
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="uno" type="xsd:string" />
-            <xsd:element name="due" type="xsd:string" />
+            <xsd:element name="uno" type="xsd:string"/>
+            <xsd:element name="due" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
@@ -359,8 +359,8 @@ def test_named_parameter():
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="due" type="xsd:string" />
-            <xsd:element name="uno" type="xsd:string" />
+            <xsd:element name="due" type="xsd:string"/>
+            <xsd:element name="uno" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
@@ -387,8 +387,8 @@ def test_optional_parameter_handling():
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="aString" type="xsd:string" minOccurs="0" />
-            <xsd:element name="anInteger" type="xsd:integer" minOccurs="0" />
+            <xsd:element name="aString" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="anInteger" type="xsd:integer" minOccurs="0"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
@@ -472,7 +472,7 @@ def test_twice_wrapped_parameter():
             <xsd:element name="Wrapper2">
               <xsd:complexType>
                 <xsd:sequence>
-                  <xsd:element name="Elemento" type="xsd:string" />
+                  <xsd:element name="Elemento" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
             </xsd:element>
@@ -524,35 +524,35 @@ def test_wrapped_parameter(monkeypatch):
     client = lambda *args : tests.client_from_wsdl(tests.wsdl_input(*args),
         nosend=True, prettyxml=True)
     client_bare_single = client("""\
-      <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
+      <xsd:element name="Elemento" type="xsd:string"/>""", "Elemento")
     client_bare_multiple_simple = client("""\
-      <xsd:element name="Elemento1" type="xsd:string" />
-      <xsd:element name="Elemento2" type="xsd:string" />""", "Elemento1",
+      <xsd:element name="Elemento1" type="xsd:string"/>
+      <xsd:element name="Elemento2" type="xsd:string"/>""", "Elemento1",
         "Elemento2")
     client_bare_multiple_wrapped = client("""\
       <xsd:complexType name="Wrapper">
         <xsd:sequence>
-          <xsd:element name="Elemento" type="xsd:string" />
+          <xsd:element name="Elemento" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
-      <xsd:element name="Elemento1" type="ns:Wrapper" />
-      <xsd:element name="Elemento2" type="ns:Wrapper" />""", "Elemento1",
+      <xsd:element name="Elemento1" type="ns:Wrapper"/>
+      <xsd:element name="Elemento2" type="ns:Wrapper"/>""", "Elemento1",
         "Elemento2")
     client_wrapped_unnamed = client("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="Elemento" type="xsd:string" />
+            <xsd:element name="Elemento" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper")
     client_wrapped_named = client("""\
       <xsd:complexType name="WrapperType">
         <xsd:sequence>
-          <xsd:element name="Elemento" type="xsd:string" />
+          <xsd:element name="Elemento" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
-      <xsd:element name="Wrapper" type="ns:WrapperType" />""", "Wrapper")
+      <xsd:element name="Wrapper" type="ns:WrapperType"/>""", "Wrapper")
 
     #   Make sure suds library interprets our WSDL definitions as wrapped or
     # bare input interfaces as expected.
