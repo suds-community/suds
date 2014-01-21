@@ -70,6 +70,325 @@ def test_bare_input_restriction_types():
     assert not _isInputWrapped(client_named, "f")
 
 
+def parametrize_single_element_input_test(param_names, param_values):
+    """
+    Define different parametrized single element input test function calls.
+
+    Parameter value input is a tuple containing 2+ parameters:
+      * 1. element - input XSD element definition
+      * 2. element - input element name
+      * 3+ elements - tuples containing the following:
+        * position argument list for the invoked test web service operation
+        * expected request body content for the given arguments
+        * [optional] reason for marking this test case as expected to fail
+
+    """
+    mark = pytest
+    expanded_param_values = []
+    for param_value in param_values:
+        xsd, external_element_name = param_value[0:2]
+        for next_value in param_value[2:]:
+            assert len(next_value) in (2, 3)
+            args, request_body = next_value[:2]
+            xfail = len(next_value) == 3
+            param = (xsd, external_element_name, args, request_body)
+            if xfail:
+                param = pytest.mark.xfail(param, reason=next_value[2])
+            expanded_param_values.append(param)
+    return (param_names, expanded_param_values), {}
+
+@pytest.mark.indirect_parametrize(parametrize_single_element_input_test,
+    ("xsd", "external_element_name", "args", "request_body"), (
+    # Bare non-optional element.
+    ('<xsd:element name="a" type="xsd:integer"/>', "a",
+        ([], "<ns0:a/>"),
+        ([5], "<ns0:a>5</ns0:a>")),
+    # Bare optional element.
+    ('<xsd:element name="a" type="xsd:integer" minOccurs="0"/>', "a",
+        ([], ""),
+        ([5], "<ns0:a>5</ns0:a>")),
+    # Choice with a non-empty sub-sequence.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a" type="xsd:integer"/>
+            <xsd:sequence>
+              <xsd:element name="b1" type="xsd:integer"/>
+              <xsd:element name="b2" type="xsd:integer"/>
+            </xsd:sequence>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper><ns0:a/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([None, 1], "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([None, 1, 2],
+            "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2>2</ns0:b2></ns0:Wrapper>"),
+        ([None, None, 1],
+            "<ns0:Wrapper><ns0:b1/><ns0:b2>1</ns0:b2></ns0:Wrapper>",
+            "non-optional choice handling buggy")),
+    # Choice with a non-optional element.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a" type="xsd:integer"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper><ns0:a/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+    # Choice with an optional element.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a" type="xsd:integer" minOccurs="0"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+    # Choices with multiple elements, at least one of which is optional.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a" type="xsd:integer" minOccurs="0"/>
+            <xsd:element name="b" type="xsd:integer"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([None, 5], "<ns0:Wrapper><ns0:b>5</ns0:b></ns0:Wrapper>")),
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a" type="xsd:integer"/>
+            <xsd:element name="b" type="xsd:integer" minOccurs="0"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([None, 5], "<ns0:Wrapper><ns0:b>5</ns0:b></ns0:Wrapper>")),
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:element name="a" type="xsd:integer" minOccurs="0"/>
+            <xsd:element name="b" type="xsd:integer" minOccurs="0"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([None, 5], "<ns0:Wrapper><ns0:b>5</ns0:b></ns0:Wrapper>")),
+    # Choice with multiple non-empty sub-sequences.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice>
+            <xsd:sequence>
+              <xsd:element name="a1" type="xsd:integer"/>
+              <xsd:element name="a2" type="xsd:integer"/>
+            </xsd:sequence>
+            <xsd:sequence>
+              <xsd:element name="b1" type="xsd:integer"/>
+              <xsd:element name="b2" type="xsd:integer"/>
+            </xsd:sequence>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper><ns0:a1/><ns0:a2/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([5], "<ns0:Wrapper><ns0:a1>5</ns0:a1><ns0:a2/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([5, 9], """\
+          <ns0:Wrapper>
+            <ns0:a1>5</ns0:a1>
+            <ns0:a2>9</ns0:a2>
+          </ns0:Wrapper>"""),
+        ([None, 1], "<ns0:Wrapper><ns0:a1/><ns0:a2>1</ns0:a2></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([None, None, 1],
+            "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([None, None, 1, 2],
+            "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2>2</ns0:b2></ns0:Wrapper>"),
+        ([None, None, None, 1],
+            "<ns0:Wrapper><ns0:b1/><ns0:b2>1</ns0:b2></ns0:Wrapper>",
+            "non-optional choice handling buggy")),
+    # Empty choice.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice/>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>")),
+    # Empty sequence.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence/>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>")),
+    # Optional choice.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:choice minOccurs="0">
+            <xsd:element name="a" type="xsd:integer"/>
+            <xsd:element name="b" type="xsd:integer"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>",
+            # This test passes by accident - the following two bugs seem to
+            # cancel each other out:
+            #  - choice order indicators explicitly marked optional unsupported
+            #  - not constructing correct input parameter values when using no
+            #    input arguments for a choice
+            #"suds does not yet support minOccurs/maxOccurs attributes on "
+            #"all/choice/sequence order indicators"
+            ),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([None, 1],
+            "<ns0:Wrapper><ns0:b>1</ns0:b></ns0:Wrapper>")),
+    # Optional sequence.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence minOccurs="0">
+            <xsd:element name="a" type="xsd:integer"/>
+            <xsd:element name="b" type="xsd:integer"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>",
+            "suds does not yet support minOccurs/maxOccurs attributes on all/"
+            "choice/sequence order indicators"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a><ns0:b/></ns0:Wrapper>"),
+        ([None, 1],
+            "<ns0:Wrapper><ns0:a/><ns0:b>1</ns0:b></ns0:Wrapper>"),
+        ([1, 2], """\
+            <ns0:Wrapper>
+              <ns0:a>1</ns0:a>
+              <ns0:b>2</ns0:b>
+            </ns0:Wrapper>""")),
+    # Sequence with a non-empty sub-sequence.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="a" type="xsd:integer"/>
+            <xsd:sequence>
+              <xsd:element name="b1" type="xsd:integer"/>
+              <xsd:element name="b2" type="xsd:integer"/>
+            </xsd:sequence>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper><ns0:a/><ns0:b1/><ns0:b2/></ns0:Wrapper>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a><ns0:b1/><ns0:b2/></ns0:Wrapper>"),
+        ([None, 1],
+            "<ns0:Wrapper><ns0:a/><ns0:b1>1</ns0:b1><ns0:b2/></ns0:Wrapper>"),
+        ([None, 1, 2], """\
+            <ns0:Wrapper>
+              <ns0:a/>
+              <ns0:b1>1</ns0:b1>
+              <ns0:b2>2</ns0:b2>
+            </ns0:Wrapper>"""),
+        ([None, None, 1],
+            "<ns0:Wrapper><ns0:a/><ns0:b1/><ns0:b2>1</ns0:b2></ns0:Wrapper>")),
+    # Sequence with a non-optional element.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="a" type="xsd:integer"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper><ns0:a/></ns0:Wrapper>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+    # Sequence with an optional element.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="a" type="xsd:integer" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+    # Sequence with multiple consecutive choices.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:choice>
+              <xsd:element name="aString1" type="xsd:string"/>
+              <xsd:element name="anInt1" type="xsd:integer"/>
+            </xsd:choice>
+            <xsd:choice>
+              <xsd:element name="aString2" type="xsd:string"/>
+              <xsd:element name="anInt2" type="xsd:integer" minOccurs="0"/>
+            </xsd:choice>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper><ns0:aString1/></ns0:Wrapper>",
+            "non-optional choice handling buggy"),
+        ([5], "<ns0:Wrapper><ns0:aString1>5</ns0:aString1></ns0:Wrapper>"),
+        ([None, 1, 2], """\
+            <ns0:Wrapper>
+              <ns0:anInt1>1</ns0:anInt1>
+              <ns0:aString2>2</ns0:aString2>
+            </ns0:Wrapper>"""),
+        ([None, 1, None, 2], """\
+            <ns0:Wrapper>
+              <ns0:anInt1>1</ns0:anInt1>
+              <ns0:anInt2>2</ns0:anInt2>
+            </ns0:Wrapper>""")),
+    # Sequence with multiple optional elements.
+    ("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="a" type="xsd:integer" minOccurs="0"/>
+            <xsd:element name="b" type="xsd:integer" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", "Wrapper",
+        ([], "<ns0:Wrapper/>"),
+        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([None, 1], "<ns0:Wrapper><ns0:b>1</ns0:b></ns0:Wrapper>"),
+        ([5, 1],
+            "<ns0:Wrapper><ns0:a>5</ns0:a><ns0:b>1</ns0:b></ns0:Wrapper>")),
+    ))
+def test_document_literal_request_for_single_element_input(xsd,
+        external_element_name, args, request_body):
+    wsdl = tests.wsdl_input(xsd, external_element_name)
+    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+
+    _check_request(client.service.f(*args), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>%s</ns1:Body>
+</SOAP-ENV:Envelope>""" % (request_body,))
+
+
 def test_disabling_automated_simple_interface_unwrapping():
     client = tests.client_from_wsdl(tests.wsdl_input("""\
       <xsd:element name="Wrapper">
