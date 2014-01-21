@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the (LGPL) GNU Lesser General Public License as published by the
 # Free Software Foundation; either version 3 of the License, or (at your
@@ -11,13 +13,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-# written by: Jeff Ortel ( jortel@redhat.com )
+# written by: Jurko Gospodnetić( jurko.gospodnetic@pke.hr )
 
 import suds.client
 import suds.store
-
-import logging
-import sys
 
 
 def client_from_wsdl(wsdl_content, *args, **kwargs):
@@ -135,6 +134,7 @@ def compare_xml_to_string(lhs, rhs):
 
 def runUsingPyTest(callerGlobals):
     """Run the caller test script using the pytest testing framework."""
+    import sys
     # Trick setuptools into not recognizing we are referencing __file__ here.
     # If setuptools detects __file__ usage in a module, any package containing
     # this module will be installed as an actual folder instead of a zipped
