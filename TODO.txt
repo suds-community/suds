@@ -744,15 +744,21 @@ PRIORETIZED:
 (+)     * Update release notes.
 (+)     * Report back & close the project issue on BitBucket.
 
-(27.12.2013.)
+(21.01.2014.)
 
-    * (Jurko) Process patch sent in by Bouke Haarsma on BitBucket to 'make sure
-      all web service operation parameters are consumed'.
-        * Research.
-        * Prepare tests.
-        * Merge.
-        * Thorough code review.
-        * Update release notes.
+(+) * (Jurko) Process patch sent in by Bouke Haarsma on BitBucket to 'make sure
+(+)   all web service operation parameters are consumed'.
+(+)     * This patch has been worked on on a separate feature branch for close
+(+)       to a month now.
+(+)     * Update todo list.
+(+)     * Update release notes.
+(+)     * Commit.
+(+)     * Push changes to BitBucket.
+
+(22.01.2014.)
+
+    * (Jurko) Process research & todo notes collected while working on reporting
+      extra parameter errors.
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
