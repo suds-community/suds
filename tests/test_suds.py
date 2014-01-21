@@ -632,8 +632,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 """))
 
     # Input #1.
-    tests.compare_xml_to_string(_construct_SOAP_request(client, 'f',
-        a1="Wackadoodle"), """\
+    request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
+    assert tests.compare_xml_to_string(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -647,8 +647,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     # Input #2.
     param = client.factory.create("Choice.sequence")
     param.e2 = "Wackadoodle"
-    tests.compare_xml_to_string(_construct_SOAP_request(client, 'f',
-        sequence=param), """\
+    request = _construct_SOAP_request(client, 'f', sequence=param)
+    assert tests.compare_xml_to_string(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -732,8 +732,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     param.sequence.e2 = "Wackadoodle"
 
     # Construct a SOAP request containing our input parameters.
-    tests.compare_xml_to_string(_construct_SOAP_request(client, 'f', param),
-        """\
+    request = _construct_SOAP_request(client, 'f', param)
+    assert tests.compare_xml_to_string(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>

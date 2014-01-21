@@ -381,7 +381,7 @@ def test_document_literal_request_for_single_element_input(xsd,
     wsdl = tests.wsdl_input(xsd, external_element_name)
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
-    _check_request(client.service.f(*args), """\
+    assert _compare_request(client.service.f(*args), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -401,7 +401,7 @@ def test_disabling_automated_simple_interface_unwrapping():
     assert not _isInputWrapped(client, "f")
     wrapper = client.factory.create("Wrapper")
     wrapper.Elemento = "Wonderwall"
-    _check_request(client.service.f(Wrapper=wrapper), """\
+    assert _compare_request(client.service.f(Wrapper=wrapper), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -482,8 +482,8 @@ def test_element_references_to_different_namespaces():
         wsdl=wsdl)
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         nosend=True, prettyxml=True)
-    _check_request(client.service.f(local="--L--", local_referenced="--LR--",
-        external="--E--"), """\
+    assert _compare_request(client.service.f(local="--L--",
+        local_referenced="--LR--", external="--E--"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns1="first-namespace" xmlns:ns2="second-namespace" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -528,7 +528,7 @@ def test_invalid_input_parameter_type_handling():
     class SomeType:
         def __str__(self):
             return "Some string representation."
-    _check_request(client.service.f(anInteger=SomeType()), """\
+    assert _compare_request(client.service.f(anInteger=SomeType()), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -546,7 +546,7 @@ def test_invalid_input_parameter_type_handling():
     value.freak1 = "Tiny"
     value.freak2 = "Miny"
     value.freak3 = "Mo"
-    _check_request(client.service.f(anInteger=value), """\
+    assert _compare_request(client.service.f(anInteger=value), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -576,7 +576,7 @@ def test_missing_parameters():
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
 
-    _check_request(service.f(), """\
+    assert _compare_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -588,7 +588,7 @@ def test_missing_parameters():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    _check_request(service.f(u"Pero Ždero"), """\
+    assert _compare_request(service.f(u"Pero Ždero"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -600,7 +600,7 @@ def test_missing_parameters():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    _check_request(service.f(anInteger=666), """\
+    assert _compare_request(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -613,7 +613,7 @@ def test_missing_parameters():
 </SOAP-ENV:Envelope>""")
 
     # None value is treated the same as undefined.
-    _check_request(service.f(aString=None, anInteger=666), """\
+    assert _compare_request(service.f(aString=None, anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -624,7 +624,7 @@ def test_missing_parameters():
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
-    _check_request(service.f(aString="Omega", anInteger=None), """\
+    assert _compare_request(service.f(aString="Omega", anInteger=None), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -644,7 +644,8 @@ def test_named_parameter():
             self.expected_xml = expected_xml
 
         def test(self, *args, **kwargs):
-            _check_request(self.service.f(*args, **kwargs), self.expected_xml)
+            request = self.service.f(*args, **kwargs)
+            assert _compare_request(request, self.expected_xml)
 
     # Test different ways to make the same web service operation call.
     service = _service_from_wsdl(tests.wsdl_input("""\
@@ -712,7 +713,7 @@ def test_optional_parameter_handling():
         </xsd:complexType>
       </xsd:element>""", "Wrapper"))
 
-    _check_request(service.f(), """\
+    assert _compare_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -722,7 +723,7 @@ def test_optional_parameter_handling():
 </SOAP-ENV:Envelope>""")
 
     # None is treated as an undefined value.
-    _check_request(service.f(None), """\
+    assert _compare_request(service.f(None), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -732,7 +733,7 @@ def test_optional_parameter_handling():
 </SOAP-ENV:Envelope>""")
 
     # Empty string values are treated as well defined values.
-    _check_request(service.f(""), """\
+    assert _compare_request(service.f(""), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -743,7 +744,7 @@ def test_optional_parameter_handling():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    _check_request(service.f("Kiflica"), """\
+    assert _compare_request(service.f("Kiflica"), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -754,7 +755,7 @@ def test_optional_parameter_handling():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    _check_request(service.f(anInteger=666), """\
+    assert _compare_request(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -765,7 +766,7 @@ def test_optional_parameter_handling():
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    _check_request(service.f("Alfa", 9), """\
+    assert _compare_request(service.f("Alfa", 9), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -819,8 +820,8 @@ def test_twice_wrapped_parameter():
       </ns0:Wrapper1>
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % (value,)
-    _check_request(client.service.f(value), expectedRequest)
-    _check_request(client.service.f(Wrapper2=value), expectedRequest)
+    assert _compare_request(client.service.f(value), expectedRequest)
+    assert _compare_request(client.service.f(Wrapper2=value), expectedRequest)
 
     # Web service operation calls made with 'invalid' parameters.
     def testInvalidParameter(**kwargs):
@@ -887,7 +888,7 @@ def test_wrapped_parameter(monkeypatch):
     data = "Maestro"
     call_single = lambda c : c.service.f(data)
 
-    _check_request(call_single(client_bare_single), """\
+    assert _compare_request(call_single(client_bare_single), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -906,8 +907,8 @@ def test_wrapped_parameter(monkeypatch):
       </ns0:Wrapper>
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % data
-    _check_request(call_single(client_wrapped_unnamed), expected_xml)
-    _check_request(call_single(client_wrapped_named), expected_xml)
+    assert _compare_request(call_single(client_wrapped_unnamed), expected_xml)
+    assert _compare_request(call_single(client_wrapped_named), expected_xml)
 
     #   Suds library's automatic structure unwrapping prevents us from
     # specifying the external wrapper structure directly.
@@ -919,7 +920,7 @@ def test_wrapped_parameter(monkeypatch):
     data = ("Unga", "Bunga")
     call_multiple = lambda c : c.service.f(*data)
 
-    _check_request(call_multiple(client_bare_multiple_simple), """\
+    assert _compare_request(call_multiple(client_bare_multiple_simple), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -929,7 +930,7 @@ def test_wrapped_parameter(monkeypatch):
    </ns1:Body>
 </SOAP-ENV:Envelope>""" % data)
 
-    _check_request(call_multiple(client_bare_multiple_wrapped), """\
+    assert _compare_request(call_multiple(client_bare_multiple_wrapped), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
    <SOAP-ENV:Header/>
@@ -940,8 +941,8 @@ def test_wrapped_parameter(monkeypatch):
 </SOAP-ENV:Envelope>""" % data)
 
 
-def _check_request(request, expected_xml):
-    tests.compare_xml_to_string(request.original_envelope, expected_xml)
+def _compare_request(request, expected_xml):
+    return tests.compare_xml_to_string(request.original_envelope, expected_xml)
 
 
 def _isInputWrapped(client, method_name):
