@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the (LGPL) GNU Lesser General Public License as published by the
 # Free Software Foundation; either version 3 of the License, or (at your
@@ -11,13 +13,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-# written by: Jeff Ortel ( jortel@redhat.com )
+# written by: Jurko Gospodnetić( jurko.gospodnetic@pke.hr )
 
 import suds.client
 import suds.store
-
-import logging
-import sys
 
 
 def client_from_wsdl(wsdl_content, *args, **kwargs):
@@ -65,11 +64,15 @@ def compare_xml(lhs, rhs):
     underlying XML structure when used from different Python versions.
 
     """
-    assert lhs.__class__ is suds.sax.document.Document
-    assert rhs.__class__ is suds.sax.document.Document
-    assert len(lhs.getChildren()) == 1
-    assert len(rhs.getChildren()) == 1
-    compare_xml_element(lhs.getChildren()[0], rhs.getChildren()[0])
+    if lhs.__class__ is not suds.sax.document.Document:
+        return False
+    if rhs.__class__ is not suds.sax.document.Document:
+        return False
+    if len(lhs.getChildren()) != 1:
+        return False
+    if len(rhs.getChildren()) != 1:
+        return False
+    return compare_xml_element(lhs.getChildren()[0], rhs.getChildren()[0])
 
 
 def compare_xml_element(lhs, rhs):
@@ -89,20 +92,28 @@ def compare_xml_element(lhs, rhs):
     constructed in code to represent a SOAP request.
 
     """
-    assert lhs.__class__ is suds.sax.element.Element
-    assert rhs.__class__ is suds.sax.element.Element
-    assert lhs.namespace()[1] == rhs.namespace()[1]
-    assert lhs.name == rhs.name
+    if lhs.__class__ is not suds.sax.element.Element:
+        return False
+    if rhs.__class__ is not suds.sax.element.Element:
+        return False
+    if lhs.namespace()[1] != rhs.namespace()[1]:
+        return False
+    if lhs.name != rhs.name:
+        return False
     lhs_text = lhs.text
     rhs_text = rhs.text
     if lhs_text == "":
         lhs_text = None
     if rhs_text == "":
         rhs_text = None
-    assert lhs_text == rhs_text
-    assert len(lhs.getChildren()) == len(rhs.getChildren())
+    if lhs_text != rhs_text:
+        return False
+    if len(lhs.getChildren()) != len(rhs.getChildren()):
+        return False
     for l, r in zip(lhs.getChildren(), rhs.getChildren()):
-        compare_xml_element(l, r)
+        if not compare_xml_element(l, r):
+            return False
+    return True
 
 
 def compare_xml_to_string(lhs, rhs):
@@ -117,11 +128,13 @@ def compare_xml_to_string(lhs, rhs):
     underlying XML structure when used from different Python versions.
 
     """
-    compare_xml(lhs, suds.sax.parser.Parser().parse(string=suds.byte_str(rhs)))
+    rhs_document = suds.sax.parser.Parser().parse(string=suds.byte_str(rhs))
+    return compare_xml(lhs, rhs_document)
 
 
 def runUsingPyTest(callerGlobals):
     """Run the caller test script using the pytest testing framework."""
+    import sys
     # Trick setuptools into not recognizing we are referencing __file__ here.
     # If setuptools detects __file__ usage in a module, any package containing
     # this module will be installed as an actual folder instead of a zipped
@@ -141,16 +154,23 @@ def runUsingPyTest(callerGlobals):
     sys.exit(exitCode)
 
 
-def wsdl_input(schema_content, *args):
+def wsdl_input(schema_content, *args, **kwargs):
     """
       Returns a WSDL schema used in different suds library tests, defining a
-    single operation named f, taking an externally specified input structure
-    and returning no output.
+    single operation taking an externally specified input structure and
+    returning no output.
 
-      The first input parameter is the schema part of the WSDL, the rest of the
-    parameters identify top level input parameter elements.
+      The operation is named 'f' by default, but a custom name may be defined
+    for it by using a 'operation_name' keyword argument.
+
+      Initial input argument is the schema part of the WSDL, any remaining
+    positional arguments are interpreted as names of included top level input
+    parameter elements.
 
     """
+    operation_name = kwargs.pop("operation_name", "f")
+    assert not kwargs
+
     wsdl = ["""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
@@ -165,7 +185,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 %s
     </xsd:schema>
   </wsdl:types>
-  <wsdl:message name="fRequestMessage">""" % schema_content]
+  <wsdl:message name="fRequestMessage">""" % (schema_content,)]
 
     assert len(args) >= 1
     for arg in args:
@@ -175,15 +195,15 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     wsdl.append("""\
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
+    <wsdl:operation name="%(name)s">
       <wsdl:input message="ns:fRequestMessage" />
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
     transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
+    <wsdl:operation name="%(name)s">
+      <soap:operation soapAction="my-soap-action" style="document" />
       <wsdl:input><soap:body use="literal" /></wsdl:input>
     </wsdl:operation>
   </wsdl:binding>
@@ -193,7 +213,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-""")
+""" % {"name":operation_name})
 
     return suds.byte_str("\n".join(wsdl))
 
