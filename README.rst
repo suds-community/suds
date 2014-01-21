@@ -111,8 +111,6 @@ version 0.6 (development)
     whole data caching system).
   * Many thanks to Arthur Clune for reporting the issue.
 
-* Added unit tests for transport related Request & Reply classes.
-* Improved HTTPTransport related unit tests.
 * Added explicit tests for URL parameters being passed as unicode or single-byte
   strings under Python 2 but only unicode strings under Python 3, and improved
   how such invalid parameter values are reported.
@@ -122,8 +120,18 @@ version 0.6 (development)
   * Many thanks to Mesut Tasci for reporting a related issue and preparing the
     initial patch for it.
 
+* Extra arguments used when making a web service operation call are now reported
+  similar to how this is done for regular Python functions.
+
+  * The extra argument error reporting may be disabled using the new
+    'extraArgumentErrors' suds option.
+  * Basic idea and the initial implementation for this feature contributed by
+    Bouke Haarsma.
+
+* Corrected a typo in the BuildError exception message.
 * Removed partial support for pre-2.4 Python versions since such old Python
   versions are no longer officially supported nor are they tested anywhere.
+* Updated documented project links to use HTTP instead of HTTPS protocol.
 * Setup improvements.
 
   * Fixed setup to work with soft links in the current working folder path
@@ -144,15 +152,28 @@ version 0.6 (development)
     package distribution metadata file stores this text with an 8 space
     indentation.
 
-* Cleaned up support for running test scripts directly as Python scripts.
+* Internal test suite improvements.
 
-  * May now be passed pytest command-line options.
-  * Now return an exit code indicating the test result (0=success, !0=failure).
+  * Added unit tests for transport related Request & Reply classes.
+  * Improved HTTPTransport related unit tests.
+  * Split up some web service operation invocation request construction tests
+    into:
 
-* Corrected a typo in the BuildError exception message.
-* Added a basic development script for running the project's full test suite
-  using multiple Python interpreter versions under Windows.
-* Updated documented project links to use HTTP instead of HTTPS protocol.
+    * parameter definition tests
+    * argument parsing tests
+    * binding specific request construction tests
+
+  * Many new tests added & existing ones extended.
+  * Several redundant tests removed.
+  * Added a basic development script for running the project's full test suite
+    using multiple Python interpreter versions under Windows.
+  * Better test support when running with disabled assertion optimizations
+    enabled.
+  * Cleaned up support for running test scripts directly as Python scripts.
+
+    * May now be passed pytest command-line options.
+    * Now return an exit code indicating the test result (0=success,
+      !0=failure).
 
 version 0.5 (2013-11-25)
 ------------------------
