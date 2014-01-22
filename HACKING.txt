@@ -5,7 +5,7 @@ GENERAL DEVELOPMENT NOTES:
       hosted by BitBucket at 'http://bitbucket.org/jurko/suds'.
 
     * Project development should be tracked in the TODO.txt file.
-        * Exact formatting is not important as long as its contect is kept
+        * Exact formatting is not important as long as its content is kept
           formatted consistently.
         * Done tasks should be marked as such and not deleted.
 
