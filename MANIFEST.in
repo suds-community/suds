@@ -6,6 +6,6 @@
 
 # Top level project files.
 include ez_setup.py
-include HACKING.txt
+include HACKING.rst
 include LICENSE.txt
 include TODO.txt

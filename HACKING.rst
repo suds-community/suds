@@ -188,7 +188,7 @@ TOP-LEVEL FILES & FOLDERS
   project's source distribution packages in addition to those automatically
   added to those packages by the used package preparation system.
 
-| HACKING.txt
+| HACKING.rst
 | LICENSE.txt
 | README.txt
 | TODO.txt
