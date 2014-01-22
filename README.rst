@@ -24,7 +24,7 @@ again.
 * Documentation: http://fedorahosted.org/suds/wiki/Documentation
 * Epydocs: http://jortel.fedorapeople.org/suds/doc
 
-For development notes see the ``HACKING.txt`` document included in the
+For development notes see the ``HACKING.rst`` document included in the
 distribution.
 
 
@@ -151,6 +151,10 @@ version 0.6 (development)
   * 'long_description' field content wrapped to 72 characters, since PKG-INFO
     package distribution metadata file stores this text with an 8 space
     indentation.
+
+* Improved internal project development documentation.
+
+  * 'HACKING.txt' updated, converted to .rst format & renamed to 'HACKING.rst'.
 
 * Internal test suite improvements.
 
