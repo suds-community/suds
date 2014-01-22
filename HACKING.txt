@@ -169,6 +169,9 @@ RELEASE PROCEDURE:
     * Document the release correctly in 'README.rst'.
 
     * Test the project build with the latest available setuptools project.
+        * Note that the chosen setuptools version needs to support all the
+          Python interpreter versions supported by our project.
+            * setuptools version 2.0 dropped support for Python 2.4 & 2.5.
         * Update the ez_setup.py setuptools installation script as needed.
 
     * Version identification.
