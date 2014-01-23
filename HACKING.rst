@@ -158,6 +158,9 @@ External documentation:
   * Part 1: Structures - http://www.w3.org/TR/xmlschema-1
   * Part 2: Datatypes - http://www.w3.org/TR/xmlschema-2
 
+For additional design, research & development project notes see the project's
+``notes/`` folder.
+
 
 TOP-LEVEL FILES & FOLDERS
 =================================================
@@ -173,6 +176,10 @@ TOP-LEVEL FILES & FOLDERS
 | suds_jurko.egg-info/
 
 * Folders created during project setup procedure (build/install).
+
+| notes/
+
+* Internal project design, research & development notes.
 
 | suds/
 

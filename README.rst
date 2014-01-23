@@ -156,6 +156,9 @@ version 0.6 (development)
 
   * ``HACKING.txt`` updated, converted to .rst format & renamed to
     ``HACKING.rst``.
+  * Started internal project design, research & development notes documentation.
+    Stored in a new ``notes/`` subfolder, included in the project's source
+    distribution, but not its builds or installations.
 
 * Internal test suite improvements.
 
