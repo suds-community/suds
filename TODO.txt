@@ -755,10 +755,19 @@ PRIORETIZED:
 (+)     * Commit.
 (+)     * Push changes to BitBucket.
 
-(22.01.2014.)
+(23.01.2014.)
 
-    * (Jurko) Process research & todo notes collected while working on reporting
-      extra parameter errors.
+(+) * (Jurko) Prepare internal documentation notes folder.
+(+)     * Add folder & add a descriptive readme.txt file to it.
+(+)     * Include in the source distribution folder.
+(+)     * Do not include it in the installation.
+(+)     * Note the new documentation notes folder in the project's HACKING.rst
+(+)       documentation.
+
+    * (Jurko) Process Jurko's research & todo notes collected while working on
+      reporting extra parameter errors.
+
+(24.01.2014.)
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
@@ -871,10 +880,13 @@ NON PRIORETIZED:
         * Research.
             * HTML.
             * PDF.
-        * Decide how to generate & distribute this documentation.
+        * Decide how to maintain, generate & distribute this documentation.
         * Update project HACKING notes to note the external software required
           for generating the documentation.
         * Update release procedure to include releasing the documentation.
+        * Once the official project documentation has been integrated into this
+          fork, go through existing internal project notes in our fork and see
+          how to integrate them into the official project documentation.
 
     * Research.
         * Test how optional elements under a choice work.
