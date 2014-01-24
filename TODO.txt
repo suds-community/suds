@@ -772,9 +772,11 @@ PRIORETIZED:
 (+)     * Check release notes.
 (+)     * Test.
 (+)     * Update version tag.
+(+)     * Tag in Hg.
+(+)     * Update version information.
 
     * (Jurko) Prepare a new suds-jurko 0.6 release.
-        * Tag in hg.
+        * Retag in Hg
         * Package the release.
         * Tag next version development.
         * Distribute the new release.
