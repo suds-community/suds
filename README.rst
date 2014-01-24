@@ -69,6 +69,29 @@ Installation troubleshooting:
 Release notes
 =================================================
 
+version 0.7 (development)
+-------------------------
+
+* Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
+  original ``suds`` Python library development project's Subversion repository.
+
+  * Last officially packaged & released ``suds`` Python library version - 0.4.1.
+
+* Supported Python versions.
+
+  * Intended to work with Python 2.4+.
+  * Basic sources prepared for Python 2.x.
+  * For using Python 3 the sources first processed by the Python ``py2to3`` tool
+    during the setup procedure.
+  * Tested in the following environments:
+
+    * Python 2.4.3/x86, on Windows 7/SP1/x64.
+    * Python 2.4.4/x86, on Windows 7/SP1/x64.
+    * Python 2.7.6/x64, on Windows 7/SP1/x64.
+    * Python 3.2.5/x64, on Windows 7/SP1/x64.
+    * Python 3.3.3/x86, on Windows 7/SP1/x64.
+    * Python 3.3.3/x64, on Windows 7/SP1/x64.
+
 version 0.6 (2014-01-24)
 -------------------------
 
