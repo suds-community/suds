@@ -764,10 +764,25 @@ PRIORETIZED:
 (+)     * Note the new documentation notes folder in the project's HACKING.rst
 (+)       documentation.
 
-    * (Jurko) Process Jurko's research & todo notes collected while working on
-      reporting extra parameter errors.
-
 (24.01.2014.)
+
+(+) * (Jurko) Process Jurko's research & todo notes collected while working on
+(+)   reporting extra parameter errors.
+
+    * (Jurko) Prepare a new suds-jurko 0.6 release.
+        * Check release notes.
+        * Test.
+        * Update version tag.
+        * Tag in hg.
+        * Package the release.
+        * Tag next version development.
+        * Distribute the new release.
+            * PyPI.
+            * BitBucket.
+            * Notify Gauthier Bastien - see comments for commit
+              9da81de891958292850a242781b30a3493f617 on BitBucket.
+
+(25.01.2014.)
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
@@ -776,6 +791,149 @@ PRIORETIZED:
         * Merge.
         * Thorough code review.
         * Update release notes.
+
+    * (Jurko) Clean up input argument/parameter & wrapped/unwrapped terminology
+      usage in code.
+        * Synchronize all usage both in code and in relevant 'notes/' documents.
+
+    * (Jurko) Process Jurko's remaining research & todo notes collected while
+      working on reporting extra parameter errors. Some are redundant or have
+      already been dealt with so the list needs to be triaged first.
+        * Fix non-optional choice element handling - missing values should be
+          used as empty strings, same as for non-choice parameters - search for
+          tests xfailed with reason 'non-optional choice handling buggy'.
+        * Add tests: which type XSD schemas do not get unwrapped automatically,
+          e.g. simple types such as built-in type restrictions.
+        * Split up test_request_construction.py tests into parameter definition,
+          argument parsing & possibly partial binding specific request
+          construction tests.
+        * Add test: single parameter pointing to an element - parameter name
+          should be ignored.
+        * Add test: single parameter pointing to an element - with unwrapping.
+        * Add test: single parameter pointing to a type - with unwrapping.
+        * Add test: single parameter pointing to a built-in type - no
+          unwrapping.
+        * Add test: multiple parameters pointing to types & elements.
+        * Add tests: wsdl tests - XSD schema content.
+        * Add tests: wsdl tests - recognized operations.
+        * Add tests: wsdl tests - recognized services.
+        * Add test: document/literal, document/encoded, rpc/literal &
+          rpc/encoded should make no difference to input processing in theory
+          and should all recognize the same input parameter structure.
+        * Add tests: wsdl tests - recognized binding - input/output - for
+          different methods - document binding should be the default - see
+          whether literal should be the default binding style.
+        * Add test: named sequence/choice/all - there is no such thing - their
+          name attributes should be ignored.
+        * Research: consider input parameter elements with missing type
+          declarations to have the type "xsd:string" or "xsd:any" or something
+          similar - check the XSD specification.
+            * '<xsd:element name="MyElement"></xsd:element>' currently used
+              wrapped.
+            * '<xsd:element name="MyElement"> </xsd:element>' currently used
+              unwrapped.
+        * Add test: unwrapped element reference input parameter.
+        * Add test: shema_object.resolve() &
+          shema_object.resolve(nobuiltin=True).
+        * Add test: explicitly marking an input parameter sequence as optional
+          should be recognized when unwrapping those input parameters - such
+          functions should report accepting 0 parameters.
+        * Add test: expected input argument count reporting with choice input
+          parameters explicitly marked optional.
+        * Add test: array parameters.
+        * Research: whether web service operations taking multiple input
+          parameter body-parts can have those body-parts simply reference other
+          elements, thus requiring us to resolve that reference before checking
+          whether the input parameter is optional (and possibly other places as
+          well - see Document.mkparam() which does no resolving for such web
+          service operations but does so for operations taking a single wrapper
+          input parameter structure).
+        * Research: see if the parameter type checked whether it is optional
+          inside Document.bodycontent() needs to have its ancestor elements
+          checked as well - this might be needed if this can actually be a
+          reference to some other, more deeply nested element.
+        * Research: can element references be chained - nope as they are allowed
+          to reference only top level elements and top level elements are
+          explicitly not allowed to use the ref attribute.
+        * Research: can element references be optional by themselves - yes, and
+          that is the only way they can be marked as optional since they may
+          only reference top-level elements and those are in turn not allowed to
+          use the minOccurs/maxOccurs attributes.
+        * Add test: extra array parameters - more than maxOccurs - possibly not
+          necessary if we want to allow suds to make such 'illegal' calls.
+        * Add test: missing regular parameters.
+        * Add test: missing non-optional choice parameters.
+        * Add test: missing optional choice parameters.
+        * Recognize missing optional values when specified as a lists/tuples
+          containing only values None and other such lists/tuples.
+        * Error when passed a list/tuple argument containing a list/tuple or
+          None.
+        * Research: web service operations taking multiple same-named parameters
+          - how they are and how they should be handled.
+        * Choice containing an empty sequence should be recognized as optional.
+        * Choice(a, sequence(b, c)) should set b to '' if it is not optional and
+          no value is given for it, but a value is given for c - same if b & c
+          roles are reversed.
+        * Research: suds does not seem to know how to handle minOccurs/maxOccurs
+          attributes specified on sequence & choice XSD schema XML elements - it
+          definitely does not recognize elements inside an optional choice or
+          sequence as optional - see how this affects input/output parameter
+          unwrapping.
+        * Add test: passing an array element value as an empty list.
+        * Add test: passing an array element value as a non-empty list.
+        * Add test: constructing requests with missing optional parameters -
+          should not be specified in the request.
+        * Add test: constructing requests with missing non-optional parameters
+          when the operation also takes some optional parameters - how this is
+          reported.
+        * Add test: constructing requests by using positional arguments when the
+          operation takes first optional input parameters and then non-optional
+          ones after that - initial positional arguments should be mapped to the
+          initial optional input parameters.
+        * Research: constructing requests with missing default parameters - see
+          whether this should be reported as an error or added to the request as
+          an empty value.
+        * Research: self.mkparam() call in Document.bodycontent() may return a
+          list in which case later setPrefix() method call on the returned
+          object will raise an AttributeError exception.
+        * Detecting and reporting multiple input parameter values specified for
+          a single input parameter choice group (empty choice group, simple
+          single choice, multiple independent choices, one choice group inside
+          another, one choice inside another but with additional elements
+          between them).
+        * Research: whether specifying an empty list or tuple for a parameter
+          should be treated the same as None - if so, add tests - possibly []/
+          (,) really skips the parameter while None gets mapped to an empty
+          value for non-optional parameters..
+        * Support for multiple same-named elements in a single input or output
+          structure - those directly back-to-back with each other can already be
+          set or accessed as arrays but we could need to support others as well.
+        * Constructing a request for a web service operation taking a single
+          empty all/choice/sequence parameter - should be the same as for
+          operations taking no parameters.
+        * Constructing requests for web service operations taking multiple
+          choice parameter groups (as positional and keyword arguments).
+        * Using a function with multiple choice parameter group values.
+        * TestExtraParameters.test_function_with_no_parameters() - why does
+          using WSDL '<xsd:element name="Wrapper" />' not work - seems not to be
+          recognized as wrapped data but if the XML element has any data (e.g. a
+          space or a new-line) then it gets recognized correctly - smells like
+          this could be a bug.
+        * Web service operation taking multiple input parameter bodyparts.
+            * None of which is an empty sequence.
+            * At least one of which is an empty sequence.
+        * Unrelated issues noticed while working on this.
+            * Document.document() - returned temporary can be inlined.
+            * Core.process() - root local variable seems redundant.
+            * Document.bodycontent() - mkparam() does not seem to be able to
+              return None but if it does, it might mess up tracking which
+              argument got used and we should document when it does that.
+            * Parsing parameter values (interpreting positional & keyword
+              arguments, mapping them to internal web service operation
+              parameters, reporting duplicate parameter values, reporting
+              unrecognized parameters and skipping ignored or None choice item
+              parameters) should not be binding class specific, i.e. it should
+              be shared for both document & rpc bindings.
 
     * (Jurko) Clean up the project's basic development script for running the
       full suds test suite using multiple Python interpreter versions.
