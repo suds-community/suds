@@ -797,6 +797,9 @@ PRIORETIZED:
       usage in code.
         * Synchronize all usage both in code and in relevant 'notes/' documents.
 
+    * (Jurko) Triage received issues & pull requests at BitBucket a bit and
+      prioretize them in relation to already existing todo items on this list.
+
     * (Jurko) Process Jurko's remaining research & todo notes collected while
       working on reporting extra parameter errors. Some are redundant or have
       already been dealt with so the list needs to be triaged first.
