@@ -774,16 +774,14 @@ PRIORETIZED:
 (+)     * Update version tag.
 (+)     * Tag in Hg.
 (+)     * Update version information.
-
-    * (Jurko) Prepare a new suds-jurko 0.6 release.
-        * Retag in Hg
-        * Package the release.
-        * Tag next version development.
-        * Distribute the new release.
-            * PyPI.
-            * BitBucket.
-            * Notify Gauthier Bastien - see comments for commit
-              9da81de891958292850a242781b30a3493f617 on BitBucket.
+(+)     * Retag in Hg
+(+)     * Package the release.
+(+)     * Distribute the new release.
+(+)         * PyPI.
+(+)         * BitBucket.
+(+)         * Notify Gauthier Bastien - see comments for commit
+(+)           9da81de891958292850a242781b30a3493f617 on BitBucket.
+(+)     * Prepare project information for the next development cycle.
 
 (25.01.2014.)
 
