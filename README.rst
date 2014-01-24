@@ -69,7 +69,7 @@ Installation troubleshooting:
 Release notes
 =================================================
 
-version 0.6 (development)
+version 0.6 (2014-01-24)
 -------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the

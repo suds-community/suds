@@ -768,11 +768,12 @@ PRIORETIZED:
 
 (+) * (Jurko) Process Jurko's research & todo notes collected while working on
 (+)   reporting extra parameter errors.
+(+) * (Jurko) Prepare a new suds-jurko 0.6 release.
+(+)     * Check release notes.
+(+)     * Test.
+(+)     * Update version tag.
 
     * (Jurko) Prepare a new suds-jurko 0.6 release.
-        * Check release notes.
-        * Test.
-        * Update version tag.
         * Tag in hg.
         * Package the release.
         * Tag next version development.
