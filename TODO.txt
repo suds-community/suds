@@ -785,6 +785,17 @@ PRIORETIZED:
 
 (25.01.2014.)
 
+    * (Jurko) Look into issue #12 & the related pull request #22 reported on
+      BitBucket - suds-jurko incorrectly returning a raw Fault() instead of a
+      WebFault() object when faults=False. Reported as a regression against the
+      base suds project.
+        * Research.
+            * Most likely introduced by commit
+              '506c8362c81343f1f629906606db23daf8b426ec'.
+            * Try to reproduce using an injected reply.
+                * Test against the current HEAD commit.
+                * Find a commit not that works correctly.
+
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
         * Research.
