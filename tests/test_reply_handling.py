@@ -521,7 +521,7 @@ def test_wrapped_sequence_output():
     assert response.result3.__class__ is suds.sax.text.Text
 
 
-def _attibutes(object):
+def _attributes(object):
     result = set()
     for x in object:
         result.add(x[0])
@@ -543,8 +543,8 @@ def _test_fault(fault, has_detail):
     expected_attributes = set(("faultcode", "faultstring"))
     if has_detail:
         expected_attributes.add("detail")
-    assert _attibutes(fault) == expected_attributes
-    assert not has_detail or _attibutes(fault.detail) == set(("errorcode",))
+    assert _attributes(fault) == expected_attributes
+    assert not has_detail or _attributes(fault.detail) == set(("errorcode",))
 
 
 _fault_reply__with_detail = suds.byte_str("""\
