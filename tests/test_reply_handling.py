@@ -260,13 +260,13 @@ def test_empty_reply():
     assert reason is None
     status, reason = f(httplib.INTERNAL_SERVER_ERROR)
     assert status == httplib.INTERNAL_SERVER_ERROR
-    assert reason == 'injected reply'
+    assert reason == "injected reply"
     status, reason = f(httplib.FORBIDDEN)
     assert status == httplib.FORBIDDEN
-    assert reason == 'injected reply'
+    assert reason == "injected reply"
     status, reason = f(httplib.FORBIDDEN, "kwack")
     assert status == httplib.FORBIDDEN
-    assert reason == 'kwack'
+    assert reason == "kwack"
 
 
 def test_fault_reply_with_unicode_faultstring(monkeypatch):
