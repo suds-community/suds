@@ -175,14 +175,14 @@ class Client(UnicodeMixin):
         return clone
 
     def __unicode__(self):
-        s = ['\n']
-        s.append('Suds ( https://fedorahosted.org/suds/ )')
-        s.append('  version: %s' % suds.__version__)
+        s = ["\n"]
+        s.append("Suds ( https://fedorahosted.org/suds/ )")
+        s.append("  version: %s" % suds.__version__)
         if ( suds.__build__ ):
-            s.append('  build: %s' % suds.__build__)
+            s.append("  build: %s" % suds.__build__)
         for sd in self.sd:
-            s.append('\n\n%s' % unicode(sd))
-        return ''.join(s)
+            s.append("\n\n%s" % unicode(sd))
+        return "".join(s)
 
 
 class Factory:
@@ -227,7 +227,7 @@ class Factory:
                 log.error("create '%s' failed", name, exc_info=True)
                 raise BuildError(name, e)
         timer.stop()
-        metrics.log.debug('%s created: %s', name, timer)
+        metrics.log.debug("%s created: %s", name, timer)
         return result
 
     def separator(self, ps):
@@ -312,13 +312,13 @@ class ServiceSelector:
         """
         service = None
         if not len(self.__services):
-            raise Exception, 'No services defined'
+            raise Exception, "No services defined"
         if isinstance(name, int):
             try:
                 service = self.__services[name]
                 name = service.name
             except IndexError:
-                raise ServiceNotFound, 'at [%d]' % name
+                raise ServiceNotFound, "at [%d]" % name
         else:
             for s in self.__services:
                 if name == s.name:
@@ -413,22 +413,22 @@ class PortSelector:
         """
         port = None
         if not len(self.__ports):
-            raise Exception, 'No ports defined: %s' % self.__qn
+            raise Exception, "No ports defined: %s" % self.__qn
         if isinstance(name, int):
-            qn = '%s[%d]' % (self.__qn, name)
+            qn = "%s[%d]" % (self.__qn, name)
             try:
                 port = self.__ports[name]
             except IndexError:
                 raise PortNotFound, qn
         else:
-            qn = '.'.join((self.__qn, name))
+            qn = ".".join((self.__qn, name))
             for p in self.__ports:
                 if name == p.name:
                     port = p
                     break
         if port is None:
             raise PortNotFound, qn
-        qn = '.'.join((self.__qn, port.name))
+        qn = ".".join((self.__qn, port.name))
         return MethodSelector(self.__client, port.methods, qn)
 
     def __dp(self):
@@ -487,7 +487,7 @@ class MethodSelector:
         """
         m = self.__methods.get(name)
         if m is None:
-            qn = '.'.join((self.__qn, name))
+            qn = ".".join((self.__qn, name))
             raise MethodNotFound, qn
         return Method(self.__client, m)
 
@@ -592,7 +592,7 @@ class SoapClient:
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         location = self.location()
-        log.debug('sending to (%s)\nmessage:\n%s', location, soapenv)
+        log.debug("sending to (%s)\nmessage:\n%s", location, soapenv)
         original_soapenv = soapenv
         plugins = PluginContainer(self.options.plugins)
         plugins.message.marshalled(envelope=soapenv.root())
@@ -600,7 +600,7 @@ class SoapClient:
             soapenv = soapenv.str()
         else:
             soapenv = soapenv.plain()
-        soapenv = soapenv.encode('utf-8')
+        soapenv = soapenv.encode("utf-8")
         ctx = plugins.message.sending(envelope=soapenv)
         soapenv = ctx.envelope
         if self.options.nosend:
@@ -612,9 +612,9 @@ class SoapClient:
             timer.start()
             reply = self.options.transport.send(request)
             timer.stop()
-            metrics.log.debug('waited %s on server reply', timer)
+            metrics.log.debug("waited %s on server reply", timer)
         except TransportError, e:
-            content = e.fp and e.fp.read() or ''
+            content = e.fp and e.fp.read() or ""
             return self.process_reply(reply=content, status=e.httpcode,
                 description=tostr(e), original_soapenv=original_soapenv)
         return self.process_reply(reply=reply.message,
@@ -629,9 +629,9 @@ class SoapClient:
         failed = True
         try:
             if status == httplib.OK:
-                log.debug('HTTP succeeded:\n%s', reply)
+                log.debug("HTTP succeeded:\n%s", reply)
             else:
-                log.debug('HTTP failed - %d - %s:\n%s', status, description,
+                log.debug("HTTP failed - %d - %s:\n%s", status, description,
                     reply)
 
             # (todo)
@@ -705,9 +705,9 @@ class SoapClient:
         @rtype: L{Object}
         """
         envns = suds.bindings.binding.envns
-        soapenv = replyroot and replyroot.getChild('Envelope', envns)
-        soapbody = soapenv and soapenv.getChild('Body', envns)
-        fault = soapbody and soapbody.getChild('Fault', envns)
+        soapenv = replyroot and replyroot.getChild("Envelope", envns)
+        soapbody = soapenv and soapenv.getChild("Body", envns)
+        fault = soapbody and soapbody.getChild("Fault", envns)
         return fault is not None and UmxBasic().process(fault)
 
     def headers(self):
@@ -718,10 +718,10 @@ class SoapClient:
         """
         action = self.method.soap.action
         if isinstance(action, unicode):
-            action = action.encode('utf-8')
-        stock = {'Content-Type':'text/xml; charset=utf-8', 'SOAPAction':action}
+            action = action.encode("utf-8")
+        stock = {"Content-Type":"text/xml; charset=utf-8", "SOAPAction":action}
         result = dict(stock, **self.options.headers)
-        log.debug('headers = %s', result)
+        log.debug("headers = %s", result)
         return result
 
     def location(self):
@@ -729,7 +729,7 @@ class SoapClient:
         Returns the SOAP request's target location URL.
 
         """
-        return Unskin(self.options).get('location', self.method.location)
+        return Unskin(self.options).get("location", self.method.location)
 
 
 class SimClient(SoapClient):
@@ -737,7 +737,7 @@ class SimClient(SoapClient):
     Loopback client used for message/reply simulation.
     """
 
-    injkey = '__inject'
+    injkey = "__inject"
 
     @classmethod
     def simulation(cls, kwargs):
@@ -755,22 +755,22 @@ class SimClient(SoapClient):
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
         simulation = kwargs[self.injkey]
-        msg = simulation.get('msg')
+        msg = simulation.get("msg")
         if msg is not None:
             assert msg.__class__ is suds.byte_str_class
             return self.send(_parse(msg))
         msg = self.method.binding.input.get_message(self.method, args, kwargs)
-        log.debug('inject (simulated) send message:\n%s', msg)
-        reply = simulation.get('reply')
+        log.debug("inject (simulated) send message:\n%s", msg)
+        reply = simulation.get("reply")
         if reply is not None:
             assert reply.__class__ is suds.byte_str_class
-            status = simulation.get('status')
-            description=simulation.get('description')
+            status = simulation.get("status")
+            description=simulation.get("description")
             if description is None:
-                description = 'injected reply'
+                description = "injected reply"
             return self.process_reply(reply=reply, status=status,
                 description=description, original_soapenv=msg)
-        raise Exception('reply or msg injection parameter expected');
+        raise Exception("reply or msg injection parameter expected");
 
 
 class RequestContext:
