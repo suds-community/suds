@@ -348,7 +348,7 @@ class SchemaObject(UnicodeMixin):
         """
         The list of I{auto} qualified attribute values.
         Qualification means to convert values into I{qref}.
-        @return: A list of attibute names.
+        @return: A list of attribute names.
         @rtype: list
         """
         return ['type', 'ref']
