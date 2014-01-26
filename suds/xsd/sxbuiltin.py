@@ -1,43 +1,30 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-"""
-The I{sxbuiltin} module provides classes that represent
-XSD I{builtin} schema objects.
-"""
+"""Classes representing I{built-in} XSD schema objects."""
 
 from suds import *
 from suds.xsd import *
 from suds.sax.date import *
 from suds.xsd.sxbase import XBuiltin
 
-import datetime as dt
-
-
-class XString(XBuiltin):
-    """
-    Represents an (xsd) <xs:string/> node
-    """
-    pass
+import datetime
 
 
 class XAny(XBuiltin):
-    """
-    Represents an (xsd) <any/> node
-    """
+    """Represents an XSD <xsd:any/> node."""
 
     def __init__(self, schema, name):
         XBuiltin.__init__(self, schema, name)
@@ -52,12 +39,10 @@ class XAny(XBuiltin):
 
 
 class XBoolean(XBuiltin):
-    """
-    Represents an (xsd) boolean builtin type.
-    """
+    """Represents an XSD boolean built-in type."""
 
-    translation = ({'1':True, 'true':True, '0':False, 'false':False},
-        {True:'true', 1:'true', False:'false', 0:'false'})
+    translation = ({"1": True, "true": True, "0": False, "false": False},
+        {True: "true", 1: "true", False: "false", 0: "false"})
 
     @staticmethod
     def translate(value, topython=True):
@@ -70,15 +55,55 @@ class XBoolean(XBuiltin):
             return value
 
 
-class XInteger(XBuiltin):
-    """
-    Represents an (xsd) xs:int builtin type.
-    """
+class XDate(XBuiltin):
+    """Represents an XSD <xsd:date/> built-in type."""
 
     @staticmethod
     def translate(value, topython=True):
         if topython:
-            if isinstance(value, basestring) and len(value):
+            if isinstance(value, basestring) and value:
+                return Date(value).value
+        else:
+            if isinstance(value, datetime.date):
+                return str(Date(value))
+            return value
+
+
+class XDateTime(XBuiltin):
+    """Represents an XSD <xsd:datetime/> built-in type."""
+
+    @staticmethod
+    def translate(value, topython=True):
+        if topython:
+            if isinstance(value, basestring) and value:
+                return DateTime(value).value
+        else:
+            if isinstance(value, datetime.datetime):
+                return str(DateTime(value))
+            return value
+
+
+class XFloat(XBuiltin):
+    """Represents an XSD <xsd:float/> built-in type."""
+
+    @staticmethod
+    def translate(value, topython=True):
+        if topython:
+            if isinstance(value, basestring) and value:
+                return float(value)
+        else:
+            if isinstance(value, float):
+                return str(value)
+            return value
+
+
+class XInteger(XBuiltin):
+    """Represents an XSD <xsd:int/> built-in type."""
+
+    @staticmethod
+    def translate(value, topython=True):
+        if topython:
+            if isinstance(value, basestring) and value:
                 return int(value)
         else:
             if isinstance(value, int):
@@ -87,14 +112,12 @@ class XInteger(XBuiltin):
 
 
 class XLong(XBuiltin):
-    """
-    Represents an (xsd) xs:long builtin type.
-    """
+    """Represents an XSD <xsd:long/> built-in type."""
 
     @staticmethod
     def translate(value, topython=True):
         if topython:
-            if isinstance(value, basestring) and len(value):
+            if isinstance(value, basestring) and value:
                 return long(value)
         else:
             if isinstance(value, (int, long)):
@@ -102,139 +125,95 @@ class XLong(XBuiltin):
             return value
 
 
-class XFloat(XBuiltin):
-    """
-    Represents an (xsd) xs:float builtin type.
-    """
-
-    @staticmethod
-    def translate(value, topython=True):
-        if topython:
-            if isinstance(value, basestring) and len(value):
-                return float(value)
-        else:
-            if isinstance(value, float):
-                return str(value)
-            return value
-
-
-class XDate(XBuiltin):
-    """
-    Represents an (xsd) xs:date builtin type.
-    """
-
-    @staticmethod
-    def translate(value, topython=True):
-        if topython:
-            if isinstance(value, basestring) and len(value):
-                return Date(value).value
-        else:
-            if isinstance(value, dt.date):
-                return str(Date(value))
-            return value
+class XString(XBuiltin):
+    """Represents an XSD <xsd:string/> node."""
+    pass
 
 
 class XTime(XBuiltin):
-    """
-    Represents an (xsd) xs:time builtin type.
-    """
+    """Represents an XSD <xsd:time/> built-in type."""
 
     @staticmethod
     def translate(value, topython=True):
         if topython:
-            if isinstance(value, basestring) and len(value):
+            if isinstance(value, basestring) and value:
                 return Time(value).value
         else:
-            if isinstance(value, dt.time):
+            if isinstance(value, datetime.time):
                 return str(Time(value))
-            return value
-
-
-class XDateTime(XBuiltin):
-    """
-    Represents an (xsd) xs:datetime builtin type.
-    """
-
-    @staticmethod
-    def translate(value, topython=True):
-        if topython:
-            if isinstance(value, basestring) and len(value):
-                return DateTime(value).value
-        else:
-            if isinstance(value, dt.datetime):
-                return str(DateTime(value))
             return value
 
 
 class Factory:
 
-    tags =\
-    {
+    tags = {
         # any
-        'anyType' : XAny,
+        "anyType": XAny,
         # strings
-        'string' : XString,
-        'normalizedString' : XString,
-        'ID' : XString,
-        'Name' : XString,
-        'QName' : XString,
-        'NCName' : XString,
-        'anySimpleType' : XString,
-        'anyURI' : XString,
-        'NOTATION' : XString,
-        'token' : XString,
-        'language' : XString,
-        'IDREFS' : XString,
-        'ENTITIES' : XString,
-        'IDREF' : XString,
-        'ENTITY' : XString,
-        'NMTOKEN' : XString,
-        'NMTOKENS' : XString,
+        "string": XString,
+        "normalizedString": XString,
+        "ID": XString,
+        "Name": XString,
+        "QName": XString,
+        "NCName": XString,
+        "anySimpleType": XString,
+        "anyURI": XString,
+        "NOTATION": XString,
+        "token": XString,
+        "language": XString,
+        "IDREFS": XString,
+        "ENTITIES": XString,
+        "IDREF": XString,
+        "ENTITY": XString,
+        "NMTOKEN": XString,
+        "NMTOKENS": XString,
         # binary
-        'hexBinary' : XString,
-        'base64Binary' : XString,
+        "hexBinary": XString,
+        "base64Binary": XString,
         # integers
-        'int' : XInteger,
-        'integer' : XInteger,
-        'unsignedInt' : XInteger,
-        'positiveInteger' : XInteger,
-        'negativeInteger' : XInteger,
-        'nonPositiveInteger' : XInteger,
-        'nonNegativeInteger' : XInteger,
+        "int": XInteger,
+        "integer": XInteger,
+        "unsignedInt": XInteger,
+        "positiveInteger": XInteger,
+        "negativeInteger": XInteger,
+        "nonPositiveInteger": XInteger,
+        "nonNegativeInteger": XInteger,
         # longs
-        'long' : XLong,
-        'unsignedLong' : XLong,
+        "long": XLong,
+        "unsignedLong": XLong,
         # shorts
-        'short' : XInteger,
-        'unsignedShort' : XInteger,
-        'byte' : XInteger,
-        'unsignedByte' : XInteger,
+        "short": XInteger,
+        "unsignedShort": XInteger,
+        "byte": XInteger,
+        "unsignedByte": XInteger,
         # floats
-        'float' : XFloat,
-        'double' : XFloat,
-        'decimal' : XFloat,
+        "float": XFloat,
+        "double": XFloat,
+        "decimal": XFloat,
         # dates & times
-        'date' : XDate,
-        'time' : XTime,
-        'dateTime': XDateTime,
-        'duration': XString,
-        'gYearMonth' : XString,
-        'gYear' : XString,
-        'gMonthDay' : XString,
-        'gDay' : XString,
-        'gMonth' : XString,
+        "date": XDate,
+        "time": XTime,
+        "dateTime": XDateTime,
+        "duration": XString,
+        "gYearMonth": XString,
+        "gYear": XString,
+        "gMonthDay": XString,
+        "gDay": XString,
+        "gMonth": XString,
         # boolean
-        'boolean' : XBoolean,
+        "boolean": XBoolean,
     }
 
     @classmethod
     def maptag(cls, tag, fn):
         """
         Map (override) tag => I{class} mapping.
-        @param tag: An xsd tag name.
+
+        @param tag: An XSD tag name.
         @type tag: str
         @param fn: A function or class.
         @type fn: fn|class.
+
         """
         cls.tags[tag] = fn
 
@@ -242,14 +221,14 @@ class Factory:
     def create(cls, schema, name):
         """
         Create an object based on the root tag name.
+
         @param schema: A schema object.
         @type schema: L{schema.Schema}
         @param name: The name.
         @type name: str
         @return: The created object.
         @rtype: L{XBuiltin}
+
         """
-        fn = cls.tags.get(name)
-        if fn is not None:
-            return fn(schema, name)
-        return XBuiltin(schema, name)
+        fn = cls.tags.get(name, XBuiltin)
+        return fn(schema, name)

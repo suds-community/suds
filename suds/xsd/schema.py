@@ -339,8 +339,6 @@ class Schema(UnicodeMixin):
         """
         if self.container is not None:
             return self.container.locate(ns)
-        else:
-            return None
 
     def custom(self, ref, context=None):
         """
