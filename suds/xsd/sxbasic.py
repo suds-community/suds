@@ -563,7 +563,7 @@ class Import(SchemaObject):
 
     def open(self, options):
         """
-        Open and import the refrenced schema.
+        Open and import the referenced schema.
         @param options: An options dictionary.
         @type options: L{options.Options}
         @return: The referenced schema.
@@ -627,7 +627,7 @@ class Include(SchemaObject):
 
     def open(self, options):
         """
-        Open and include the refrenced schema.
+        Open and include the referenced schema.
         @param options: An options dictionary.
         @type options: L{options.Options}
         @return: The referenced schema.
