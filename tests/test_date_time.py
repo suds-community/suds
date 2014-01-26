@@ -228,7 +228,7 @@ class TestDateTime:
         ("2013-12-31T23:59:59.99999949", 2013, 12, 31, 23, 59, 59, 999999),
         ("2013-12-31T23:59:59.9999995", 2014, 1, 1, 0, 0, 0, 0)))
     def testConstructFromString_subsecondRounding(self, string, y, M, d, h, m,
-        s, micros):
+            s, micros):
         ref = datetime.datetime(y, M, d, h, m, s, micros)
         assert DateTime(string).value == ref
 
@@ -245,7 +245,7 @@ class TestDateTime:
         ("2013-11-19T14:05:23.428068-23:59",
             2013, 11, 19, 14, 5, 23, 428068, -23, -59)))
     def testConstructFromString_timezone(self, string, y, M, d, h, m, s,
-        micros, tz_h, tz_m):
+            micros, tz_h, tz_m):
         tzdelta = datetime.timedelta(hours=tz_h, minutes=tz_m)
         tzinfo = FixedOffsetTimezone(tzdelta)
         ref = datetime.datetime(y, M, d, h, m, s, micros, tzinfo=tzinfo)
@@ -323,7 +323,7 @@ class TestTime:
         ("0:0:0.9999996", 0, 0, 1, 0),
         ("0:0:0.9999999", 0, 0, 1, 0)))
     def testConstructFromString_subsecondRounding(self, string, h, m, s,
-        micros):
+            micros):
         assert Time(string).value == datetime.time(h, m, s, micros)
 
     @pytest.mark.parametrize(
@@ -337,7 +337,7 @@ class TestTime:
         ("18:0:09.2139+10:31", 18, 0, 9, 213900, 10, 31),
         ("18:0:09.2139-10:31", 18, 0, 9, 213900, -10, -31)))
     def testConstructFromString_timezone(self, string, h, m, s, micros, tz_h,
-        tz_m):
+            tz_m):
         tzdelta = datetime.timedelta(hours=tz_h, minutes=tz_m)
         tzinfo = FixedOffsetTimezone(tzdelta)
         ref = datetime.time(h, m, s, micros, tzinfo=tzinfo)
