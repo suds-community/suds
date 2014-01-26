@@ -803,10 +803,29 @@ PRIORETIZED:
 (+)           behaviour is defined.
 (+)     * Ask for feedback containing a reproducible example.
 
+(26.01.2014.)
+
+(+) * (Jurko) Code cleanup.
+(+)     * Stylistic cleanup.
+
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
         * Research.
+            * Where a Python type to SOAP representation transformation is
+              performed.
+                * Expected locations.
+                    * When constructing a web service operation invocation
+                      request, i.e. when marshalling Python data to a SOAP
+                      request XMLS (mx package).
+            * Where a SOAP representation to Python type transformation is
+              performed.
+                * Expected locations.
+                    * When processing a web service operation reply, i.e. when
+                      unmarshalling Python data from a SOAP reponse XML (umx
+                      package).
         * Prepare tests.
+            * Representation tests for different data types.
+            * Transformation tests for different data types.
         * Merge.
         * Thorough code review.
         * Update release notes.
@@ -956,6 +975,23 @@ PRIORETIZED:
               unrecognized parameters and skipping ignored or None choice item
               parameters) should not be binding class specific, i.e. it should
               be shared for both document & rpc bindings.
+
+    * Code cleanup.
+        * Performance tuning - SchemaObject.str() should not use len(self) to
+          check whether it is empty.
+        * SchemaObject.str() - see whether any contained item information is
+          included if none of the items are instances of Content.
+        * TypedContent.qref() - see whether len(self) == 0 check for 'simple
+          types' can be improved. There should be no need to calculate the whole
+          length just to determine that the object is empty.
+        * Simple.mixed(), SimpleContent.mixed()  - see if they really need to
+          return the current object length or if they can just check whether the
+          object is empty.
+        * suds.sudsobject.footprint() - see if the len() check is really needed
+          just to see if the object is empty.
+            * Check other len() usage in suds.sudsboject.
+        * Check all 'except:' blocks to see if they actually need to be such
+          catch-all blocks.
 
     * (Jurko) Clean up the project's basic development script for running the
       full suds test suite using multiple Python interpreter versions.
