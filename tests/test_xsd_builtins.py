@@ -176,6 +176,88 @@ def test_recognize_custom_mapped_builtins(monkeypatch):
     assert schema.builtin((name, builtin_namespaces[0]))
 
 
+def test_resolving_builtin_types(monkeypatch):
+    _monkeypatch_builtin_XSD_type_registry(monkeypatch)
+    class MockXInteger(XInteger):
+        pass
+    Factory.maptag("osama", MockXInteger)
+
+    wsdl = tests.wsdl_input('<xsd:element name="wu" type="xsd:osama"/>', "wu")
+    client = tests.client_from_wsdl(wsdl, nosend=True)
+
+    # Check suds client's information on the 'wu' input parameter.
+    element, schema_object = client.sd[0].params[0]
+    assert element.name == "wu"
+    assert element.type == ("osama", "http://www.w3.org/2001/XMLSchema")
+    assert schema_object.__class__ is MockXInteger
+    assert schema_object.name == "osama"
+    assert schema_object.schema is client.wsdl.schema
+
+
+def test_translation(monkeypatch):
+    """Python <--> XML representation translation on marshall/unmarshall."""
+    anObject = object()
+    class MockType(XBuiltin):
+        def __init__(self, *args, **kwargs):
+            self._mock_translate_log = []
+            super(MockType, self).__init__(*args, **kwargs)
+        def translate(self, value, topython=True):
+            self._mock_translate_log.append((value, topython))
+            if topython:
+                return anObject
+            return "'ollywood"
+    _monkeypatch_builtin_XSD_type_registry(monkeypatch)
+    Factory.maptag("woof", MockType)
+
+    wsdl = tests.wsdl("""\
+      <xsd:element name="wi" type="xsd:woof"/>
+      <xsd:element name="wo" type="xsd:woof"/>""", input="wi", output="wo")
+    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+
+    # Check suds library's XSD schema input parameter information.
+    schema = client.wsdl.schema
+    element_in = schema.elements["wi", "my-namespace"]
+    assert element_in.name == "wi"
+    element_out = schema.elements["wo", "my-namespace"]
+    assert element_out.name == "wo"
+    schema_object_in = element_in.resolve()
+    schema_object_out = element_out.resolve()
+    assert element_in is client.sd[0].params[0][0]
+    assert schema_object_in is client.sd[0].params[0][1]
+    assert schema_object_in.__class__ is MockType
+    assert schema_object_in._mock_translate_log == []
+    assert schema_object_out.__class__ is MockType
+    assert schema_object_out._mock_translate_log == []
+
+    # Construct operation invocation request.
+    request = client.service.f(55)
+    assert schema_object_in._mock_translate_log == [(55, False)]
+    assert schema_object_out._mock_translate_log == []
+    assert tests.compare_xml_to_string(request.original_envelope, """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace"
+    xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:wi>&apos;ollywood</ns0:wi>
+   </ns1:Body>
+</SOAP-ENV:Envelope>""")
+
+    # Process operation response.
+    response = client.service.f(__inject=dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <wo xmlns="my-namespace">fri-fru</wo>
+  </env:Body>
+</env:Envelope>""")))
+    assert response is anObject
+    assert schema_object_in._mock_translate_log == [(55, False)]
+    assert schema_object_out._mock_translate_log == [("fri-fru", True)]
+
+
 def _create_dummy_schema():
     """Constructs a new dummy XSD schema instance."""
     #TODO: Find out how to construct this XSD schema object directly without
