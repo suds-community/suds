@@ -56,8 +56,8 @@ calculating them from a much shorter definition:
  * test_example("Madagascar", 10)
  * test_example("Madagascar", 20)
  * test_example("Madagascar", 30)
- * test_example("Rumpelstilskin", 20)
- * test_example("Rumpelstilskin", 40)
+ * test_example("Rumpelstiltskin", 20)
+ * test_example("Rumpelstiltskin", 40)
 
 def custom_parametrization(param_names, param_value_defs):
     param_values = []
@@ -69,7 +69,7 @@ def custom_parametrization(param_names, param_value_defs):
 @pytest.indirect_parametrize(custom_parametrization, ("uno", "due"), (
     ("Fritula", (1, 2, 3, 4, 5, 6, 7, 8, 9)),
     ("Madagascar", (10, 30, 50)),
-    ("Rumpelstilskin", (20, 40))))
+    ("Rumpelstiltskin", (20, 40))))
 def test_example(uno, due):
     assert False
 
