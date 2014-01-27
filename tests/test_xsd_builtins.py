@@ -1,0 +1,141 @@
+# -*- coding: utf-8 -*-
+
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
+
+"""
+Suds library's built-in XSD type handling unit tests.
+
+Implemented using the 'pytest' testing framework.
+
+Detailed date/time related unit tests extracted into a separate test module.
+
+"""
+
+if __name__ == "__main__":
+    import __init__
+    __init__.runUsingPyTest(globals())
+
+
+import suds.client
+import suds.xsd.sxbuiltin
+import tests
+
+import pytest
+
+
+# Built-in XSD data types as defined in 'XML Schema Part 2: Datatypes Second
+# Edition' (http://www.w3.org/TR/2004/REC-xmlschema-2-20041028).
+builtins = [
+    "anySimpleType",
+    "anyType",
+    "anyURI",
+    "base64Binary",
+    "boolean",
+    "byte",
+    "date",
+    "dateTime",
+    "decimal",
+    "double",
+    "duration",
+    "ENTITIES",
+    "ENTITY",
+    "float",
+    "gDay",
+    "gMonth",
+    "gMonthDay",
+    "gYear",
+    "gYearMonth",
+    "hexBinary",
+    "ID",
+    "IDREF",
+    "IDREFS",
+    "int",
+    "integer",
+    "language",
+    "long",
+    "Name",
+    "NCName",
+    "negativeInteger",
+    "NMTOKEN",
+    "NMTOKENS",
+    "nonNegativeInteger",
+    "nonPositiveInteger",
+    "normalizedString",
+    "NOTATION",
+    "positiveInteger",
+    "QName",
+    "short",
+    "string",
+    "time",
+    "token",
+    "unsignedByte",
+    "unsignedInt",
+    "unsignedLong",
+    "unsignedShort",
+    ]
+
+# XML namespaces where all the built-in type names live, as defined in 'XML
+# Schema Part 2: Datatypes Second Edition'
+# (http://www.w3.org/TR/2004/REC-xmlschema-2-20041028).
+builtin_namespaces = [
+    "http://www.w3.org/2001/XMLSchema",
+    "http://www.w3.org/2001/XMLSchema-datatypes"]
+
+
+@pytest.mark.parametrize("name", builtins)
+def test_do_not_recognize_builtin_types_in_unknown_namespace(name):
+    schema = _create_dummy_schema()
+    assert not schema.builtin((name, ""))
+    assert not schema.builtin((name, " "))
+    assert not schema.builtin((name, "some-dummy-namespace"))
+
+
+@pytest.mark.parametrize(("name", "namespace"), (
+    ("", builtin_namespaces[0]),
+    ("", builtin_namespaces[1]),
+    ("", ""),
+    ("", " "),
+    ("", "some-dummy-namespace"),
+    ("x", builtin_namespaces[0]),
+    ("x", builtin_namespaces[1]),
+    ("x", ""),
+    ("x", " "),
+    ("xyz", "some-dummy-namespace"),
+    ("xyz", builtin_namespaces[0]),
+    ("xyz", builtin_namespaces[1]),
+    ("xyz", ""),
+    ("xyz", " "),
+    ("xyz", "some-dummy-namespace")))
+def test_do_not_recognize_unknown_types_as_builtins(name, namespace):
+    schema = _create_dummy_schema()
+    assert not schema.builtin((name, namespace))
+
+
+@pytest.mark.parametrize("name", builtins)
+def test_recognize_builtin_types(name):
+    schema = _create_dummy_schema()
+    for namespace in builtin_namespaces:
+        assert schema.builtin((name, namespace))
+
+
+def _create_dummy_schema():
+    """Constructs a new dummy XSD schema instance."""
+    #TODO: Find out how to construct this XSD schema object directly without
+    # first having to construct a suds.client.Client from a complete WSDL
+    # schema.
+    wsdl = tests.wsdl_input('<xsd:element name="dummy"/>', "dummy")
+    client = tests.client_from_wsdl(wsdl)
+    return client.wsdl.schema
