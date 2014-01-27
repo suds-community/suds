@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
 
 import suds.client
-import suds.xsd.sxbuiltin
+from suds.xsd.sxbuiltin import Factory, XBuiltin, XInteger, XFloat, XString
 import tests
 
 import pytest
@@ -101,13 +101,13 @@ builtin_namespaces = [
 
 
 @pytest.mark.parametrize(("xsd_type_name", "xsd_type"), (
-    ("integer", suds.xsd.sxbuiltin.XInteger),
-    ("string", suds.xsd.sxbuiltin.XString),
-    ("float", suds.xsd.sxbuiltin.XFloat),
-    ("...unknown...", suds.xsd.sxbuiltin.XBuiltin)))
+    ("integer", XInteger),
+    ("string", XString),
+    ("float", XFloat),
+    ("...unknown...", XBuiltin)))
 def test_create_builtin_type_schema_objects(xsd_type_name, xsd_type):
     schema = _create_dummy_schema()
-    xsd_object = suds.xsd.sxbuiltin.Factory.create(schema, xsd_type_name)
+    xsd_object = Factory.create(schema, xsd_type_name)
     assert xsd_object.__class__ is xsd_type
     assert xsd_object.name == xsd_type_name
     assert xsd_object.schema is schema
@@ -123,8 +123,8 @@ def test_create_custom_mapped_builtin_type_schema_objects(xsd_type_name,
             self.schema = schema
             self.name = name
     schema = _Dummy()
-    suds.xsd.sxbuiltin.Factory.maptag(xsd_type_name, MockType)
-    xsd_object = suds.xsd.sxbuiltin.Factory.create(schema, xsd_type_name)
+    Factory.maptag(xsd_type_name, MockType)
+    xsd_object = Factory.create(schema, xsd_type_name)
     assert xsd_object.__class__ is MockType
     assert xsd_object.name == xsd_type_name
     assert xsd_object.schema is schema
@@ -172,7 +172,7 @@ def test_recognize_custom_mapped_builtins(monkeypatch):
     schema = _create_dummy_schema()
     name = "trla-baba-lan"
     assert not schema.builtin((name, builtin_namespaces[0]))
-    suds.xsd.sxbuiltin.Factory.maptag(name, _Dummy)
+    Factory.maptag(name, _Dummy)
     assert schema.builtin((name, builtin_namespaces[0]))
 
 
@@ -200,6 +200,6 @@ def _monkeypatch_builtin_XSD_type_registry(monkeypatch):
     afterwards.
 
     """
-    tags = suds.xsd.sxbuiltin.Factory.tags
+    tags = Factory.tags
     assert tags.__class__ is dict
-    monkeypatch.setattr(suds.xsd.sxbuiltin.Factory, "tags", dict(tags))
+    monkeypatch.setattr(Factory, "tags", dict(tags))
