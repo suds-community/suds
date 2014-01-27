@@ -92,6 +92,9 @@ version 0.7 (development)
     * Python 3.3.3/x86, on Windows 7/SP1/x64.
     * Python 3.3.3/x64, on Windows 7/SP1/x64.
 
+* Extra input arguments now reported when invoking web service operations taking
+  no input parameters.
+
 version 0.6 (2014-01-24)
 -------------------------
 
@@ -205,6 +208,11 @@ version 0.6 (2014-01-24)
     * May now be passed pytest command-line options.
     * Now return an exit code indicating the test result (0=success,
       !0=failure).
+
+* Known defects.
+
+  * Extra argument errors not reported for web service operations taking no
+    input parameters.
 
 version 0.5 (2013-11-25)
 ------------------------

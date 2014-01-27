@@ -154,6 +154,56 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     pytest.raises(MyException, client.service.f, "x", "y")
 
 
+@pytest.mark.parametrize("binding_style", (
+    "document",
+    #TODO: Suds library's RPC binding implementation should be updated to use
+    # the argument parsing functionality. This will remove code duplication
+    # between different binding implementations and make their features more
+    # balanced.
+    pytest.mark.xfail(reason="Not yet implemented.")("rpc")
+    ))
+def test_binding_for_an_operation_with_no_input_uses_argument_parsing(
+        monkeypatch, binding_style):
+    """
+    Calling web service operations should use the generic argument parsing
+    functionality independent of the operation's specific binding style.
+
+    """
+    class MyException(Exception):
+        pass
+    def raise_exception(*args, **kwargs):
+        raise MyException
+    monkeypatch.setattr(suds.argparser._ArgParser, "__init__", raise_exception)
+
+    wsdl = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+xmlns:ns="my-namespace"
+xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f" />
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+    transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="%s" />
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="unga-bunga-location" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""" % (binding_style,))
+    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    pytest.raises(MyException, client.service.f)
+    pytest.raises(MyException, client.service.f, "x")
+    pytest.raises(MyException, client.service.f, "x", "y")
+
+
 @pytest.mark.parametrize(("param_optional", "args"), (
     # Operations taking no parameters.
     ((), (1,)),

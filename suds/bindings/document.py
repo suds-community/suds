@@ -54,8 +54,6 @@ class Document(Binding):
 
     """
     def bodycontent(self, method, args, kwargs):
-        if not len(method.soap.input.body.parts):
-            return ()
         wrapped = method.soap.input.body.wrapped
         if wrapped:
             pts = self.bodypart_types(method)
