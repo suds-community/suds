@@ -94,6 +94,11 @@ version 0.7 (development)
 
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
+* Test suite improvements.
+
+  * Added more detailed XSD modeling tests.
+  * Added tests demonstrating how additional or replacement built-in XSD types
+    can be registered with suds.
 
 version 0.6 (2014-01-24)
 -------------------------
