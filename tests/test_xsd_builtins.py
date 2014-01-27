@@ -100,6 +100,19 @@ builtin_namespaces = [
     "http://www.w3.org/2001/XMLSchema-datatypes"]
 
 
+@pytest.mark.parametrize(("xsd_type_name", "xsd_type"), (
+    ("integer", suds.xsd.sxbuiltin.XInteger),
+    ("string", suds.xsd.sxbuiltin.XString),
+    ("float", suds.xsd.sxbuiltin.XFloat),
+    ("...unknown...", suds.xsd.sxbuiltin.XBuiltin)))
+def test_create_builtin_type_schema_objects(xsd_type_name, xsd_type):
+    schema = _create_dummy_schema()
+    xsd_object = suds.xsd.sxbuiltin.Factory.create(schema, xsd_type_name)
+    assert xsd_object.__class__ is xsd_type
+    assert xsd_object.name == xsd_type_name
+    assert xsd_object.schema is schema
+
+
 @pytest.mark.parametrize("name", builtins)
 def test_do_not_recognize_builtin_types_in_unknown_namespace(name):
     schema = _create_dummy_schema()
