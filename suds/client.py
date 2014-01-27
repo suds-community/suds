@@ -754,7 +754,7 @@ class SimClient(SoapClient):
         @return: The result of the method invocation.
         @rtype: I{builtin} or I{subclass of} L{Object}
         """
-        simulation = kwargs[self.injkey]
+        simulation = kwargs.pop(self.injkey)
         msg = simulation.get("msg")
         if msg is not None:
             assert msg.__class__ is suds.byte_str_class

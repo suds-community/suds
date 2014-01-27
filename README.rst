@@ -94,6 +94,9 @@ version 0.7 (development)
 
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
+* Using injected requests/replies/error-information with a web service operation
+  taking at least one input parameter no longer causes suds to report an invalid
+  extra argument error.
 * Test suite improvements.
 
   * Added more detailed XSD modeling tests.
@@ -218,6 +221,9 @@ version 0.6 (2014-01-24)
 
   * Extra argument errors not reported for web service operations taking no
     input parameters.
+  * Invalid extra argument error reported when using an injected request/reply/
+    error-information with a web service operation taking at least one input
+    parameter.
 
 version 0.5 (2013-11-25)
 ------------------------
