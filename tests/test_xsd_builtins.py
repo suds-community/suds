@@ -36,6 +36,11 @@ import tests
 import pytest
 
 
+class _Dummy:
+    """Class for testing unknown object class handling."""
+    pass
+
+
 # Built-in XSD data types as defined in 'XML Schema Part 2: Datatypes Second
 # Edition' (http://www.w3.org/TR/2004/REC-xmlschema-2-20041028).
 builtins = [
@@ -131,6 +136,16 @@ def test_recognize_builtin_types(name):
         assert schema.builtin((name, namespace))
 
 
+def test_recognize_custom_mapped_builtins(monkeypatch):
+    """User code can register additional XSD built-ins."""
+    _monkeypatch_builtin_XSD_type_registry(monkeypatch)
+    schema = _create_dummy_schema()
+    name = "trla-baba-lan"
+    assert not schema.builtin((name, builtin_namespaces[0]))
+    suds.xsd.sxbuiltin.Factory.maptag(name, _Dummy)
+    assert schema.builtin((name, builtin_namespaces[0]))
+
+
 def _create_dummy_schema():
     """Constructs a new dummy XSD schema instance."""
     #TODO: Find out how to construct this XSD schema object directly without
@@ -139,3 +154,22 @@ def _create_dummy_schema():
     wsdl = tests.wsdl_input('<xsd:element name="dummy"/>', "dummy")
     client = tests.client_from_wsdl(wsdl)
     return client.wsdl.schema
+
+
+def _monkeypatch_builtin_XSD_type_registry(monkeypatch):
+    """
+    Monkeypatches the global suds built-in XSD type dictionary.
+
+    After calling this function, a test is free to mess around with suds
+    library's built-in XSD type register (register new ones, change classes
+    registered for a particular XSD type, remove registrations, and such) and
+    any such changes will be automatically undone at the end of the test.
+
+    If a test does not call this function, any such modifications will be left
+    valid in the current global application state and may affect tests run
+    afterwards.
+
+    """
+    tags = suds.xsd.sxbuiltin.Factory.tags
+    assert tags.__class__ is dict
+    monkeypatch.setattr(suds.xsd.sxbuiltin.Factory, "tags", dict(tags))
