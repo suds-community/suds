@@ -154,22 +154,25 @@ def runUsingPyTest(callerGlobals):
     sys.exit(exitCode)
 
 
-def wsdl_input(schema_content, *args, **kwargs):
+def wsdl(schema_content, input=None, output=None, operation_name="f"):
     """
-      Returns a WSDL schema used in different suds library tests, defining a
-    single operation taking an externally specified input structure and
-    returning no output.
+    Returns a WSDL schema used in different suds library tests.
 
-      The operation is named 'f' by default, but a custom name may be defined
-    for it by using a 'operation_name' keyword argument.
+    Defines a single operation taking an externally specified input structure
+    and returning an externally defined output structure.
 
-      Initial input argument is the schema part of the WSDL, any remaining
-    positional arguments are interpreted as names of included top level input
-    parameter elements.
+    input/output parameters accept the following values:
+      * None - operation has no input/output message.
+      * list/tuple - operation has an input/output message consisting of
+        message parts referencing top-level XSD schema elements with the given
+        names.
+      * Otherwise operation has an input/output message consisting of a single
+        message part referencing a top-level XSD schema element with the given
+        name.
 
     """
-    operation_name = kwargs.pop("operation_name", "f")
-    assert not kwargs
+    has_input = input is not None
+    has_output = output is not None
 
     wsdl = ["""\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -184,84 +187,59 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 %s
     </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fRequestMessage">""" % (schema_content,)]
+  </wsdl:types>""" % (schema_content,)]
 
-    assert len(args) >= 1
-    for arg in args:
+    if has_input:
+        if input.__class__ not in (list, tuple):
+            input = [input]
         wsdl.append("""\
-    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
+  <wsdl:message name="fRequestMessage">""")
+        for element in input:
+            wsdl.append("""\
+    <wsdl:part name="parameters" element="ns:%s" />""" % (element,))
+        wsdl.append("""\
+  </wsdl:message>""")
+
+    if has_output:
+        if output.__class__ not in (list, tuple):
+            output = [output]
+        wsdl.append("""\
+  <wsdl:message name="fResponseMessage">""")
+        for element in output:
+            wsdl.append("""\
+    <wsdl:part name="parameters" element="ns:%s" />""" % (element,))
+        wsdl.append("""\
+  </wsdl:message>""")
 
     wsdl.append("""\
-  </wsdl:message>
   <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="%(name)s">
-      <wsdl:input message="ns:fRequestMessage" />
+    <wsdl:operation name="%s">""" % (operation_name,))
+
+    if has_input:
+        wsdl.append("""\
+      <wsdl:input message="ns:fRequestMessage" />""")
+    if has_output:
+        wsdl.append("""\
+      <wsdl:output message="ns:fResponseMessage" />""")
+
+    wsdl.append("""\
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
     transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="%(name)s">
-      <soap:operation soapAction="my-soap-action" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="unga-bunga-location" />
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>
-""" % {"name":operation_name})
+    <wsdl:operation name="%s">
+      <soap:operation soapAction="my-soap-action" style="document" />""" %
+        (operation_name,))
 
-    return suds.byte_str("\n".join(wsdl))
-
-
-def wsdl_output(schema_content, *args):
-    """
-      Returns a WSDL schema used in different suds library tests, defining a
-    single operation named f, taking no input and returning an externally
-    specified output structure.
-
-      The first input parameter is the schema part of the WSDL, the rest of the
-    parameters identify top level output parameter elements.
-
-    """
-    wsdl = ["""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%s
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fResponseMessage">""" % schema_content]
-
-    assert len(args) >= 1
-    for arg in args:
+    if has_input:
         wsdl.append("""\
-    <wsdl:part name="parameters" element="ns:%s" />""" % arg)
+      <wsdl:input><soap:body use="literal" /></wsdl:input>""")
+    if has_output:
+        wsdl.append("""\
+      <wsdl:output><soap:body use="literal" /></wsdl:output>""")
 
     wsdl.append("""\
-  </wsdl:message>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f">
-      <wsdl:output message="ns:fResponseMessage" />
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
-    <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
@@ -273,3 +251,44 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 """)
 
     return suds.byte_str("\n".join(wsdl))
+
+
+def wsdl_input(schema_content, *args, **kwargs):
+    """
+    Returns an input-only WSDL schema used in different suds library tests.
+
+    Defines a single operation taking an externally specified input structure
+    and returning no output. The operation is named 'f' by default, but a
+    custom name may be defined for it using the 'operation_name' keyword
+    argument.
+
+    Initial input argument is the schema part of the WSDL, any remaining
+    positional arguments are interpreted as names of included top level input
+    parameter elements.
+
+    """
+    assert len(args) >= 1
+    if kwargs:
+        assert len(kwargs) == 1
+        assert "operation_name" in kwargs
+    return wsdl(schema_content, input=args, **kwargs)
+
+
+def wsdl_output(schema_content, *args, **kwargs):
+    """
+    Returns an output-only WSDL schema used in different suds library tests.
+
+    Defines a single operation, taking no input and returning an externally
+    specified output structure. The operation is named 'f' by default, but a
+    custom name may be defined for it using the 'operation_name' keyword
+    argument.
+
+    The first input parameter is the schema part of the WSDL, the rest of the
+    parameters identify top level output parameter elements.
+
+    """
+    assert len(args) >= 1
+    if kwargs:
+        assert len(kwargs) == 1
+        assert "operation_name" in kwargs
+    return wsdl(schema_content, output=args, **kwargs)
