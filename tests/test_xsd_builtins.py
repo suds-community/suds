@@ -113,6 +113,23 @@ def test_create_builtin_type_schema_objects(xsd_type_name, xsd_type):
     assert xsd_object.schema is schema
 
 
+@pytest.mark.parametrize("xsd_type_name", ("tonkica-polonkica", "integer"))
+def test_create_custom_mapped_builtin_type_schema_objects(xsd_type_name,
+        monkeypatch):
+    """User code can add or update built-in XSD type registrations."""
+    _monkeypatch_builtin_XSD_type_registry(monkeypatch)
+    class MockType:
+        def __init__(self, schema, name):
+            self.schema = schema
+            self.name = name
+    schema = _Dummy()
+    suds.xsd.sxbuiltin.Factory.maptag(xsd_type_name, MockType)
+    xsd_object = suds.xsd.sxbuiltin.Factory.create(schema, xsd_type_name)
+    assert xsd_object.__class__ is MockType
+    assert xsd_object.name == xsd_type_name
+    assert xsd_object.schema is schema
+
+
 @pytest.mark.parametrize("name", builtins)
 def test_do_not_recognize_builtin_types_in_unknown_namespace(name):
     schema = _create_dummy_schema()
