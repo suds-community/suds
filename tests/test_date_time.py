@@ -27,7 +27,6 @@ if __name__ == "__main__":
 
 from suds.sax.date import (FixedOffsetTimezone, Date, DateTime, Time,
     UtcTimezone)
-import suds.xsd.sxbuiltin
 import tests
 
 import pytest
@@ -38,32 +37,6 @@ import datetime
 class _Dummy:
     """Class for testing unknown object class handling."""
     pass
-
-
-# The following Mock classes are used to test XDate, XDateTime & XTime
-# translate() functionality.
-#
-# We do not want to call their translate() methods as unbound methods (e.g.
-# XDate.translate(...)) as that would fail if those methods are not defined
-# exactly in those classes but in one of their parent classes.
-#
-# We also can not construct regular XDate/XDateTime/XTime instances because to
-# construct those we need to connect them to an actual XSD schema element. That
-# would unnecessarily complicate our test code and the tested translate()
-# methods do not actually have anything to do with those XSD schema elements.
-
-class MockXDate(suds.xsd.sxbuiltin.XDate):
-    """Mock XDate not connected to an XSD schema."""
-    def __init__(self):
-        pass
-
-class MockXDateTime(suds.xsd.sxbuiltin.XDateTime):
-    def __init__(self):
-        pass
-
-class MockXTime(suds.xsd.sxbuiltin.XTime):
-    def __init__(self):
-        pass
 
 
 """Invalid date strings reused for both date & datetime testing."""
@@ -389,101 +362,3 @@ class TestTime:
         ("14:05:23.428-23:59", "14:05:23.428000-23:59")))
     def testConvertToString(self, input, output):
         assert str(Time(input)) == output
-
-
-class TestXDate:
-    """
-    Tests for the suds.xsd.sxbuiltin.XDate class.
-
-    Python object <--> string conversion details already tested in TestDate.
-
-    """
-
-    def testTranslateEmptyStringToPythonObject(self):
-        assert MockXDate().translate("") == None
-
-    def testTranslateStringToPythonObject(self):
-        assert MockXDate().translate("1941-12-7") == datetime.date(1941, 12, 7)
-
-    def testTranslatePythonObjectToString(self):
-        date = datetime.date(2013, 7, 24)
-        translated = MockXDate().translate(date, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "2013-07-24"
-
-    def testTranslatePythonObjectToString_datetime(self):
-        dt = datetime.datetime(2013, 7, 24, 11, 59, 4)
-        translated = MockXDate().translate(dt, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "2013-07-24"
-
-    @pytest.mark.parametrize("source", (
-        None,
-        object(),
-        _Dummy(),
-        datetime.time()))
-    def testTranslatePythonObjectToString_failed(self, source):
-        assert MockXDate().translate(source, topython=False) is source
-
-
-class TestXDateTime:
-    """
-    Tests for the suds.xsd.sxbuiltin.XDateTime class.
-
-    Python object <--> string conversion details already tested in
-    TestDateTime.
-
-    """
-
-    def testTranslateEmptyStringToPythonObject(self):
-        assert MockXDateTime().translate("") == None
-
-    def testTranslateStringToPythonObject(self):
-        dt = datetime.datetime(1941, 12, 7, 10, 30, 22, 454000)
-        assert MockXDateTime().translate("1941-12-7T10:30:22.454") == dt
-
-    def testTranslatePythonObjectToString(self):
-        dt = datetime.datetime(2021, 12, 31, 11, 25, tzinfo=UtcTimezone())
-        translated = MockXDateTime().translate(dt, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "2021-12-31T11:25:00+00:00"
-
-    @pytest.mark.parametrize("source", (
-        None,
-        object(),
-        _Dummy(),
-        datetime.time(22, 47, 9, 981),
-        datetime.date(2101, 1, 1)))
-    def testTranslatePythonObjectToString_failed(self, source):
-        assert MockXDateTime().translate(source, topython=False) is source
-
-
-class TestXTime:
-    """
-    Tests for the suds.xsd.sxbuiltin.XTime class.
-
-    Python object <--> string conversion details already tested in
-    TestDateTime.
-
-    """
-
-    def testTranslateEmptyStringToPythonObject(self):
-        assert MockXTime().translate("") == None
-
-    def testTranslateStringToPythonObject(self):
-        assert MockXTime().translate("10:30:22") == datetime.time(10, 30, 22)
-
-    def testTranslatePythonObjectToString(self):
-        time = datetime.time(16, 53, 12, tzinfo=FixedOffsetTimezone(4))
-        translated = MockXTime().translate(time, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "16:53:12+04:00"
-
-    @pytest.mark.parametrize("source", (
-        None,
-        object(),
-        _Dummy(),
-        datetime.date(2101, 1, 1),
-        datetime.datetime(2101, 1, 1, 22, 47, 9, 981)))
-    def testTranslatePythonObjectToString_failed(self, source):
-        assert MockXTime().translate(source, topython=False) is source
