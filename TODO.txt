@@ -807,27 +807,35 @@ PRIORETIZED:
 
 (+) * (Jurko) Code cleanup.
 (+)     * Stylistic cleanup.
+(+) * (Jurko) Process decimal type support patch sent in by pendletongp on
+(+)   BitBucket.
+(+)     * Research.
+(+)         * Where a Python type to SOAP representation transformation is
+(+)           performed.
+(+)             * Expected locations.
+(+)                 * When constructing a web service operation invocation
+(+)                   request, i.e. when marshalling Python data to a SOAP
+(+)                   request XMLS (mx package).
+(+)         * Where a SOAP representation to Python type transformation is
+(+)           performed.
+(+)             * Expected locations.
+(+)                 * When processing a web service operation reply, i.e. when
+(+)                   unmarshalling Python data from a SOAP reponse XML (umx
+(+)                   package).
+
+(28.01.2014.)
+
+(+) * (Jurko) Process decimal type support patch sent in by pendletongp on
+(+)   BitBucket.
+(+)     * Prepare tests.
+(+)         * Representation tests for different data types.
+(+)         * Transformation tests for different data types.
+(+)     * Thorough code review.
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
-        * Research.
-            * Where a Python type to SOAP representation transformation is
-              performed.
-                * Expected locations.
-                    * When constructing a web service operation invocation
-                      request, i.e. when marshalling Python data to a SOAP
-                      request XMLS (mx package).
-            * Where a SOAP representation to Python type transformation is
-              performed.
-                * Expected locations.
-                    * When processing a web service operation reply, i.e. when
-                      unmarshalling Python data from a SOAP reponse XML (umx
-                      package).
-        * Prepare tests.
-            * Representation tests for different data types.
-            * Transformation tests for different data types.
-        * Merge.
-        * Thorough code review.
+        * Add XFloat tests.
+        * Apply equivalent changes together with adding related unit tests.
         * Update release notes.
 
     * (Jurko) Clean up input argument/parameter & wrapped/unwrapped terminology
@@ -835,7 +843,7 @@ PRIORETIZED:
         * Synchronize all usage both in code and in relevant 'notes/' documents.
 
     * (Jurko) Triage received issues & pull requests at BitBucket a bit and
-      prioretize them in relation to already existing todo items on this list.
+      prioritize them in relation to already existing todo items on this list.
 
     * (Jurko) Process Jurko's remaining research & todo notes collected while
       working on reporting extra parameter errors. Some are redundant or have
@@ -976,7 +984,18 @@ PRIORETIZED:
               parameters) should not be binding class specific, i.e. it should
               be shared for both document & rpc bindings.
 
-    * Code cleanup.
+    * Code cleanup
+        * It seems suds ignores top-level element names & namespaces when
+          parsing server responses and instead just uses them by their index.
+          This seems wrong. Check the WSDL specification, SOAP message binding
+          and other related standards to see if the server must always return
+          its values in the correct order in which the corresponding output
+          message parts are defined in the WSDL. Plan updating suds to report
+          invalid server responses.
+        * Replace except: blocks with blocks catching specific exception types.
+        * suds.xsd.schema module imports suds.xsd.sxbuiltin.Factory as
+          BuiltinFactory but never used that reference. See if this interface is
+          perhaps documented as published and if not - remove it.
         * Performance tuning - SchemaObject.str() should not use len(self) to
           check whether it is empty.
         * SchemaObject.str() - see whether any contained item information is
@@ -1011,6 +1030,22 @@ PRIORETIZED:
 
 NON PRIORETIZED:
 =================================================
+
+    * Resolving XSD schema elements currently returns an XSD schema type object
+      representing the element's type. Different elements with matching types
+      should possibly resolve to the same XSD schema type object but currently
+      do not. See if this behaviour should be corrected.
+        * Example.
+            * XSD schema:
+                <xsd:element name="wi" type="xsd:string"/>
+                <xsd:element name="wo" type="xsd:string"/>
+            * Test code:
+                schema = client.wsdl.schema
+                element_in = schema.elements["wi", "my-namespace"]
+                element_out = schema.elements["wo", "my-namespace"]
+                assert element_in.resolve() is element_out.resolve()
+            * Both elements should possibly resolve to the same XString
+              instance, but currently they resolve to two separate ones.
 
     * Optionally make suds check that the input parameters passed to its web
       service proxy operations actually match their respective WSDL definitions.
