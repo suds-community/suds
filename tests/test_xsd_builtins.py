@@ -494,10 +494,11 @@ def test_recognize_custom_mapped_builtins(monkeypatch):
     _monkeypatch_builtin_XSD_type_registry(monkeypatch)
     schema = _create_dummy_schema()
     name = "trla-baba-lan"
-    namespace = builtin_namespaces[0]
-    assert not schema.builtin((name, namespace))
+    for ns in builtin_namespaces:
+        assert not schema.builtin((name, ns))
     Factory.maptag(name, _Dummy)
-    assert schema.builtin((name, namespace))
+    for ns in builtin_namespaces:
+        assert schema.builtin((name, ns))
 
 
 def test_resolving_builtin_types(monkeypatch):
