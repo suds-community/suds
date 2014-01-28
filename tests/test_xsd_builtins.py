@@ -20,8 +20,6 @@ Suds library's built-in XSD type handling unit tests.
 
 Implemented using the 'pytest' testing framework.
 
-Detailed date/time related unit tests extracted into a separate test module.
-
 """
 
 if __name__ == "__main__":
@@ -30,10 +28,15 @@ if __name__ == "__main__":
 
 
 import suds.client
-from suds.xsd.sxbuiltin import Factory, XBuiltin, XInteger, XFloat, XString
+from suds.xsd.sxbuiltin import (Factory, XAny, XBoolean, XBuiltin, XDate,
+    XDateTime, XFloat, XInteger, XLong, XString, XTime)
 import tests
 
 import pytest
+
+import datetime
+import re
+import sys
 
 
 class _Dummy:
@@ -41,56 +44,96 @@ class _Dummy:
     pass
 
 
+# Define mock MockXType classes (e.g. MockXDate, MockXInteger & MockXString)
+# used to test translate() methods in different XSD data type model classes
+# such as XDate, XInteger & XString.
+def _def_mock_xsd_class(x_class_name):
+    """
+    Define a mock XType class and reference it globally as MockXType.
+
+    XType classes (e.g. XDate, XInteger & XString), represent built-in XSD
+    types. Their mock counterparts created here (e.g. MockXDate, MockXInteger &
+    MockXString) may be used to test their translate() methods without having
+    to connect them to an actual XSD schema.
+
+    This is achieved by having their constructor call take no parameters and
+    not call the parent class __init__() method.
+
+    Rationale why these mock classes are used instead of actual XType classes:
+      * XType instances need to be connected to an actual XSD schema element
+        which would unnecessarily complicate our test code.
+      * XType translate() implementations are not affected by whether the
+        instance they have been called on has been connected to an actual XSD
+        schema element.
+      * XType translate() functions can not be called as unbound methods, e.g.
+        XDate.translate(...). Such an implementation would fail if those
+        methods are not defined exactly in the specified XType class but in one
+        of its parent classes.
+
+    """
+    x_class = getattr(suds.xsd.sxbuiltin, x_class_name)
+    assert issubclass(x_class, XBuiltin)
+    mock_class_name = "Mock" + x_class_name
+    mock_class = type(mock_class_name, (x_class,), {
+        "__doc__": "Mock %s not connected to an XSD schema." % (x_class_name,),
+        "__init__": lambda self: None})
+    globals()[mock_class_name] = mock_class
+
+for x in ("XAny", "XBoolean", "XDate", "XDateTime", "XFloat", "XInteger",
+        "XLong", "XString", "XTime"):
+    _def_mock_xsd_class(x)
+
+
 # Built-in XSD data types as defined in 'XML Schema Part 2: Datatypes Second
-# Edition' (http://www.w3.org/TR/2004/REC-xmlschema-2-20041028).
-builtins = [
-    "anySimpleType",
-    "anyType",
-    "anyURI",
-    "base64Binary",
-    "boolean",
-    "byte",
-    "date",
-    "dateTime",
-    "decimal",
-    "double",
-    "duration",
-    "ENTITIES",
-    "ENTITY",
-    "float",
-    "gDay",
-    "gMonth",
-    "gMonthDay",
-    "gYear",
-    "gYearMonth",
-    "hexBinary",
-    "ID",
-    "IDREF",
-    "IDREFS",
-    "int",
-    "integer",
-    "language",
-    "long",
-    "Name",
-    "NCName",
-    "negativeInteger",
-    "NMTOKEN",
-    "NMTOKENS",
-    "nonNegativeInteger",
-    "nonPositiveInteger",
-    "normalizedString",
-    "NOTATION",
-    "positiveInteger",
-    "QName",
-    "short",
-    "string",
-    "time",
-    "token",
-    "unsignedByte",
-    "unsignedInt",
-    "unsignedLong",
-    "unsignedShort",
-    ]
+# Edition' (http://www.w3.org/TR/2004/REC-xmlschema-2-20041028). Each is paired
+# with its respective suds library XSD type modeling class.
+builtins = {
+    "anySimpleType": XString,
+    "anyType": XAny,
+    "anyURI": XString,
+    "base64Binary": XString,
+    "boolean": XBoolean,
+    "byte": XInteger,
+    "date": XDate,
+    "dateTime": XDateTime,
+    "decimal": XFloat,
+    "double": XFloat,
+    "duration": XString,
+    "ENTITIES": XString,
+    "ENTITY": XString,
+    "float": XFloat,
+    "gDay": XString,
+    "gMonth": XString,
+    "gMonthDay": XString,
+    "gYear": XString,
+    "gYearMonth": XString,
+    "hexBinary": XString,
+    "ID": XString,
+    "IDREF": XString,
+    "IDREFS": XString,
+    "int": XInteger,
+    "integer": XInteger,
+    "language": XString,
+    "long": XLong,
+    "Name": XString,
+    "NCName": XString,
+    "negativeInteger": XInteger,
+    "NMTOKEN": XString,
+    "NMTOKENS": XString,
+    "nonNegativeInteger": XInteger,
+    "nonPositiveInteger": XInteger,
+    "normalizedString": XString,
+    "NOTATION": XString,
+    "positiveInteger": XInteger,
+    "QName": XString,
+    "short": XInteger,
+    "string": XString,
+    "time": XTime,
+    "token": XString,
+    "unsignedByte": XInteger,
+    "unsignedInt": XInteger,
+    "unsignedLong": XLong,
+    "unsignedShort": XInteger}
 
 # XML namespaces where all the built-in type names live, as defined in 'XML
 # Schema Part 2: Datatypes Second Edition'
@@ -100,11 +143,303 @@ builtin_namespaces = [
     "http://www.w3.org/2001/XMLSchema-datatypes"]
 
 
-@pytest.mark.parametrize(("xsd_type_name", "xsd_type"), (
-    ("integer", XInteger),
-    ("string", XString),
-    ("float", XFloat),
-    ("...unknown...", XBuiltin)))
+class TestXBoolean:
+    """suds.xsd.sxbuiltin.XBoolean.translate() tests."""
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        (0, "false"),
+        (1, "true"),
+        (False, "false"),
+        (True, "true")))
+    def test_from_python_object(self, source, expected):
+        translated = MockXBoolean().translate(source, topython=False)
+        assert translated.__class__ == str
+        assert translated == expected
+
+    @pytest.mark.parametrize("source", (
+        None,
+        pytest.mark.skipif(sys.version_info >= (3, 0),
+            reason="int == long since Python 3.0")(long(0)),
+        pytest.mark.skipif(sys.version_info >= (3, 0),
+            reason="int == long since Python 3.0")(long(1)),
+        "x",
+        "True",
+        "False",
+        object(),
+        _Dummy(),
+        datetime.date(2101, 1, 1)))
+    def test_from_python_object__invalid(self, source):
+        assert MockXBoolean().translate(source, topython=False) is source
+
+    @pytest.mark.parametrize("source", (-1, 2, 5, 100))
+    def test_from_python_object__invalid_integer(self, source):
+        #TODO: See if this special integer handling is really desired.
+        assert MockXBoolean().translate(source, topython=False) is None
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        ("0", False),
+        ("1", True),
+        ("false", False),
+        ("true", True)))
+    def test_to_python_object(self, source, expected):
+        assert MockXBoolean().translate(source) is expected
+
+    @pytest.mark.parametrize("source",
+        (0, 1, "", "True", "False", "2", "Z", "-1", "00", "x", "poppycock"))
+    def test_to_python_object__invalid(self, source):
+        assert MockXBoolean().translate(source) is None
+
+
+class TestXDate:
+    """
+    suds.xsd.sxbuiltin.XDate.translate() tests.
+
+    Related Python object <--> string conversion details are tested in a
+    separate date/time related test module. These tests are only concerned with
+    basic translate() functionality.
+
+    """
+
+    def test_from_python_object__date(self):
+        date = datetime.date(2013, 7, 24)
+        translated = MockXDate().translate(date, topython=False)
+        assert isinstance(translated, str)
+        assert translated == "2013-07-24"
+
+    def test_from_python_object__datetime(self):
+        dt = datetime.datetime(2013, 7, 24, 11, 59, 4)
+        translated = MockXDate().translate(dt, topython=False)
+        assert isinstance(translated, str)
+        assert translated == "2013-07-24"
+
+    @pytest.mark.parametrize("source", (
+        None,
+        object(),
+        _Dummy(),
+        datetime.time()))
+    def test_from_python_object__invalid(self, source):
+        assert MockXDate().translate(source, topython=False) is source
+
+    def test_to_python_object(self):
+        assert MockXDate().translate("1941-12-7") == datetime.date(1941, 12, 7)
+
+    def test_to_python_object__empty_string(self):
+        assert MockXDate().translate("") == None
+
+
+class TestXDateTime:
+    """
+    suds.xsd.sxbuiltin.XDateTime.translate() tests.
+
+    Related Python object <--> string conversion details are tested in a
+    separate date/time related test module. These tests are only concerned with
+    basic translate() functionality.
+
+    """
+
+    def test_from_python_object(self):
+        dt = datetime.datetime(2021, 12, 31, 11, 25)
+        translated = MockXDateTime().translate(dt, topython=False)
+        assert isinstance(translated, str)
+        assert translated == "2021-12-31T11:25:00"
+
+    @pytest.mark.parametrize("source", (
+        None,
+        object(),
+        _Dummy(),
+        datetime.time(22, 47, 9, 981),
+        datetime.date(2101, 1, 1)))
+    def test_from_python_object__invalid(self, source):
+        assert MockXDateTime().translate(source, topython=False) is source
+
+    def test_to_python_object(self):
+        dt = datetime.datetime(1941, 12, 7, 10, 30, 22, 454000)
+        assert MockXDateTime().translate("1941-12-7T10:30:22.454") == dt
+
+    def test_to_python_object__empty_string(self):
+        assert MockXDateTime().translate("") == None
+
+
+class TestXInteger:
+    """suds.xsd.sxbuiltin.XInteger.translate() tests."""
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        (-50, "-50"),
+        (0, "0"),
+        (1, "1"),
+        (50, "50")))
+    def test_from_python_object(self, source, expected):
+        translated = MockXInteger().translate(source, topython=False)
+        assert translated.__class__ == str
+        assert translated == expected
+
+    @pytest.mark.parametrize("source", (
+        None,
+        pytest.mark.skipif(sys.version_info >= (3, 0),
+            reason="int == long since Python 3.0")(long(0)),
+        pytest.mark.skipif(sys.version_info >= (3, 0),
+            reason="int == long since Python 3.0")(long(1)),
+        "x",
+        object(),
+        _Dummy(),
+        datetime.date(2101, 1, 1)))
+    def test_from_python_object__invalid(self, source):
+        assert MockXInteger().translate(source, topython=False) is source
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        (False, "False"),
+        (True, "True")))
+    def test_from_python_object__invalid_boolean(self, source, expected):
+        """bool is a subclass of int."""
+        translated = MockXInteger().translate(source, topython=False)
+        assert translated.__class__ == str
+        assert translated == expected
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        ("-500", -500),
+        ("0", 0),
+        ("000", 0),
+        ("1", 1),
+        ("01", 1),
+        ("100", 100)))
+    def test_to_python_object(self, source, expected):
+        translated = MockXInteger().translate(source)
+        assert translated.__class__ == expected.__class__
+        assert translated == expected
+
+    @pytest.mark.parametrize("source",
+        ("", 0, 1, True, False, 500, _Dummy(), object()))
+    def test_to_python_object__invalid_class_or_empty_string(self, source):
+        assert MockXInteger().translate(source) is None
+
+    @pytest.mark.parametrize("source", ("0-0", "x", "poppycock"))
+    def test_to_python_object__invalid_string(self, source, monkeypatch):
+        """
+        Suds raises raw Python exceptions when it fails to convert received
+        response element data to its mapped Python integer data type, according
+        to the used WSDL schema.
+
+        """
+        monkeypatch.delitem(locals(), "e", False)
+        e = pytest.raises(ValueError, MockXInteger().translate, source).value
+        # ValueError instance received here has different string
+        # representations depending on the Python version used:
+        #   Python 2.4:
+        #     "invalid literal for int(): Fifteen"
+        #   Python 2.7.x, 3.x:
+        #     "invalid literal for int() with base 10: 'Fifteen'"
+        assert re.match("invalid literal for int\(\)( with base 10)?: ('?)"
+            "%s\\2$" % (source,), str(e))
+
+
+class TestXLong:
+    """suds.xsd.sxbuiltin.XLong.translate() tests."""
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        (-50, "-50"),
+        (0, "0"),
+        (1, "1"),
+        (50, "50"),
+        (long(-50), "-50"),
+        (long(0), "0"),
+        (long(1), "1"),
+        (long(50), "50")))
+    def test_from_python_object(self, source, expected):
+        translated = MockXLong().translate(source, topython=False)
+        assert translated.__class__ == str
+        assert translated == expected
+
+    @pytest.mark.parametrize("source", (
+        None,
+        "x",
+        object(),
+        _Dummy(),
+        datetime.date(2101, 1, 1)))
+    def test_from_python_object__invalid(self, source):
+        assert MockXLong().translate(source, topython=False) is source
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        (False, "False"),
+        (True, "True")))
+    def test_from_python_object__invalid_boolean(self, source, expected):
+        """bool is a subclass of int."""
+        translated = MockXLong().translate(source, topython=False)
+        assert translated.__class__ == str
+        assert translated == expected
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        ("-500", -500),
+        ("0", 0),
+        ("000", 0),
+        ("1", 1),
+        ("01", 1),
+        ("100", 100)))
+    def test_to_python_object(self, source, expected):
+        translated = MockXLong().translate(source)
+        assert translated.__class__ is long
+        assert translated == expected
+
+    @pytest.mark.parametrize("source",
+        ("", 0, 1, True, False, 500, _Dummy(), object()))
+    def test_to_python_object__invalid_class_or_empty_string(self, source):
+        assert MockXLong().translate(source) is None
+
+    @pytest.mark.parametrize("source", ("0-0", "x", "poppycock"))
+    def test_to_python_object__invalid_string(self, source, monkeypatch):
+        """
+        Suds raises raw Python exceptions when it fails to convert received
+        response element data to its mapped Python long data type, according to
+        the used WSDL schema.
+
+        """
+        monkeypatch.delitem(locals(), "e", False)
+        e = pytest.raises(ValueError, MockXLong().translate, source).value
+        # ValueError instance received here has different string
+        # representations depending on the Python version used:
+        #   Python 2.4:
+        #     "invalid literal for long(): Fifteen"
+        #   Python 2.7 - 3.0:
+        #     "invalid literal for long() with base 10: 'Fifteen'"
+        #   Python 3.x:
+        #     "invalid literal for int() with base 10: 'Fifteen'"
+        assert re.match("invalid literal for %s\(\)( with base 10)?: "
+            "('?)%s\\2$" % (long.__name__, source,), str(e))
+
+
+class TestXTime:
+    """
+    suds.xsd.sxbuiltin.XTime.translate() tests.
+
+    Related Python object <--> string conversion details are tested in a
+    separate date/time related test module. These tests are only concerned with
+    basic translate() functionality.
+
+    """
+
+    def test_from_python_object(self):
+        time = datetime.time(16, 53, 12)
+        translated = MockXTime().translate(time, topython=False)
+        assert isinstance(translated, str)
+        assert translated == "16:53:12"
+
+    @pytest.mark.parametrize("source", (
+        None,
+        object(),
+        _Dummy(),
+        datetime.date(2101, 1, 1),
+        datetime.datetime(2101, 1, 1, 22, 47, 9, 981)))
+    def test_from_python_object__invalid(self, source):
+        assert MockXTime().translate(source, topython=False) is source
+
+    def test_to_python_object(self):
+        assert MockXTime().translate("10:30:22") == datetime.time(10, 30, 22)
+
+    def test_to_python_object__empty_string(self):
+        assert MockXTime().translate("") == None
+
+
+@pytest.mark.parametrize(("xsd_type_name", "xsd_type"),
+    builtins.items() + [("...unknown...", XBuiltin)])
 def test_create_builtin_type_schema_objects(xsd_type_name, xsd_type):
     schema = _create_dummy_schema()
     xsd_object = Factory.create(schema, xsd_type_name)
@@ -130,40 +465,28 @@ def test_create_custom_mapped_builtin_type_schema_objects(xsd_type_name,
     assert xsd_object.schema is schema
 
 
-@pytest.mark.parametrize("name", builtins)
-def test_do_not_recognize_builtin_types_in_unknown_namespace(name):
+@pytest.mark.parametrize(("name", "namespace"), ((n, ns)
+    for n in builtins.keys()
+    for ns in builtin_namespaces))
+def test_recognize_builtin_types(name, namespace):
     schema = _create_dummy_schema()
-    assert not schema.builtin((name, ""))
-    assert not schema.builtin((name, " "))
-    assert not schema.builtin((name, "some-dummy-namespace"))
+    assert schema.builtin((name, namespace))
 
 
-@pytest.mark.parametrize(("name", "namespace"), (
-    ("", builtin_namespaces[0]),
-    ("", builtin_namespaces[1]),
-    ("", ""),
-    ("", " "),
-    ("", "some-dummy-namespace"),
-    ("x", builtin_namespaces[0]),
-    ("x", builtin_namespaces[1]),
-    ("x", ""),
-    ("x", " "),
-    ("xyz", "some-dummy-namespace"),
-    ("xyz", builtin_namespaces[0]),
-    ("xyz", builtin_namespaces[1]),
-    ("xyz", ""),
-    ("xyz", " "),
-    ("xyz", "some-dummy-namespace")))
-def test_do_not_recognize_unknown_types_as_builtins(name, namespace):
+@pytest.mark.parametrize(("name", "namespace"), ((n, ns)
+    for n in builtins.keys()
+    for ns in ["", " ", "some-dummy-namespace"]))
+def test_recognize_builtin_types_in_unknown_namespace(name, namespace):
     schema = _create_dummy_schema()
     assert not schema.builtin((name, namespace))
 
 
-@pytest.mark.parametrize("name", builtins)
-def test_recognize_builtin_types(name):
+@pytest.mark.parametrize(("name", "namespace"), ((n, ns)
+    for n in ["", " ", "x", "xyz"]
+    for ns in builtin_namespaces + ["", " ", "some-dummy-namespace"]))
+def test_recognize_non_builtin_types(name, namespace):
     schema = _create_dummy_schema()
-    for namespace in builtin_namespaces:
-        assert schema.builtin((name, namespace))
+    assert not schema.builtin((name, namespace))
 
 
 def test_recognize_custom_mapped_builtins(monkeypatch):
@@ -171,9 +494,10 @@ def test_recognize_custom_mapped_builtins(monkeypatch):
     _monkeypatch_builtin_XSD_type_registry(monkeypatch)
     schema = _create_dummy_schema()
     name = "trla-baba-lan"
-    assert not schema.builtin((name, builtin_namespaces[0]))
+    namespace = builtin_namespaces[0]
+    assert not schema.builtin((name, namespace))
     Factory.maptag(name, _Dummy)
-    assert schema.builtin((name, builtin_namespaces[0]))
+    assert schema.builtin((name, namespace))
 
 
 def test_resolving_builtin_types(monkeypatch):
@@ -183,9 +507,8 @@ def test_resolving_builtin_types(monkeypatch):
     Factory.maptag("osama", MockXInteger)
 
     wsdl = tests.wsdl_input('<xsd:element name="wu" type="xsd:osama"/>', "wu")
-    client = tests.client_from_wsdl(wsdl, nosend=True)
+    client = tests.client_from_wsdl(wsdl)
 
-    # Check suds client's information on the 'wu' input parameter.
     element, schema_object = client.sd[0].params[0]
     assert element.name == "wu"
     assert element.type == ("osama", "http://www.w3.org/2001/XMLSchema")
@@ -196,7 +519,7 @@ def test_resolving_builtin_types(monkeypatch):
 
 def test_translation(monkeypatch):
     """Python <--> XML representation translation on marshall/unmarshall."""
-    anObject = object()
+    anObject = _Dummy()
     class MockType(XBuiltin):
         def __init__(self, *args, **kwargs):
             self._mock_translate_log = []
@@ -229,7 +552,7 @@ def test_translation(monkeypatch):
     assert schema_object_out.__class__ is MockType
     assert schema_object_out._mock_translate_log == []
 
-    # Construct operation invocation request.
+    # Construct operation invocation request - test marshalling.
     request = client.service.f(55)
     assert schema_object_in._mock_translate_log == [(55, False)]
     assert schema_object_out._mock_translate_log == []
@@ -245,7 +568,7 @@ def test_translation(monkeypatch):
    </ns1:Body>
 </SOAP-ENV:Envelope>""")
 
-    # Process operation response.
+    # Process operation response - test unmarshalling.
     response = client.service.f(__inject=dict(reply=suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
