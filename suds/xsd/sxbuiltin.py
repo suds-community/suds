@@ -65,7 +65,7 @@ class XDate(XBuiltin):
                 return Date(value).value
         else:
             if isinstance(value, datetime.date):
-                return str(Date(value))
+                return Date(value)
             return value
 
 
@@ -79,7 +79,7 @@ class XDateTime(XBuiltin):
                 return DateTime(value).value
         else:
             if isinstance(value, datetime.datetime):
-                return str(DateTime(value))
+                return DateTime(value)
             return value
 
 
@@ -92,8 +92,6 @@ class XFloat(XBuiltin):
             if isinstance(value, basestring) and value:
                 return float(value)
         else:
-            if isinstance(value, float):
-                return str(value)
             return value
 
 
@@ -106,8 +104,6 @@ class XInteger(XBuiltin):
             if isinstance(value, basestring) and value:
                 return int(value)
         else:
-            if isinstance(value, int):
-                return str(value)
             return value
 
 
@@ -120,8 +116,6 @@ class XLong(XBuiltin):
             if isinstance(value, basestring) and value:
                 return long(value)
         else:
-            if isinstance(value, (int, long)):
-                return str(value)
             return value
 
 
@@ -140,7 +134,7 @@ class XTime(XBuiltin):
                 return Time(value).value
         else:
             if isinstance(value, datetime.time):
-                return str(Time(value))
+                return Time(value)
             return value
 
 
