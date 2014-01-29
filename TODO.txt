@@ -831,10 +831,48 @@ PRIORETIZED:
 (+)         * Representation tests for different data types.
 (+)         * Transformation tests for different data types.
 (+)     * Thorough code review.
+(+)     * Add XFloat tests.
+
+(29.01.2014.)
+
+(+) * (Jurko) Update XFloat to correctly translate decimal.Decimal &
+(+)   numbers.Real (on Python 2.6+) values to their XSD value representation.
+(+)   Currently, inconsistently with how other types are handled, they get
+(+)   translated to the same decimal/fraction value which then gets changed to a
+(+)   string later on when actually writing it to an XML string. This works out
+(+)   fine for decimals in the end but not for rationals/fractions.
+(+)     * Research.
+(+)         * decimal.Decimal input values already get entered correctly into
+(+)           constructed SOAP XML requests.
+(+)         * It seems not all numbers.Real derived classes can be converted to
+(+)           their XSD value representation the same way.
+(+)             * Some examples.
+(+)                 * float --> str(x)
+(+)                 * fractions.Fraction --> str(float(x))
+(+)                 * decimals.Decimal --> str(x)
+(+)                 * int --> str(x)
+(+)                 * bool --> str(int(x))
+(+)             * Adding support for them would pair down to simply listing all
+(+)               supported types explicitly and adding code for translating
+(+)               each of them separately. We can not possibly do this for 'all
+(+)               data types in the world' so the current implementation seems
+(+)               as good as any.
+(+)         * A user application requiring support for a specific type can
+(+)           always add it itself by implementing a replacement XFloat class
+(+)           and registering it using suds.xsd.xbuiltin.Factory.maptag().
+(+)     * Discard the task.
+(+)     * Add a new development note document describing XType class usage for
+(+)       built-in XSD type value translation between Python objects and their
+(+)       XSD value representations.
+
+    * (Jurko) Clean up different XType.translate() methods. See if there is any
+      difference in them returning a string or any other Python object
+      convertible to a string using str().
+        * If there is no difference, clean up the code to simply return the
+          original value where possible.
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
-        * Add XFloat tests.
         * Apply equivalent changes together with adding related unit tests.
         * Update release notes.
 
@@ -1027,6 +1065,9 @@ PRIORETIZED:
               to how this is done for the pytest package), not having the egg
               folder added to the Python path and leaving the tests folder
               inside the egg folder.
+
+    * (Jurko) Look into issues #7 & #13 on BitBucket - problems loading a WSDL
+      containing a recursively defined XML schema.
 
 NON PRIORETIZED:
 =================================================
