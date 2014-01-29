@@ -312,7 +312,7 @@ class TestXInteger:
     def test_to_python_object__invalid_class_or_empty_string(self, source):
         assert MockXInteger().translate(source) is None
 
-    @pytest.mark.parametrize("source", ("0-0", "x", "poppycock"))
+    @pytest.mark.parametrize("source", (" ", "0-0", "x", "poppycock"))
     def test_to_python_object__invalid_string(self, source, monkeypatch):
         """
         Suds raises raw Python exceptions when it fails to convert received
@@ -328,8 +328,9 @@ class TestXInteger:
         #     "invalid literal for int(): Fifteen"
         #   Python 2.7.x, 3.x:
         #     "invalid literal for int() with base 10: 'Fifteen'"
-        assert re.match("invalid literal for int\(\)( with base 10)?: ('?)"
-            "%s\\2$" % (source,), str(e))
+        #   Python 3.3:
+        #     - value " " will be stripped in the output
+        assert str(e).startswith("invalid literal for int()")
 
 
 class TestXLong:
@@ -384,7 +385,7 @@ class TestXLong:
     def test_to_python_object__invalid_class_or_empty_string(self, source):
         assert MockXLong().translate(source) is None
 
-    @pytest.mark.parametrize("source", ("0-0", "x", "poppycock"))
+    @pytest.mark.parametrize("source", (" ", "0-0", "x", "poppycock"))
     def test_to_python_object__invalid_string(self, source, monkeypatch):
         """
         Suds raises raw Python exceptions when it fails to convert received
