@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
 
 import suds.client
+import suds.sax.date
 from suds.xsd.sxbuiltin import (Factory, XAny, XBoolean, XBuiltin, XDate,
     XDateTime, XFloat, XInteger, XLong, XString, XTime)
 import tests
@@ -157,7 +158,7 @@ class TestXBoolean:
         (True, "true")))
     def test_from_python_object(self, source, expected):
         translated = MockXBoolean().translate(source, topython=False)
-        assert translated.__class__ == str
+        assert translated.__class__ is str
         assert translated == expected
 
     @pytest.mark.parametrize("source", (
@@ -207,14 +208,14 @@ class TestXDate:
     def test_from_python_object__date(self):
         date = datetime.date(2013, 7, 24)
         translated = MockXDate().translate(date, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "2013-07-24"
+        assert translated.__class__ is suds.sax.date.Date
+        assert str(translated) == "2013-07-24"
 
     def test_from_python_object__datetime(self):
         dt = datetime.datetime(2013, 7, 24, 11, 59, 4)
         translated = MockXDate().translate(dt, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "2013-07-24"
+        assert translated.__class__ is suds.sax.date.Date
+        assert str(translated) == "2013-07-24"
 
     @pytest.mark.parametrize("source", (
         None,
@@ -244,8 +245,8 @@ class TestXDateTime:
     def test_from_python_object(self):
         dt = datetime.datetime(2021, 12, 31, 11, 25)
         translated = MockXDateTime().translate(dt, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "2021-12-31T11:25:00"
+        assert translated.__class__ is suds.sax.date.DateTime
+        assert str(translated) == "2021-12-31T11:25:00"
 
     @pytest.mark.parametrize("source", (
         None,
@@ -267,13 +268,6 @@ class TestXDateTime:
 class TestXFloat:
     """suds.xsd.sxbuiltin.XFloat.translate() tests."""
 
-    @pytest.mark.parametrize("source", (-50.2, 0.1 + 0.2, 0.7, 1.0, 50.99999))
-    def test_from_python_object(self, source):
-        assert source.__class__ is float, "bad test data"
-        translated = MockXFloat().translate(source, topython=False)
-        assert translated.__class__ == str
-        assert translated == str(source)
-
     extra_test_data = ()
     if sys.version_info >= (2, 6):
         extra_test_data = (
@@ -289,6 +283,12 @@ class TestXFloat:
         decimal.Decimal(0),
         decimal.Decimal("0.1") + decimal.Decimal("0.2"),
         decimal.Decimal("5.781963"),
+        # float
+        -50.2,
+        0.1 + 0.2,
+        0.7,
+        1.0,
+        50.99999,
         # int
         0,
         1,
@@ -301,7 +301,7 @@ class TestXFloat:
         object(),
         _Dummy(),
         datetime.date(2101, 1, 1)) + extra_test_data)
-    def test_from_python_object__invalid(self, source):
+    def test_from_python_object(self, source):
         assert MockXFloat().translate(source, topython=False) is source
 
     @pytest.mark.parametrize("source", (
@@ -317,7 +317,7 @@ class TestXFloat:
         "100"))
     def test_to_python_object(self, source):
         translated = MockXFloat().translate(source)
-        assert translated.__class__ == float
+        assert translated.__class__ is float
         assert translated == float(source)
 
     @pytest.mark.parametrize("source",
@@ -339,7 +339,7 @@ class TestXFloat:
         # strings results in different exception messages here.
         try:
             float(source)
-            pytest.fail("Invalid input data.")
+            pytest.fail("Bad test data.")
         except ValueError, expected_e:
             assert str(e) == str(expected_e)
 
@@ -347,49 +347,35 @@ class TestXFloat:
 class TestXInteger:
     """suds.xsd.sxbuiltin.XInteger.translate() tests."""
 
-    @pytest.mark.parametrize(("source", "expected"), (
-        (-50, "-50"),
-        (0, "0"),
-        (1, "1"),
-        (50, "50")))
-    def test_from_python_object(self, source, expected):
-        translated = MockXInteger().translate(source, topython=False)
-        assert translated.__class__ == str
-        assert translated == expected
-
     @pytest.mark.parametrize("source", (
         None,
+        # bool
+        False,
+        True,
+        # int
+        -50,
+        0,
+        1,
+        50,
+        # long
         pytest.mark.skipif(sys.version_info >= (3, 0),
             reason="int == long since Python 3.0")(long(0)),
         pytest.mark.skipif(sys.version_info >= (3, 0),
             reason="int == long since Python 3.0")(long(1)),
+        # str
         "x",
+        # other
         object(),
         _Dummy(),
         datetime.date(2101, 1, 1)))
-    def test_from_python_object__invalid(self, source):
+    def test_from_python_object(self, source):
         assert MockXInteger().translate(source, topython=False) is source
 
-    @pytest.mark.parametrize(("source", "expected"), (
-        (False, "False"),
-        (True, "True")))
-    def test_from_python_object__invalid_boolean(self, source, expected):
-        """bool is a subclass of int."""
-        translated = MockXInteger().translate(source, topython=False)
-        assert translated.__class__ == str
-        assert translated == expected
-
-    @pytest.mark.parametrize(("source", "expected"), (
-        ("-500", -500),
-        ("0", 0),
-        ("000", 0),
-        ("1", 1),
-        ("01", 1),
-        ("100", 100)))
-    def test_to_python_object(self, source, expected):
+    @pytest.mark.parametrize("source", ("-500", "0", "000", "1", "01", "100"))
+    def test_to_python_object(self, source):
         translated = MockXInteger().translate(source)
-        assert translated.__class__ == expected.__class__
-        assert translated == expected
+        assert translated.__class__ is int
+        assert translated == int(source)
 
     @pytest.mark.parametrize("source",
         ("", 0, 1, True, False, 500, _Dummy(), object()))
@@ -418,37 +404,29 @@ class TestXInteger:
 class TestXLong:
     """suds.xsd.sxbuiltin.XLong.translate() tests."""
 
-    @pytest.mark.parametrize(("source", "expected"), (
-        (-50, "-50"),
-        (0, "0"),
-        (1, "1"),
-        (50, "50"),
-        (long(-50), "-50"),
-        (long(0), "0"),
-        (long(1), "1"),
-        (long(50), "50")))
-    def test_from_python_object(self, source, expected):
-        translated = MockXLong().translate(source, topython=False)
-        assert translated.__class__ == str
-        assert translated == expected
-
     @pytest.mark.parametrize("source", (
         None,
+        # bool
+        False,
+        True,
+        # int
+        -50,
+        0,
+        1,
+        50,
+        # long
+        long(-50),
+        long(0),
+        long(1),
+        long(50),
+        # str
         "x",
+        # other
         object(),
         _Dummy(),
         datetime.date(2101, 1, 1)))
-    def test_from_python_object__invalid(self, source):
+    def test_from_python_object(self, source):
         assert MockXLong().translate(source, topython=False) is source
-
-    @pytest.mark.parametrize(("source", "expected"), (
-        (False, "False"),
-        (True, "True")))
-    def test_from_python_object__invalid_boolean(self, source, expected):
-        """bool is a subclass of int."""
-        translated = MockXLong().translate(source, topython=False)
-        assert translated.__class__ == str
-        assert translated == expected
 
     @pytest.mark.parametrize(("source", "expected"), (
         ("-500", -500),
@@ -499,8 +477,8 @@ class TestXTime:
     def test_from_python_object(self):
         time = datetime.time(16, 53, 12)
         translated = MockXTime().translate(time, topython=False)
-        assert isinstance(translated, str)
-        assert translated == "16:53:12"
+        assert translated.__class__ is suds.sax.date.Time
+        assert str(translated) == "16:53:12"
 
     @pytest.mark.parametrize("source", (
         None,
