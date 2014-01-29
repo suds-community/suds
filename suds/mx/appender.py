@@ -60,7 +60,7 @@ class ContentAppender:
         @param marshaller: A marshaller.
         @type marshaller: L{suds.mx.core.Core}
         """
-        self.default = PrimativeAppender(marshaller)
+        self.default = PrimitiveAppender(marshaller)
         self.appenders = (
             (Matcher(None), NoneAppender(marshaller)),
             (Matcher(null), NoneAppender(marshaller)),
@@ -168,9 +168,9 @@ class Appender:
         self.marshaller.append(parent, content)
 
 
-class PrimativeAppender(Appender):
+class PrimitiveAppender(Appender):
     """
-    An appender for python I{primative} types.
+    An appender for python I{primitive} types.
     """
 
     def append(self, parent, content):
