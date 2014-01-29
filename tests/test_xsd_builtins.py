@@ -406,15 +406,13 @@ class TestXInteger:
         """
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(ValueError, MockXInteger().translate, source).value
-        # ValueError instance received here has different string
-        # representations depending on the Python version used:
-        #   Python 2.4:
-        #     "invalid literal for int(): Fifteen"
-        #   Python 2.7.x, 3.x:
-        #     "invalid literal for int() with base 10: 'Fifteen'"
-        #   Python 3.3:
-        #     - value " " will be stripped in the output
-        assert str(e).startswith("invalid literal for int()")
+        # Using different Python interpreter versions and different source
+        # strings results in different exception messages here.
+        try:
+            int(source)
+            pytest.fail("Bad test data.")
+        except ValueError, expected_e:
+            assert str(e) == str(expected_e)
 
 
 class TestXLong:
@@ -479,16 +477,13 @@ class TestXLong:
         """
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(ValueError, MockXLong().translate, source).value
-        # ValueError instance received here has different string
-        # representations depending on the Python version used:
-        #   Python 2.4:
-        #     "invalid literal for long(): Fifteen"
-        #   Python 2.7 - 3.0:
-        #     "invalid literal for long() with base 10: 'Fifteen'"
-        #   Python 3.x:
-        #     "invalid literal for int() with base 10: 'Fifteen'"
-        assert re.match("invalid literal for %s\(\)( with base 10)?: "
-            "('?)%s\\2$" % (long.__name__, source,), str(e))
+        # Using different Python interpreter versions and different source
+        # strings results in different exception messages here.
+        try:
+            long(source)
+            pytest.fail("Bad test data.")
+        except ValueError, expected_e:
+            assert str(e) == str(expected_e)
 
 
 class TestXTime:
