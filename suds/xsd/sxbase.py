@@ -363,9 +363,16 @@ class SchemaObject(UnicodeMixin):
 
     def translate(self, value, topython=True):
         """
-        Translate a value (type) to/from a Python type.
+        Translate between an XSD type values and Python objects.
+
+        When converting a Python object to an XSD type value the operation may
+        return any Python object whose string representation matches the
+        desired XSD type value.
 
         @param value: A value to translate.
+        @type value: str if topython is True; any Python object otherwise
+        @param topython: Flag indicating the translation direction.
+        @type topython: bool
         @return: The converted I{language} type.
 
         """
