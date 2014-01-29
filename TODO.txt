@@ -864,12 +864,11 @@ PRIORETIZED:
 (+)     * Add a new development note document describing XType class usage for
 (+)       built-in XSD type value translation between Python objects and their
 (+)       XSD value representations.
-
-    * (Jurko) Clean up different XType.translate() methods. See if there is any
-      difference in them returning a string or any other Python object
-      convertible to a string using str().
-        * If there is no difference, clean up the code to simply return the
-          original value where possible.
+(+) * (Jurko) Clean up different XType.translate() methods. See if there is any
+(+)   difference in them returning a string or any other Python object
+(+)   convertible to a string using str().
+(+)     * If there is no difference, clean up the code to simply return the
+(+)       original value where possible.
 
     * (Jurko) Process decimal type support patch sent in by pendletongp on
       BitBucket.
