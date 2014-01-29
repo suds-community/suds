@@ -223,7 +223,7 @@ class Typed(Core):
         """
         Translate using the XSD type information.
         Python I{dict} is translated to a suds object. Most importantly,
-        primative values are translated from python types to XML types using
+        primitive values are translated from python types to XML types using
         the XSD type.
         @param content: The content to translate.
         @type content: L{Object}
