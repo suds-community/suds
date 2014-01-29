@@ -41,17 +41,17 @@ class XAny(XBuiltin):
 class XBoolean(XBuiltin):
     """Represents an XSD boolean built-in type."""
 
-    translation = ({"1": True, "true": True, "0": False, "false": False},
-        {True: "true", 1: "true", False: "false", 0: "false"})
+    _xml_to_python = {"1": True, "true": True, "0": False, "false": False}
+    _python_to_xml = {True: "true", 1: "true", False: "false", 0: "false"}
 
     @staticmethod
     def translate(value, topython=True):
         if topython:
             if isinstance(value, basestring):
-                return XBoolean.translation[0].get(value)
+                return XBoolean._xml_to_python.get(value)
         else:
             if isinstance(value, (bool, int)):
-                return XBoolean.translation[1].get(value)
+                return XBoolean._python_to_xml.get(value)
             return value
 
 
