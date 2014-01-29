@@ -35,8 +35,12 @@ import tests
 import pytest
 
 import datetime
+import decimal
 import re
 import sys
+
+if sys.version_info >= (2, 6):
+    import fractions
 
 
 class _Dummy:
@@ -258,6 +262,86 @@ class TestXDateTime:
 
     def test_to_python_object__empty_string(self):
         assert MockXDateTime().translate("") == None
+
+
+class TestXFloat:
+    """suds.xsd.sxbuiltin.XFloat.translate() tests."""
+
+    @pytest.mark.parametrize("source", (-50.2, 0.1 + 0.2, 0.7, 1.0, 50.99999))
+    def test_from_python_object(self, source):
+        assert source.__class__ is float, "bad test data"
+        translated = MockXFloat().translate(source, topython=False)
+        assert translated.__class__ == str
+        assert translated == str(source)
+
+    extra_test_data = ()
+    if sys.version_info >= (2, 6):
+        extra_test_data = (
+            # fraction.Fraction
+            fractions.Fraction(10, 4),
+            fractions.Fraction(1, 3))
+    @pytest.mark.parametrize("source", (
+        None,
+        # bool
+        True,
+        False,
+        # decimal.Decimal
+        decimal.Decimal(0),
+        decimal.Decimal("0.1") + decimal.Decimal("0.2"),
+        decimal.Decimal("5.781963"),
+        # int
+        0,
+        1,
+        -55566,
+        # str
+        "0.1",
+        "0.2",
+        "x",
+        # other
+        object(),
+        _Dummy(),
+        datetime.date(2101, 1, 1)) + extra_test_data)
+    def test_from_python_object__invalid(self, source):
+        assert MockXFloat().translate(source, topython=False) is source
+
+    @pytest.mark.parametrize("source", (
+        "-500.0",
+        "0",
+        "0.0",
+        "0.00000000000000000000001",
+        "000",
+        "1.78123875",
+        "-1.78123875",
+        "1",
+        "01",
+        "100"))
+    def test_to_python_object(self, source):
+        translated = MockXFloat().translate(source)
+        assert translated.__class__ == float
+        assert translated == float(source)
+
+    @pytest.mark.parametrize("source",
+        ("", 0, 1, 1.5, True, False, 500, _Dummy(), object()))
+    def test_to_python_object__invalid_class_or_empty_string(self, source):
+        assert MockXFloat().translate(source) is None
+
+    @pytest.mark.parametrize("source", (" ", "0,0", "0-0", "x", "poppycock"))
+    def test_to_python_object__invalid_string(self, source, monkeypatch):
+        """
+        Suds raises raw Python exceptions when it fails to convert received
+        response element data to its mapped Python float data type, according
+        to the used WSDL schema.
+
+        """
+        monkeypatch.delitem(locals(), "e", False)
+        e = pytest.raises(ValueError, MockXFloat().translate, source).value
+        # Using different Python interpreter versions and different source
+        # strings results in different exception messages here.
+        try:
+            float(source)
+            pytest.fail("Invalid input data.")
+        except ValueError, expected_e:
+            assert str(e) == str(expected_e)
 
 
 class TestXInteger:
