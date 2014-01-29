@@ -86,6 +86,8 @@ versions:
 
   * ``bytes`` type.
   * Byte literals, e.g. ``b"quack"``.
+  * ``fractions`` module.
+  * ``numbers`` module.
   * String ``format()`` method.
 
 * Features introduced in Python 2.7.
