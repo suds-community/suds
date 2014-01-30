@@ -869,11 +869,26 @@ PRIORETIZED:
 (+)   convertible to a string using str().
 (+)     * If there is no difference, clean up the code to simply return the
 (+)       original value where possible.
+(+) * (Jurko) Process decimal type support patch sent in by pendletongp on
+(+)   BitBucket.
+(+)     * Research.
 
-    * (Jurko) Process decimal type support patch sent in by pendletongp on
-      BitBucket.
-        * Apply equivalent changes together with adding related unit tests.
-        * Update release notes.
+(30.01.2014.)
+
+(+) * (Jurko) Process decimal type support patch sent in by pendletongp on
+(+)   BitBucket.
+(+)     * Research.
+(+)         * XSD type value representation is incorrect.
+(+)     * Apply equivalent changes together with adding related unit tests.
+(+)     * Comment on the original issue #3 & patch request #19 on BitBucket.
+(+)     * Update release notes.
+(+)     * Later ideas to consider.
+(+)         * 'float' --> 'decimal.Decimal' conversion which has not been
+(+)           implemented in Python before Python 2.7.
+(+)             * YAGNI for now.
+(+)             * Update release notes.
+
+(31.01.2014.)
 
     * (Jurko) Clean up input argument/parameter & wrapped/unwrapped terminology
       usage in code.

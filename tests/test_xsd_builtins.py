@@ -30,7 +30,7 @@ if __name__ == "__main__":
 import suds.client
 import suds.sax.date
 from suds.xsd.sxbuiltin import (Factory, XAny, XBoolean, XBuiltin, XDate,
-    XDateTime, XFloat, XInteger, XLong, XString, XTime)
+    XDateTime, XDecimal, XFloat, XInteger, XLong, XString, XTime)
 import tests
 
 import pytest
@@ -84,8 +84,8 @@ def _def_mock_xsd_class(x_class_name):
         "__init__": lambda self: None})
     globals()[mock_class_name] = mock_class
 
-for x in ("XAny", "XBoolean", "XDate", "XDateTime", "XFloat", "XInteger",
-        "XLong", "XString", "XTime"):
+for x in ("XAny", "XBoolean", "XDate", "XDateTime", "XDecimal", "XFloat",
+        "XInteger", "XLong", "XString", "XTime"):
     _def_mock_xsd_class(x)
 
 
@@ -101,7 +101,7 @@ builtins = {
     "byte": XInteger,
     "date": XDate,
     "dateTime": XDateTime,
-    "decimal": XFloat,
+    "decimal": XDecimal,
     "double": XFloat,
     "duration": XString,
     "ENTITIES": XString,
@@ -263,6 +263,117 @@ class TestXDateTime:
 
     def test_to_python_object__empty_string(self):
         assert MockXDateTime().translate("") == None
+
+
+class TestXDecimal:
+    """suds.xsd.sxbuiltin.XDecimal.translate() tests."""
+
+    @pytest.mark.parametrize(("source", "expected"), (
+        # Zeros.
+        (decimal.Decimal("0"), "0"),
+        (decimal.Decimal("-0"), "-0"),
+        # Positive integral.
+        (decimal.Decimal("1"), "1"),
+        (decimal.Decimal("1000"), "1000"),
+        (decimal.Decimal("1E500"), "1" + "0" * 500),
+        # Negative integral.
+        (decimal.Decimal("-1"), "-1"),
+        (decimal.Decimal("-1000"), "-1000"),
+        (decimal.Decimal("-1E500"), "-1" + "0" * 500),
+        # Simple fractional.
+        (decimal.Decimal("0.1"), "0.1"),
+        (decimal.Decimal("-0.1"), "-0.1"),
+        (decimal.Decimal("0." + "0123456789" * 9), "0." + "0123456789" * 9),
+        (decimal.Decimal("-0." + "0123456789" * 9), "-0." + "0123456789" * 9),
+        # Only 0s as fractional digits.
+        (decimal.Decimal("5.000000000000000000"), "5"),
+        (decimal.Decimal("-5.000000000000000000"), "-5"),
+        # Trailing fractional 0 digits.
+        (decimal.Decimal("5.000000123000000000000"), "5.000000123"),
+        (decimal.Decimal("-5.000000123000000000000"), "-5.000000123"),
+        # Very small fractional part.
+        (decimal.Decimal("9E-100"), "0." + "0" * 99 + "9"),
+        (decimal.Decimal("-9E-100"), "-0." + "0" * 99 + "9")))
+    def test_decimal_to_xsd_value_representation(self, source, expected):
+        assert source.__class__ is decimal.Decimal
+        string = MockXDecimal()._decimal_to_xsd_format(source)
+        assert string.__class__ is str
+        assert string == expected
+
+    @pytest.mark.parametrize("source", (
+        decimal.Decimal(0),
+        decimal.Decimal("0.1") + decimal.Decimal("0.2"),
+        decimal.Decimal("5.781963")))
+    def test_from_python_object(self, source):
+        assert source.__class__ is decimal.Decimal, "bad test data"
+        translated = MockXDecimal().translate(source, topython=False)
+        expected = MockXDecimal()._decimal_to_xsd_format(source)
+        assert translated.__class__ is str
+        assert translated == expected
+
+    extra_test_data = ()
+    if sys.version_info >= (2, 6):
+        extra_test_data = (
+            # fraction.Fraction
+            fractions.Fraction(10, 4),
+            fractions.Fraction(1, 3))
+    @pytest.mark.parametrize("source", (
+        None,
+        # bool
+        True,
+        False,
+        # float
+        -50.2,
+        1.9623e-26,
+        0.1 + 0.2,
+        0.7,
+        1.0,
+        50.99999,
+        # int
+        0,
+        1,
+        -55566,
+        # str
+        "0.1",
+        "0.2",
+        "x",
+        # other
+        object(),
+        _Dummy(),
+        datetime.date(2101, 1, 1)) + extra_test_data)
+    def test_from_python_object__no_translation(self, source):
+        assert MockXDecimal().translate(source, topython=False) is source
+
+    @pytest.mark.parametrize("source", (
+        "-500.0",
+        "0",
+        "0.0",
+        "0.00000000000000000000001",
+        "000",
+        "1.78123875",
+        "-1.78123875",
+        "1",
+        "01",
+        "100"))
+    def test_to_python_object(self, source):
+        translated = MockXDecimal().translate(source)
+        assert translated.__class__ is decimal.Decimal
+        assert translated == decimal.Decimal(source)
+
+    @pytest.mark.parametrize("source",
+        ("", 0, 1, 1.5, True, False, 500, _Dummy(), object()))
+    def test_to_python_object__invalid_class_or_empty_string(self, source):
+        assert MockXDecimal().translate(source) is None
+
+    @pytest.mark.parametrize("src", (" ", "0,0", "0-0", "x", "poppycock"))
+    def test_to_python_object__invalid_string(self, src):
+        """
+        Suds raises raw Python exceptions when it fails to convert received
+        response element data to its mapped Python decimal.Decimal data type,
+        according to the used WSDL schema.
+
+        """
+        pytest.raises(decimal.InvalidOperation, MockXDecimal().translate, src)
 
 
 class TestXFloat:

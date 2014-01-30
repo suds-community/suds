@@ -92,6 +92,28 @@ version 0.7 (development)
     * Python 3.3.3/x86, on Windows 7/SP1/x64.
     * Python 3.3.3/x64, on Windows 7/SP1/x64.
 
+* Improved support for ``decimal`` XSD types.
+
+  * Now modeled internally using Python's ``decimal.Decimal`` type instead of
+    ``float`` - see the new ``suds.xsd.sxbuiltin.XDecimal`` class.
+  * Based on a patch included with `#454
+    <http://fedorahosted.org/suds/ticket/454>`_ for the original ``suds``
+    library implementation.
+  * In order to get a ``decimal`` value formatted correctly in constructed SOAP
+    request XML documents, pass it to ``suds`` as ``decimal.Decimal`` or an
+    ``int``/``long``.
+
+    * In general, passing a value of a Python type other than
+      ``decimal.Decimal`` causes that type's native string representation to be
+      used which might not strictly match the lexical representation rules
+      defined in the XSD specification for the ``decimal`` XSD type. For
+      instance, a ``float`` value may be represented using scientific notation,
+      or a ``fractions.Fraction`` may be represented using its ``numerator`` &
+      ``denominator`` values.
+    * Specific user applications can easily register their own customized
+      ``XDecimal`` implementation using ``suds.xsd.sxbuiltin.Factory.maptag()``
+      if they want to use more specialized ``decimal`` value handling.
+
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
 * Using injected requests/replies/error-information with a web service operation
