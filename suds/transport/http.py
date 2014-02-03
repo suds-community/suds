@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Contains classes for basic HTTP transport implementations.
+Basic HTTP transport implementation classes.
 
 """
 
@@ -27,7 +27,6 @@ import httplib
 import socket
 import sys
 import urllib2
-from urlparse import urlparse
 
 from logging import getLogger
 log = getLogger(__name__)
@@ -151,9 +150,7 @@ class HttpTransport(Transport):
         @rtype: [Handler,...]
 
         """
-        handlers = []
-        handlers.append(urllib2.ProxyHandler(self.proxy))
-        return handlers
+        return [urllib2.ProxyHandler(self.proxy)]
 
     def u2ver(self):
         """
@@ -161,6 +158,7 @@ class HttpTransport(Transport):
 
         @return: The urllib2 version.
         @rtype: float
+
         """
         try:
             part = urllib2.__version__.split('.', 1)
@@ -228,6 +226,7 @@ class HttpAuthenticated(HttpTransport):
     Provides basic HTTP authentication for servers that do not follow the
     specified challenge/response model. Appends the I{Authorization} HTTP
     header with base64 encoded credentials on every HTTP request.
+
     """
 
     def open(self, request):
@@ -240,15 +239,14 @@ class HttpAuthenticated(HttpTransport):
 
     def addcredentials(self, request):
         credentials = self.credentials()
-        if not (None in credentials):
+        if None not in credentials:
             credentials = ':'.join(credentials)
-            if sys.version_info < (3,0):
-                basic = 'Basic %s' % base64.b64encode(credentials)
+            if sys.version_info < (3, 0):
+                encodedString = base64.b64encode(credentials)
             else:
                 encodedBytes = base64.urlsafe_b64encode(credentials.encode())
                 encodedString = encodedBytes.decode()
-                basic = 'Basic %s' % encodedString
-            request.headers['Authorization'] = basic
+            request.headers['Authorization'] = 'Basic %s' % encodedString
 
     def credentials(self):
         return self.options.username, self.options.password
