@@ -116,9 +116,9 @@ def compare_xml_element(lhs, rhs):
     return True
 
 
-def compare_xml_to_string(lhs, rhs):
+def compare_xml_string_to_string(lhs, rhs):
     """
-    Compares two XML documents, second one given as a string.
+    Compares two XML documents, both given as strings or bytes objects.
 
     Not intended to be perfect, but only good enough comparison to be used
     internally inside the project's test suite.
@@ -128,7 +128,30 @@ def compare_xml_to_string(lhs, rhs):
     underlying XML structure when used from different Python versions.
 
     """
-    rhs_document = suds.sax.parser.Parser().parse(string=suds.byte_str(rhs))
+    if isinstance(lhs, unicode):
+        lhs = suds.byte_str(lhs)
+    if isinstance(rhs, unicode):
+        rhs = suds.byte_str(rhs)
+    lhs_document = suds.sax.parser.Parser().parse(string=lhs)
+    rhs_document = suds.sax.parser.Parser().parse(string=rhs)
+    return compare_xml(lhs_document, rhs_document)
+
+
+def compare_xml_to_string(lhs, rhs):
+    """
+    Compares two XML documents, second one given as a string or a bytes object.
+
+    Not intended to be perfect, but only good enough comparison to be used
+    internally inside the project's test suite.
+
+    Does not compare namespace prefixes and considers them irrelevant. This is
+    because suds may generate different namespace prefixes for the same
+    underlying XML structure when used from different Python versions.
+
+    """
+    if isinstance(rhs, unicode):
+        rhs = suds.byte_str(rhs)
+    rhs_document = suds.sax.parser.Parser().parse(string=rhs)
     return compare_xml(lhs, rhs_document)
 
 
