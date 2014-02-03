@@ -942,7 +942,7 @@ def test_wrapped_parameter(monkeypatch):
 
 
 def _compare_request(request, expected_xml):
-    return tests.compare_xml_to_string(request.original_envelope, expected_xml)
+    return tests.compare_xml_string_to_string(request.envelope, expected_xml)
 
 
 def _isInputWrapped(client, method_name):

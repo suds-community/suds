@@ -726,7 +726,7 @@ def test_translation(monkeypatch):
     request = client.service.f(55)
     assert schema_object_in._mock_translate_log == [(55, False)]
     assert schema_object_out._mock_translate_log == []
-    assert tests.compare_xml_to_string(request.original_envelope, """\
+    assert tests.compare_xml_string_to_string(request.envelope, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace"
     xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/"
