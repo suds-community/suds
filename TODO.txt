@@ -384,7 +384,7 @@ PRIORETIZED:
 (+)           which would then get reported as 'document not found'.
 (+)     * SAX parser now accepts only byte string content instead of also
 (+)       accepting unicode strings containing latin1 characters only.
-(+)     * Make tests now specify their fixed wsdl & reply content as byte
+(+)     * Make tests now specify their fixed WSDL & reply content as byte
 (+)       strings only.
 (+)     * Make all tests pass.
 (+)         * Python 2.4.
@@ -890,6 +890,48 @@ PRIORETIZED:
 
 (31.01.2014.)
 
+(+) * (Jurko) Restore last_sent()/last_received() getters for last used SOAP
+(+)   request/response messages.
+(+)     * Research background.
+(+)         * Requested by.
+(+)             * andreebrazeau as BitBucket.
+(+)                 * 'https://bitbucket.org/andreebrazeau'.
+(+)             * FerCesar at BitBucket.
+(+)                 * 'https://bitbucket.org/FerCesar'.
+(+)             * Lucas Sampaio at BitBucket.
+(+)                 * 'https://bitbucket.org/lucassmagal'.
+(+)         * Related links.
+(+)             * 'http://stackoverflow.com/questions/4426204/
+(+)               how-can-i-output-what-suds-is-generating-receiving'.
+(+)             * 'http://jortel.fedorapeople.org/suds/doc/
+(+)               suds.client.Client-class.html'
+(+)         * Code removed in commit 'f0034d6826c179625478bc19ae2a39a0b803fc3a'.
+
+(03.02.2014.)
+
+(+) * (Jurko) Restore last_sent()/last_received() getters for last used SOAP
+(+)   request/response messages.
+(+)     * Clean up related code.
+
+    * (Jurko) Restore last_sent()/last_received() getters for last used SOAP
+      request/response messages.
+        * Research.
+            * Difference between how SoapClient & SimClient stored their last
+              sent/received messages.
+                * Both stored them.
+                * SimClient stored the simulated fault as its last received
+                  message.
+            * Whether sent/received messages should be returned/logged before or
+              after being processed by registered plugins.
+                * SoapClient stored the received reply after it got processed by
+                  registered plugins.
+            * Sending with SoapClient.
+            * Sending with SimClient.
+            * Which plugins get called and when.
+        * Add back the removed code.
+        * Add tests.
+        * Notify people interested in this.
+
     * (Jurko) Clean up input argument/parameter & wrapped/unwrapped terminology
       usage in code.
         * Synchronize all usage both in code and in relevant 'notes/' documents.
@@ -915,13 +957,13 @@ PRIORETIZED:
         * Add test: single parameter pointing to a built-in type - no
           unwrapping.
         * Add test: multiple parameters pointing to types & elements.
-        * Add tests: wsdl tests - XSD schema content.
-        * Add tests: wsdl tests - recognized operations.
-        * Add tests: wsdl tests - recognized services.
+        * Add tests: WSDL tests - XSD schema content.
+        * Add tests: WSDL tests - recognized operations.
+        * Add tests: WSDL tests - recognized services.
         * Add test: document/literal, document/encoded, rpc/literal &
           rpc/encoded should make no difference to input processing in theory
           and should all recognize the same input parameter structure.
-        * Add tests: wsdl tests - recognized binding - input/output - for
+        * Add tests: WSDL tests - recognized binding - input/output - for
           different methods - document binding should be the default - see
           whether literal should be the default binding style.
         * Add test: named sequence/choice/all - there is no such thing - their
@@ -1223,7 +1265,7 @@ NON PRIORETIZED:
         * Implement.
 
     * Prepare additional test cases.
-        * Loading a wsdl from a file as in suds.client.Client(
+        * Loading a WSDL from a file as in suds.client.Client(
           "file://localhost/Folder/aaa.wsdl").
             * Path not containing spaces.
             * Path containing spaces.
