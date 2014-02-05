@@ -118,7 +118,7 @@ class Transport:
 
     def send(self, request):
         """
-        Send soap message. Implementations are expected to handle:
+        Send SOAP message. Implementations are expected to handle:
             - proxies
             - I{HTTP} headers
             - cookies
