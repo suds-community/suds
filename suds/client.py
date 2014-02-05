@@ -575,12 +575,67 @@ class Method:
 
     def clientclass(self, kwargs):
         """Get SOAP client class."""
-        if SimClient.simulation(kwargs):
-            return SimClient
-        return SoapClient
+        if _SimClient.simulation(kwargs):
+            return _SimClient
+        return _SoapClient
 
 
-class SoapClient:
+class RequestContext:
+    """
+    A request context.
+
+    Returned by a suds Client when invoking a web service operation with the
+    ``nosend`` enabled. Allows the caller to take care of sending the request
+    himself and return back the reply data for further processing.
+
+    @ivar client: The suds client.
+    @type client: L{Client}
+    @ivar envelope: The request SOAP envelope.
+    @type envelope: I{bytes}
+    @ivar original_envelope: The original request SOAP envelope before plugin
+                             processing.
+    @type original_envelope: L{Document}
+
+    """
+
+    def __init__(self, client, envelope, original_envelope):
+        """
+        @param client: The suds client.
+        @type client: L{Client}
+        @param envelope: The request SOAP envelope.
+        @type envelope: I{bytes}
+        @param original_envelope: The original request SOAP envelope before
+                                  plugin processing.
+        @type original_envelope: L{Document}
+
+        """
+        self.client = client
+        self.envelope = envelope
+        self.original_envelope = original_envelope
+
+    def process_reply(self, reply, status=None, description=None):
+        """
+        Re-entry for processing a successful reply.
+
+        Depending on how the ``retxml`` option is set, may return the SOAP
+        reply XML or process it and return the Python object representing the
+        returned value.
+
+        @param reply: The reply SOAP envelope.
+        @type reply: I{bytes}
+        @param status: The HTTP status code.
+        @type status: int
+        @param description: Additional status description.
+        @type description: I{bytes}
+        @return: The invoked web service operation return value.
+        @rtype: I{builtin}|I{subclass of} L{Object}|I{bytes}|I{None}
+
+        """
+        return self.client.process_reply(reply=reply, status=status,
+            description=description, original_soapenv=self.original_envelope)
+
+
+class _SoapClient:
     """
     An internal lightweight SOAP based web service operation client.
 
@@ -843,9 +898,9 @@ class SoapClient:
         return Unskin(self.options).get("location", self.method.location)
 
 
-class SimClient(SoapClient):
+class _SimClient(_SoapClient):
     """
-    Loopback SoapClient used for SOAP request/reply simulation.
+    Loopback _SoapClient used for SOAP request/reply simulation.
 
     Used when a web service operation is invoked with injected SOAP request or
     reply data.
@@ -857,7 +912,7 @@ class SimClient(SoapClient):
     @classmethod
     def simulation(cls, kwargs):
         """Get whether injected data has been specified in I{kwargs}."""
-        return kwargs.has_key(SimClient.__injkey)
+        return kwargs.has_key(_SimClient.__injkey)
 
     def invoke(self, args, kwargs):
         """
@@ -900,61 +955,6 @@ class SimClient(SoapClient):
             return self.process_reply(reply=reply, status=status,
                 description=description, original_soapenv=msg)
         raise Exception("reply or msg injection parameter expected")
-
-
-class RequestContext:
-    """
-    A request context.
-
-    Returned by a suds Client when invoking a web service operation with the
-    ``nosend`` enabled. Allows the caller to take care of sending the request
-    himself and return back the reply data for further processing.
-
-    @ivar client: The suds client.
-    @type client: L{Client}
-    @ivar envelope: The request SOAP envelope.
-    @type envelope: I{bytes}
-    @ivar original_envelope: The original request SOAP envelope before plugin
-                             processing.
-    @type original_envelope: L{Document}
-
-    """
-
-    def __init__(self, client, envelope, original_envelope):
-        """
-        @param client: The suds client.
-        @type client: L{Client}
-        @param envelope: The request SOAP envelope.
-        @type envelope: I{bytes}
-        @param original_envelope: The original request SOAP envelope before
-                                  plugin processing.
-        @type original_envelope: L{Document}
-
-        """
-        self.client = client
-        self.envelope = envelope
-        self.original_envelope = original_envelope
-
-    def process_reply(self, reply, status=None, description=None):
-        """
-        Re-entry for processing a successful reply.
-
-        Depending on how the ``retxml`` option is set, may return the SOAP
-        reply XML or process it and return the Python object representing the
-        returned value.
-
-        @param reply: The reply SOAP envelope.
-        @type reply: I{bytes}
-        @param status: The HTTP status code.
-        @type status: int
-        @param description: Additional status description.
-        @type description: I{bytes}
-        @return: The invoked web service operation return value.
-        @rtype: I{builtin}|I{subclass of} L{Object}|I{bytes}|I{None}
-
-        """
-        return self.client.process_reply(reply=reply, status=status,
-            description=description, original_soapenv=self.original_envelope)
 
 
 def _parse(string):
