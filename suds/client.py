@@ -772,15 +772,17 @@ class _SoapClient:
         """
         if status is None:
             status = httplib.OK
+        debug_message = "Reply HTTP status - %d" % (status,)
         if status in (httplib.ACCEPTED, httplib.NO_CONTENT):
+            log.debug(debug_message)
             return
         #TODO: Consider whether and how to allow plugins to handle error,
         # httplib.ACCEPTED & httplib.NO_CONTENT replies as well as successful
         # ones.
         if status == httplib.OK:
-            log.debug("HTTP succeeded:\n%s", reply)
+            log.debug("%s\n%s", debug_message, reply)
         else:
-            log.debug("HTTP failed - %d - %s\n%s", status, description, reply)
+            log.debug("%s - %s\n%s", debug_message, description, reply)
 
         plugins = PluginContainer(self.options.plugins)
         ctx = plugins.message.received(reply=reply)
