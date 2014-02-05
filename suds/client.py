@@ -681,7 +681,7 @@ class SoapClient:
             I{None}
 
         """
-        location = self.location()
+        location = self.__location()
         log.debug("sending to (%s)\nmessage:\n%s", location, soapenv)
         original_soapenv = soapenv
         plugins = PluginContainer(self.options.plugins)
@@ -696,7 +696,7 @@ class SoapClient:
         if self.options.nosend:
             return RequestContext(self, soapenv, original_soapenv)
         request = suds.transport.Request(location, soapenv)
-        request.headers = self.headers()
+        request.headers = self.__headers()
         try:
             timer = metrics.Timer()
             timer.start()
@@ -768,7 +768,7 @@ class SoapClient:
             if status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
                 replyroot = _parse(reply)
                 plugins.message.parsed(reply=replyroot)
-                fault = self.get_fault(replyroot)
+                fault = self.__get_fault(replyroot)
                 if fault:
                     if status != httplib.INTERNAL_SERVER_ERROR:
                         log.warn("Web service reported a SOAP processing "
@@ -801,7 +801,7 @@ class SoapClient:
                 # its string representation.
                 log.error(original_soapenv)
 
-    def get_fault(self, replyroot):
+    def __get_fault(self, replyroot):
         """
         Extract fault information from a SOAP reply.
 
@@ -820,7 +820,7 @@ class SoapClient:
         fault = soapbody and soapbody.getChild("Fault", envns)
         return fault is not None and UmxBasic().process(fault)
 
-    def headers(self):
+    def __headers(self):
         """
         Get HTTP headers for a HTTP/HTTPS SOAP request.
 
@@ -838,7 +838,7 @@ class SoapClient:
         log.debug("headers = %s", result)
         return result
 
-    def location(self):
+    def __location(self):
         """Returns the SOAP request's target location URL."""
         return Unskin(self.options).get("location", self.method.location)
 
