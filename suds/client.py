@@ -750,9 +750,9 @@ class _SoapClient:
         except suds.transport.TransportError, e:
             content = e.fp and e.fp.read() or ""
             return self.process_reply(content, e.httpcode, tostr(e))
-        return self.process_reply(reply.message)
+        return self.process_reply(reply.message, None, None)
 
-    def process_reply(self, reply, status=None, description=None):
+    def process_reply(self, reply, status, description):
         """
         Process a web service operation SOAP reply.
 
