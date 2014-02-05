@@ -588,30 +588,21 @@ class RequestContext:
     ``nosend`` enabled. Allows the caller to take care of sending the request
     himself and return back the reply data for further processing.
 
-    @ivar client: The suds client.
-    @type client: L{Client}
-    @ivar envelope: The request SOAP envelope.
+    @ivar envelope: The SOAP request envelope.
     @type envelope: I{bytes}
-    @ivar original_envelope: The original request SOAP envelope before plugin
-                             processing.
-    @type original_envelope: L{Document}
 
     """
 
-    def __init__(self, client, envelope, original_envelope):
+    def __init__(self, process_reply, envelope):
         """
-        @param client: The suds client.
-        @type client: L{Client}
-        @param envelope: The request SOAP envelope.
+        @param client: A callback for processing a user defined reply.
+        @type client: I{callable}
+        @param envelope: The SOAP request envelope.
         @type envelope: I{bytes}
-        @param original_envelope: The original request SOAP envelope before
-                                  plugin processing.
-        @type original_envelope: L{Document}
 
         """
-        self.client = client
+        self.__process_reply = process_reply
         self.envelope = envelope
-        self.original_envelope = original_envelope
 
     def process_reply(self, reply, status=None, description=None):
         """
@@ -621,7 +612,7 @@ class RequestContext:
         reply XML or process it and return the Python object representing the
         returned value.
 
-        @param reply: The reply SOAP envelope.
+        @param reply: The SOAP reply envelope.
         @type reply: I{bytes}
         @param status: The HTTP status code.
         @type status: int
@@ -631,8 +622,7 @@ class RequestContext:
         @rtype: I{builtin}|I{subclass of} L{Object}|I{bytes}|I{None}
 
         """
-        return self.client.process_reply(reply=reply, status=status,
-            description=description, original_soapenv=self.original_envelope)
+        return self.__process_reply(reply, status, description)
 
 
 class _SoapClient:
@@ -738,7 +728,6 @@ class _SoapClient:
         """
         location = self.__location()
         log.debug("sending to (%s)\nmessage:\n%s", location, soapenv)
-        original_soapenv = soapenv
         plugins = PluginContainer(self.options.plugins)
         plugins.message.marshalled(envelope=soapenv.root())
         if self.options.prettyxml:
@@ -749,7 +738,7 @@ class _SoapClient:
         ctx = plugins.message.sending(envelope=soapenv)
         soapenv = ctx.envelope
         if self.options.nosend:
-            return RequestContext(self, soapenv, original_soapenv)
+            return RequestContext(self.process_reply, soapenv)
         request = suds.transport.Request(location, soapenv)
         request.headers = self.__headers()
         try:
@@ -760,13 +749,10 @@ class _SoapClient:
             metrics.log.debug("waited %s on server reply", timer)
         except suds.transport.TransportError, e:
             content = e.fp and e.fp.read() or ""
-            return self.process_reply(reply=content, status=e.httpcode,
-                description=tostr(e), original_soapenv=original_soapenv)
-        return self.process_reply(reply=reply.message,
-            original_soapenv=original_soapenv)
+            return self.process_reply(content, e.httpcode, tostr(e))
+        return self.process_reply(reply.message)
 
-    def process_reply(self, reply, status=None, description=None,
-            original_soapenv=None):
+    def process_reply(self, reply, status=None, description=None):
         """
         Process a web service operation SOAP reply.
 
@@ -774,15 +760,12 @@ class _SoapClient:
         reply XML or process it and return the Python object representing the
         returned value.
 
-        @param reply: The reply SOAP envelope.
-        @type reply: str
-        @param status: The HTTP status code.
-        @type status: int
+        @param reply: The SOAP reply envelope.
+        @type reply: I{bytes}
+        @param status: The HTTP status code (None indicates httplib.OK).
+        @type status: int|I{None}
         @param description: Additional status description.
         @type description: str
-        @param original_envelope: The original request SOAP envelope before
-                                  plugin processing.
-        @type original_envelope: L{Document}
         @return: The invoked web service operation return value.
         @rtype: I{builtin}|I{subclass of} L{Object}|I{bytes}|I{None}
 
@@ -794,67 +777,56 @@ class _SoapClient:
         #TODO: Consider whether and how to allow plugins to handle error,
         # httplib.ACCEPTED & httplib.NO_CONTENT replies as well as successful
         # ones.
-        failed = True
-        try:
-            if status == httplib.OK:
-                log.debug("HTTP succeeded:\n%s", reply)
-            else:
-                log.debug("HTTP failed - %d - %s:\n%s", status, description,
-                    reply)
+        if status == httplib.OK:
+            log.debug("HTTP succeeded:\n%s", reply)
+        else:
+            log.debug("HTTP failed - %d - %s\n%s", status, description, reply)
 
-            plugins = PluginContainer(self.options.plugins)
-            ctx = plugins.message.received(reply=reply)
-            reply = ctx.reply
+        plugins = PluginContainer(self.options.plugins)
+        ctx = plugins.message.received(reply=reply)
+        reply = ctx.reply
 
-            # SOAP standard states that SOAP errors must be accompanied by HTTP
-            # status code 500 - internal server error:
-            #
-            # From SOAP 1.1 specification:
-            #   In case of a SOAP error while processing the request, the SOAP
-            # HTTP server MUST issue an HTTP 500 "Internal Server Error"
-            # response and include a SOAP message in the response containing a
-            # SOAP Fault element (see section 4.4) indicating the SOAP
-            # processing error.
-            #
-            # From WS-I Basic profile:
-            #   An INSTANCE MUST use a "500 Internal Server Error" HTTP status
-            # code if the response message is a SOAP Fault.
-            replyroot = None
-            if status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
-                replyroot = _parse(reply)
-                plugins.message.parsed(reply=replyroot)
-                fault = self.__get_fault(replyroot)
-                if fault:
-                    if status != httplib.INTERNAL_SERVER_ERROR:
-                        log.warn("Web service reported a SOAP processing "
-                            "fault using an unexpected HTTP status code %d. "
-                            "Reporting as an internal server error.", status)
-                    if self.options.faults:
-                        raise WebFault(fault, replyroot)
-                    return httplib.INTERNAL_SERVER_ERROR, fault
-            if status != httplib.OK:
+        # SOAP standard states that SOAP errors must be accompanied by HTTP
+        # status code 500 - internal server error:
+        #
+        # From SOAP 1.1 specification:
+        #   In case of a SOAP error while processing the request, the SOAP HTTP
+        # server MUST issue an HTTP 500 "Internal Server Error" response and
+        # include a SOAP message in the response containing a SOAP Fault
+        # element (see section 4.4) indicating the SOAP processing error.
+        #
+        # From WS-I Basic profile:
+        #   An INSTANCE MUST use a "500 Internal Server Error" HTTP status code
+        # if the response message is a SOAP Fault.
+        replyroot = None
+        if status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
+            replyroot = _parse(reply)
+            plugins.message.parsed(reply=replyroot)
+            fault = self.__get_fault(replyroot)
+            if fault:
+                if status != httplib.INTERNAL_SERVER_ERROR:
+                    log.warn("Web service reported a SOAP processing fault "
+                        "using an unexpected HTTP status code %d. Reporting "
+                        "as an internal server error.", status)
                 if self.options.faults:
-                    #TODO: Use a more specific exception class here.
-                    raise Exception((status, description))
-                return status, description
-
-            if self.options.retxml:
-                failed = False
-                return reply
-
-            result = replyroot and self.method.binding.output.get_reply(
-                self.method, replyroot)
-            ctx = plugins.message.unmarshalled(reply=result)
-            result = ctx.reply
-            failed = False
+                    raise WebFault(fault, replyroot)
+                return httplib.INTERNAL_SERVER_ERROR, fault
+        if status != httplib.OK:
             if self.options.faults:
-                return result
-            return httplib.OK, result
-        finally:
-            if failed and original_soapenv:
-                #TODO: See if we really want to log original_soapenv here or
-                # its string representation.
-                log.error(original_soapenv)
+                #TODO: Use a more specific exception class here.
+                raise Exception((status, description))
+            return status, description
+
+        if self.options.retxml:
+            return reply
+
+        result = replyroot and self.method.binding.output.get_reply(
+            self.method, replyroot)
+        ctx = plugins.message.unmarshalled(reply=result)
+        result = ctx.reply
+        if self.options.faults:
+            return result
+        return httplib.OK, result
 
     def __get_fault(self, replyroot):
         """
@@ -952,8 +924,7 @@ class _SimClient(_SoapClient):
             description = simulation.get("description")
             if description is None:
                 description = "injected reply"
-            return self.process_reply(reply=reply, status=status,
-                description=description, original_soapenv=msg)
+            return self.process_reply(reply, status, description)
         raise Exception("reply or msg injection parameter expected")
 
 
