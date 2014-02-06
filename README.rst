@@ -114,6 +114,8 @@ version 0.7 (development)
       ``XDecimal`` implementation using ``suds.xsd.sxbuiltin.Factory.maptag()``
       if they want to use more specialized ``decimal`` value handling.
 
+* Fixed a bug causing DocumentCache & ObjectCache to not remove their cached
+  files when failing to read data from them or process the data read from them.
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
 * Using injected requests/replies/error-information with a web service operation

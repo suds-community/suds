@@ -265,6 +265,7 @@ class DocumentCache(FileCache):
         return "xml"
 
     def get(self, id):
+        fp = None
         try:
             fp = self.getf(id)
             if fp is None:
@@ -272,6 +273,8 @@ class DocumentCache(FileCache):
             p = suds.sax.parser.Parser()
             return p.parse(fp)
         except Exception:
+            if fp is not None:
+                fp.close()
             self.purge(id)
 
     def put(self, id, object):
@@ -294,11 +297,14 @@ class ObjectCache(FileCache):
         return "px"
 
     def get(self, id):
+        fp = None
         try:
             fp = self.getf(id)
             if fp is not None:
                 return pickle.load(fp)
         except Exception:
+            if fp is not None:
+                fp.close()
             self.purge(id)
 
     def put(self, id, object):
