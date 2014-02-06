@@ -115,8 +115,17 @@ class FileCache(Cache):
             location = os.path.join(tempfile.gettempdir(), "suds")
         self.location = location
         self.duration = (None, 0)
-        self.setduration(**duration)
-        self.checkversion()
+        self.__set_duration(**duration)
+        self.__check_version()
+
+    def clear(self):
+        for filename in os.listdir(self.location):
+            path = os.path.join(self.location, filename)
+            if os.path.isdir(path):
+                continue
+            if filename.startswith(self.fnprefix):
+                os.remove(path)
+                log.debug("deleted: %s", path)
 
     def fnsuffix(self):
         """
@@ -128,21 +137,35 @@ class FileCache(Cache):
         """
         return "gcf"
 
-    def setduration(self, **duration):
-        """
-        Set the duration after which cached entries expire.
+    def get(self, id):
+        try:
+            f = self._getf(id)
+            try:
+                return f.read()
+            finally:
+                f.close()
+        except Exception:
+            pass
 
-        @param duration: The duration after which cached entries expire
-            (0=never). Unit may be: (months|weeks|days|hours|minutes|seconds).
-        @type duration: {unit: value}
+    def purge(self, id):
+        filename = self.__filename(id)
+        try:
+            os.remove(filename)
+        except Exception:
+            pass
 
-        """
-        if len(duration) == 1:
-            arg = duration.items()[0]
-            if not arg[0] in self.units:
-                raise Exception("must be: %s" % str(self.units))
-            self.duration = arg
-        return self
+    def put(self, id, data):
+        try:
+            filename = self.__filename(id)
+            f = self.__open(filename, "wb")
+            try:
+                f.write(data)
+            finally:
+                f.close()
+            return data
+        except Exception:
+            log.debug(id, exc_info=1)
+            return data
 
     def setlocation(self, location):
         """
@@ -154,72 +177,19 @@ class FileCache(Cache):
         """
         self.location = location
 
-    def mktmp(self):
-        """Create the I{location} folder if it does not already exist."""
-        try:
-            if not os.path.isdir(self.location):
-                os.makedirs(self.location)
-        except Exception:
-            log.debug(self.location, exc_info=1)
-        return self
-
-    def put(self, id, data):
-        try:
-            filename = self.__filename(id)
-            f = self.open(filename, "wb")
-            try:
-                f.write(data)
-            finally:
-                f.close()
-            return data
-        except Exception:
-            log.debug(id, exc_info=1)
-            return data
-
-    def get(self, id):
-        try:
-            f = self.getf(id)
-            try:
-                return f.read()
-            finally:
-                f.close()
-        except Exception:
-            pass
-
-    def getf(self, id):
+    def _getf(self, id):
         """Open a cached file with the given id for reading."""
         try:
             filename = self.__filename(id)
             self.__remove_if_expired(filename)
-            return self.open(filename, "rb")
+            return self.__open(filename, "rb")
         except Exception:
             pass
 
-    def clear(self):
-        for filename in os.listdir(self.location):
-            path = os.path.join(self.location, filename)
-            if os.path.isdir(path):
-                continue
-            if filename.startswith(self.fnprefix):
-                os.remove(path)
-                log.debug("deleted: %s", path)
-
-    def purge(self, id):
-        filename = self.__filename(id)
-        try:
-            os.remove(filename)
-        except Exception:
-            pass
-
-    def open(self, filename, *args):
-        """Open cache file making sure the I{location} folder is created."""
-        self.mktmp()
-        return open(filename, *args)
-
-    def checkversion(self):
+    def __check_version(self):
         path = os.path.join(self.location, "version")
         try:
-            f = self.open(path)
+            f = self.__open(path)
             try:
                 version = f.read()
             finally:
@@ -228,7 +198,7 @@ class FileCache(Cache):
                 raise Exception()
         except Exception:
             self.clear()
-            f = self.open(path, "w")
+            f = self.__open(path, "w")
             try:
                 f.write(suds.__version__)
             finally:
@@ -239,6 +209,20 @@ class FileCache(Cache):
         suffix = self.fnsuffix()
         filename = "%s-%s.%s" % (self.fnprefix, id, suffix)
         return os.path.join(self.location, filename)
+
+    def __mktmp(self):
+        """Create the I{location} folder if it does not already exist."""
+        try:
+            if not os.path.isdir(self.location):
+                os.makedirs(self.location)
+        except Exception:
+            log.debug(self.location, exc_info=1)
+        return self
+
+    def __open(self, filename, *args):
+        """Open cache file making sure the I{location} folder is created."""
+        self.__mktmp()
+        return open(filename, *args)
 
     def __remove_if_expired(self, filename):
         """
@@ -257,6 +241,22 @@ class FileCache(Cache):
             os.remove(filename)
             log.debug("%s expired, deleted", filename)
 
+    def __set_duration(self, **duration):
+        """
+        Set the duration after which cached entries expire.
+
+        @param duration: The duration after which cached entries expire
+            (0=never). Unit may be: (months|weeks|days|hours|minutes|seconds).
+        @type duration: {unit: value}
+
+        """
+        if len(duration) == 1:
+            arg = duration.items()[0]
+            if not arg[0] in self.units:
+                raise Exception("must be: %s" % str(self.units))
+            self.duration = arg
+        return self
+
 
 class DocumentCache(FileCache):
     """XML document file cache."""
@@ -267,7 +267,7 @@ class DocumentCache(FileCache):
     def get(self, id):
         fp = None
         try:
-            fp = self.getf(id)
+            fp = self._getf(id)
             if fp is None:
                 return None
             p = suds.sax.parser.Parser()
@@ -299,7 +299,7 @@ class ObjectCache(FileCache):
     def get(self, id):
         fp = None
         try:
-            fp = self.getf(id)
+            fp = self._getf(id)
             if fp is not None:
                 return pickle.load(fp)
         except Exception:

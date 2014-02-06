@@ -114,8 +114,20 @@ version 0.7 (development)
       ``XDecimal`` implementation using ``suds.xsd.sxbuiltin.Factory.maptag()``
       if they want to use more specialized ``decimal`` value handling.
 
-* Fixed a bug causing DocumentCache & ObjectCache to not remove their cached
-  files when failing to read data from them or process the data read from them.
+* Caching cleanup.
+
+  * Fixed a bug causing ``DocumentCache`` & ``ObjectCache`` to not remove their
+    cached files when failing to read data from them or process the data read
+    from them.
+  * Private and protected ``FileCache`` interface functions renamed to use
+    leading underscores.
+
+    * ``FileCache.getf()`` --> ``FileCache._getf()``.
+    * ``FileCache.checkversion()`` --> ``FileCache.__check_version()``.
+    * ``FileCache.mktmp()`` --> ``FileCache.__mktmp()``.
+    * ``FileCache.open()`` --> ``FileCache.__open()``.
+    * ``FileCache.setduration()`` --> ``FileCache.__set_duration()``.
+
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
 * Using injected requests/replies/error-information with a web service operation
@@ -126,6 +138,7 @@ version 0.7 (development)
   * Added more detailed XSD modeling tests.
   * Added tests demonstrating how additional or replacement built-in XSD types
     can be registered with suds.
+  * Added new and updated existing suds.cache module related tests.
 
 version 0.6 (2014-01-24)
 -------------------------
