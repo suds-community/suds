@@ -93,29 +93,26 @@ class FileCache(Cache):
     @cvar fnprefix: The file name prefix.
     @type fnprefix: str
     @ivar duration: The duration after which cached entries expire (0=never).
-        Unit may be: (months|weeks|days|hours|minutes|seconds).
-    @type duration: (unit, value)
+    @type duration: datetime.timedelta
     @ivar location: The cached file folder.
     @type location: str
 
     """
     fnprefix = "suds"
-    units = ("months", "weeks", "days", "hours", "minutes", "seconds")
 
     def __init__(self, location=None, **duration):
         """
         @param location: The cached file folder.
         @type location: str
         @param duration: The duration after which cached entries expire
-            (0=never). Unit may be: (months|weeks|days|hours|minutes|seconds).
-        @type duration: {unit: value}
+            (default: 0=never).
+        @type duration: keyword arguments for datetime.timedelta constructor
 
         """
         if location is None:
             location = os.path.join(tempfile.gettempdir(), "suds")
         self.location = location
-        self.duration = (None, 0)
-        self.__set_duration(**duration)
+        self.duration = datetime.timedelta(**duration)
         self.__check_version()
 
     def clear(self):
@@ -222,30 +219,13 @@ class FileCache(Cache):
         @type filename: str
 
         """
-        if self.duration[1] < 1:
+        if not self.duration:
             return
         created = datetime.datetime.fromtimestamp(os.path.getctime(filename))
-        d = {self.duration[0]: self.duration[1]}
-        expired = created + datetime.timedelta(**d)
+        expired = created + self.duration
         if expired < datetime.datetime.now():
             os.remove(filename)
             log.debug("%s expired, deleted", filename)
-
-    def __set_duration(self, **duration):
-        """
-        Set the duration after which cached entries expire.
-
-        @param duration: The duration after which cached entries expire
-            (0=never). Unit may be: (months|weeks|days|hours|minutes|seconds).
-        @type duration: {unit: value}
-
-        """
-        if len(duration) == 1:
-            arg = duration.items()[0]
-            if not arg[0] in self.units:
-                raise Exception("must be: %s" % str(self.units))
-            self.duration = arg
-        return self
 
 
 class DocumentCache(FileCache):

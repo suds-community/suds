@@ -33,6 +33,7 @@ import suds.sax.parser
 
 import pytest
 
+import datetime
 import os
 import tempfile
 
@@ -326,6 +327,7 @@ class TestFileCache:
     def test_basic_construction(self):
         cache = suds.cache.FileCache()
         assert isinstance(cache, suds.cache.Cache)
+        assert cache.duration.__class__ is datetime.timedelta
 
     def test_cached_content_empty(self, tmpdir):
         cache_folder = tmpdir.strpath
@@ -509,6 +511,27 @@ class TestFileCache:
         cache1.clear()
         assert cache2.get("unga1") is None
         assert cache2.get("unga3") is None
+
+    @pytest.mark.parametrize("params", (
+        {},
+        {"microseconds": 1},
+        {"milliseconds": 1},
+        {"seconds": 1},
+        {"minutes": 1},
+        {"hours": 1},
+        {"days": 1},
+        {"weeks": 1},
+        {"microseconds": -1},
+        {"milliseconds": -1},
+        {"seconds": -1},
+        {"minutes": -1},
+        {"hours": -1},
+        {"days": -1},
+        {"weeks": -1},
+        {"weeks": 1, "days": 2, "hours": 7, "minutes": 0, "seconds": -712}))
+    def test_set_durations(self, tmpdir, params):
+        cache = suds.cache.FileCache(tmpdir.strpath, **params)
+        assert cache.duration == datetime.timedelta(**params)
 
     def test_version(self, tmpdir):
         fake_version_info = "--- fake version info ---"
