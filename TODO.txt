@@ -946,18 +946,23 @@ PRIORETIZED:
 (+)                 * Duration.
 (+)         * Default duration.
 (+)         * Set duration (<0, 0, >0, single/multiple duration arguments).
+(+)         * Exception on duration < 0.
+(+)             * YAGNI. Current implementation, using negative values as
+(+)               regular durations and simply adding them to a specific file
+(+)               timestamp to see whether it expired seems good enough as well
+(+)               as intuitive enough for the user.
+(+)         * Expiration after expiration time with duration > 0.
+(+)         * Not expiring after expiration time with duration = 0
+(+)         * Not expiring before expiration time with duration > 0.
+(+)         * Not expiring before expiration time with duration = 0.
+(+)         * Duration testing for all FileCache derived classes - DocumentCache
+(+)           & ObjectCache.
 (+)     * Update release notes.
 
     * (Jurko) Update FileCache duration handling.
         * Add tests.
-            * Exception on duration < 0.
-            * Expiration after expiration time with duration > 0.
-            * Not expiring after expiration time with duration = 0
-            * Not expiring before expiration time with duration > 0.
-            * Not expiring before expiration time with duration = 0.
-            * Duration testing for all derived classes - DocumentCache &
-              ObjectCache.
-        * Update release notes.
+            * FileCache and derived classes - one item expiring should not
+              affect other existing and not yet expired items.
 
     * (Jurko) Per process default FileCache folder randomization + removal on
       exit.
@@ -968,6 +973,11 @@ PRIORETIZED:
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
+        * Client's cache/store/transport usage.
+            * If an object is found in cache it should not be looked up in the
+              given document store or transported.
+            * If an object is found in a given document store it should not be
+              transported.
         * Transport.
         * _SoapClient.
             * Using Transport.
