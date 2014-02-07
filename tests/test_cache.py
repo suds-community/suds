@@ -645,17 +645,17 @@ class TestFileCache:
         fake_version_info = "--- fake version info ---"
         assert suds.__version__ != fake_version_info
 
-        cache_folder = tmpdir.join("hitori")
-        version_file = cache_folder.join("version")
-        cache = suds.cache.FileCache(cache_folder.strpath)
+        version_file = tmpdir.join("version")
+        cache_folder = tmpdir.strpath
+        cache = suds.cache.FileCache(cache_folder)
         assert version_file.read() == suds.__version__
         cache.put("unga1", value_p1)
 
         version_file.write(fake_version_info)
         assert cache.get("unga1") == value_p1
 
-        cache2 = suds.cache.FileCache(cache_folder.strpath)
-        assert _is_empty_cache_folder(cache_folder.strpath)
+        cache2 = suds.cache.FileCache(cache_folder)
+        assert _is_empty_cache_folder(cache_folder)
         assert cache.get("unga1") is None
         assert cache2.get("unga1") is None
         assert version_file.read() == suds.__version__
@@ -666,8 +666,8 @@ class TestFileCache:
         assert cache.get("unga1") == value_p11
         assert cache.get("unga2") == value_p22
 
-        cache3 = suds.cache.FileCache(cache_folder.strpath)
-        assert _is_empty_cache_folder(cache_folder.strpath)
+        cache3 = suds.cache.FileCache(cache_folder)
+        assert _is_empty_cache_folder(cache_folder)
         assert cache.get("unga1") is None
         assert cache.get("unga2") is None
         assert cache2.get("unga1") is None
