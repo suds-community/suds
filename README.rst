@@ -114,19 +114,66 @@ version 0.7 (development)
       ``XDecimal`` implementation using ``suds.xsd.sxbuiltin.Factory.maptag()``
       if they want to use more specialized ``decimal`` value handling.
 
-* Caching cleanup.
+* ``suds.cache`` module cleanup.
 
   * Fixed a bug causing ``DocumentCache`` & ``ObjectCache`` to not remove their
     cached files when failing to read data from them or process the data read
     from them.
-  * Private and protected ``FileCache`` interface functions renamed to use
+  * ``FileCache`` version file operations now take care to close the file in
+    case of a failed read/write operation.
+  * Removed ``FileCache.setlocation()`` method as it was never used inside
+    ``suds`` and if used from user code would have caused the cache to use a
+    specific folder but without making sure that the data already stored in it
+    has been prepared for the correct ``suds`` version, as done when passing a
+    location parameter to the ``FileCache`` constructor.
+  * Private and protected ``FileCache`` interface methods renamed to use
     leading underscores.
 
     * ``FileCache.getf()`` --> ``FileCache._getf()``.
+    * ``FileCache.__fn()`` --> ``FileCache.__filename()``.
     * ``FileCache.checkversion()`` --> ``FileCache.__check_version()``.
     * ``FileCache.mktmp()`` --> ``FileCache.__mktmp()``.
     * ``FileCache.open()`` --> ``FileCache.__open()``.
     * ``FileCache.setduration()`` --> ``FileCache.__set_duration()``.
+    * ``FileCache.validate()`` --> ``FileCache.__remove_if_expired()``.
+
+* ``suds.client`` module cleanup.
+
+  * Removed unused ``suds.client.Client.messages`` attribute.
+  * Renamed private ``SoapClient`` & ``SimClient`` classes:
+
+    * ``SoapClient`` --> ``_SoapClient``.
+    * ``SimClient`` --> ``_SimClient``.
+
+  * Several private methods renamed:
+
+    * ``_SoapClient.location()`` --> ``_SoapClient.__location()``.
+    * ``_SoapClient.get_fault()`` --> ``_SoapClient.__get_fault()``.
+    * ``_SoapClient.headers()`` --> ``_SoapClient.__headers()``.
+
+  * ``RequestContext`` no longer has ``client`` & ``original_envelope``
+    attributes.
+
+    * ``client`` attribute seems unnecessary.
+    * ``original_envelope`` was an incorrectly documented bug trap - it
+      represented the XML request envelope as a ``SAX`` XML document from after
+      being processed by registered ``marshalled`` plugins, but before being
+      processed by registered ``sending`` plugins. Users should use the
+      ``envelope`` attribute instead which can easily be converted into a
+      ``SAX`` XML document if needed by parsing it using
+      ``suds.sax.parser.Parser.parse()``. That envelope has been consistently
+      processed by all relevant registered plugins and matches the data to be
+      sent over the registered transport exactly.
+
+  * Cleaned up ``_SoapClient`` debug log messages a bit.
+
+* ``suds.reader`` module cleanup.
+
+  * Several private methods renamed:
+
+    * ``DocumentReader.cache()`` --> ``DocumentReader.__cache()``
+    * ``DocumentReader.download()`` --> ``DocumentReader.__fetch()``
+    * ``DefinitionsReader.cache()`` --> ``DefinitionsReader.__cache()``
 
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
