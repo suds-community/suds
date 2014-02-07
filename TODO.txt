@@ -913,20 +913,140 @@ PRIORETIZED:
 (+)   request/response messages.
 (+)     * Clean up related code.
 
+(05.02.2014.)
+
+(+) * (Jurko) Clean up SoapClient/SimClient related code a bit.
+(+)     * Generic code cleanup.
+(+)     * Mark private methods using leading underscores.
+(+)     * Remove RequestContext.original_envelope attribute.
+(+)     * Stop logging incorrect 'original_envelope' value.
+(+)     * Rename to _SoapClient/_SimClient.
+
+(06.02.2014.)
+
+(+) * (Jurko) Add tests for the functionality potentially affected by a planned
+(+)   _SoapClient/_SimClient refactoring.
+(+)     * Cache - update existing tests.
+(+)         * File operation failures.
+
+(07.02.2014.)
+
+(+) * (Jurko) Update FileCache duration handling.
+(+)     * Research.
+(+)         * Currently FileCache.__set_duration() implementation allows using
+(+)           only a single unit.
+(+)         * Check whether Python 2.4 datetime.timedelta class implementation
+(+)           allows it to be constructed from multiple units.
+        * Store FileCache.duration as a datetime.timedelta instance.
+        * Support for specifying FileCache durations with multiple time units.
+        * Add tests.
+            * Default suds.Client cache.
+                * Class.
+                * Duration.
+            * Default duration.
+            * Set duration > 0.
+            * Set 0 duration.
+            * Exception on duration < 0.
+            * Expiration after expiration time with duration > 0.
+            * Not expiring after expiration time with duration = 0
+            * Not expiring before expiration time with duration > 0.
+            * Not expiring before expiration time with duration = 0.
+            * Duration testing for all derived classes - DocumentCache &
+              ObjectCache.
+        * Update release notes.
+
+    * (Jurko) Per process default FileCache folder randomization + removal on
+      exit.
+        * Add tests.
+        * Implement.
+        * Update related issues on BitBucket.
+        * Update release notes.
+
+    * (Jurko) Add tests for the functionality potentially affected by a planned
+      _SoapClient/_SimClient refactoring.
+        * Transport.
+        * _SoapClient.
+            * Using Transport.
+            * 'nosend' option.
+            * 'retxml' option.
+            * 'prettyxml' option.
+            * Variants.
+                * Subclasses modifying _init_invocation_context(),
+                  _get_request() & _get_reply().
+        * _SimClient.
+            * Using Transport for sending an injected request.
+            * Not using Transport when a reply has been injected.
+            * _SimClient using injected request.
+            * _SimClient using injected reply.
+                * Success.
+                * Failure.
+                * Status & status description.
+            * 'nosend' option.
+                * With injected request data.
+                * With injected response data - ignored.
+            * 'retxml' option.
+            * 'prettyxml' option.
+        * RequestContext.
+            * Returned from _SoapClient.
+            * Returned from _SimClient.
+            * Processing an externally provided reply.
+        * Plugin processing.
+            * Variants.
+                * _SoapClient/_SimClient.
+                * _SimClient with injected reply/response.
+                * 'nosend' option + RequestContext reply.
+                * 'retxml'.
+                * 'prettyxml'.
+            * Downloaded documents.
+                * loaded(url, bytes) --> bytes.
+            * SOAP requests.
+                * marshalled(document) - may modify document in-place.
+                * sending(bytes) --> bytes.
+            * SOAP replies.
+                * received(bytes) --> bytes.
+                * parsed(element) --> may modify document in-place.
+                * unmarshalled(result) --> result.
+
+    * (Jurko) Refactor _SoapClient/_SimClient related code.
+        * Refactor.
+            * Already prepared as client_1.py on Jurko's notebook but need to
+              add relevant tests first.
+        * Update release notes.
+            * Client debug log messages changed.
+            * Removed the RequestContext.original_envelope attribute.
+
+    * (Jurko) Generic code cleanup.
+        * DefinitionsReader.open() changes options on cached Definitions
+          instances. Make sure this does not break programs with multiple suds
+          Clients loading the same WSDL schema but using different options.
+        * Support for calling NoCache.purge() & NoCache.clear().
+        * Consider making FileCache.clear() remove files matching both prefix &
+          suffix instead of only the prefix.
+            * Might be ok for explicitly called clears, but not for those called
+              due to the cache version information getting changed. This might
+              need to be worked around or commented/tested in code.
+        * Make FileCache, DocumentCache & ObjectCache all consistently remove or
+          not remove cache entries on failed access. Possibly do so for the base
+          Cache class as well.
+        * Make Cache.put() not return the cached data.
+        * FileCache.put() operations should not leave behind invalid files in
+          case of failed write operations. Possibly first store a valid file
+          under a temporary name and then rename it.
+
     * (Jurko) Restore last_sent()/last_received() getters for last used SOAP
       request/response messages.
         * Research.
-            * Difference between how SoapClient & SimClient stored their last
+            * Difference between how _SoapClient & _SimClient stored their last
               sent/received messages.
                 * Both stored them.
-                * SimClient stored the simulated fault as its last received
+                * _SimClient stored the simulated fault as its last received
                   message.
             * Whether sent/received messages should be returned/logged before or
               after being processed by registered plugins.
-                * SoapClient stored the received reply after it got processed by
-                  registered plugins.
-            * Sending with SoapClient.
-            * Sending with SimClient.
+                * _SoapClient stored the received reply after it got processed
+                  by registered plugins.
+            * Sending with _SoapClient.
+            * Sending with _SimClient.
             * Which plugins get called and when.
         * Add back the removed code.
         * Add tests.
@@ -1183,7 +1303,7 @@ NON PRIORETIZED:
           'xxxtest_choice_parameter_implementation_inconsistencies' unit test
           demonstrating a problem with the current implementation.
 
-    * SoapClient 'location' cleanup.
+    * _SoapClient 'location' cleanup.
         * URL quoting, especially if specified externally by the caller instead
           of having been read from a valid WSDL schema.
 
