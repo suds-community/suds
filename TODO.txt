@@ -937,15 +937,19 @@ PRIORETIZED:
 (+)           only a single unit.
 (+)         * Check whether Python 2.4 datetime.timedelta class implementation
 (+)           allows it to be constructed from multiple units.
-        * Store FileCache.duration as a datetime.timedelta instance.
-        * Support for specifying FileCache durations with multiple time units.
+(+)     * Store FileCache.duration as a datetime.timedelta instance.
+(+)     * Support for specifying FileCache durations with multiple time units.
+(+)     * Add tests.
+(+)         * Default suds.Client cache.
+(+)             * Already tested in test_default_cache_construction().
+(+)                 * Class.
+(+)                 * Duration.
+(+)         * Default duration.
+(+)         * Set duration (<0, 0, >0, single/multiple duration arguments).
+(+)     * Update release notes.
+
+    * (Jurko) Update FileCache duration handling.
         * Add tests.
-            * Default suds.Client cache.
-                * Class.
-                * Duration.
-            * Default duration.
-            * Set duration > 0.
-            * Set 0 duration.
             * Exception on duration < 0.
             * Expiration after expiration time with duration > 0.
             * Not expiring after expiration time with duration = 0
