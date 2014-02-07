@@ -957,12 +957,9 @@ PRIORETIZED:
 (+)         * Not expiring before expiration time with duration = 0.
 (+)         * Duration testing for all FileCache derived classes - DocumentCache
 (+)           & ObjectCache.
+(+)         * FileCache and derived classes - one item expiring should not
+(+)           affect other unexpired items.
 (+)     * Update release notes.
-
-    * (Jurko) Update FileCache duration handling.
-        * Add tests.
-            * FileCache and derived classes - one item expiring should not
-              affect other existing and not yet expired items.
 
     * (Jurko) Per process default FileCache folder randomization + removal on
       exit.

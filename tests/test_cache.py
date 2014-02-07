@@ -49,6 +49,24 @@ class InvisibleMan:
         self.x = x
 
 
+class MockDateTime(datetime.datetime):
+    """
+    MockDateTime class monkeypatched to replace datetime.datetime.
+
+    Allows us to control the exact built-in datetime.datetime.now() return
+    value. Note that Python does not allow us to monkeypatch
+    datetime.datetime.now() directly as it is a built-in function.
+
+    """
+
+    mock_counter = 0
+
+    @staticmethod
+    def now(*args, **kwargs):
+        MockDateTime.mock_counter += 1
+        return MockDateTime.mock_value
+
+
 class MockFile:
     """
     Wrapper around a regular file object allowing controlled file operation
@@ -182,6 +200,7 @@ file_cache_item_expiration_test_data = ([
             (datetime.datetime.resolution, True),
             (datetime.timedelta(days=7), True),
             (datetime.datetime.max, True))])
+
 
 @pytest.mark.parametrize(("method_name", "params"), (
     ("clear", []),
@@ -394,21 +413,7 @@ class TestFileCache:
         file_timestamp = os.path.getctime(filepath)
         file_time = datetime.datetime.fromtimestamp(file_timestamp)
 
-        class MockDateTime(datetime.datetime):
-            """
-            MockDateTime class monkeypatched to replace datetime.datetime.
-
-            Allows us to control the exact built-in datetime.datetime.now()
-            return value. Note that Python does not allow us to monkeypatch
-            datetime.datetime.now() directly as it is a built-in function.
-
-            """
-            mock_counter = 0
-            @staticmethod
-            def now(*args, **kwargs):
-                MockDateTime.mock_counter += 1
-                return MockDateTime.mock_value
-
+        MockDateTime.mock_counter = 0
         if isinstance(current_time, datetime.timedelta):
             expire_time = file_time + cache.duration
             MockDateTime.mock_value = expire_time + current_time
@@ -536,6 +541,55 @@ class TestFileCache:
         assert cache2.get("unga1") is None
         assert cache2.get("unga2") == value_f22
         assert cache2.get("unga3") == value_f3
+
+    def test_independent_item_expirations(self, tmpdir, monkeypatch):
+        cache = suds.cache.FileCache(tmpdir.strpath, days=1)
+        cache.put("unga1", value_p1)
+        cache.put("unga2", value_p2)
+        cache.put("unga3", value_f2)
+        filepath1 = cache._FileCache__filename("unga1")
+        filepath2 = cache._FileCache__filename("unga2")
+        filepath3 = cache._FileCache__filename("unga3")
+        file_timestamp1 = os.path.getctime(filepath1)
+        file_timestamp2 = file_timestamp1 + 10 * 60  # in seconds
+        file_timestamp3 = file_timestamp1 + 20 * 60  # in seconds
+        file_time1 = datetime.datetime.fromtimestamp(file_timestamp1)
+        file_time1_expiration = file_time1 + cache.duration
+
+        original_getctime = os.path.getctime
+        def mock_getctime(path):
+            if path == filepath2:
+                return file_timestamp2
+            if path == filepath3:
+                return file_timestamp3
+            return original_getctime(path)
+
+        timedelta = datetime.timedelta
+
+        monkeypatch.setattr(os.path, "getctime", mock_getctime)
+        monkeypatch.setattr(datetime, "datetime", MockDateTime)
+
+        MockDateTime.mock_value = file_time1_expiration + timedelta(minutes=15)
+        assert cache._getf("unga2") is None
+        assert os.path.isfile(filepath1)
+        assert not os.path.isfile(filepath2)
+        assert os.path.isfile(filepath3)
+
+        cache._getf("unga3").close()
+        assert os.path.isfile(filepath1)
+        assert not os.path.isfile(filepath2)
+        assert os.path.isfile(filepath3)
+
+        MockDateTime.mock_value = file_time1_expiration + timedelta(minutes=25)
+        assert cache._getf("unga1") is None
+        assert not os.path.isfile(filepath1)
+        assert not os.path.isfile(filepath2)
+        assert os.path.isfile(filepath3)
+
+        assert cache._getf("unga3") is None
+        assert not os.path.isfile(filepath1)
+        assert not os.path.isfile(filepath2)
+        assert not os.path.isfile(filepath3)
 
     @pytest.mark.parametrize(("duration", "current_time", "expect_remove"),
         file_cache_item_expiration_test_data)
