@@ -167,16 +167,6 @@ class FileCache(Cache):
             log.debug(id, exc_info=1)
             return data
 
-    def setlocation(self, location):
-        """
-        Set the cached file location (folder).
-
-        @param location: The cached file folder.
-        @type location: str
-
-        """
-        self.location = location
-
     def _getf(self, id):
         """Open a cached file with the given id for reading."""
         try:
