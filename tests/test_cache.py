@@ -156,6 +156,33 @@ value_p22 = suds.byte_str("pero22")
 value_unicode = suds.byte_str(u"€ 的 čćžšđČĆŽŠĐ")
 
 
+# FileCache item expiration test data - duration, current_time, expect_remove.
+# Reused for different testing different FileCache derived classes.
+file_cache_item_expiration_test_data = ([
+    # Infinite cache entry durations.
+    ({}, datetime.datetime.min, False),
+    ({}, datetime.timedelta(days=-21), False),
+    ({}, -datetime.datetime.resolution, False),
+    ({}, datetime.timedelta(), False),
+    ({}, datetime.datetime.resolution, False),
+    ({}, datetime.timedelta(days=7), False),
+    ({}, datetime.datetime.max, False)] +
+    # Finite cache entry durations.
+    [(duration, current_time, expect_remove)
+        for duration in (
+            {"minutes": 7},
+            {"microseconds": 1},
+            {"microseconds": -1},
+            {"hours": -7})
+        for current_time, expect_remove in (
+            (datetime.datetime.min, False),
+            (datetime.timedelta(days=-21), False),
+            (-datetime.datetime.resolution, False),
+            (datetime.timedelta(), False),
+            (datetime.datetime.resolution, True),
+            (datetime.timedelta(days=7), True),
+            (datetime.datetime.max, True))])
+
 @pytest.mark.parametrize(("method_name", "params"), (
     ("clear", []),
     ("get", ["id"]),
@@ -310,6 +337,17 @@ class TestDocumentCache:
         assert mock.counter == 0
         assert extra_checks[3](mock)
 
+    @pytest.mark.parametrize(("duration", "current_time", "expect_remove"),
+        file_cache_item_expiration_test_data)
+    def test_item_expiration(self, tmpdir, monkeypatch, duration, current_time,
+            expect_remove):
+        """See TestFileCache.item_expiration_test_worker() for more info."""
+        cache = suds.cache.DocumentCache(tmpdir.strpath, **duration)
+        content, element = self.construct_XML()
+        cache.put("willy", element)
+        TestFileCache.item_expiration_test_worker(cache, "willy", monkeypatch,
+            current_time, expect_remove)
+
     def test_repeated_reads(self, tmpdir):
         cache = suds.cache.DocumentCache(tmpdir.strpath)
         content, element = self.construct_XML()
@@ -323,6 +361,66 @@ class TestDocumentCache:
 
 
 class TestFileCache:
+
+    @staticmethod
+    def item_expiration_test_worker(cache, id, monkeypatch, current_time,
+            expect_remove):
+        """
+        Test how a FileCache & its derived classes expire their item entries.
+
+        Facts tested:
+        * 0 duration should cause cache items never to expire.
+        * Expired item files should be automatically removed from the cache
+          folder.
+        * Negative durations should be treated the same as positive ones.
+
+        Requirements on the passed cache object:
+        * Configures with the correct duration for this test.
+        * Contains a valid cached item with the given id and its ctime
+          timestamp + cache.duration must fall into the valid datetime.datetime
+          value range.
+        * Must use only public & protected FileCache interfaces to access its
+          cache item data files.
+
+        'current_time' values are expected to be either datetime.datetime or
+        datetime.timedelta instances with the latter interpreted relative to
+        the test file's expected expiration time.
+
+        """
+        assert isinstance(cache, suds.cache.FileCache)
+        filepath = cache._FileCache__filename(id)
+        assert os.path.isfile(filepath)
+        file_timestamp = os.path.getctime(filepath)
+        file_time = datetime.datetime.fromtimestamp(file_timestamp)
+
+        class MockDateTime(datetime.datetime):
+            """
+            MockDateTime class monkeypatched to replace datetime.datetime.
+
+            Allows us to control the exact built-in datetime.datetime.now()
+            return value. Note that Python does not allow us to monkeypatch
+            datetime.datetime.now() directly as it is a built-in function.
+
+            """
+            mock_counter = 0
+            @staticmethod
+            def now(*args, **kwargs):
+                MockDateTime.mock_counter += 1
+                return MockDateTime.mock_value
+
+        if isinstance(current_time, datetime.timedelta):
+            expire_time = file_time + cache.duration
+            MockDateTime.mock_value = expire_time + current_time
+        else:
+            MockDateTime.mock_value = current_time
+        monkeypatch.setattr(datetime, "datetime", MockDateTime)
+        assert (cache._getf(id) is None) == expect_remove
+        monkeypatch.undo()
+        if cache.duration:
+            assert MockDateTime.mock_counter == 1
+        else:
+            assert MockDateTime.mock_counter == 0
+        assert os.path.isfile(filepath) == (not expect_remove)
 
     def test_basic_construction(self):
         cache = suds.cache.FileCache()
@@ -437,6 +535,16 @@ class TestFileCache:
         assert cache2.get("unga1") is None
         assert cache2.get("unga2") == value_f22
         assert cache2.get("unga3") == value_f3
+
+    @pytest.mark.parametrize(("duration", "current_time", "expect_remove"),
+        file_cache_item_expiration_test_data)
+    def test_item_expiration(self, tmpdir, monkeypatch, duration, current_time,
+            expect_remove):
+        """See TestFileCache.item_expiration_test_worker() for more info."""
+        cache = suds.cache.FileCache(tmpdir.strpath, **duration)
+        cache.put("unga1", value_p1)
+        TestFileCache.item_expiration_test_worker(cache, "unga1", monkeypatch,
+            current_time, expect_remove)
 
     def test_location(self, tmpdir):
         FileCache = suds.cache.FileCache
@@ -686,6 +794,16 @@ class TestObjectCache:
         assert cache.get("unga2").x == 2
         assert mock.counter == 0
         assert extra_checks[3](mock)
+
+    @pytest.mark.parametrize(("duration", "current_time", "expect_remove"),
+        file_cache_item_expiration_test_data)
+    def test_item_expiration(self, tmpdir, monkeypatch, duration, current_time,
+            expect_remove):
+        """See TestFileCache.item_expiration_test_worker() for more info."""
+        cache = suds.cache.ObjectCache(tmpdir.strpath, **duration)
+        cache.put("silly", InvisibleMan(666))
+        TestFileCache.item_expiration_test_worker(cache, "silly", monkeypatch,
+            current_time, expect_remove)
 
 
 def _is_empty_cache_folder(folder):
