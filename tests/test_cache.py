@@ -211,7 +211,8 @@ class TestDocumentCache:
         assert element.__class__ is suds.sax.element.Element
         assert suds.byte_str(str(element)) == content
 
-    def construct_XML(self, element_name="Elemento"):
+    @staticmethod
+    def construct_XML(element_name="Elemento"):
         """
         Construct XML content and an Element wrapping it.
 
