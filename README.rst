@@ -137,6 +137,22 @@ version 0.7 (development)
     * ``FileCache.setduration()`` --> ``FileCache.__set_duration()``.
     * ``FileCache.validate()`` --> ``FileCache.__remove_if_expired()``.
 
+  * Updated ``FileCache`` duration implementation.
+
+    * ``FileCache`` construction now takes standard ``datetime.timedelta``
+      duration related keyword arguments instead of just ``weeks``, ``days``,
+      ``hours``, ``minutes`` & ``seconds``. More to the point, it now also
+      supports ``milliseconds`` & ``microseconds`` keyword arguments.
+    * Corrected ``FileCache`` docstring stating that it accepted a ``months``
+      keyword argument. Using that argument would actually have caused a failure
+      when passing it to a ``datetime.timedelta`` initializer internally.
+    * You may now specify multiple duration keyword arguments in ``FileCache``
+      construction and they will all get summed up when constructing the
+      internal ``datetime.timedelta`` duration representation. Before, you could
+      specify such multiple arguments, but that would only make the
+      ``FileCache`` silently use duration ``0``, i.e. its cache entries would
+      never expire.
+
 * ``suds.client`` module cleanup.
 
   * Removed unused ``suds.client.Client.messages`` attribute.
