@@ -22,7 +22,7 @@ import suds
 from suds import *
 import suds.bindings.binding
 from suds.builder import Builder
-from suds.cache import ObjectCache
+import suds.cache
 import suds.metrics as metrics
 from suds.options import Options
 from suds.plugin import PluginContainer
@@ -114,7 +114,7 @@ class Client(UnicodeMixin):
         options.transport = suds.transport.https.HttpAuthenticated()
         self.options = options
         if "cache" not in kwargs:
-            kwargs["cache"] = ObjectCache(days=1)
+            kwargs["cache"] = suds.cache.ObjectCache(days=1)
         self.set_options(**kwargs)
         reader = DefinitionsReader(options, Definitions)
         self.wsdl = reader.open(url)

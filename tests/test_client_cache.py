@@ -50,8 +50,8 @@ def test_avoiding_default_cache(cache, monkeypatch):
     class MockStore(suds.store.DocumentStore):
         def open(self, *args, **kwargs):
             raise MyException
-    monkeypatch.setattr("suds.client.ObjectCache", construct_default_cache)
-    monkeypatch.setattr("suds.store.DocumentStore", MockStore)
+    monkeypatch.setattr(suds.cache, "ObjectCache", construct_default_cache)
+    monkeypatch.setattr(suds.store, "DocumentStore", MockStore)
     pytest.raises(MyException, suds.client.Client, "some_url",
         documentStore=MockStore(), cache=cache)
 
@@ -71,7 +71,7 @@ def test_default_cache_construction(monkeypatch):
     class MockStore(suds.store.DocumentStore):
         def open(self, *args, **kwargs):
             pytest.fail("Default cache not created in time.")
-    monkeypatch.setattr("suds.client.ObjectCache", construct_default_cache)
-    monkeypatch.setattr("suds.store.DocumentStore", MockStore)
+    monkeypatch.setattr(suds.cache, "ObjectCache", construct_default_cache)
+    monkeypatch.setattr(suds.store, "DocumentStore", MockStore)
     pytest.raises(MyException, suds.client.Client, "some_url",
         documentStore=MockStore())
