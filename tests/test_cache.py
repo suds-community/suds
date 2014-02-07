@@ -186,7 +186,7 @@ class TestDocumentCache:
 
     def construct_XML(self, element_name="Elemento"):
         """
-        Construct XML content & and an Element wrapping it.
+        Construct XML content and an Element wrapping it.
 
         Constructed content may be parametrized with the given element name.
 
