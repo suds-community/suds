@@ -47,7 +47,7 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
         store = suds.store.DocumentStore()
         kwargs.update(documentStore=store)
     testFileId = "whatchamacallit"
-    store.update({testFileId:wsdl_content})
+    store.update({testFileId: wsdl_content})
     kwargs.update(cache=None)
     return suds.client.Client("suds://" + testFileId, *args, **kwargs)
 

@@ -44,7 +44,7 @@ import sys
     u"中原千军逐蒋"))
 def test_reply_as_string(message):
     code = 17
-    reply = Reply(code, {"aaa":1}, message)
+    reply = Reply(code, {"aaa": 1}, message)
     expected = u"""\
 CODE: %s
 HEADERS: %s

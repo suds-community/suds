@@ -36,7 +36,6 @@ import pytest
 
 import base64
 import sys
-import urllib2
 
 
 class MyException(Exception):
@@ -58,6 +57,11 @@ def test_authenticated_http_add_credentials_to_request():
         def __init__(self):
             self.headers = {}
 
+    def check_Authorization_header(request, username, password):
+        assert len(request.headers) == 1
+        header = request.headers["Authorization"]
+        assert header == _encode_basic_credentials(username, password)
+
     t = suds.transport.http.HttpAuthenticated(username="Humpty")
     r = MockRequest()
     t.addcredentials(r)
@@ -74,11 +78,11 @@ def test_authenticated_http_add_credentials_to_request():
         password=password)
     r = MockRequest()
     t.addcredentials(r)
-    _check_Authorization_header(r, username, password)
+    check_Authorization_header(r, username, password)
 
-    #   Regression test: Extremely long username & password combinations must
-    # not cause suds to add additional newlines in the constructed
-    # 'Authorization' HTTP header.
+    # Regression test: Extremely long username & password combinations must not
+    # cause suds to add additional newlines in the constructed 'Authorization'
+    # HTTP header.
     username = ("An Extremely Long Username that could be usable only to "
         "Extremely Important People whilst on Extremely Important Missions.")
     password = ("An Extremely Long Password that could be usable only to "
@@ -90,7 +94,7 @@ def test_authenticated_http_add_credentials_to_request():
         password=password)
     r = MockRequest()
     t.addcredentials(r)
-    _check_Authorization_header(r, username, password)
+    check_Authorization_header(r, username, password)
 
 
 @pytest.mark.parametrize("url", (
@@ -120,7 +124,7 @@ def test_http_request_URL_with_a_missing_protocol_identifier(url):
     """
     Test suds reporting URLs with a missing protocol identifier.
 
-    Python urllib library makes this check under Python 3.x, but does not under
+    Python urllib library makes this check under Python 3.x, but not under
     earlier Python versions.
 
     """
@@ -230,7 +234,7 @@ def test_sending_unicode_data(monkeypatch):
 def test_sending_non_ascii_location():
     """
     Suds should refuse to send HTTP requests with a target location string
-    containing non-ASCII characters. URLs are supposed to consist of
+    containing non-ASCII characters. URLs are supposed to consist of ASCII
     characters only.
 
     """
@@ -305,18 +309,11 @@ def test_sending_py3_bytes_location(urlString):
         pytest.raises(expectedException, client.service.f)
 
 
-def _check_Authorization_header(request, username, password):
-    assert len(request.headers) == 1
-    header = request.headers["Authorization"]
-    assert header == _encode_basic_credentials(username, password)
-
-
 def _encode_basic_credentials(username, password):
     """
-      Encodes user credentials as used in basic HTTP authentication.
+    Encode user credentials as used in basic HTTP authentication.
 
-      This is the value expected to be added to the 'Authorization' HTTP
-    header.
+    This is the value expected to be added to the 'Authorization' HTTP header.
 
     """
     data = suds.byte_str("%s:%s" % (username, password))
