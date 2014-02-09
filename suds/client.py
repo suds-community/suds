@@ -374,10 +374,10 @@ class PortSelector:
     The B{port} selector is used to select a I{web service} B{port}.
 
     In cases where multiple ports have been defined and no default has been
-    specified, the port is found by name (or index) and a L{MethodSelector}
-    for the port is returned. In all cases, attribute access is forwarded to
-    the L{MethodSelector} for either the I{first} port or the I{default} port
-    (when specified).
+    specified, the port is found by name (or index) and a L{MethodSelector} for
+    the port is returned. In all cases, attribute access is forwarded to the
+    L{MethodSelector} for either the I{first} port or the I{default} port (when
+    specified).
 
     @ivar __client: A suds client.
     @type __client: L{Client}
