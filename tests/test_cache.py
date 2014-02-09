@@ -35,7 +35,10 @@ import pytest
 
 import datetime
 import os
+import os.path
+import subprocess
 import tempfile
+import sys
 
 
 class MyException(Exception):
@@ -214,6 +217,193 @@ def test_Cache_methods_abstract(monkeypatch, method_name, params):
     e = pytest.raises(Exception, f, *params).value
     assert e.__class__ is Exception
     assert str(e) == "not-implemented"
+
+
+class TestDefaultFileCacheLocation:
+    """Default FileCache cache location handling tests."""
+
+    @staticmethod
+    def run_test_process(script):
+        """Runs the given Python test script as a separate process."""
+        popen = subprocess.Popen([sys.executable], stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=script.dirname,
+            universal_newlines=True)
+        out, err = popen.communicate("""\
+import sys
+sys.path = %(sys.path)s
+import suds
+if suds.__version__ != %(suds.__version__)r:
+    print("Unexpected suds version imported - '%%s'." %% (suds.__version__))
+    sys.exit(-2)
+
+if sys.version_info >= (3, 0):
+    def exec_file(x):
+        e = getattr(__builtins__, "exec")
+        return e(open(x).read(), globals(), globals())
+else:
+    exec_file = execfile
+exec_file(%(script)r)
+""" % {"suds.__version__": suds.__version__,
+    "script": script.basename,
+    "sys.path": sys.path})
+        if popen.returncode != 0 or err or out:
+            if popen.returncode != 0:
+                print("Test process exit code: %d" % (popen.returncode,))
+            if out:
+                print("Test process stdout:")
+                print(out)
+            if err:
+                print("Test process stderr:")
+                print(err)
+            pytest.fail("Test subprocess failed.")
+
+    @pytest.mark.parametrize("cache_class", (
+        suds.cache.DocumentCache,
+        suds.cache.FileCache,
+        suds.cache.ObjectCache))
+    def test_basic(self, tmpdir, cache_class):
+        """
+        Test default FileCache folder usage.
+
+        Initial DocumentCache/FileCache/ObjectCache instantiation with no
+        explicitly specified location in a process should use
+        tempfile.mkdtemp() and that folder should be used as its location.
+
+        After a single DocumentCache/FileCache/ObjectCache instantiation with
+        no explicitly specified location, all later DocumentCache/FileCache/
+        ObjectCache instantiations with no explicitly specified location in the
+        same process should use that same location folder without additional
+        tempfile.mkdtemp() calls.
+
+        Both initial & non-initial DocumentCache/FileCache/ObjectCache
+        instantiation with an explicitly specified location should use that
+        folder as its default location and not make any tempfile.mkdtemp()
+        calls.
+
+        """
+        cache_folder_name = "my test cache-%s" % (cache_class.__name__,)
+        cache_folder = tmpdir.join(cache_folder_name).strpath
+        fake_cache_folder_name = "my fake cache-%s" % (cache_class.__name__,)
+        fake_cache_folder = tmpdir.join(fake_cache_folder_name).strpath
+        test_file = tmpdir.join("test_file.py")
+        test_file.write("""\
+import os.path
+
+import tempfile
+original_mkdtemp = tempfile.mkdtemp
+mock_mkdtemp_counter = 0
+def mock_mkdtemp(*args, **kwargs):
+    global mock_mkdtemp_counter
+    mock_mkdtemp_counter += 1
+    return cache_folder
+tempfile.mkdtemp = mock_mkdtemp
+
+def check_cache_folder(expected_exists, expected_mkdtemp_counter, comment):
+    if os.path.exists(cache_folder) != expected_exists:
+        if expected_exists:
+            message = "does not exist when expected"
+        else:
+            message = "exists when not expected"
+        print("Cache folder %%s (%%s)." %% (message, comment))
+        sys.exit(-2)
+    if mock_mkdtemp_counter != expected_mkdtemp_counter:
+        if mock_mkdtemp_counter < expected_mkdtemp_counter:
+            message = "less"
+        else:
+            message = "more"
+        print("tempfile.mkdtemp() called %%s times then expected (%%s)" %%
+            (message, comment,))
+
+cache_folder = %(cache_folder)r
+fake_cache_folder = %(fake_cache_folder)r
+def fake_cache(n):
+    return fake_cache_folder + str(n)
+
+from suds.cache import DocumentCache, FileCache, ObjectCache
+check_cache_folder(False, 0, "import")
+
+assert DocumentCache(fake_cache(1)).location == fake_cache(1)
+assert FileCache(fake_cache(2)).location == fake_cache(2)
+assert ObjectCache(fake_cache(3)).location == fake_cache(3)
+check_cache_folder(False, 0, "initial caches with non-default location")
+
+assert %(cache_class_name)s().location == cache_folder
+check_cache_folder(True, 1, "initial cache with default location")
+
+assert DocumentCache().location == cache_folder
+assert FileCache().location == cache_folder
+assert ObjectCache().location == cache_folder
+check_cache_folder(True, 1, "non-initial caches with default location")
+
+assert DocumentCache(fake_cache(4)).location == fake_cache(4)
+assert FileCache(fake_cache(5)).location == fake_cache(5)
+assert ObjectCache(fake_cache(6)).location == fake_cache(6)
+check_cache_folder(True, 1, "non-initial caches with non-default location")
+
+assert DocumentCache().location == cache_folder
+assert FileCache().location == cache_folder
+assert ObjectCache().location == cache_folder
+check_cache_folder(True, 1, "final caches with default location")
+""" % {"cache_class_name": cache_class.__name__,
+    "cache_folder": cache_folder,
+    "fake_cache_folder": fake_cache_folder})
+
+        assert not os.path.exists(cache_folder)
+        self.run_test_process(test_file)
+
+    @pytest.mark.parametrize("removal_enabled", (True, False))
+    def test_remove_on_exit(self, tmpdir, removal_enabled):
+        """
+        Test removing the default cache folder on process exit.
+
+        The folder should be removed by default on process exit, but this
+        behaviour may be disabled by the user.
+
+        """
+        cache_folder_name = "my test cache-%s" % (removal_enabled,)
+        cache_folder = tmpdir.join(cache_folder_name).strpath
+        test_file = tmpdir.join("test_file.py")
+        test_file.write("""\
+import os.path
+
+import tempfile
+original_mkdtemp = tempfile.mkdtemp
+mock_mkdtemp_counter = 0
+def mock_mkdtemp(*args, **kwargs):
+    global mock_mkdtemp_counter
+    mock_mkdtemp_counter += 1
+    return cache_folder
+tempfile.mkdtemp = mock_mkdtemp
+
+import suds.cache
+if not suds.cache.FileCache.remove_default_location_on_exit:
+    print("Default FileCache folder removal not enabled by default.")
+    sys.exit(-2)
+suds.cache.FileCache.remove_default_location_on_exit = %(removal_enabled)s
+
+cache_folder = %(cache_folder)r
+if os.path.exists(cache_folder):
+    print("Cache folder exists too early.")
+    sys.exit(-2)
+
+suds.cache.FileCache()
+
+if not mock_mkdtemp_counter == 1:
+    print("tempfile.mkdtemp() not called as expected (%%d)." %%
+        (mock_mkdtemp_counter,))
+    sys.exit(-2)
+
+if not os.path.isdir(cache_folder):
+    print("Cache folder not created when expected.")
+    sys.exit(-2)
+""" % {"cache_folder": cache_folder, "removal_enabled": removal_enabled})
+
+        assert not os.path.exists(cache_folder)
+        self.run_test_process(test_file)
+        if removal_enabled:
+            assert not os.path.exists(cache_folder)
+        else:
+            assert os.path.isdir(cache_folder)
 
 
 # TODO: DocumentCache class interface seems silly. Its get() operation returns
@@ -601,15 +791,8 @@ class TestFileCache:
         TestFileCache.item_expiration_test_worker(cache, "unga1", monkeypatch,
             current_time, expect_remove)
 
-    def test_location(self, tmpdir):
+    def test_non_default_location(self, tmpdir):
         FileCache = suds.cache.FileCache
-
-        defaultLocation = os.path.join(tempfile.gettempdir(), "suds")
-        cache = FileCache()
-        assert os.path.isdir(cache.location)
-        assert cache.location == defaultLocation
-        assert FileCache().location == defaultLocation
-        assert cache.location == defaultLocation
 
         cache_folder1 = tmpdir.join("flip-flop1").strpath
         assert not os.path.isdir(cache_folder1)

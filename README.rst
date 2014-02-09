@@ -116,6 +116,30 @@ version 0.7 (development)
 
 * ``suds.cache`` module cleanup.
 
+  * Fixed ``FileCache`` default cache location related security issue. Many
+    thanks to Rolf Krahl for the initial report, providing links to related
+    external resources as well as helping brainstorm the whole issue.
+
+    * Each process now uses a separate temporary folder as its default cache
+      location.
+    * Different ``FileCache`` instances within the same process still use the
+      same default cache location and user may still explicitly specify a
+      non-default location for each ``FileCache`` instance.
+    * Default cache location now gets removed automatically on process exit.
+      User code may disable this removal by setting the
+      ``FileCache.remove_default_location_on_exit`` class attribute to False.
+    * Additional external information on this issue:
+
+      * `Red Hat bug 978696
+        <https://bugzilla.redhat.com/show_bug.cgi?id=978696>`_
+      * `CVE-2013-2217
+        <http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2013-2217>`_
+      * `Ubuntu USN-2008-1: Suds vulnerability
+        <http://www.ubuntu.com/usn/USN-2008-1>`_
+      * http://lists.opensuse.org/opensuse-updates/2013-07/msg00062.html
+      * https://bugzilla.novell.com/show_bug.cgi?id=827568
+      * http://www.openwall.com/lists/oss-security/2013/06/27/8
+
   * Fixed a bug causing ``DocumentCache`` & ``ObjectCache`` to not remove their
     cached files when failing to read data from them or process the data read
     from them.
@@ -324,6 +348,7 @@ version 0.6 (2014-01-24)
   * Invalid extra argument error reported when using an injected request/reply/
     error-information with a web service operation taking at least one input
     parameter.
+  * Security issue CVE-2013-2217 - using fixed default cache location.
 
 version 0.5 (2013-11-25)
 ------------------------
@@ -382,6 +407,10 @@ version 0.5 (2013-11-25)
 * Removed several internal Mercurial version control system related files from
   the project's source distribution package.
 * Better documented the project's development & testing environment.
+
+* Known defects.
+
+  * Security issue CVE-2013-2217 - using fixed default cache location.
 
 version 0.4.1 jurko 5 (2013-11-11)
 ----------------------------------
@@ -530,6 +559,10 @@ version 0.4.1 jurko 5 (2013-11-11)
   * Removed unused ``Cache`` module ``getf()`` & ``putf()`` functions.
     ``getf()`` left only in ``FileCache`` and its derived classes.
 
+* Known defects.
+
+  * Security issue CVE-2013-2217 - using fixed default cache location.
+
 version 0.4.1 jurko 4 (2012-04-17)
 ----------------------------------
 
@@ -559,6 +592,10 @@ version 0.4.1 jurko 4 (2012-04-17)
 * Original term unbounded meant that its object has more than one occurrence
   while its name inferred that 'it has no upper limit on its number of
   occurrences'.
+
+* Known defects.
+
+  * Security issue CVE-2013-2217 - using fixed default cache location.
 
 version 0.4.1 jurko 3 (2011-12-26)
 ----------------------------------
@@ -591,6 +628,10 @@ version 0.4.1 jurko 3 (2011-12-26)
   with the parameter ``nobuiltin=True``.
 * Added more test cases.
 
+* Known defects.
+
+  * Security issue CVE-2013-2217 - using fixed default cache location.
+
 version 0.4.1 jurko 2 (2011-12-24)
 ----------------------------------
 
@@ -620,6 +661,10 @@ version 0.4.1 jurko 2 (2011-12-24)
     release causing printing out a ``suds.client.Client`` object to raise an
     exception due to the code in question making some undocumented assumptions
     on how the build information string should be formatted.
+
+* Known defects.
+
+  * Security issue CVE-2013-2217 - using fixed default cache location.
 
 version 0.4.1 jurko 1 (2011-12-24)
 ----------------------------------
@@ -697,6 +742,7 @@ version 0.4.1 jurko 1 (2011-12-24)
 
   * Converting a ``suds.client.Client`` object to a string fails & raises an
     ``IndexError`` exception.
+  * Security issue CVE-2013-2217 - using fixed default cache location.
 
 
 Original suds library release notes
@@ -705,6 +751,9 @@ Original suds library release notes
 **version 0.4.1 (2010-10-15)**
 
 * <undocumented>
+* Known defects.
+
+  * Security issue CVE-2013-2217 - using fixed default cache location.
 
 **version 0.4 (2010-09-08)**
 

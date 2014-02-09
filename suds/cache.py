@@ -92,6 +92,9 @@ class FileCache(Cache):
 
     @cvar fnprefix: The file name prefix.
     @type fnprefix: str
+    @cvar remove_default_location_on_exit: Whether to remove the default cache
+        location on process exit (default=True).
+    @type remove_default_location_on_exit: bool
     @ivar duration: The duration after which cached entries expire (0=never).
     @type duration: datetime.timedelta
     @ivar location: The cached file folder.
@@ -99,9 +102,20 @@ class FileCache(Cache):
 
     """
     fnprefix = "suds"
+    __default_location = None
+    remove_default_location_on_exit = True
 
     def __init__(self, location=None, **duration):
         """
+        Initialized a new FileCache instance.
+
+        If no cache location is specified, a temporary default location will be
+        used. Such default cache location will be shared by all FileCache
+        instances with no explicitly specified location within the same
+        process. The default cache location will be removed automatically on
+        process exit unless user sets the remove_default_location_on_exit
+        FileCache class attribute to False.
+
         @param location: The cached file folder.
         @type location: str
         @param duration: The duration after which cached entries expire
@@ -110,7 +124,7 @@ class FileCache(Cache):
 
         """
         if location is None:
-            location = os.path.join(tempfile.gettempdir(), "suds")
+            location = self.__get_default_location()
         self.location = location
         self.duration = datetime.timedelta(**duration)
         self.__check_version()
@@ -197,6 +211,21 @@ class FileCache(Cache):
         filename = "%s-%s.%s" % (self.fnprefix, id, suffix)
         return os.path.join(self.location, filename)
 
+    @staticmethod
+    def __get_default_location():
+        """
+        Returns the current process's default cache location folder.
+
+        The folder is determined lazily on first call.
+
+        """
+        if not FileCache.__default_location:
+            tmp = tempfile.mkdtemp("suds-default-cache")
+            FileCache.__default_location = tmp
+            import atexit
+            atexit.register(FileCache.__remove_default_location)
+        return FileCache.__default_location
+
     def __mktmp(self):
         """Create the I{location} folder if it does not already exist."""
         try:
@@ -210,6 +239,19 @@ class FileCache(Cache):
         """Open cache file making sure the I{location} folder is created."""
         self.__mktmp()
         return open(filename, *args)
+
+    @staticmethod
+    def __remove_default_location():
+        """
+        Removes the default cache location folder.
+
+        This removal may be disabled by setting the
+        remove_default_location_on_exit FileCache class attribute to False.
+
+        """
+        if FileCache.remove_default_location_on_exit:
+            import shutil
+            shutil.rmtree(FileCache.__default_location, ignore_errors=True)
 
     def __remove_if_expired(self, filename):
         """

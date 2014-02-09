@@ -960,13 +960,22 @@ PRIORETIZED:
 (+)         * FileCache and derived classes - one item expiring should not
 (+)           affect other unexpired items.
 (+)     * Update release notes.
+(+) * (Jurko) Per process default FileCache folder randomization + removal on
+(+)   exit.
+(+)     * Research.
+(+)         * Related BitBucket issue #15.
+(+)         * Links from the BitBucket issue #15.
+(+)             * 'https://bugzilla.redhat.com/show_bug.cgi?id=978696'.
+(+)             * 'http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2013-2217'.
 
-    * (Jurko) Per process default FileCache folder randomization + removal on
-      exit.
-        * Add tests.
-        * Implement.
-        * Update related issues on BitBucket.
-        * Update release notes.
+(09.02.2014.)
+
+(+) * (Jurko) Per process default FileCache folder randomization + removal on
+(+)   exit.
+(+)     * Add tests.
+(+)     * Implement.
+(+)     * Update release notes.
+(+)     * Update related issues on BitBucket.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
