@@ -1,23 +1,22 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Support for holding XML document texts that may then be accessed internally by
-suds without having to download them from an external source. Also contains XML
-document content to be distributed alongside the suds library.
+Support for holding XML document content that may then be accessed internally
+by suds without having to download them from an external source. Also contains
+XML document content to be distributed alongside the suds library.
 
 """
 
@@ -529,30 +528,30 @@ soap5_encoding_schema = suds.byte_str("""\
 
 class DocumentStore:
     """
-    The I{suds} document store provides a local repository for XML documents.
+    Local XML document content repository.
 
-    @cvar protocol: The URL protocol for the store.
-    @type protocol: str
-    @cvar store: The mapping of URL location to documents.
-    @type store: dict
+    Each XML document is identified by its location, i.e. URL without any
+    protocol identifier. Contained XML documents can be looked up using any URL
+    referencing that same location.
+
     """
 
     def __init__(self, *args, **kwargs):
         self.__store = {
-            'schemas.xmlsoap.org/soap/encoding/':soap5_encoding_schema}
+            'schemas.xmlsoap.org/soap/encoding/': soap5_encoding_schema}
         self.update = self.__store.update
         self.update(*args, **kwargs)
 
     def __len__(self):
-        # Implementation note:
-        #   We can not implement '__len__' as simply self.__store.__len__, as
-        # we do for 'update' because that causes py2to3 conversion to fail.
-        #                                            (08.05.2013.) (Jurko)
         return len(self.__store)
 
     def open(self, url):
         """
         Open a document at the specified URL.
+
+        The document URL's needs not contain a protocol identifier, and if it
+        does, that protocol identifier is ignored when looking up the store
+        content.
 
         Missing documents referenced using the internal 'suds' protocol are
         reported by raising an exception. For other protocols, None is returned
@@ -562,6 +561,7 @@ class DocumentStore:
         @type url: str
         @return: Document content or None if not found.
         @rtype: bytes
+
         """
         protocol, location = self.__split(url)
         content = self.__find(location)
@@ -572,20 +572,24 @@ class DocumentStore:
     def __find(self, location):
         """
         Find the specified location in the store.
+
         @param location: The I{location} part of a URL.
         @type location: str
         @return: Document content or None if not found.
         @rtype: bytes
+
         """
         return self.__store.get(location)
 
     def __split(self, url):
         """
-        Split the URL into I{protocol} and I{location}
+        Split the given URL into its I{protocol} & I{location} components.
+
         @param url: A URL.
         @param url: str
-        @return: (I{url}, I{location})
-        @rtype: tuple
+        @return: (I{protocol}, I{location})
+        @rtype: (str, str)
+
         """
         parts = url.split('://', 1)
         if len(parts) == 2:
