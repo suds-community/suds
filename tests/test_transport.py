@@ -28,11 +28,28 @@ if __name__ == "__main__":
 
 
 import suds
-from suds.transport import Reply, Request
+from suds.transport import Reply, Request, Transport
+import suds.transport.options
 
 import pytest
 
 import sys
+
+
+class TestBaseTransportClass:
+
+    def test_members(self):
+        t = Transport()
+        assert t.options.__class__ is suds.transport.options.Options
+
+    @pytest.mark.parametrize("method_name", ("open", "send"))
+    def test_functions_should_be_abstract(self, monkeypatch, method_name):
+        monkeypatch.delitem(locals(), "e", False)
+        transport = Transport()
+        f = getattr(transport, method_name)
+        e = pytest.raises(Exception, f, "whatever").value
+        assert e.__class__ is Exception
+        assert str(e) == "not-implemented"
 
 
 @pytest.mark.parametrize("message", (
