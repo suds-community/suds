@@ -412,7 +412,7 @@ Python 2.4.x
   * Can not be run using ``python.exe -m pip``.
 
     * Workaround is to use one of the ``pip`` startup scripts found in the
-      Python installations ``Scripts`` folder or the following invocation::
+      Python installation's ``Scripts`` folder or the following invocation::
 
         py244 -c "import pip;pip.main()" <regular-pip-options>
 
