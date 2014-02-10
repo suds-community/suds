@@ -182,9 +182,15 @@ class TestCacheStoreTransportUsage:
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert store.mock_log == [url]
 
-    def test_wsdl_not_found_in_cache_or_store_should_be_transported(self):
+    @pytest.mark.parametrize("url", (
+        "sudo://make-me-a-sammich",
+        "http://my little URL",
+        "https://my little URL",
+        "xxx://my little URL",
+        "xxx:my little URL",
+        "xxx:"))
+    def test_wsdl_not_found_in_cache_or_store_should_be_transported(self, url):
         store = MockDocumentStore()
-        url = "sudo://make-me-a-sammich"
         t = MockTransport(open_data=tests.wsdl(""))
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert t.mock_operation_log == [("open", url)]
