@@ -1,4 +1,6 @@
-﻿# This program is free software; you can redistribute it and/or modify it under
+# -*- coding: utf-8 -*-
+
+# This program is free software; you can redistribute it and/or modify it under
 # the terms of the (LGPL) GNU Lesser General Public License as published by the
 # Free Software Foundation; either version 3 of the License, or (at your
 # option) any later version.
@@ -22,7 +24,7 @@ Implemented using the 'pytest' testing framework.
 
 if __name__ == "__main__":
     import __init__
-    __init__.runUsingPyTest(globals())
+    __init__.run_using_pytest(globals())
 
 
 from suds.sax.date import FixedOffsetTimezone, UtcTimezone

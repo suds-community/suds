@@ -29,7 +29,7 @@ specific to a particular web service operation binding.
 
 if __name__ == "__main__":
     import __init__
-    __init__.runUsingPyTest(globals())
+    __init__.run_using_pytest(globals())
 
 
 import suds
@@ -273,15 +273,15 @@ def test_extra_positional_arguments(param_optional, args):
 
 
 @pytest.mark.parametrize(("param_names", "args", "kwargs"), (
-    (["a"], (1,), {"a":5}),
-    ([["a"]], (1,), {"a":5}),
-    (["a"], (None, 1, 2, 7), {"a":5}),
-    ([["a"]], (None, 1, 2, 7), {"a":5}),
-    (["a", ["b"], "c"], (None, None, None), {"a":1, "b":2, "c":3}),
-    ([["a"], ["b"], ["c"]], (None, None, None), {"a":1, "b":2, "c":3}),
-    (["a"], ("x",), {"a":None}),
-    (["a", ["b"], ["c"]], (1,), {"a":None}),
-    (["a", "b", ["c"]], (None, 2), {"b":None})))
+    (["a"], (1,), {"a": 5}),
+    ([["a"]], (1,), {"a": 5}),
+    (["a"], (None, 1, 2, 7), {"a": 5}),
+    ([["a"]], (None, 1, 2, 7), {"a": 5}),
+    (["a", ["b"], "c"], (None, None, None), {"a": 1, "b": 2, "c": 3}),
+    ([["a"], ["b"], ["c"]], (None, None, None), {"a": 1, "b": 2, "c": 3}),
+    (["a"], ("x",), {"a": None}),
+    (["a", ["b"], ["c"]], (1,), {"a": None}),
+    (["a", "b", ["c"]], (None, 2), {"b": None})))
 def test_multiple_value_for_single_parameter_error(param_names, args, kwargs):
     """
     Test how multiple value for a single parameter errors are reported.
@@ -326,7 +326,7 @@ def test_not_reporting_extra_argument_errors():
         ("p2", MockParamType(True), [x, c]),
         ("p3", MockParamType(False), [x, c])]
     args = list(range(5))
-    kwargs = {"p1":"p1", "p3":"p3", "x":666}
+    kwargs = {"p1": "p1", "p3": "p3", "x": 666}
     param_processor = MockParamProcessor()
     args_required, args_allowed = suds.argparser.parse_args("w", params, args,
         kwargs, param_processor.process, False)
@@ -343,19 +343,19 @@ def test_not_reporting_extra_argument_errors():
 
 
 @pytest.mark.parametrize(("param_names", "args", "kwargs"), (
-    ([], (), {"x":5}),
-    ([], (None, 1, 2, 7), {"x":5}),
-    ([], (), {"x":1, "y":2, "z":3}),
-    (["a"], (), {"x":None}),
-    ([["a"]], (), {"x":None}),
-    (["a"], (1,), {"x":None}),
-    ([["a"]], (1,), {"x":None}),
-    (["a"], (), {"a":"spank me", "x":5}),
-    (["a"], (), {"x":5, "a":"spank me"}),
-    (["a"], (), {"a":"spank me", "x":5, "wuwu":None}),
-    (["a", "b", "c"], (1, 2), {"w":666}),
-    (["a", ["b"], ["c"]], (1,), {"c":None, "w":666}),
-    (["a", "b", ["c"]], (None,), {"b":None, "_":666})))
+    ([], (), {"x": 5}),
+    ([], (None, 1, 2, 7), {"x": 5}),
+    ([], (), {"x": 1, "y": 2, "z": 3}),
+    (["a"], (), {"x": None}),
+    ([["a"]], (), {"x": None}),
+    (["a"], (1,), {"x": None}),
+    ([["a"]], (1,), {"x": None}),
+    (["a"], (), {"a": "spank me", "x": 5}),
+    (["a"], (), {"x": 5, "a": "spank me"}),
+    (["a"], (), {"a": "spank me", "x": 5, "wuwu": None}),
+    (["a", "b", "c"], (1, 2), {"w": 666}),
+    (["a", ["b"], ["c"]], (1,), {"c": None, "w": 666}),
+    (["a", "b", ["c"]], (None,), {"b": None, "_": 666})))
 def test_unexpected_keyword_argument(param_names, args, kwargs):
     """
     Test how unexpected keyword arguments are reported.

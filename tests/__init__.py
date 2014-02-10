@@ -46,10 +46,10 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
     if store is None:
         store = suds.store.DocumentStore()
         kwargs.update(documentStore=store)
-    testFileId = "whatchamacallit"
-    store.update({testFileId: wsdl_content})
+    test_file_id = "whatchamacallit"
+    store.update({test_file_id: wsdl_content})
     kwargs.update(cache=None)
-    return suds.client.Client("suds://" + testFileId, *args, **kwargs)
+    return suds.client.Client("suds://" + test_file_id, *args, **kwargs)
 
 
 def compare_xml(lhs, rhs):
@@ -155,7 +155,7 @@ def compare_xml_to_string(lhs, rhs):
     return compare_xml(lhs, rhs_document)
 
 
-def runUsingPyTest(callerGlobals):
+def run_using_pytest(caller_globals):
     """Run the caller test script using the pytest testing framework."""
     import sys
     # Trick setuptools into not recognizing we are referencing __file__ here.
@@ -164,7 +164,7 @@ def runUsingPyTest(callerGlobals):
     # archive. This __file__ usage is safe since it is used only when a script
     # has been run directly, and that can not be done from a zipped package
     # archive.
-    filename = callerGlobals.get("file".join(["__"] * 2))
+    filename = caller_globals.get("file".join(["__"] * 2))
     if not filename:
         sys.exit("Internal error: can not determine test script name.")
     try:
@@ -173,8 +173,8 @@ def runUsingPyTest(callerGlobals):
         filename = filename or "<unknown-script>"
         sys.exit("'py.test' unit testing framework not available. Can not run "
             "'%s' directly as a script." % (filename,))
-    exitCode = pytest.main(["--pyargs", filename] + sys.argv[1:])
-    sys.exit(exitCode)
+    exit_code = pytest.main(["--pyargs", filename] + sys.argv[1:])
+    sys.exit(exit_code)
 
 
 def wsdl(schema_content, input=None, output=None, operation_name="f"):
