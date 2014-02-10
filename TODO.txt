@@ -971,19 +971,48 @@ PRIORETIZED:
 (09.02.2014.)
 
 (+) * (Jurko) Per process default FileCache folder randomization + removal on
-(+)   exit.
+(+)   exit - fix CVE-2013-2217.
 (+)     * Add tests.
 (+)     * Implement.
 (+)     * Update release notes.
 (+)     * Update related issues on BitBucket.
+(+) * (Jurko) Extract all suds.client.Client related tests related to how it
+(+)   uses its worker cache/store/transport components into separate
+(+)   test_client.py test module. Modules like test_transport.py or
+(+)   test_cache.py should concentrate on testing that specific component
+(+)   functionality and not how the component gets used by suds.client.Client.
+(+)     * Test modules to check.
+(+)         * 'test_cache.py'.
+(+)         * 'test_client_cache.py'.
+(+)         * 'test_transport.py'.
+(+)     * Several transport usage tests already prepared in test_transport_1.py
+(+)       on Jurko's notebook.
+
+(10.02.2014.)
+
+(+) * (Jurko) Add tests for the functionality potentially affected by a planned
+(+)   _SoapClient/_SimClient refactoring.
+(+)     * Client's cache/store/transport usage.
+(+)         * WSDL access.
+(+)             * If an object is found in cache it should not be looked up in
+(+)               the given document store or transported.
+(+)             * If an object is found in a given document store it should not
+(+)               be transported.
+
+    * (Jurko) Clean up test_client.py test module - extract all remaining
+      suds.client.Client related tests related to how it uses its worker cache/
+      store/transport components.
+        * Test modules to check.
+            * 'test_transport_http.py'.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
         * Client's cache/store/transport usage.
-            * If an object is found in cache it should not be looked up in the
-              given document store or transported.
-            * If an object is found in a given document store it should not be
-              transported.
+            * Sending requests.
+                * If an object is found in cache it should not be looked up in
+                  the given document store or transported.
+                * If an object is found in a given document store it should not
+                  be transported.
         * Transport.
         * _SoapClient.
             * Using Transport.
@@ -1017,8 +1046,13 @@ PRIORETIZED:
                 * 'nosend' option + RequestContext reply.
                 * 'retxml'.
                 * 'prettyxml'.
-            * Downloaded documents.
-                * loaded(url, bytes) --> bytes.
+            * Fetched documents.
+                * document.loaded(url, bytes) --> bytes.
+                * document.parsed(url, document).
+            * Documents read from cache.
+                * document.parsed(url, document).
+            * Client initialized with WSDL.
+                * init.initialized(wsdl).
             * SOAP requests.
                 * marshalled(document) - may modify document in-place.
                 * sending(bytes) --> bytes.
@@ -1035,7 +1069,27 @@ PRIORETIZED:
             * Client debug log messages changed.
             * Removed the RequestContext.original_envelope attribute.
 
+    * (Jurko) See why creating two suds.client.Client instances with the same
+      transport instance fails. It report some 'Duplicate domain "suds.options"
+      found' error.
+        t = suds.transport.Transport()
+        tests.client_from_wsdl(tests.wsdl(""), transport=t)
+        tests.client_from_wsdl(tests.wsdl(""), transport=t)
+
     * (Jurko) Generic code cleanup.
+        * Add cachingpolicy option tests.
+        * Add default document store tests.
+            * Generic.
+            * suds.client.Client document store usage.
+        * See why exception raised when passing a transport to
+          suds.client.Client that is not a subclass of suds.transport.Transport
+          is formatted as it is.
+            * Class's string representation wrapped in a tuple.
+            * Uses class's repr() string representation.
+            * Double quotes used around the 'transport'.
+        * suds.store.defaultDocumentStore cleanup.
+            * See if this member should be marked as private.
+            * Rename to not use camelCase.
         * DefinitionsReader.open() changes options on cached Definitions
           instances. Make sure this does not break programs with multiple suds
           Clients loading the same WSDL schema but using different options.
