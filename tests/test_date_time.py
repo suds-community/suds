@@ -22,7 +22,7 @@ Implemented using the 'pytest' testing framework.
 
 if __name__ == "__main__":
     import __init__
-    __init__.runUsingPyTest(globals())
+    __init__.run_using_pytest(globals())
 
 
 from suds.sax.date import (FixedOffsetTimezone, Date, DateTime, Time,

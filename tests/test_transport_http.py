@@ -24,7 +24,7 @@ Implemented using the 'pytest' testing framework.
 
 if __name__ == "__main__":
     import __init__
-    __init__.runUsingPyTest(globals())
+    __init__.run_using_pytest(globals())
 
 
 import suds
@@ -136,10 +136,10 @@ def test_http_request_URL_with_a_missing_protocol_identifier(url):
     store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
-    exceptionClass = ValueError
+    exception_class = ValueError
     if sys.version_info < (3, 0):
-        exceptionClass = MyException
-    pytest.raises(exceptionClass, client.service.f)
+        exception_class = MyException
+    pytest.raises(exception_class, client.service.f)
 
 
 def test_sending_unicode_data(monkeypatch):
@@ -170,50 +170,50 @@ def test_sending_unicode_data(monkeypatch):
     suds attempt to read back data from the network.
 
     """
-    def callOnce(f):
+    def call_once(f):
         """Method decorator making sure its function only gets called once."""
         def wrapper(self, *args, **kwargs):
-            fTag = "_%s__%s_called" % (self.__class__.__name__, f.__name__)
-            assert not hasattr(self, fTag)
-            setattr(self, fTag, True)
+            f_tag = "_%s__%s_called" % (self.__class__.__name__, f.__name__)
+            assert not hasattr(self, f_tag)
+            setattr(self, f_tag, True)
             return f(self, *args, **kwargs)
         return wrapper
 
     class Mocker:
-        def __init__(self, expectedHost, expectedPort):
-            self.expectedHost = expectedHost
-            self.expectedPort = expectedPort
-            self.sentData = suds.byte_str()
-            self.hostAddress = object()
-        @callOnce
+        def __init__(self, expected_host, expected_port):
+            self.expected_host = expected_host
+            self.expected_port = expected_port
+            self.sent_data = suds.byte_str()
+            self.host_address = object()
+        @call_once
         def getaddrinfo(self, host, port, *args, **kwargs):
-            assert host == self.expectedHost
-            assert port == self.expectedPort
-            return [(None, None, None, None, self.hostAddress)]
-        @callOnce
+            assert host == self.expected_host
+            assert port == self.expected_port
+            return [(None, None, None, None, self.host_address)]
+        @call_once
         def socket(self, *args, **kwargs):
             self.socket = MockSocket(self)
             return self.socket
 
     class MockSocketReader:
-        @callOnce
+        @call_once
         def readline(self, *args, **kwargs):
             raise MyException
 
     class MockSocket:
         def __init__(self, mocker):
             self.__mocker = mocker
-        @callOnce
+        @call_once
         def connect(self, address):
-            assert address is self.__mocker.hostAddress
-        @callOnce
+            assert address is self.__mocker.host_address
+        @call_once
         def makefile(self, *args, **kwargs):
             return MockSocketReader()
         def sendall(self, data):
             # Python 2.4 urllib implementation calls this function twice - once
             # for sending the HTTP request headers and once for its body.
-            self.__mocker.sentData += data
-        @callOnce
+            self.__mocker.sent_data += data
+        @call_once
         def settimeout(self, *args, **kwargs):
             assert not hasattr(self, "settimeout_called")
             self.settimeout_called = True
@@ -228,7 +228,7 @@ def test_sending_unicode_data(monkeypatch):
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
     data = u"Дмитровский район"
     pytest.raises(MyException, client.service.f, data)
-    assert data.encode("utf-8") in mocker.sentData
+    assert data.encode("utf-8") in mocker.sent_data
 
 
 def test_sending_non_ascii_location():
@@ -252,10 +252,10 @@ def test_sending_non_ascii_location():
 
 @pytest.mark.skipif(sys.version_info >= (3, 0),
     reason="Python 2 specific functionality")
-@pytest.mark.parametrize(("urlString", "expectedException"), (
+@pytest.mark.parametrize(("url_string", "expected_exception"), (
     ("http://jorgula", MyException),
     ("http://jorgula_\xe7", UnicodeDecodeError)))
-def test_sending_py2_bytes_location(urlString, expectedException):
+def test_sending_py2_bytes_location(url_string, expected_exception):
     """
     Suds should accept single-byte string URL values under Python 2, but should
     still report an error if those strings contain any non-ASCII characters.
@@ -269,16 +269,16 @@ def test_sending_py2_bytes_location(urlString, expectedException):
     store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data("http://x"))
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
-    client.options.location = suds.byte_str(urlString)
-    pytest.raises(expectedException, client.service.f)
+    client.options.location = suds.byte_str(url_string)
+    pytest.raises(expected_exception, client.service.f)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 0),
     reason="requires at least Python 3")
-@pytest.mark.parametrize("urlString", (
+@pytest.mark.parametrize("url_string", (
     "http://jorgula",
     "http://jorgula_\xe7"))
-def test_sending_py3_bytes_location(urlString):
+def test_sending_py3_bytes_location(url_string):
     """
     Suds should refuse to send HTTP requests with a target location specified
     as either a Python 3 bytes or bytearray object.
@@ -293,12 +293,12 @@ def test_sending_py3_bytes_location(urlString):
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         transport=transport)
 
-    expectedException = AssertionError
+    expected_exception = AssertionError
     if sys.flags.optimize:
-        expectedException = AttributeError
+        expected_exception = AttributeError
 
-    for url in (bytes(urlString, encoding="utf-8"),
-        bytearray(urlString, encoding="utf-8")):
+    for url in (bytes(url_string, encoding="utf-8"),
+            bytearray(url_string, encoding="utf-8")):
         # Under Python 3.x we can not use the client's 'location' option to set
         # a bytes URL as it accepts only strings and in Python 3.x all strings
         # are unicode strings. Therefore, we use an ugly hack, modifying suds's
@@ -306,7 +306,7 @@ def test_sending_py3_bytes_location(urlString):
         # has a bytes object specified as a location for its 'f' web service
         # operation.
         client.sd[0].ports[0][0].methods['f'].location = url
-        pytest.raises(expectedException, client.service.f)
+        pytest.raises(expected_exception, client.service.f)
 
 
 def _encode_basic_credentials(username, password):

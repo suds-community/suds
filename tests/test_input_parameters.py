@@ -37,7 +37,7 @@ operation's input parameters correctly.
 
 if __name__ == "__main__":
     import __init__
-    __init__.runUsingPyTest(globals())
+    __init__.run_using_pytest(globals())
 
 
 import suds
