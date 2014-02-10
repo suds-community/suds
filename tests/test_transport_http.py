@@ -30,12 +30,19 @@ if __name__ == "__main__":
 import suds
 import suds.client
 import suds.store
+import suds.transport
 import suds.transport.http
 
 import pytest
 
 import base64
 import sys
+import urllib2
+
+if sys.version_info >= (3, 0):
+    urllib_request = urllib.request
+else:
+    urllib_request = urllib2
 
 
 class MyException(Exception):
@@ -95,26 +102,6 @@ def test_authenticated_http_add_credentials_to_request():
     r = MockRequest()
     t.addcredentials(r)
     check_Authorization_header(r, username, password)
-
-
-@pytest.mark.parametrize("url", (
-    "http://my little URL",
-    "https://my little URL",
-    "xxx://my little URL",
-    "xxx:my little URL",
-    "xxx:"))
-def test_http_request_URL(url):
-    """Make sure suds makes a HTTP request targeted at an expected URL."""
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            assert request.get_full_url() == url
-            raise MyException
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        transport=transport)
-    pytest.raises(MyException, client.service.f)
 
 
 @pytest.mark.parametrize("url", (
@@ -307,6 +294,57 @@ def test_sending_py3_bytes_location(url_string):
         # operation.
         client.sd[0].ports[0][0].methods['f'].location = url
         pytest.raises(expected_exception, client.service.f)
+
+
+@pytest.mark.parametrize("url", (
+    "sudo://make-me-a-sammich",
+    "http://my little URL",
+    "https://my little URL",
+    "xxx://my little URL",
+    "xxx:my little URL",
+    "xxx:"))
+def test_urlopener_default(url, monkeypatch):
+    """HttpTransport builds a new urlopener if not given an external one."""
+    my_request = suds.transport.Request(url, u"Rumpelstiltskin")
+    def mock_build_urlopener(*handlers):
+        assert len(handlers) == 1
+        assert handlers[0].__class__ is urllib2.ProxyHandler
+        raise MyException
+    monkeypatch.setattr(urllib_request, "build_opener", mock_build_urlopener)
+    transport = suds.transport.http.HttpTransport()
+    assert transport.urlopener is None
+    pytest.raises(MyException, transport.open, my_request)
+    pytest.raises(MyException, transport.send, my_request)
+
+
+@pytest.mark.parametrize("url", (
+    "sudo://make-me-a-sammich",
+    "http://my little URL",
+    "https://my little URL",
+    "xxx://my little URL",
+    "xxx:my little URL",
+    "xxx:"))
+def test_urlopener_indirection(url, monkeypatch):
+    """
+    HttpTransport may be configured with an external urlopener.
+
+    In that case, a new urlopener is not built and the given urlopener is used
+    as-is, without adding any extra handlers to it.
+
+    """
+    my_request = suds.transport.Request(url, u"Rumpelstiltskin")
+    class MockURLOpener:
+        def open(self, urllib_request, timeout=None):
+            assert urllib_request.__class__ is urllib2.Request
+            assert urllib_request.get_full_url() == url
+            raise MyException
+    def mock_build_urlopener(*args, **kwargs):
+        pytest.fail("urllib2.build_opener() called when not expected.")
+    monkeypatch.setattr(urllib_request, "build_opener", mock_build_urlopener)
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    pytest.raises(MyException, transport.open, my_request)
+    pytest.raises(MyException, transport.send, my_request)
 
 
 def _encode_basic_credentials(username, password):
