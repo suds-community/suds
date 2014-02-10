@@ -96,7 +96,7 @@ MESSAGE:
 %s""" % (self.code, self.headers, self.message)
 
 
-class Transport:
+class Transport(object):
     """The transport I{interface}."""
 
     def __init__(self):

@@ -526,7 +526,7 @@ soap5_encoding_schema = suds.byte_str("""\
 """)
 
 
-class DocumentStore:
+class DocumentStore(object):
     """
     Local XML document content repository.
 
