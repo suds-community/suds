@@ -120,13 +120,17 @@ def test_http_request_URL_with_a_missing_protocol_identifier(url):
             raise MyException
     transport = suds.transport.http.HttpTransport()
     transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        transport=transport)
-    exception_class = ValueError
     if sys.version_info < (3, 0):
         exception_class = MyException
-    pytest.raises(exception_class, client.service.f)
+        def check_exception(e):
+            pass
+    else:
+        exception_class = ValueError
+        def check_exception(e):
+            assert "unknown url type" in str(e)
+    request = suds.transport.Request(url, u"Giligan's island")
+    check_exception(pytest.raises(exception_class, transport.open, request))
+    check_exception(pytest.raises(exception_class, transport.send, request))
 
 
 def test_sending_unicode_data(monkeypatch):
