@@ -1077,6 +1077,17 @@ PRIORETIZED:
         tests.client_from_wsdl(tests.wsdl(""), transport=t)
 
     * (Jurko) Generic code cleanup.
+        * HttpTransport tests.
+            * Check for multiple build_opener() calls.
+            * Check for multiple urlopener.open() calls.
+            * Check what gets passed to the default built urlopener. Merge this
+              with externally specified urlopener testing.
+        * Add HttpTransport proxy configuration tests.
+            * See when the proxy member is set.
+            * See what the default proxy member value is for.
+            * See whether the proxy member is used at all with an externally
+              specified urlopener, and if so - if it is made redundant by using
+              such externally specified urlopeners.
         * Add cachingpolicy option tests.
         * Add default document store tests.
             * Generic.
