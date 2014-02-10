@@ -30,6 +30,9 @@ if __name__ == "__main__":
 import suds
 import suds.cache
 import suds.store
+import suds.transport
+import suds.transport.https
+import tests
 
 import pytest
 
@@ -39,7 +42,156 @@ class MyException(Exception):
     pass
 
 
+class MockCache(suds.cache.Cache):
+    """
+    Mock cache structure used in the tests in this module.
+
+    Implements an in-memory cache and allows the test code to test the exact
+    triggered cache operations. May be configured to allow or not adding
+    additional entries to the cache, thus allowing our tests complete control
+    over the cache's content.
+
+    """
+
+    """Enumeration for specific mock operation configurations."""
+    ALLOW = 0
+    IGNORE = 1
+    FAIL = 2
+
+    def __init__(self):
+        self.mock_data = {}
+        self.mock_operation_log = []
+        self.mock_put_config = MockCache.ALLOW
+        super(MockCache, self).__init__()
+
+    def clear(self):
+        self.mock_operation_log.append("clear")
+        pytest.fail("Unexpected MockCache.clear() operation call.")
+
+    def get(self, id):
+        self.mock_operation_log.append("get")
+        return self.mock_data.get(id, None)
+
+    def purge(self, id):
+        self.mock_operation_log.append("purge")
+        pytest.fail("Unexpected MockCache.purge() operation call.")
+
+    def put(self, id, object):
+        self.mock_operation_log.append("put")
+        if self.mock_put_config == MockCache.FAIL:
+            pytest.fail("Unexpected MockCache.put() operation call.")
+        if self.mock_put_config == MockCache.ALLOW:
+            self.mock_data[id] = object
+        else:
+            assert self.mock_put_config == MockCache.IGNORE
+
+
+class MockDocumentStore(suds.store.DocumentStore):
+    """Mock DocumentStore tracking all of its operations."""
+
+    def __init__(self, *args, **kwargs):
+        self.mock_log = []
+        self.mock_fail = kwargs.pop("mock_fail", False)
+        super(MockDocumentStore, self).__init__(*args, **kwargs)
+
+    def open(self, url):
+        self.mock_log.append(url)
+        if self.mock_fail:
+            raise MyException
+        return super(MockDocumentStore, self).open(url)
+
+    def reset(self):
+        self.mock_log = []
+
+
+class MockTransport(suds.transport.Transport):
+    """
+    Mock Transport used by the tests implemented in this module.
+
+    Allows the tests to check which transport operations got triggered and to
+    control what each of them returns.
+
+    """
+
+    def __init__(self, open_data=None, send_data=None):
+        if open_data is None:
+            open_data = []
+        elif open_data.__class__ is not list:
+            assert open_data.__class__ is suds.byte_str_class
+            open_data = [open_data]
+        if send_data is None:
+            send_data = []
+        elif send_data.__class__ is not list:
+            assert send_data.__class__ is suds.byte_str_class
+            send_data = [send_data]
+        self.mock_operation_log = []
+        self.mock_open_data = open_data
+        self.mock_send_config = send_data
+        super(MockTransport, self).__init__()
+
+    def open(self, request):
+        self.mock_operation_log.append(("open", request.url))
+        if self.mock_open_data:
+            return suds.BytesIO(self.mock_open_data.pop(0))
+        pytest.fail("Unexpected MockTransport.open() operation call.")
+
+    def send(self, request):
+        self.mock_operation_log.append(("send", request.url))
+        if self.mock_send_data:
+            return suds.BytesIO(self.mock_send_data.pop(0))
+        pytest.fail("Unexpected MockTransport.send() operation call.")
+
+
+class TestCacheStoreTransportUsage:
+    """
+    suds.client.Client cache/store/transport component usage interaction tests.
+
+    """
+
+    def test_fetching_wsdl_from_cache_should_avoid_store_and_transport(self):
+        """
+        When a requested WSDL schema is located in the client's cache, it
+        should be read from there instead of fetching its data from the
+        client's document store or using its registered transport.
+
+        """
+        # Add to cache.
+        cache = MockCache()
+        store1 = MockDocumentStore(umpala=tests.wsdl(""))
+        c1 = suds.client.Client("suds://umpala", cache=cache,
+            documentStore=store1, transport=MockTransport())
+        assert cache.mock_operation_log == ["get", "put"]
+        assert len(cache.mock_data) == 1
+        wsdl_document = cache.mock_data.values()[0]
+        assert c1.wsdl.root is wsdl_document.root()
+
+        # Make certain the same WSDL schema is fetched from the cache and not
+        # using the document store or the transport.
+        cache.mock_operation_log = []
+        cache.mock_put_config = MockCache.FAIL
+        store2 = MockDocumentStore(mock_fail=True)
+        c2 = suds.client.Client("suds://umpala", cache=cache,
+            documentStore=store2, transport=MockTransport())
+        assert cache.mock_operation_log == ["get"]
+        assert c2.wsdl.root is wsdl_document.root()
+
+    def test_fetching_wsdl_from_store_should_avoid_transport(self):
+        store = MockDocumentStore(umpala=tests.wsdl(""))
+        url = "suds://umpala"
+        t = MockTransport()
+        suds.client.Client(url, cache=None, documentStore=store, transport=t)
+        assert store.mock_log == [url]
+
+    def test_wsdl_not_found_in_cache_or_store_should_be_transported(self):
+        store = MockDocumentStore()
+        url = "sudo://make-me-a-sammich"
+        t = MockTransport(open_data=tests.wsdl(""))
+        suds.client.Client(url, cache=None, documentStore=store, transport=t)
+        assert t.mock_operation_log == [("open", url)]
+
+
 class TestCacheUsage:
+    """suds.client.Client cache component usage tests."""
 
     @pytest.mark.parametrize("cache", (
         None,
@@ -54,7 +206,7 @@ class TestCacheUsage:
                 raise MyException
         monkeypatch.setattr(suds.cache, "ObjectCache", construct_default_cache)
         monkeypatch.setattr(suds.store, "DocumentStore", MockStore)
-        pytest.raises(MyException, suds.client.Client, "some_url",
+        pytest.raises(MyException, suds.client.Client, "suds://some_URL",
             documentStore=MockStore(), cache=cache)
 
     def test_default_cache_construction(self, monkeypatch):
@@ -75,5 +227,48 @@ class TestCacheUsage:
                 pytest.fail("Default cache not created in time.")
         monkeypatch.setattr(suds.cache, "ObjectCache", construct_default_cache)
         monkeypatch.setattr(suds.store, "DocumentStore", MockStore)
-        pytest.raises(MyException, suds.client.Client, "some_url",
+        pytest.raises(MyException, suds.client.Client, "suds://some_URL",
             documentStore=MockStore())
+
+    @pytest.mark.parametrize("cache", (object(), MyException()))
+    def test_reject_invalid_cache_class(self, cache, monkeypatch):
+        monkeypatch.delitem(locals(), "e", False)
+        e = pytest.raises(AttributeError, suds.client.Client,
+            "suds://some_URL", cache=cache).value
+        expected_error = '"cache" must be: (%r,)'
+        assert str(e) == expected_error % (suds.cache.Cache,)
+
+
+class TestStoreUsage:
+    """suds.client.Client document store component usage tests."""
+
+    @pytest.mark.parametrize("store", (object(), suds.cache.NoCache()))
+    def test_reject_invalid_store_class(self, store, monkeypatch):
+        monkeypatch.delitem(locals(), "e", False)
+        e = pytest.raises(AttributeError, suds.client.Client,
+            "suds://some_URL", documentStore=store).value
+        expected_error = '"documentStore" must be: (%r,)'
+        assert str(e) == expected_error % (suds.store.DocumentStore,)
+
+
+class TestTransportUsage:
+    """suds.client.Client transport component usage tests."""
+
+    def test_default_transport(self):
+        client = tests.client_from_wsdl(tests.wsdl(""))
+        expected = suds.transport.https.HttpAuthenticated
+        assert client.options.transport.__class__ is expected
+
+    def test_nosend_should_avoid_transport_sends(self):
+        wsdl = tests.wsdl("")
+        t = MockTransport()
+        client = tests.client_from_wsdl(wsdl, nosend=True, transport=t)
+        client.service.f()
+
+    @pytest.mark.parametrize("transport", (object(), suds.cache.NoCache()))
+    def test_reject_invalid_transport_class(self, transport, monkeypatch):
+        monkeypatch.delitem(locals(), "e", False)
+        e = pytest.raises(AttributeError, suds.client.Client,
+            "suds://some_URL", transport=transport).value
+        expected_error = '"transport" must be: (%r,)'
+        assert str(e) == expected_error % (suds.transport.Transport,)
