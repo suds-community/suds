@@ -210,8 +210,8 @@ class HttpTransport(Transport):
             encodedURL = url
             decodedURL = url.decode("ascii")
         else:
-            # On Python3, calling encode() on a bytes or a bytearray object
-            # raises an AttributeError exception.
+            # When using Python 3, calling encode() on a bytes or a bytearray
+            # object raises an AttributeError exception.
             assert py2 or not isinstance(url, bytes)
             assert py2 or not isinstance(url, bytearray)
             decodedURL = url
