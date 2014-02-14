@@ -42,11 +42,11 @@ class HttpTransport(Transport):
     def __init__(self, **kwargs):
         """
         @param kwargs: Keyword arguments.
-            - B{proxy} - An http proxy to be specified on requests.
+            - B{proxy} - An HTTP proxy to be specified on requests.
                  The proxy is defined as {protocol:proxy,}
                     - type: I{dict}
                     - default: {}
-            - B{timeout} - Set the url open timeout (seconds).
+            - B{timeout} - Set the URL open timeout (seconds).
                     - type: I{float}
                     - default: 90
 
