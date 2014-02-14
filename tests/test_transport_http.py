@@ -133,10 +133,13 @@ def test_http_request_URL_with_a_missing_protocol_identifier(url):
     check_exception(pytest.raises(exception_class, transport.send, request))
 
 
-def test_sending_unicode_data(monkeypatch):
+def test_sending_non_ascii_data_with_unicode_url(monkeypatch):
     """
-    Original suds implementation passed its request location URL to the
-    underlying HTTP request object as a unicode string.
+    Original suds HttpTransport implementation passed its request location URL
+    to the underlying httplib HTTP request object as-is. And since suds Client
+    passes its target URL to its HttpTransport as a unicode string, this caused
+    problems on Python implementations expecting a non-unicode URL in their
+    httplib HTTP requests.
 
     Under Python 2.4 this causes no problems as that implementation simply
     sends all the request data over the network as-is (and treats all unicode
@@ -157,8 +160,8 @@ def test_sending_unicode_data(monkeypatch):
     attempt to send a HTTP request over the network. On the other hand, we want
     this test to work even on computers not connected to a network so we
     monkey-patch the underlying network socket APIs, log all the data suds
-    attempt to send over the network and consider the test run successful once
-    suds attempt to read back data from the network.
+    attempts to send over the network and consider the test run successful once
+    suds attempts to read back data from the network.
 
     """
     def call_once(f):
@@ -214,12 +217,15 @@ def test_sending_unicode_data(monkeypatch):
     mocker = Mocker(host, port)
     monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
     monkeypatch.setattr("socket.socket", mocker.socket)
-    url = "http://%s:%s/svc" % (host, port)
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_input_data(url))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
-    data = u"Дмитровский район"
-    pytest.raises(MyException, client.service.f, data)
-    assert data.encode("utf-8") in mocker.sent_data
+    host_port = "%s:%s" % (host, port)
+    unicode_url = u"http://%s/svc" % (host_port,)
+    non_ascii_byte_data = u"Дмитровский район".encode("utf-8")
+    request = suds.transport.Request(unicode_url, non_ascii_byte_data)
+    transport = suds.transport.http.HttpTransport()
+    pytest.raises(MyException, transport.send, request)
+    assert mocker.sent_data.__class__ is suds.byte_str_class
+    assert mocker.sent_data.endswith(non_ascii_byte_data)
+    assert host_port.encode("utf-8") in mocker.sent_data
 
 
 def test_sending_non_ascii_location():
