@@ -34,6 +34,7 @@ import suds.transport.http
 import pytest
 
 import base64
+import re
 import sys
 import urllib2
 
@@ -46,6 +47,46 @@ else:
 class MyException(Exception):
     """Local exception used in this test module."""
     pass
+
+
+class CountedMock(object):
+    """
+    Base mock object class supporting generic attribute access counting.
+
+    Ignores attributes whose name starts with 'mock_' or '__mock_' or their
+    transformed variant '_<className>__mock_'.
+
+    Derived classes must call this class's __init__() or mock_reset()
+    methods during their initialization, but both calls are not needed.
+    Before this initialization, all counters will be reported as None.
+
+    """
+
+    def __init__(self):
+        self.mock_reset()
+
+    def __getattribute__(self, name):
+        get = super(CountedMock, self).__getattribute__
+        counter_name = "_CountedMock__mock_call_counter"
+        has_counter = False
+        try:
+            counter = get(counter_name)
+            has_counter = True
+        except AttributeError:
+            pass
+        if has_counter:
+            if name == counter_name:
+                return counter
+            if not re.match("(_.+__)?mock_", name):
+                counter[name] = counter.get(name, 0) + 1
+        return get(name)
+
+    def mock_call_count(self, name):
+        if self.__mock_call_counter:
+            return self.__mock_call_counter.get(name, 0)
+
+    def mock_reset(self):
+        self.__mock_call_counter = {}
 
 
 def test_authenticated_http():
@@ -102,7 +143,12 @@ def test_authenticated_http_add_credentials_to_request():
     check_Authorization_header(r, username, password)
 
 
-def test_sending_non_ascii_data_to_unicode_URL(monkeypatch):
+@pytest.mark.parametrize(
+    ("sender_method", "expected_send_data_start", "expect_request_data_send"), (
+    (suds.transport.http.HttpTransport.open, "GET ", False),
+    (suds.transport.http.HttpTransport.send, "POST ", True)))
+def test_sending_non_ascii_data_to_unicode_URL(monkeypatch, sender_method,
+        expected_send_data_start, expect_request_data_send):
     """
     Regression test: Original suds HttpTransport implementation passed its
     request URL to the underlying httplib HTTP request object as-is, and since
@@ -133,59 +179,51 @@ def test_sending_non_ascii_data_to_unicode_URL(monkeypatch):
     suds attempts to read back data from the network.
 
     """
-    def call_once(f):
-        """Method decorator making sure its function only gets called once."""
-        def wrapper(self, *args, **kwargs):
-            f_tag = "_%s__%s_called" % (self.__class__.__name__, f.__name__)
-            assert not hasattr(self, f_tag)
-            setattr(self, f_tag, True)
-            return f(self, *args, **kwargs)
-        return wrapper
-
-    class Mocker:
+    class Mocker(CountedMock):
         def __init__(self, expected_host, expected_port):
             self.expected_host = expected_host
             self.expected_port = expected_port
-            self.sent_data = suds.byte_str()
             self.host_address = object()
-        @call_once
+            self.mock_reset()
         def getaddrinfo(self, host, port, *args, **kwargs):
             assert host == self.expected_host
             assert port == self.expected_port
             return [(None, None, None, None, self.host_address)]
-        @call_once
+        def mock_reset(self):
+            super(Mocker, self).mock_reset()
+            self.mock_sent_data = suds.byte_str()
+            self.mock_socket = None
         def socket(self, *args, **kwargs):
-            self.socket = MockSocket(self)
-            return self.socket
+            assert self.mock_socket is None
+            self.mock_socket = MockSocket(self)
+            return self.mock_socket
 
-    class MockSocketReader:
-        @call_once
+    class MockSocket(CountedMock):
+        def __init__(self, mocker):
+            self.__mocker = mocker
+            self.mock_reset()
+        def connect(self, address):
+            assert address is self.__mocker.host_address
+        def makefile(self, *args, **kwargs):
+            assert self.mock_reader is None
+            self.mock_reader = MockSocketReader()
+            return self.mock_reader
+        def mock_reset(self):
+            super(MockSocket, self).mock_reset()
+            self.mock_reader = None
+        def sendall(self, data):
+            self.__mocker.mock_sent_data += data
+        def settimeout(self, *args, **kwargs):
+            pass
+
+    class MockSocketReader(CountedMock):
+        def __init__(self):
+            super(MockSocketReader, self).__init__()
         def readline(self, *args, **kwargs):
             raise MyException
 
-    class MockSocket:
-        def __init__(self, mocker):
-            self.__mocker = mocker
-        @call_once
-        def connect(self, address):
-            assert address is self.__mocker.host_address
-        @call_once
-        def makefile(self, *args, **kwargs):
-            return MockSocketReader()
-        def sendall(self, data):
-            # Python 2.4 urllib implementation calls this function twice - once
-            # for sending the HTTP request headers and once for its body.
-            self.__mocker.sent_data += data
-        @call_once
-        def settimeout(self, *args, **kwargs):
-            assert not hasattr(self, "settimeout_called")
-            self.settimeout_called = True
-
     host = "an-easily-recognizable-host-name-214894932"
     port = 9999
-    mocker = Mocker(host, port)
-    monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
-    monkeypatch.setattr("socket.socket", mocker.socket)
     host_port = "%s:%s" % (host, port)
     # It is important for this URL to be unicode in order to trigger the
     # problematic httplib behaviour described in the main test description.
@@ -194,13 +232,35 @@ def test_sending_non_ascii_data_to_unicode_URL(monkeypatch):
     # matches regular HttpTransport usage in suds as suds.client.Client always
     # passes its target location URL as a unicode value.
     unicode_URL = u"http://%s/svc" % (host_port,)
+    partial_ascii_byte_data = suds.byte_str("Muka-laka-hiki")
     non_ascii_byte_data = u"Дмитровский район".encode("utf-8")
+    non_ascii_byte_data += partial_ascii_byte_data
+    mocker = Mocker(host, port)
+    monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
+    monkeypatch.setattr("socket.socket", mocker.socket)
     request = suds.transport.Request(unicode_URL, non_ascii_byte_data)
     transport = suds.transport.http.HttpTransport()
-    pytest.raises(MyException, transport.send, request)
-    assert mocker.sent_data.__class__ is suds.byte_str_class
-    assert mocker.sent_data.endswith(non_ascii_byte_data)
-    assert host_port.encode("utf-8") in mocker.sent_data
+    pytest.raises(MyException, sender_method, transport, request)
+    assert mocker.mock_call_count("getaddrinfo") == 1
+    assert mocker.mock_call_count("socket") == 1
+    assert mocker.mock_socket.mock_call_count("connect") == 1
+    assert mocker.mock_socket.mock_call_count("makefile") == 1
+    # With older Python versions, e.g. Python 2.4, urllib implementation calls
+    # Socket's sendall() method twice - once for sending the HTTP request
+    # headers and once for its body.
+    assert mocker.mock_socket.mock_call_count("sendall") in (1, 2)
+    # With older Python versions , e.g. Python 2.4, Socket class does not
+    # implement the settimeout() method.
+    assert mocker.mock_socket.mock_call_count("settimeout") in (0, 1)
+    assert mocker.mock_socket.mock_reader.mock_call_count("readline") == 1
+    assert mocker.mock_sent_data.__class__ is suds.byte_str_class
+    expected_send_data_start = suds.byte_str(expected_send_data_start)
+    assert mocker.mock_sent_data.startswith(expected_send_data_start)
+    assert host_port.encode("utf-8") in mocker.mock_sent_data
+    if expect_request_data_send:
+        assert mocker.mock_sent_data.endswith(non_ascii_byte_data)
+    else:
+        assert partial_ascii_byte_data not in mocker.mock_sent_data
 
 
 @pytest.mark.parametrize("url", (
