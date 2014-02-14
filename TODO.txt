@@ -999,11 +999,17 @@ PRIORETIZED:
 (+)             * If an object is found in a given document store it should not
 (+)               be transported.
 
-    * (Jurko) Clean up test_client.py test module - extract all remaining
-      suds.client.Client related tests related to how it uses its worker cache/
-      store/transport components.
-        * Test modules to check.
-            * 'test_transport_http.py'.
+(14.02.2014.)
+
+(+) * (Jurko) Clean up test_client.py test module - extract all remaining
+(+)   suds.client.Client related tests related to how it uses its worker cache/
+(+)   store/transport components.
+(+)     * Test modules to check.
+(+)         * 'test_transport_http.py'.
+
+    * (Jurko) Add HttpTransport tests.
+        * test_sending_non_ascii_data_to_unicode_URL() with send() & open().
+        * Sending to unicode and bytes URL.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
