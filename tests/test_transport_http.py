@@ -28,8 +28,6 @@ if __name__ == "__main__":
 
 
 import suds
-import suds.client
-import suds.store
 import suds.transport
 import suds.transport.http
 
@@ -104,52 +102,23 @@ def test_authenticated_http_add_credentials_to_request():
     check_Authorization_header(r, username, password)
 
 
-@pytest.mark.parametrize("url", (
-    "my no-protocol URL",
-    ":my no-protocol URL"))
-def test_http_request_URL_with_a_missing_protocol_identifier(url):
+def test_sending_non_ascii_data_to_unicode_URL(monkeypatch):
     """
-    Test suds reporting URLs with a missing protocol identifier.
+    Regression test: Original suds HttpTransport implementation passed its
+    request URL to the underlying httplib HTTP request object as-is, and since
+    suds Client passes its target location URL to its HttpTransport as a
+    unicode string, this was causing problems on Python implementations
+    expecting a non-unicode URL in their httplib HTTP requests.
 
-    Python urllib library makes this check under Python 3.x, but not under
-    earlier Python versions.
-
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    if sys.version_info < (3, 0):
-        exception_class = MyException
-        def check_exception(e):
-            pass
-    else:
-        exception_class = ValueError
-        def check_exception(e):
-            assert "unknown url type" in str(e)
-    request = suds.transport.Request(url, u"Giligan's island")
-    check_exception(pytest.raises(exception_class, transport.open, request))
-    check_exception(pytest.raises(exception_class, transport.send, request))
-
-
-def test_sending_non_ascii_data_with_unicode_url(monkeypatch):
-    """
-    Original suds HttpTransport implementation passed its request location URL
-    to the underlying httplib HTTP request object as-is. And since suds Client
-    passes its target URL to its HttpTransport as a unicode string, this caused
-    problems on Python implementations expecting a non-unicode URL in their
-    httplib HTTP requests.
-
-    Under Python 2.4 this causes no problems as that implementation simply
+    Under Python 2.4 this was causing no problems as that implementation simply
     sends all the request data over the network as-is (and treats all unicode
-    data as bytes anyway).
+    data as bytes internally anyway).
 
-    Under Python 2.7 this causes the httplib HTTP request implementation to
-    convert all of its data to unicode, and do so by simply assuming that data
-    contains only ASCII characters. If any other characters are encountered, it
-    fails with an exception like "UnicodeDecodeError: 'ascii' codec can't
-    decode byte 0xd0 in position 290: ordinal not in range(128)".
+    Under Python 2.7 this was causing the httplib HTTP request implementation
+    to convert all of its data to unicode, and do so by simply assuming that
+    data contains only ASCII characters. If any other characters are
+    encountered, it fails with an exception like "UnicodeDecodeError: 'ascii'
+    codec can't decode byte 0xd0 in position 290: ordinal not in range(128)".
 
     Under Python 3.x the httplib HTTP request implementation automatically
     converts its received URL to a bytes object (assuming it contains only
@@ -218,9 +187,15 @@ def test_sending_non_ascii_data_with_unicode_url(monkeypatch):
     monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
     monkeypatch.setattr("socket.socket", mocker.socket)
     host_port = "%s:%s" % (host, port)
-    unicode_url = u"http://%s/svc" % (host_port,)
+    # It is important for this URL to be unicode in order to trigger the
+    # problematic httplib behaviour described in the main test description.
+    # Setting it to a simple byte-string avoids Python 2.7 httplib's unicode +
+    # string concatenation causing the final sent data to be unicode. This
+    # matches regular HttpTransport usage in suds as suds.client.Client always
+    # passes its target location URL as a unicode value.
+    unicode_URL = u"http://%s/svc" % (host_port,)
     non_ascii_byte_data = u"Дмитровский район".encode("utf-8")
-    request = suds.transport.Request(unicode_url, non_ascii_byte_data)
+    request = suds.transport.Request(unicode_URL, non_ascii_byte_data)
     transport = suds.transport.http.HttpTransport()
     pytest.raises(MyException, transport.send, request)
     assert mocker.sent_data.__class__ is suds.byte_str_class
@@ -228,9 +203,39 @@ def test_sending_non_ascii_data_with_unicode_url(monkeypatch):
     assert host_port.encode("utf-8") in mocker.sent_data
 
 
-def test_sending_non_ascii_location():
+@pytest.mark.parametrize("url", (
+    "my no-protocol URL",
+    ":my no-protocol URL"))
+def test_sending_to_URL_with_a_missing_protocol_identifier(url):
     """
-    Suds should refuse to send HTTP requests with a target location string
+    Test suds reporting URLs with a missing protocol identifier.
+
+    Python urllib library makes this check under Python 3.x, but not under
+    earlier Python versions.
+
+    """
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    if sys.version_info < (3, 0):
+        exception_class = MyException
+        def check_exception(e):
+            pass
+    else:
+        exception_class = ValueError
+        def check_exception(e):
+            assert "unknown url type" in str(e)
+    request_data = object()
+    request = suds.transport.Request(url, request_data)
+    check_exception(pytest.raises(exception_class, transport.open, request))
+    check_exception(pytest.raises(exception_class, transport.send, request))
+
+
+def test_sending_to_non_ascii_URL():
+    """
+    Suds should refuse to send HTTP requests with a target URL string
     containing non-ASCII characters. URLs are supposed to consist of ASCII
     characters only.
 
@@ -238,13 +243,13 @@ def test_sending_non_ascii_location():
     class MockURLOpener:
         def open(self, request, timeout=None):
             raise MyException
-    url = u"http://Дмитровский-район-152312306:9999/svc"
     transport = suds.transport.http.HttpTransport()
     transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data(url))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        transport=transport)
-    pytest.raises(UnicodeEncodeError, client.service.f)
+    unicode_URL = u"http://Дмитровский-район-152312306:9999/svc"
+    request_data = "any data type will do here as we do not actually send it"
+    request = suds.transport.Request(unicode_URL, request_data)
+    pytest.raises(UnicodeEncodeError, transport.open, request)
+    pytest.raises(UnicodeEncodeError, transport.send, request)
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 0),
@@ -252,7 +257,7 @@ def test_sending_non_ascii_location():
 @pytest.mark.parametrize(("url_string", "expected_exception"), (
     ("http://jorgula", MyException),
     ("http://jorgula_\xe7", UnicodeDecodeError)))
-def test_sending_py2_bytes_location(url_string, expected_exception):
+def test_sending_to_py2_bytes_URL(url_string, expected_exception):
     """
     Suds should accept single-byte string URL values under Python 2, but should
     still report an error if those strings contain any non-ASCII characters.
@@ -263,11 +268,10 @@ def test_sending_py2_bytes_location(url_string, expected_exception):
             raise MyException
     transport = suds.transport.http.HttpTransport()
     transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data("http://x"))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        transport=transport)
-    client.options.location = suds.byte_str(url_string)
-    pytest.raises(expected_exception, client.service.f)
+    request_data = u"any data type will do here as we do not actually send it"
+    request = suds.transport.Request(suds.byte_str(url_string), request_data)
+    pytest.raises(expected_exception, transport.open, request)
+    pytest.raises(expected_exception, transport.send, request)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 0),
@@ -275,10 +279,13 @@ def test_sending_py2_bytes_location(url_string, expected_exception):
 @pytest.mark.parametrize("url_string", (
     "http://jorgula",
     "http://jorgula_\xe7"))
-def test_sending_py3_bytes_location(url_string):
+@pytest.mark.parametrize("url_type_name", (
+    "bytes",
+    "bytearray"))
+def test_sending_to_py3_bytes_URL(url_string, url_type_name):
     """
-    Suds should refuse to send HTTP requests with a target location specified
-    as either a Python 3 bytes or bytearray object.
+    Suds should refuse to send HTTP requests using target URL specified as
+    either a Python 3 bytes or bytearray object.
 
     """
     class MockURLOpener:
@@ -286,24 +293,16 @@ def test_sending_py3_bytes_location(url_string):
             raise MyException
     transport = suds.transport.http.HttpTransport()
     transport.urlopener = MockURLOpener()
-    store = suds.store.DocumentStore(wsdl=_wsdl_with_no_input_data("http://x"))
-    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
-        transport=transport)
-
     expected_exception = AssertionError
     if sys.flags.optimize:
         expected_exception = AttributeError
-
-    for url in (bytes(url_string, encoding="utf-8"),
-            bytearray(url_string, encoding="utf-8")):
-        # Under Python 3.x we can not use the client's 'location' option to set
-        # a bytes URL as it accepts only strings and in Python 3.x all strings
-        # are unicode strings. Therefore, we use an ugly hack, modifying suds's
-        # internal web service description structure to force it to think it
-        # has a bytes object specified as a location for its 'f' web service
-        # operation.
-        client.sd[0].ports[0][0].methods['f'].location = url
-        pytest.raises(expected_exception, client.service.f)
+    import builtins
+    url_type = getattr(builtins, url_type_name)
+    url = url_type(url_string, encoding="utf-8")
+    content = len("any data type will do here as we do not actually send it")
+    request = suds.transport.Request(url, content)
+    pytest.raises(expected_exception, transport.open, request)
+    pytest.raises(expected_exception, transport.send, request)
 
 
 @pytest.mark.parametrize("url", (
@@ -366,78 +365,3 @@ def _encode_basic_credentials(username, password):
     """
     data = suds.byte_str("%s:%s" % (username, password))
     return "Basic %s" % base64.b64encode(data).decode("utf-8")
-
-
-def _wsdl_with_input_data(url):
-    """
-    Return a WSDL schema with a single operation f taking a single parameter.
-
-    Included operation takes a single string parameter and returns no values.
-    Externally specified URL is used as the web service location.
-
-    """
-    return suds.byte_str(u"""\
-<?xml version="1.0" encoding="utf-8"?>
-<wsdl:definitions targetNamespace="myNamespace"
-  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-  xmlns:tns="myNamespace"
-  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <wsdl:types>
-    <xsd:schema targetNamespace="myNamespace">
-      <xsd:element name="fRequest" type="xsd:string"/>
-    </xsd:schema>
-  </wsdl:types>
-  <wsdl:message name="fInputMessage">
-    <wsdl:part name="parameters" element="tns:fRequest"/>
-  </wsdl:message>
-  <wsdl:portType name="Port">
-    <wsdl:operation name="f">
-      <wsdl:input message="tns:fInputMessage"/>
-    </wsdl:operation>
-  </wsdl:portType>
-  <wsdl:binding name="Binding" type="tns:Port">
-    <soap:binding style="document"
-      transport="http://schemas.xmlsoap.org/soap/http"/>
-    <wsdl:operation name="f">
-      <soap:operation/>
-      <wsdl:input><soap:body use="literal"/></wsdl:input>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="Service">
-    <wsdl:port name="Port" binding="tns:Binding">
-      <soap:address location="%s"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>""" % (url,))
-
-
-def _wsdl_with_no_input_data(url):
-    """
-    Return a WSDL schema with a single operation f taking no parameters.
-
-    Included operation returns no values. Externally specified URL is used as
-    the web service location.
-
-    """
-    return suds.byte_str(u"""\
-<?xml version="1.0" encoding="utf-8"?>
-<wsdl:definitions targetNamespace="myNamespace"
-  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-  xmlns:tns="myNamespace"
-  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <wsdl:portType name="Port">
-    <wsdl:operation name="f"/>
-  </wsdl:portType>
-  <wsdl:binding name="Binding" type="tns:Port">
-    <soap:binding style="document"
-      transport="http://schemas.xmlsoap.org/soap/http"/>
-    <wsdl:operation name="f"/>
-  </wsdl:binding>
-  <wsdl:service name="Service">
-    <wsdl:port name="Port" binding="tns:Binding">
-      <soap:address location="%s"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>""" % (url,))
