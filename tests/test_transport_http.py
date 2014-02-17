@@ -143,40 +143,52 @@ def test_authenticated_http_add_credentials_to_request():
     check_Authorization_header(r, username, password)
 
 
-@pytest.mark.parametrize(
-    ("sender_method", "expected_send_data_start", "expect_request_data_send"), (
-    (suds.transport.http.HttpTransport.open, "GET ", False),
-    (suds.transport.http.HttpTransport.send, "POST ", True)))
-def test_sending_non_ascii_data_to_unicode_URL(monkeypatch, sender_method,
-        expected_send_data_start, expect_request_data_send):
+@pytest.mark.parametrize("url", (
+    "my no-protocol URL",
+    ":my no-protocol URL"))
+def test_sending_to_URL_with_a_missing_protocol_identifier(url):
     """
-    Regression test: Original suds HttpTransport implementation passed its
-    request URL to the underlying httplib HTTP request object as-is, and since
-    suds Client passes its target location URL to its HttpTransport as a
-    unicode string, this was causing problems on Python implementations
-    expecting a non-unicode URL in their httplib HTTP requests.
+    Test suds reporting URLs with a missing protocol identifier.
 
-    Under Python 2.4 this was causing no problems as that implementation simply
-    sends all the request data over the network as-is (and treats all unicode
-    data as bytes internally anyway).
+    Python urllib library makes this check under Python 3.x, but not under
+    earlier Python versions.
 
-    Under Python 2.7 this was causing the httplib HTTP request implementation
-    to convert all of its data to unicode, and do so by simply assuming that
-    data contains only ASCII characters. If any other characters are
-    encountered, it fails with an exception like "UnicodeDecodeError: 'ascii'
-    codec can't decode byte 0xd0 in position 290: ordinal not in range(128)".
+    """
+    class MockURLOpener:
+        def open(self, request, timeout=None):
+            raise MyException
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpener()
+    if sys.version_info < (3, 0):
+        exception_class = MyException
+        def check_exception(e):
+            pass
+    else:
+        exception_class = ValueError
+        def check_exception(e):
+            assert "unknown url type" in str(e)
+    request_data = object()
+    request = suds.transport.Request(url, request_data)
+    check_exception(pytest.raises(exception_class, transport.open, request))
+    check_exception(pytest.raises(exception_class, transport.send, request))
 
-    Under Python 3.x the httplib HTTP request implementation automatically
-    converts its received URL to a bytes object (assuming it contains only
-    ASCII characters), thus avoiding the need to convert all the other request
-    data.
 
-    In order to trigger the problematic httplib behaviour we need to make suds
-    attempt to send a HTTP request over the network. On the other hand, we want
-    this test to work even on computers not connected to a network so we
-    monkey-patch the underlying network socket APIs, log all the data suds
-    attempts to send over the network and consider the test run successful once
-    suds attempts to read back data from the network.
+@pytest.mark.parametrize(
+    ("send_method", "expected_sent_data_start", "expect_request_data_send"), (
+    (suds.transport.http.HttpTransport.open, "GET", False),
+    (suds.transport.http.HttpTransport.send, "POST", True)))
+def test_sending_using_network_sockets(monkeypatch, send_method,
+        expected_sent_data_start, expect_request_data_send):
+    """
+    Test that telling HttpTransport to send a request actually causes it to
+    send the expected data over the network.
+
+    In order to test this we need to make suds attempt to send a HTTP request
+    over the network. On the other hand, we want the test to work even on
+    computers not connected to a network so we monkey-patch the underlying
+    network socket APIs, log all the data suds attempts to send over the
+    network and consider the test run successful once suds attempts to read
+    back data from the network.
 
     """
     class Mocker(CountedMock):
@@ -225,22 +237,17 @@ def test_sending_non_ascii_data_to_unicode_URL(monkeypatch, sender_method,
     host = "an-easily-recognizable-host-name-214894932"
     port = 9999
     host_port = "%s:%s" % (host, port)
-    # It is important for this URL to be unicode in order to trigger the
-    # problematic httplib behaviour described in the main test description.
-    # Setting it to a simple byte-string avoids Python 2.7 httplib's unicode +
-    # string concatenation causing the final sent data to be unicode. This
-    # matches regular HttpTransport usage in suds as suds.client.Client always
-    # passes its target location URL as a unicode value.
-    unicode_URL = u"http://%s/svc" % (host_port,)
+    url_relative = "svc"
+    url = "http://%s/%s" % (host_port, url_relative)
     partial_ascii_byte_data = suds.byte_str("Muka-laka-hiki")
     non_ascii_byte_data = u"Дмитровский район".encode("utf-8")
     non_ascii_byte_data += partial_ascii_byte_data
     mocker = Mocker(host, port)
     monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
     monkeypatch.setattr("socket.socket", mocker.socket)
-    request = suds.transport.Request(unicode_URL, non_ascii_byte_data)
+    request = suds.transport.Request(url, non_ascii_byte_data)
     transport = suds.transport.http.HttpTransport()
-    pytest.raises(MyException, sender_method, transport, request)
+    pytest.raises(MyException, send_method, transport, request)
     assert mocker.mock_call_count("getaddrinfo") == 1
     assert mocker.mock_call_count("socket") == 1
     assert mocker.mock_socket.mock_call_count("connect") == 1
@@ -254,115 +261,15 @@ def test_sending_non_ascii_data_to_unicode_URL(monkeypatch, sender_method,
     assert mocker.mock_socket.mock_call_count("settimeout") in (0, 1)
     assert mocker.mock_socket.mock_reader.mock_call_count("readline") == 1
     assert mocker.mock_sent_data.__class__ is suds.byte_str_class
-    expected_send_data_start = suds.byte_str(expected_send_data_start)
-    assert mocker.mock_sent_data.startswith(expected_send_data_start)
+    expected_sent_data_start = "%s /%s HTTP/1.1\r\n" % (
+        expected_sent_data_start, url_relative)
+    expected_sent_data_start = suds.byte_str(expected_sent_data_start)
+    assert mocker.mock_sent_data.startswith(expected_sent_data_start)
     assert host_port.encode("utf-8") in mocker.mock_sent_data
     if expect_request_data_send:
         assert mocker.mock_sent_data.endswith(non_ascii_byte_data)
     else:
         assert partial_ascii_byte_data not in mocker.mock_sent_data
-
-
-@pytest.mark.parametrize("url", (
-    "my no-protocol URL",
-    ":my no-protocol URL"))
-def test_sending_to_URL_with_a_missing_protocol_identifier(url):
-    """
-    Test suds reporting URLs with a missing protocol identifier.
-
-    Python urllib library makes this check under Python 3.x, but not under
-    earlier Python versions.
-
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    if sys.version_info < (3, 0):
-        exception_class = MyException
-        def check_exception(e):
-            pass
-    else:
-        exception_class = ValueError
-        def check_exception(e):
-            assert "unknown url type" in str(e)
-    request_data = object()
-    request = suds.transport.Request(url, request_data)
-    check_exception(pytest.raises(exception_class, transport.open, request))
-    check_exception(pytest.raises(exception_class, transport.send, request))
-
-
-def test_sending_to_non_ascii_URL():
-    """
-    Suds should refuse to send HTTP requests with a target URL string
-    containing non-ASCII characters. URLs are supposed to consist of ASCII
-    characters only.
-
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    unicode_URL = u"http://Дмитровский-район-152312306:9999/svc"
-    request_data = "any data type will do here as we do not actually send it"
-    request = suds.transport.Request(unicode_URL, request_data)
-    pytest.raises(UnicodeEncodeError, transport.open, request)
-    pytest.raises(UnicodeEncodeError, transport.send, request)
-
-
-@pytest.mark.skipif(sys.version_info >= (3, 0),
-    reason="Python 2 specific functionality")
-@pytest.mark.parametrize(("url_string", "expected_exception"), (
-    ("http://jorgula", MyException),
-    ("http://jorgula_\xe7", UnicodeDecodeError)))
-def test_sending_to_py2_bytes_URL(url_string, expected_exception):
-    """
-    Suds should accept single-byte string URL values under Python 2, but should
-    still report an error if those strings contain any non-ASCII characters.
-
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    request_data = u"any data type will do here as we do not actually send it"
-    request = suds.transport.Request(suds.byte_str(url_string), request_data)
-    pytest.raises(expected_exception, transport.open, request)
-    pytest.raises(expected_exception, transport.send, request)
-
-
-@pytest.mark.skipif(sys.version_info < (3, 0),
-    reason="requires at least Python 3")
-@pytest.mark.parametrize("url_string", (
-    "http://jorgula",
-    "http://jorgula_\xe7"))
-@pytest.mark.parametrize("url_type_name", (
-    "bytes",
-    "bytearray"))
-def test_sending_to_py3_bytes_URL(url_string, url_type_name):
-    """
-    Suds should refuse to send HTTP requests using target URL specified as
-    either a Python 3 bytes or bytearray object.
-
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    expected_exception = AssertionError
-    if sys.flags.optimize:
-        expected_exception = AttributeError
-    import builtins
-    url_type = getattr(builtins, url_type_name)
-    url = url_type(url_string, encoding="utf-8")
-    content = len("any data type will do here as we do not actually send it")
-    request = suds.transport.Request(url, content)
-    pytest.raises(expected_exception, transport.open, request)
-    pytest.raises(expected_exception, transport.send, request)
 
 
 @pytest.mark.parametrize("url", (

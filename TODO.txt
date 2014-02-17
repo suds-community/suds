@@ -1006,10 +1006,51 @@ PRIORETIZED:
 (+)   store/transport components.
 (+)     * Test modules to check.
 (+)         * 'test_transport_http.py'.
+(+) * (Jurko) Update test_sending_non_ascii_data_to_unicode_URL() test to test
+(+)   both send() & open() transport operations.
 
-    * (Jurko) Add HttpTransport tests.
-        * test_sending_non_ascii_data_to_unicode_URL() with send() & open().
-        * Sending to unicode and bytes URL.
+(17.02.2014.)
+
+(+) * (Jurko) Clean up Transport ASCII/Unicode URL/data handling.
+(+)     * Design desired behaviour.
+(+)         * URL may be specfied as either a byte string or a unicode string.
+(+)         * URL input data may contain ASCII characters only.
+(+)         * URL stored internally as a native str type (byte string with
+(+)           Python versions prior to 3, unicode string with Python 3+).
+(+)             * Using it in a different format breaks the underlying
+(+)               HttpTransport httplib implementation under some Python
+(+)               versions.
+(+)         * Bytes data used directly.
+(+)         * Unicode data used directly with the underlying implementation
+(+)           converting the data to bytes or raising an error.
+(+)             * HttpTransport.
+(+)                 * Python2 - converts to bytes if ASCII chars only.
+(+)                 * Python2 - error for non-ASCII chars.
+(+)                 * Python3 - error.
+(+)     * Fix suds.transport Reply & Request string representation.
+(+)     * Update suds.transport.Request.
+(+)         * Check for non-ASCII URL characters.
+(+)         * Hold it internally as a native str type.
+(+)     * Update suds.transport.http.HttpTransport.
+(+)         * Expects the suds.transport.Request to have already checked its URL
+(+)           content.
+(+)     * Document the desired design (docstrings).
+(+)         * Request.
+(+)         * Transport.
+(+)     * Update tests.
+(+)         * Request tests.
+(+)             * Bytes URL.
+(+)                 * Must be used directly on Python 2.
+(+)                 * Must be converted to str URL internally on Python 3.
+(+)                 * Error if it includes non-ASCII character codes.
+(+)             * Unicode URL.
+(+)                 * Must be converted to str URL internally on Python 2.
+(+)                 * Must be used directly on Python 3.
+(+)                 * Error if it includes non-ASCII character codes.
+(+)         * HttpTransport tests.
+(+)             * Sending data through the network.
+(+)             * Remove tests made redundant by the new Request testing.
+(+)     * Update release notes.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
@@ -1076,7 +1117,7 @@ PRIORETIZED:
             * Removed the RequestContext.original_envelope attribute.
 
     * (Jurko) See why creating two suds.client.Client instances with the same
-      transport instance fails. It report some 'Duplicate domain "suds.options"
+      transport instance fails. It reports some 'Duplicate domain "suds.options"
       found' error.
         t = suds.transport.Transport()
         tests.client_from_wsdl(tests.wsdl(""), transport=t)
