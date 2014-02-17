@@ -177,6 +177,21 @@ version 0.7 (development)
       ``FileCache`` silently use duration ``0``, i.e. its cache entries would
       never expire.
 
+* Cleaned up ``suds.transport`` ASCII/unicode URL/data handling.
+
+  * ``suds.transport.Request`` now allows specifying its URL input as either a
+    byte or a unicode string with any Python version. Internally that URL
+    information is always converted to the used Python interpreter's native
+    ``str`` data type (byte string for Python versions prior to 3.0, or unicode
+    string for later ones).
+  * Given URLs must not contain any non-ASCII characters, and any attempt to
+    create a ``suds.transport.Request`` with such an invalid URL is reported as
+    a ``UnicodeError`` (either ``UnicodeDecodeError`` or ``UnicodeEncodeError``
+    depending on the exact Python version and the given URL data type used).
+  * ``suds.transport.Reply`` & ``suds.transport.Request`` string representation
+    cleaned up and no longer raises an error when their message data contains
+    non-ASCII characters.
+
 * ``suds.client`` module cleanup.
 
   * Removed unused ``suds.client.Client.messages`` attribute.

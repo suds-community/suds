@@ -20,6 +20,8 @@ Contains transport interface (classes).
 
 from suds import UnicodeMixin
 
+import sys
+
 
 class TransportError(Exception):
     def __init__(self, reason, httpcode, fp=None):
@@ -32,10 +34,16 @@ class Request(UnicodeMixin):
     """
     A transport request.
 
+    Request URL input data may be given as either a byte or a unicode string,
+    but it may not under any circumstances contain non-ASCII characters. The
+    URL value is stored as a str value internally. With Python versions prior
+    to 3.0, str is the byte string type, while with later Python versions it is
+    the unicode string type.
+
     @ivar url: The URL for the request.
     @type url: str
-    @ivar message: The message to be sent in a POST request.
-    @type message: str
+    @ivar message: The optional message to be sent in the request body.
+    @type message: bytes|None
     @ivar headers: The HTTP headers to be used for the request.
     @type headers: dict
 
@@ -43,22 +51,43 @@ class Request(UnicodeMixin):
 
     def __init__(self, url, message=None):
         """
+        Raised exception in case of detected non-ASCII URL characters may be
+        either UnicodeEncodeError or UnicodeDecodeError, depending on the used
+        Python version's str type and the exact value passed as URL input data.
+
         @param url: The URL for the request.
-        @type url: str
-        @param message: The (optional) message to be sent in the request.
-        @type message: str
+        @type url: bytes|str|unicode
+        @param message: The optional message to be sent in the request body.
+        @type message: bytes|None
 
         """
-        self.url = url
+        self.__set_URL(url)
         self.headers = {}
         self.message = message
 
     def __unicode__(self):
-        return u"""\
-URL: %s
-HEADERS: %s
-MESSAGE:
-%s""" % (self.url, self.headers, self.message)
+        result = [u"URL: %s\nHEADERS: %s" % (self.url, self.headers)]
+        if self.message is not None:
+            result.append(u"MESSAGE:")
+            result.append(self.message.decode("raw_unicode_escape"))
+        return u"\n".join(result)
+
+    def __set_URL(self, url):
+        """
+        URL is stored as a str internally and must not contain ASCII chars.
+
+        Raised exception in case of detected non-ASCII URL characters may be
+        either UnicodeEncodeError or UnicodeDecodeError, depending on the used
+        Python version's str type and the exact value passed as URL input data.
+
+        """
+        if isinstance(url, str):
+            url.encode("ascii")  # Check for non-ASCII characters.
+            self.url = url
+        elif sys.version_info < (3, 0):
+            self.url = url.encode("ascii")
+        else:
+            self.url = url.decode("ascii")
 
 
 class Reply(UnicodeMixin):
@@ -67,10 +96,10 @@ class Reply(UnicodeMixin):
 
     @ivar code: The HTTP code returned.
     @type code: int
-    @ivar message: The message to be sent in a POST request.
-    @type message: str
-    @ivar headers: The HTTP headers to be used for the request.
+    @ivar headers: The HTTP headers included in the received reply.
     @type headers: dict
+    @ivar message: The message received as a reply.
+    @type message: bytes
 
     """
 
@@ -78,10 +107,10 @@ class Reply(UnicodeMixin):
         """
         @param code: The HTTP code returned.
         @type code: int
-        @param headers: The HTTP returned headers.
+        @param headers: The HTTP headers included in the received reply.
         @type headers: dict
-        @param message: The (optional) reply message received.
-        @type message: str
+        @param message: The (optional) message received as a reply.
+        @type message: bytes
 
         """
         self.code = code
@@ -93,7 +122,7 @@ class Reply(UnicodeMixin):
 CODE: %s
 HEADERS: %s
 MESSAGE:
-%s""" % (self.code, self.headers, self.message)
+%s""" % (self.code, self.headers, self.message.decode("raw_unicode_escape"))
 
 
 class Transport(object):
