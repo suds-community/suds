@@ -184,11 +184,13 @@ class TestCacheStoreTransportUsage:
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert store.mock_log == [url]
 
-    def test_import_XSD_from_cache_should_avoid_store_and_transport(self):
+    @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
+    def test_using_cached_XSD_schema_should_avoid_store_and_transport(self,
+            external_reference_tag):
         """
-        When an imported XSD schema is located in the client's cache, it should
-        be read from there instead of fetching its data from the client's
-        document store or using its registered transport.
+        When an imported or included XSD schema is located in the client's
+        cache, it should be read from there instead of fetching its data from
+        the client's document store or using its registered transport.
 
         Note that this test makes sense only when caching raw XML documents
         (cachingpolicy == 0) and not when caching final WSDL objects
@@ -196,18 +198,27 @@ class TestCacheStoreTransportUsage:
 
         """
         # Prepare document content.
-        wsdl_import = tests.wsdl(
-            '<xsd:import namespace="xxx" schemaLocation="suds://imported"/>')
-        imported_schema = suds.byte_str("""\
+        xsd_target_namespace = "my xsd namespace"
+        wsdl = tests.wsdl('<xsd:%s schemaLocation="suds://external"/>' % (
+            external_reference_tag,),
+            xsd_target_namespace=xsd_target_namespace)
+        external_schema = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="xxx">
+<schema xmlns="http://www.w3.org/2001/XMLSchema">
   <element name="external" type="string"/>
 </schema>
 """)
 
+        # Imported XSD schema items retain their namespace, while included ones
+        # get merged into the target namespace.
+        external_element_namespace = None
+        if external_reference_tag == "include":
+            external_element_namespace = xsd_target_namespace
+        external_element_id = ("external", external_element_namespace)
+
         # Add to cache.
         cache = MockCache()
-        store1 = MockDocumentStore(wsdl=wsdl_import, imported=imported_schema)
+        store1 = MockDocumentStore(wsdl=wsdl, external=external_schema)
         c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
             cache=cache, documentStore=store1, transport=MockTransport())
         assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
@@ -218,30 +229,30 @@ class TestCacheStoreTransportUsage:
         assert len(cache.mock_data) == 2
         wsdl_document = cache.mock_data[id1]
         assert c1.wsdl.root is wsdl_document.root()
-        # Making sure that id2 refers to the actually imported XSD is a bit
-        # tricky due to the fact that the WSDL object merged in the imported
-        # XSD content and lost the reference to the imported XSD object itself.
-        # As a workaround we make sure that the XSD schema XML element read
-        # from the XSD object cached as id2 matches the one read from the WSDL
-        # object's XSD schema.
-        cached_imported_element = cache.mock_data[id2].root().children[0]
-        imported_element = c1.wsdl.schema.elements["external", "xxx"].root
-        assert cached_imported_element is imported_element
+        # Making sure id2 refers to the actual external XSD is a bit tricky due
+        # to the fact that the WSDL object merged in the external XSD content
+        # and lost the reference to the external XSD object itself. As a
+        # workaround we make sure that the XSD schema XML element read from the
+        # XSD object cached as id2 matches the one read from the WSDL object's
+        # XSD schema.
+        cached_external_element = cache.mock_data[id2].root().children[0]
+        external_element = c1.wsdl.schema.elements[external_element_id].root
+        assert cached_external_element is external_element
 
-        # Make certain the same imported document is fetched from the cache and
-        # not using the document store or the transport.
+        # Make certain the same external XSD document is fetched from the cache
+        # and not using the document store or the transport.
         del cache.mock_data[id1]
         assert len(cache.mock_data) == 1
         cache.mock_operation_log = []
-        store2 = MockDocumentStore(wsdl=wsdl_import)
+        store2 = MockDocumentStore(wsdl=wsdl)
         c2 = suds.client.Client("suds://wsdl", cache=cache,
             documentStore=store2, transport=MockTransport())
         assert [(x, y[0]) for x, y in cache.mock_operation_log] == [
             ("get", id1), ("put", id1), ("get", id2)]
         assert len(cache.mock_data) == 2
         assert store2.mock_log == ["suds://wsdl"]
-        imported_element = c2.wsdl.schema.elements["external", "xxx"].root
-        assert cached_imported_element is imported_element
+        external_element = c2.wsdl.schema.elements[external_element_id].root
+        assert cached_external_element is external_element
 
     @pytest.mark.parametrize("url", (
         "sudo://make-me-a-sammich",
