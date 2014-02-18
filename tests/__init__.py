@@ -177,12 +177,18 @@ def run_using_pytest(caller_globals):
     sys.exit(exit_code)
 
 
-def wsdl(schema_content, input=None, output=None, operation_name="f"):
+def wsdl(schema_content, input=None, output=None, operation_name="f",
+        wsdl_target_namespace="my-namespace",
+        xsd_target_namespace="my-namespace"):
     """
     Returns WSDL schema content used in different suds library tests.
 
     Defines a single operation taking an externally specified input structure
     and returning an externally defined output structure.
+
+    Constructed WSDL schema's XML namespace prefixes:
+      * my_wsdl - the WSDL schema's target namespace.
+      * my_xsd - the embedded XSD schema's target namespace.
 
     input/output parameters accept the following values:
       * None - operation has no input/output message.
@@ -199,18 +205,21 @@ def wsdl(schema_content, input=None, output=None, operation_name="f"):
 
     wsdl = ["""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-namespace"
+<wsdl:definitions targetNamespace="%(wsdl_target_namespace)s"
 xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
+xmlns:my_wsdl="%(wsdl_target_namespace)s"
+xmlns:my_xsd="%(xsd_target_namespace)s"
 xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
-    <xsd:schema targetNamespace="my-namespace"
+    <xsd:schema targetNamespace="%(xsd_target_namespace)s"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%s
+%(schema_content)s
     </xsd:schema>
-  </wsdl:types>""" % (schema_content,)]
+  </wsdl:types>""" % dict(schema_content=schema_content,
+        wsdl_target_namespace=wsdl_target_namespace,
+        xsd_target_namespace=xsd_target_namespace)]
 
     if has_input:
         if input.__class__ not in (list, tuple):
@@ -219,7 +228,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:message name="fRequestMessage">""")
         for element in input:
             wsdl.append("""\
-    <wsdl:part name="parameters" element="ns:%s" />""" % (element,))
+    <wsdl:part name="parameters" element="my_xsd:%s" />""" % (element,))
         wsdl.append("""\
   </wsdl:message>""")
 
@@ -230,7 +239,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:message name="fResponseMessage">""")
         for element in output:
             wsdl.append("""\
-    <wsdl:part name="parameters" element="ns:%s" />""" % (element,))
+    <wsdl:part name="parameters" element="my_xsd:%s" />""" % (element,))
         wsdl.append("""\
   </wsdl:message>""")
 
@@ -240,15 +249,15 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     if has_input:
         wsdl.append("""\
-      <wsdl:input message="ns:fRequestMessage" />""")
+      <wsdl:input message="my_wsdl:fRequestMessage" />""")
     if has_output:
         wsdl.append("""\
-      <wsdl:output message="ns:fResponseMessage" />""")
+      <wsdl:output message="my_wsdl:fResponseMessage" />""")
 
     wsdl.append("""\
     </wsdl:operation>
   </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
+  <wsdl:binding name="dummy" type="my_wsdl:dummyPortType">
     <soap:binding style="document"
     transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="%s">
@@ -266,7 +275,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
+    <wsdl:port name="dummy" binding="my_wsdl:dummy">
       <soap:address location="unga-bunga-location" />
     </wsdl:port>
   </wsdl:service>

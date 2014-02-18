@@ -857,8 +857,8 @@ def test_wrapped_parameter(monkeypatch):
           <xsd:element name="Elemento" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
-      <xsd:element name="Elemento1" type="ns:Wrapper"/>
-      <xsd:element name="Elemento2" type="ns:Wrapper"/>""", "Elemento1",
+      <xsd:element name="Elemento1" type="Wrapper"/>
+      <xsd:element name="Elemento2" type="Wrapper"/>""", "Elemento1",
         "Elemento2")
     client_wrapped_unnamed = client("""\
       <xsd:element name="Wrapper">
@@ -874,7 +874,7 @@ def test_wrapped_parameter(monkeypatch):
           <xsd:element name="Elemento" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
-      <xsd:element name="Wrapper" type="ns:WrapperType"/>""", "Wrapper")
+      <xsd:element name="Wrapper" type="WrapperType"/>""", "Wrapper")
 
     # Make sure suds library interprets our WSDL definitions as wrapped or bare
     # input interfaces as expected.
