@@ -184,6 +184,65 @@ class TestCacheStoreTransportUsage:
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert store.mock_log == [url]
 
+    def test_import_XSD_from_cache_should_avoid_store_and_transport(self):
+        """
+        When an imported XSD schema is located in the client's cache, it should
+        be read from there instead of fetching its data from the client's
+        document store or using its registered transport.
+
+        Note that this test makes sense only when caching raw XML documents
+        (cachingpolicy == 0) and not when caching final WSDL objects
+        (cachingpolicy == 1).
+
+        """
+        # Prepare document content.
+        wsdl_import = tests.wsdl(
+            '<xsd:import namespace="xxx" schemaLocation="suds://imported"/>')
+        imported_schema = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="xxx">
+  <element name="external" type="string"/>
+</schema>
+""")
+
+        # Add to cache.
+        cache = MockCache()
+        store1 = MockDocumentStore(wsdl=wsdl_import, imported=imported_schema)
+        c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
+            cache=cache, documentStore=store1, transport=MockTransport())
+        assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
+        id1 = cache.mock_operation_log[0][1][0]
+        assert id1 == cache.mock_operation_log[1][1][0]
+        id2 = cache.mock_operation_log[2][1][0]
+        assert id2 == cache.mock_operation_log[3][1][0]
+        assert len(cache.mock_data) == 2
+        wsdl_document = cache.mock_data[id1]
+        assert c1.wsdl.root is wsdl_document.root()
+        # Making sure that id2 refers to the actually imported XSD is a bit
+        # tricky due to the fact that the WSDL object merged in the imported
+        # XSD content and lost the reference to the imported XSD object itself.
+        # As a workaround we make sure that the XSD schema XML element read
+        # from the XSD object cached as id2 matches the one read from the WSDL
+        # object's XSD schema.
+        cached_imported_element = cache.mock_data[id2].root().children[0]
+        imported_element = c1.wsdl.schema.elements["external", "xxx"].root
+        assert cached_imported_element is imported_element
+
+        # Make certain the same imported document is fetched from the cache and
+        # not using the document store or the transport.
+        del cache.mock_data[id1]
+        assert len(cache.mock_data) == 1
+        cache.mock_operation_log = []
+        store2 = MockDocumentStore(wsdl=wsdl_import)
+        c2 = suds.client.Client("suds://wsdl", cache=cache,
+            documentStore=store2, transport=MockTransport())
+        assert [(x, y[0]) for x, y in cache.mock_operation_log] == [
+            ("get", id1), ("put", id1), ("get", id2)]
+        assert len(cache.mock_data) == 2
+        assert store2.mock_log == ["suds://wsdl"]
+        imported_element = c2.wsdl.schema.elements["external", "xxx"].root
+        assert cached_imported_element is imported_element
+
     @pytest.mark.parametrize("url", (
         "sudo://make-me-a-sammich",
         "http://my little URL",
