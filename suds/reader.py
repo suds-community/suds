@@ -55,6 +55,68 @@ class Reader(object):
         return "%s-%s" % (h, x)
 
 
+class DefinitionsReader(Reader):
+    """
+    Integrates between the WSDL Definitions object and the object cache.
+
+    @ivar fn: A factory function used to create objects not found in the cache.
+    @type fn: I{Constructor}
+
+    """
+
+    def __init__(self, options, fn):
+        """
+        @param options: An options object.
+        @type options: I{Options}
+        @param fn: A factory function used to create objects not found in the
+            cache.
+        @type fn: I{Constructor}
+
+        """
+        super(DefinitionsReader, self).__init__(options)
+        self.fn = fn
+
+    def open(self, url):
+        """
+        Open a WSDL schema at the specified I{URL}.
+
+        First, the WSDL schema is looked up in the I{object cache}. If not
+        found, a new one constructed using the I{fn} factory function and the
+        result is cached for the next open().
+
+        @param url: A WSDL URL.
+        @type url: str.
+        @return: The WSDL object.
+        @rtype: I{Definitions}
+
+        """
+        cache = self.__cache()
+        id = self.mangle(url, "wsdl")
+        wsdl = cache.get(id)
+        if wsdl is None:
+            wsdl = self.fn(url, self.options)
+            cache.put(id, wsdl)
+        else:
+            # Cached WSDL Definitions objects may have been created with
+            # different options so we update them here with our current ones.
+            wsdl.options = self.options
+            for imp in wsdl.imports:
+                imp.imported.options = self.options
+        return wsdl
+
+    def __cache(self):
+        """
+        Get the I{object cache}.
+
+        @return: The I{cache} when I{cachingpolicy} = B{1}.
+        @rtype: L{Cache}
+
+        """
+        if self.options.cachingpolicy == 1:
+            return self.options.cache
+        return suds.cache.NoCache()
+
+
 class DocumentReader(Reader):
     """Integrates between the SAX L{Parser} and the document cache."""
 
@@ -74,12 +136,12 @@ class DocumentReader(Reader):
         """
         cache = self.__cache()
         id = self.mangle(url, "document")
-        d = cache.get(id)
-        if d is None:
-            d = self.__fetch(url)
-            cache.put(id, d)
-        self.plugins.document.parsed(url=url, document=d.root())
-        return d
+        xml = cache.get(id)
+        if xml is None:
+            xml = self.__fetch(url)
+            cache.put(id, xml)
+        self.plugins.document.parsed(url=url, document=xml.root())
+        return xml
 
     def __cache(self):
         """
@@ -125,65 +187,3 @@ class DocumentReader(Reader):
         content = ctx.document
         sax = suds.sax.parser.Parser()
         return sax.parse(string=content)
-
-
-class DefinitionsReader(Reader):
-    """
-    Integrates between the WSDL Definitions object and the object cache.
-
-    @ivar fn: A factory function used to create objects not found in the cache.
-    @type fn: I{Constructor}
-
-    """
-
-    def __init__(self, options, fn):
-        """
-        @param options: An options object.
-        @type options: I{Options}
-        @param fn: A factory function used to create objects not found in the
-            cache.
-        @type fn: I{Constructor}
-
-        """
-        super(DefinitionsReader, self).__init__(options)
-        self.fn = fn
-
-    def open(self, url):
-        """
-        Open a WSDL schema at the specified I{URL}.
-
-        First, the WSDL schema is looked up in the I{object cache}. If not
-        found, a new one constructed using the I{fn} factory function and the
-        result is cached for the next open().
-
-        @param url: A WSDL URL.
-        @type url: str.
-        @return: The WSDL object.
-        @rtype: I{Definitions}
-
-        """
-        cache = self.__cache()
-        id = self.mangle(url, "wsdl")
-        d = cache.get(id)
-        if d is None:
-            d = self.fn(url, self.options)
-            cache.put(id, d)
-        else:
-            # Cached WSDL Definitions objects may have been created with
-            # different options so we update them here with our current ones.
-            d.options = self.options
-            for imp in d.imports:
-                imp.imported.options = self.options
-        return d
-
-    def __cache(self):
-        """
-        Get the I{object cache}.
-
-        @return: The I{cache} when I{cachingpolicy} = B{1}.
-        @rtype: L{Cache}
-
-        """
-        if self.options.cachingpolicy == 1:
-            return self.options.cache
-        return suds.cache.NoCache()
