@@ -1335,10 +1335,10 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_parameter_referencing_missing_element(monkeypatch):
-    wsdl = tests.wsdl("", input="missingElement")
+    wsdl = tests.wsdl("", input="missingElement", xsd_target_namespace="aaa")
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(suds.TypeNotFound, tests.client_from_wsdl, wsdl).value
-    assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
+    assert str(e) == "Type not found: '(missingElement, aaa, )'"
 
 
 #TODO: Update the current restriction type input parameter handling so they get
