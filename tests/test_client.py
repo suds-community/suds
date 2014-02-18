@@ -148,7 +148,7 @@ class TestCacheStoreTransportUsage:
 
     """
 
-    def test_fetching_wsdl_from_cache_should_avoid_store_and_transport(self):
+    def test_fetching_WSDL_from_cache_should_avoid_store_and_transport(self):
         """
         When a requested WSDL schema is located in the client's cache, it
         should be read from there instead of fetching its data from the
@@ -177,7 +177,7 @@ class TestCacheStoreTransportUsage:
         assert cache.mock_operation_log == [("get", [id])]
         assert c2.wsdl.root is wsdl_document.root()
 
-    def test_fetching_wsdl_from_store_should_avoid_transport(self):
+    def test_fetching_WSDL_from_store_should_avoid_transport(self):
         store = MockDocumentStore(umpala=tests.wsdl(""))
         url = "suds://umpala"
         t = MockTransport()
@@ -250,7 +250,7 @@ class TestCacheStoreTransportUsage:
         "xxx://my little URL",
         "xxx:my little URL",
         "xxx:"))
-    def test_wsdl_not_found_in_cache_or_store_should_be_transported(self, url):
+    def test_WSDL_not_found_in_cache_or_store_should_be_transported(self, url):
         store = MockDocumentStore()
         t = MockTransport(open_data=tests.wsdl(""))
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
