@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
 
 """
@@ -40,8 +39,8 @@ import re
 import xml.sax
 
 
-# TODO: Update the current choice parameter handling implementation to make
-# this test pass.
+#TODO: Update the current choice parameter handling implementation to make this
+# test pass.
 @pytest.mark.xfail
 def test_choice_parameter_implementation_inconsistencies():
     """
@@ -58,7 +57,8 @@ def test_choice_parameter_implementation_inconsistencies():
     constructed parameter definition structure.
 
     """
-    client = lambda x, y : tests.client_from_wsdl(tests.wsdl_input(x, y))
+    def client(x, y):
+        return tests.client_from_wsdl(tests.wsdl(x, input=y))
 
     client_simple_short = client("""\
       <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
@@ -141,14 +141,14 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert re.search(" ordering\[\] = ", metadata_string)
 
 
-def test_empty_invalid_wsdl(monkeypatch):
+def test_empty_invalid_WSDL(monkeypatch):
     wsdl = suds.byte_str("")
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(xml.sax.SAXParseException, tests.client_from_wsdl, wsdl)
     assert e.value.getMessage() == "no element found"
 
 
-def test_empty_valid_wsdl():
+def test_empty_valid_WSDL():
     client = tests.client_from_wsdl(suds.byte_str(
         "<?xml version='1.0' encoding='UTF-8'?><root />"))
     assert not client.wsdl.services, "No service definitions must be read "  \
@@ -200,9 +200,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert e1.name == "One"
     assert e2.name == "Two"
     assert e3.name == "Thirty-Two"
-    #   Python 3 output does not include a trailing L after long integer
-    # output, while Python 2 does. For example: 0x12345678 is output as
-    # 0x12345678L in Python 2 and simply as 0x12345678 in Python 3.
+    # Python 3 output does not include a trailing L after long integer output,
+    # while Python 2 does. For example: 0x12345678 is output as 0x12345678L in
+    # Python 2 and simply as 0x12345678 in Python 3.
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="One" />$', e1.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Two" />$', e2.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Thirty-Two" />$',
@@ -366,9 +366,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[1][1] is service.params[1][0]
 
     # Construct method parameter element object.
-    paramOut = client.factory.create("Elemento")
-    _assert_dynamic_type(paramOut, "Elemento")
-    assert not paramOut.__keylist__
+    param_out = client.factory.create("Elemento")
+    _assert_dynamic_type(param_out, "Elemento")
+    assert not param_out.__keylist__
 
 
 def test_function_parameters_local_choice_in_a_sequence():
@@ -457,18 +457,18 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[2][1] is service.params[2][0]
 
     # Construct method parameter element object.
-    paramOut = client.factory.create("Elemento")
-    _assert_dynamic_type(paramOut, "Elemento")
-    assert paramOut.x1 is None
-    _assert_dynamic_type(paramOut.x2, "x2")
-    assert not paramOut.x2.__keylist__
-    assert paramOut.x3 is None
+    param_out = client.factory.create("Elemento")
+    _assert_dynamic_type(param_out, "Elemento")
+    assert param_out.x1 is None
+    _assert_dynamic_type(param_out.x2, "x2")
+    assert not param_out.x2.__keylist__
+    assert param_out.x3 is None
 
     # Construct method parameter objects with a locally defined type.
-    paramIn = client.factory.create("Elemento.x2")
-    _assert_dynamic_type(paramIn, "x2")
-    assert not paramOut.x2.__keylist__
-    assert paramIn is not paramOut.x2
+    param_in = client.factory.create("Elemento.x2")
+    _assert_dynamic_type(param_in, "x2")
+    assert not param_out.x2.__keylist__
+    assert param_in is not param_out.x2
 
 
 def test_function_parameters_local_sequence_in_a_sequence():
@@ -557,22 +557,22 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert method_params[2][1] is service.params[2][0]
 
     # Construct method parameter element object.
-    paramOut = client.factory.create("Elemento")
-    _assert_dynamic_type(paramOut, "Elemento")
-    assert paramOut.x1 is None
-    _assert_dynamic_type(paramOut.x2, "x2")
-    assert paramOut.x2.u1 is None
-    assert paramOut.x2.u2 is None
-    assert paramOut.x2.u3 is None
-    assert paramOut.x3 is None
+    param_out = client.factory.create("Elemento")
+    _assert_dynamic_type(param_out, "Elemento")
+    assert param_out.x1 is None
+    _assert_dynamic_type(param_out.x2, "x2")
+    assert param_out.x2.u1 is None
+    assert param_out.x2.u2 is None
+    assert param_out.x2.u3 is None
+    assert param_out.x3 is None
 
     # Construct method parameter objects with a locally defined type.
-    paramIn = client.factory.create("Elemento.x2")
-    _assert_dynamic_type(paramIn, "x2")
-    assert paramIn.u1 is None
-    assert paramIn.u2 is None
-    assert paramIn.u3 is None
-    assert paramIn is not paramOut.x2
+    param_in = client.factory.create("Elemento.x2")
+    _assert_dynamic_type(param_in, "x2")
+    assert param_in.u1 is None
+    assert param_in.u2 is None
+    assert param_in.u3 is None
+    assert param_in is not param_out.x2
 
 
 def test_function_parameters_sequence_in_a_choice():
@@ -942,20 +942,20 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         assert len(typeTuple) == 2
         assert typeTuple[0] is typeTuple[1]
 
-    aTypeIn = service.types[0][0]
-    assert isinstance(aTypeIn, suds.xsd.sxbasic.Complex)
-    assert aTypeIn.name == "Oklahoma"
-    assert not aTypeIn.sequence()
-    assert aTypeIn.rawchildren[0].sequence()
+    type_in = service.types[0][0]
+    assert isinstance(type_in, suds.xsd.sxbasic.Complex)
+    assert type_in.name == "Oklahoma"
+    assert not type_in.sequence()
+    assert type_in.rawchildren[0].sequence()
 
-    aTypeOut = service.types[1][0]
-    assert isinstance(aTypeOut, suds.xsd.sxbasic.Complex)
-    assert aTypeOut.name == "Wackadoodle"
-    assert not aTypeOut.sequence()
-    assert aTypeOut.rawchildren[0].sequence()
+    type_out = service.types[1][0]
+    assert isinstance(type_out, suds.xsd.sxbasic.Complex)
+    assert type_out.name == "Wackadoodle"
+    assert not type_out.sequence()
+    assert type_out.rawchildren[0].sequence()
 
-    assert len(aTypeOut.rawchildren) == 1
-    children = aTypeOut.children()
+    assert len(type_out.rawchildren) == 1
+    children = type_out.children()
     assert isinstance(children, list)
     assert len(children) == 3
     assert children[0][0].name == "x1"
@@ -965,17 +965,17 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert children[2][0].name == "x3"
     assert children[2][0].type == _string_type
 
-    sequenceOut = client.factory.create("Wackadoodle")
-    _assert_dynamic_type(sequenceOut, "Wackadoodle")
-    assert sequenceOut.__metadata__.sxtype is aTypeOut
-    assert sequenceOut.x1 is None
-    sequenceIn = sequenceOut.x2
-    assert sequenceOut.x3 is None
-    _assert_dynamic_type(sequenceIn, "Oklahoma")
-    assert sequenceIn.__metadata__.sxtype is aTypeIn
-    assert sequenceIn.c1 is None
-    assert sequenceIn.c2 is None
-    assert sequenceIn.c3 is None
+    sequence_out = client.factory.create("Wackadoodle")
+    _assert_dynamic_type(sequence_out, "Wackadoodle")
+    assert sequence_out.__metadata__.sxtype is type_out
+    assert sequence_out.x1 is None
+    sequence_in = sequence_out.x2
+    assert sequence_out.x3 is None
+    _assert_dynamic_type(sequence_in, "Oklahoma")
+    assert sequence_in.__metadata__.sxtype is type_in
+    assert sequence_in.c1 is None
+    assert sequence_in.c2 is None
+    assert sequence_in.c3 is None
 
 
 def test_global_string_sequence():
@@ -1111,44 +1111,44 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     service = client.sd[0]
     assert len(service.types) == 1
 
-    aTypeOut = service.types[0][0]
-    assert isinstance(aTypeOut, suds.xsd.sxbasic.Complex)
-    assert aTypeOut.name == "Wackadoodle"
-    assert not aTypeOut.sequence()
-    assert aTypeOut.rawchildren[0].sequence()
+    type_out = service.types[0][0]
+    assert isinstance(type_out, suds.xsd.sxbasic.Complex)
+    assert type_out.name == "Wackadoodle"
+    assert not type_out.sequence()
+    assert type_out.rawchildren[0].sequence()
 
-    children = aTypeOut.children()
+    children = type_out.children()
     assert isinstance(children, list)
     assert len(children) == 2
-    aTypeIn1 = children[0][0]
-    assert isinstance(aTypeIn1, suds.xsd.sxbasic.Element)
-    assert not aTypeIn1.sequence()
-    assert aTypeIn1.rawchildren[0].rawchildren[0].sequence()
-    aTypeIn2 = children[1][0]
-    assert isinstance(aTypeIn2, suds.xsd.sxbasic.Element)
-    assert not aTypeIn2.sequence()
-    assert aTypeIn2.rawchildren[0].rawchildren[0].sequence()
-    assert aTypeIn1.rawchildren[0].name == "Oklahoma"
-    assert aTypeIn1.rawchildren[0].type is None
-    namespace1 = aTypeIn1.rawchildren[0].namespace()
+    type_in1 = children[0][0]
+    assert isinstance(type_in1, suds.xsd.sxbasic.Element)
+    assert not type_in1.sequence()
+    assert type_in1.rawchildren[0].rawchildren[0].sequence()
+    type_in2 = children[1][0]
+    assert isinstance(type_in2, suds.xsd.sxbasic.Element)
+    assert not type_in2.sequence()
+    assert type_in2.rawchildren[0].rawchildren[0].sequence()
+    assert type_in1.rawchildren[0].name == "Oklahoma"
+    assert type_in1.rawchildren[0].type is None
+    namespace1 = type_in1.rawchildren[0].namespace()
     assert namespace1 == ("ns", "my-namespace")
-    assert aTypeIn2.rawchildren[0].name is None
-    assert aTypeIn2.rawchildren[0].type is None
-    assert aTypeIn1.rawchildren[0].namespace() is namespace1
+    assert type_in2.rawchildren[0].name is None
+    assert type_in2.rawchildren[0].type is None
+    assert type_in1.rawchildren[0].namespace() is namespace1
 
-    sequenceOut = client.factory.create("Wackadoodle")
-    _assert_dynamic_type(sequenceOut, "Wackadoodle")
-    assert sequenceOut.__metadata__.sxtype is aTypeOut
-    sequenceIn1 = sequenceOut.x1
-    sequenceIn2 = sequenceOut.x2
-    _assert_dynamic_type(sequenceIn1, "x1")
-    _assert_dynamic_type(sequenceIn2, "x2")
-    assert sequenceIn1.__metadata__.sxtype is aTypeIn1
-    assert sequenceIn2.__metadata__.sxtype is aTypeIn2
-    assert sequenceIn1.c1 is None
-    assert sequenceIn1.c2 is None
-    assert sequenceIn1.c3 is None
-    assert sequenceIn2.s is None
+    sequence_out = client.factory.create("Wackadoodle")
+    _assert_dynamic_type(sequence_out, "Wackadoodle")
+    assert sequence_out.__metadata__.sxtype is type_out
+    sequence_in1 = sequence_out.x1
+    sequence_in2 = sequence_out.x2
+    _assert_dynamic_type(sequence_in1, "x1")
+    _assert_dynamic_type(sequence_in2, "x2")
+    assert sequence_in1.__metadata__.sxtype is type_in1
+    assert sequence_in2.__metadata__.sxtype is type_in2
+    assert sequence_in1.c1 is None
+    assert sequence_in1.c2 is None
+    assert sequence_in1.c3 is None
+    assert sequence_in2.s is None
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__0():
@@ -1335,18 +1335,18 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
 
 def test_parameter_referencing_missing_element(monkeypatch):
-    wsdl = tests.wsdl_input("", "missingElement")
+    wsdl = tests.wsdl("", input="missingElement")
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(suds.TypeNotFound, tests.client_from_wsdl, wsdl).value
     assert str(e) == "Type not found: '(missingElement, my-namespace, )'"
 
 
-# TODO: Update the current restriction type input parameter handling so they get
+#TODO: Update the current restriction type input parameter handling so they get
 # 'unwrapped' correctly instead of each of their enumeration values getting
 # interpreted as a separate input parameter.
 @pytest.mark.xfail
 def test_restrictions():
-    client_unnamed = tests.client_from_wsdl(tests.wsdl_input("""\
+    client_unnamed = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Elemento">
         <xsd:simpleType>
           <xsd:restriction base="xsd:int">
@@ -1355,9 +1355,9 @@ def test_restrictions():
             <xsd:enumeration value="5" />
           </xsd:restriction>
         </xsd:simpleType>
-      </xsd:element>""", "Elemento"))
+      </xsd:element>""", input="Elemento"))
 
-    client_named = tests.client_from_wsdl(tests.wsdl_input("""\
+    client_named = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyType">
         <xsd:restriction base="xsd:int">
           <xsd:enumeration value="1" />
@@ -1365,9 +1365,9 @@ def test_restrictions():
           <xsd:enumeration value="5" />
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType" />""", input="Elemento"))
 
-    client_twice_restricted = tests.client_from_wsdl(tests.wsdl_input("""\
+    client_twice_restricted = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyTypeGeneric">
         <xsd:restriction base="xsd:int">
           <xsd:enumeration value="1" />
@@ -1384,7 +1384,7 @@ def test_restrictions():
           <xsd:enumeration value="5" />
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType" />""", input="Elemento"))
 
     element_qref = ("Elemento", "my-namespace")
     type_named_qref = ("MyType", "my-namespace")
@@ -1402,7 +1402,7 @@ def test_restrictions():
     assert type_twice_restricted is client_twice_restricted.wsdl.schema.types[
         type_named_qref]
 
-    #   Regression test against suds automatically unwrapping input parameter
+    # Regression test against suds automatically unwrapping input parameter
     # type's enumeration values as separate parameters.
     params_unnamed = client_unnamed.sd[0].params
     params_named = client_named.sd[0].params
@@ -1562,7 +1562,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert elemento_x2.name == "x2"
     elemento_x3 = elemento.children()[2][0]
     assert elemento_x3.name == "x3"
-    elementoTyped = schema.elements["ElementoTyped", "my-namespace"]
+    elemento_typed = schema.elements["ElementoTyped", "my-namespace"]
 
     # Resolving top-level locally defined non-content nodes.
     assert typo.resolve() is typo
@@ -1571,7 +1571,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert elemento.resolve() is elemento
 
     # Resolving top-level globally typed elements.
-    assert elementoTyped.resolve() is typo
+    assert elemento_typed.resolve() is typo
 
     # Resolving a subnode referencing a globally defined type.
     assert elemento_x2.resolve() is typo
@@ -1617,7 +1617,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     e3 = schema.elements["Elemento3", "my-namespace"]
     e4 = schema.elements["Elemento4", "my-namespace"]
 
-    #   Repeating the same resolve() call twice makes sure that the first call
+    # Repeating the same resolve() call twice makes sure that the first call
     # does not cache an incorrect value, thus causing the second call to return
     # an incorrect result.
 
@@ -1704,41 +1704,42 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(schema.types) == 1
     typo = schema.types["Typo", "my-namespace"]
     assert len(schema.elements) == 10
-    elementoTyped = schema.elements["ElementoTyped", "my-namespace"]
-    elementoTyped11 = schema.elements["ElementoTyped11", "my-namespace"]
-    elementoTyped12 = schema.elements["ElementoTyped12", "my-namespace"]
-    elementoTyped13 = schema.elements["ElementoTyped13", "my-namespace"]
-    elementoTyped21 = schema.elements["ElementoTyped21", "my-namespace"]
-    elementoTyped22 = schema.elements["ElementoTyped22", "my-namespace"]
-    elementoTyped23 = schema.elements["ElementoTyped23", "my-namespace"]
-    elementoTypedX = schema.elements["ElementoTypedX", "my-namespace"]
-    elementoTypedX1 = schema.elements["ElementoTypedX1", "my-namespace"]
-    elementoTypedX2 = schema.elements["ElementoTypedX2", "my-namespace"]
+    elemento_typed = schema.elements["ElementoTyped", "my-namespace"]
+    elemento_typed11 = schema.elements["ElementoTyped11", "my-namespace"]
+    elemento_typed12 = schema.elements["ElementoTyped12", "my-namespace"]
+    elemento_typed13 = schema.elements["ElementoTyped13", "my-namespace"]
+    elemento_typed21 = schema.elements["ElementoTyped21", "my-namespace"]
+    elemento_typed22 = schema.elements["ElementoTyped22", "my-namespace"]
+    elemento_typed23 = schema.elements["ElementoTyped23", "my-namespace"]
+    elemento_typedX = schema.elements["ElementoTypedX", "my-namespace"]
+    elemento_typedX1 = schema.elements["ElementoTypedX1", "my-namespace"]
+    elemento_typedX2 = schema.elements["ElementoTypedX2", "my-namespace"]
 
-    #   For referenced element node chains try resolving their nodes in both
+    # For referenced element node chains try resolving their nodes in both
     # directions and try resolving them twice to try and avoid any internal
-    # resolve result caching that might cause some resursive resolution branch
+    # resolve result caching that might cause some recursive resolution branch
     # to not get taken.
-    #   Note that these assertions are actually redundant since inter-element
+    #
+    # Note that these assertions are actually redundant since inter-element
     # references get processed and referenced type information merged back into
     # the referencee when the schema information is loaded so no recursion is
     # needed here in the first place. The tests should still be left in place
     # and pass to serve as a safeguard in case this reference processing gets
     # changed in the future.
-    assert elementoTyped11.resolve() is typo
-    assert elementoTyped11.resolve() is typo
-    assert elementoTyped13.resolve() is typo
-    assert elementoTyped13.resolve() is typo
+    assert elemento_typed11.resolve() is typo
+    assert elemento_typed11.resolve() is typo
+    assert elemento_typed13.resolve() is typo
+    assert elemento_typed13.resolve() is typo
 
-    assert elementoTyped23.resolve() is typo
-    assert elementoTyped23.resolve() is typo
-    assert elementoTyped21.resolve() is typo
-    assert elementoTyped21.resolve() is typo
+    assert elemento_typed23.resolve() is typo
+    assert elemento_typed23.resolve() is typo
+    assert elemento_typed21.resolve() is typo
+    assert elemento_typed21.resolve() is typo
 
     # Recursive element references.
-    assert elementoTypedX.resolve() is elementoTypedX
-    assert elementoTypedX1.resolve() is elementoTypedX1
-    assert elementoTypedX2.resolve() is elementoTypedX2
+    assert elemento_typedX.resolve() is elemento_typedX
+    assert elemento_typedX1.resolve() is elemento_typedX1
+    assert elemento_typedX2.resolve() is elemento_typedX2
 
 
 def test_schema_object_child_access_by_index():
@@ -1777,23 +1778,23 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 """))
 
     service = client.sd[0]
-    aType = service.types[0][0]
-    sequence = aType.rawchildren[0]
+    a_type = service.types[0][0]
+    sequence = a_type.rawchildren[0]
     assert isinstance(sequence, suds.xsd.sxbasic.Sequence)
-    children = aType.children()
+    children = a_type.children()
     assert isinstance(children, list)
 
     assert sequence[-1] is None
 
-    # TODO: Children are returned as a 2-tuple containing the child element and
+    #TODO: Children are returned as a 2-tuple containing the child element and
     # its ancestry (list of its parent elements). For some reason the ancestry
     # list is returned as a new list on every __getitem__() call and so can not
     # be compared using the 'is' operator. Also the children() function and
-    # accesing children by index does not seem to return ancestry lists of the
+    # accessing children by index does not seem to return ancestry lists of the
     # same depth. See whether this can be updated so we always get the same
     # ancestry list object.
-    # TODO: Add more detailed tests for the ancestry list structure.
-    # TODO: Add more detailed tests for the rawchildren list structure.
+    #TODO: Add more detailed tests for the ancestry list structure.
+    #TODO: Add more detailed tests for the rawchildren list structure.
 
     assert isinstance(sequence[0], tuple)
     assert len(sequence[0]) == 2
@@ -1874,21 +1875,21 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Elements.
     assert len(client.wsdl.schema.elements) == 2
-    elementIn = client.wsdl.schema.elements["f", "my-namespace"]
-    elementOut = client.wsdl.schema.elements["fResponse", "my-namespace"]
-    assert isinstance(elementIn, suds.xsd.sxbasic.Element)
-    assert isinstance(elementOut, suds.xsd.sxbasic.Element)
-    assert elementIn.name == "f"
-    assert elementOut.name == "fResponse"
-    assert len(elementIn.children()) == 2
-    param_in_1 = elementIn.children()[0][0]
-    param_in_2 = elementIn.children()[1][0]
+    element_in = client.wsdl.schema.elements["f", "my-namespace"]
+    element_out = client.wsdl.schema.elements["fResponse", "my-namespace"]
+    assert isinstance(element_in, suds.xsd.sxbasic.Element)
+    assert isinstance(element_out, suds.xsd.sxbasic.Element)
+    assert element_in.name == "f"
+    assert element_out.name == "fResponse"
+    assert len(element_in.children()) == 2
+    param_in_1 = element_in.children()[0][0]
+    param_in_2 = element_in.children()[1][0]
     assert param_in_1.name == "a"
     assert param_in_1.type == _string_type
     assert param_in_2.name == "b"
     assert param_in_2.type == _string_type
-    assert len(elementOut.children()) == 1
-    param_out_1 = elementOut.children()[0][0]
+    assert len(element_out.children()) == 1
+    param_out_1 = element_out.children()[0][0]
     assert param_out_1.name == "c"
     assert param_out_1.type == _string_type
 
@@ -1909,13 +1910,13 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(service_definition.ports[0]) == 2
     assert service_definition.ports[0][0] is port
 
-    # Methods (from wsdl).
+    # Methods (from WSDL).
     assert len(port.methods) == 1
     method = port.methods["f"]
     assert method.name == "f"
     assert method.location == "https://localhost/dummy"
 
-    # Operations (from wsdl).
+    # Operations (from WSDL).
     assert len(client.wsdl.bindings) == 1
     binding_qname, binding = _first_from_dict(client.wsdl.bindings)
     assert binding_qname == ("dummy", "my-namespace")
@@ -1928,8 +1929,8 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     assert len(output.parts) == 1
     input_element_qname = input.parts[0].element
     output_element_qname = output.parts[0].element
-    assert input_element_qname == elementIn.qname
-    assert output_element_qname == elementOut.qname
+    assert input_element_qname == element_in.qname
+    assert output_element_qname == element_out.qname
 
     # Methods (from service definition, for format specifications see the
     # suds.serviceDefinition.ServiceDefinition.addports() docstring).
@@ -2024,7 +2025,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 def _assert_dynamic_type(anObject, typename):
     assert anObject.__module__ == suds.sudsobject.__name__
     assert anObject.__metadata__.sxtype.name == typename
-    #   In order to be compatible with old style classes (py2 only) we need to
+    # In order to be compatible with old style classes (py2 only) we need to
     # access the object's class information using its __class__ member and not
     # the type() function. type() function always returns <type 'instance'> for
     # old-style class instances while the __class__ member returns the correct
@@ -2035,9 +2036,9 @@ def _assert_dynamic_type(anObject, typename):
 
 def _construct_SOAP_request(client, operation_name, *args, **kwargs):
     """
-    Returns a SOAP request for a given web service operation invocation.
+    Construct a SOAP request for a given web service operation invocation.
 
-      To make the test case code calling this function simpler, assumes we want
+    To make the test case code calling this function simpler, assumes we want
     to call the operation on the given client's first service & port.
 
     """
@@ -2054,8 +2055,8 @@ def _element_node_xml(name, min=None, max=None):
         s.append('minOccurs="%s" ' % (min,))
     if max is not None:
         s.append('maxOccurs="%s" ' % (max,))
-    s.append('/>\n')
-    return ''.join(s)
+    s.append("/>\n")
+    return "".join(s)
 
 
 def _first_from_dict(d):

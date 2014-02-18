@@ -265,7 +265,7 @@ class TestUnsupportedParameterDefinitions:
         """
         input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
         assert not hasattr(self, "service")
-        wsdl = tests.wsdl_input(input, "Wrapper", **kwargs)
+        wsdl = tests.wsdl(input, input="Wrapper", **kwargs)
         client = tests.client_from_wsdl(wsdl, nosend=True)
         self.service = client.service
 
