@@ -702,16 +702,18 @@ def test_translation(monkeypatch):
     _monkeypatch_builtin_XSD_type_registry(monkeypatch)
     Factory.maptag("woof", MockType)
 
+    namespace = "I'm a little tea pot, short and stout..."
     wsdl = tests.wsdl("""\
       <xsd:element name="wi" type="xsd:woof"/>
-      <xsd:element name="wo" type="xsd:woof"/>""", input="wi", output="wo")
+      <xsd:element name="wo" type="xsd:woof"/>""", input="wi", output="wo",
+        xsd_target_namespace=namespace)
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     # Check suds library's XSD schema input parameter information.
     schema = client.wsdl.schema
-    element_in = schema.elements["wi", "my-namespace"]
+    element_in = schema.elements["wi", namespace]
     assert element_in.name == "wi"
-    element_out = schema.elements["wo", "my-namespace"]
+    element_out = schema.elements["wo", namespace]
     assert element_out.name == "wo"
     schema_object_in = element_in.resolve()
     schema_object_out = element_out.resolve()
@@ -728,7 +730,7 @@ def test_translation(monkeypatch):
     assert schema_object_out._mock_translate_log == []
     assert tests.compare_xml_string_to_string(request.envelope, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace"
+<SOAP-ENV:Envelope xmlns:ns0="%s"
     xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -736,16 +738,16 @@ def test_translation(monkeypatch):
    <ns1:Body>
       <ns0:wi>&apos;ollywood</ns0:wi>
    </ns1:Body>
-</SOAP-ENV:Envelope>""")
+</SOAP-ENV:Envelope>""" % (namespace,))
 
     # Process operation response - test unmarshalling.
     response = client.service.f(__inject=dict(reply=suds.byte_str("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
-    <wo xmlns="my-namespace">fri-fru</wo>
+    <wo xmlns="%s">fri-fru</wo>
   </env:Body>
-</env:Envelope>""")))
+</env:Envelope>""" % (namespace,))))
     assert response is anObject
     assert schema_object_in._mock_translate_log == [(55, False)]
     assert schema_object_out._mock_translate_log == [("fri-fru", True)]
