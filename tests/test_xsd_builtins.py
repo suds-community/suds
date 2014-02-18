@@ -676,7 +676,7 @@ def test_resolving_builtin_types(monkeypatch):
         pass
     Factory.maptag("osama", MockXInteger)
 
-    wsdl = tests.wsdl_input('<xsd:element name="wu" type="xsd:osama"/>', "wu")
+    wsdl = tests.wsdl('<xsd:element name="wu" type="xsd:osama"/>', input="wu")
     client = tests.client_from_wsdl(wsdl)
 
     element, schema_object = client.sd[0].params[0]
@@ -756,7 +756,7 @@ def _create_dummy_schema():
     #TODO: Find out how to construct this XSD schema object directly without
     # first having to construct a suds.client.Client from a complete WSDL
     # schema.
-    wsdl = tests.wsdl_input('<xsd:element name="dummy"/>', "dummy")
+    wsdl = tests.wsdl('<xsd:element name="dummy"/>', input="dummy")
     client = tests.client_from_wsdl(wsdl)
     return client.wsdl.schema
 

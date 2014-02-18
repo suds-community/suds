@@ -72,7 +72,7 @@ def test_badly_formed_reply_XML():
 # restriction's underlying data type.
 @pytest.mark.xfail
 def test_restriction_data_types():
-    client_unnamed = tests.client_from_wsdl(tests.wsdl_output("""\
+    client_unnamed = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Elemento">
         <xsd:simpleType>
           <xsd:restriction base="xsd:int">
@@ -81,9 +81,9 @@ def test_restriction_data_types():
             <xsd:enumeration value="5" />
           </xsd:restriction>
         </xsd:simpleType>
-      </xsd:element>""", "Elemento"))
+      </xsd:element>""", output="Elemento"))
 
-    client_named = tests.client_from_wsdl(tests.wsdl_output("""\
+    client_named = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyType">
         <xsd:restriction base="xsd:int">
           <xsd:enumeration value="1" />
@@ -91,9 +91,9 @@ def test_restriction_data_types():
           <xsd:enumeration value="5" />
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType" />""", output="Elemento"))
 
-    client_twice_restricted = tests.client_from_wsdl(tests.wsdl_output("""\
+    client_twice_restricted = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyTypeGeneric">
         <xsd:restriction base="xsd:int">
           <xsd:enumeration value="1" />
@@ -110,7 +110,7 @@ def test_restriction_data_types():
           <xsd:enumeration value="5" />
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", "Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType" />""", output="Elemento"))
 
     for client in (client_unnamed, client_named, client_twice_restricted):
         response = client.service.f(__inject=dict(reply=suds.byte_str("""\
@@ -125,14 +125,14 @@ def test_restriction_data_types():
 
 
 def test_disabling_automated_simple_interface_unwrapping():
-    client = tests.client_from_wsdl(tests.wsdl_output("""\
+    client = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="Elemento" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"), unwrap=False)
+      </xsd:element>""", output="Wrapper"), unwrap=False)
     assert not _isOutputWrapped(client, "f")
 
     response = client.service.f(__inject=dict(reply=suds.byte_str("""\
@@ -239,14 +239,14 @@ def test_missing_wrapper_response():
     interpreting received SOAP Response XML.
 
     """
-    client = tests.client_from_wsdl(tests.wsdl_output("""\
+    client = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="fResponse" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", output="Wrapper"))
     assert _isOutputWrapped(client, "f")
 
     response_with_missing_wrapper = client.service.f(__inject=dict(
@@ -340,16 +340,17 @@ def test_reply_error_without_detail_without_fault():
 
 def test_simple_bare_and_wrapped_output():
     # Prepare web service proxies.
-    client_bare = tests.client_from_wsdl(tests.wsdl_output("""\
-      <xsd:element name="fResponse" type="xsd:string" />""", "fResponse"))
-    client_wrapped = tests.client_from_wsdl(tests.wsdl_output("""\
+    client_bare = tests.client_from_wsdl(tests.wsdl("""\
+      <xsd:element name="fResponse" type="xsd:string" />""",
+      output="fResponse"))
+    client_wrapped = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="fResponse" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", output="Wrapper"))
 
     #   Make sure suds library inteprets our WSDL definitions as wrapped or
     # bare output interfaces as expected.
@@ -385,7 +386,7 @@ def test_simple_bare_and_wrapped_output():
 
 
 def test_wrapped_sequence_output():
-    client = tests.client_from_wsdl(tests.wsdl_output("""\
+    client = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -394,7 +395,7 @@ def test_wrapped_sequence_output():
             <xsd:element name="result3" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", output="Wrapper"))
     assert _isOutputWrapped(client, "f")
 
     response = client.service.f(__inject=dict(reply=suds.byte_str("""\
@@ -478,7 +479,7 @@ _fault_reply__without_detail = suds.byte_str("""\
 </env:Envelope>
 """)
 
-_wsdl__simple = tests.wsdl_output("""\
+_wsdl__simple = tests.wsdl("""\
       <xsd:element name="fResponse">
         <xsd:complexType>
           <xsd:sequence>
@@ -486,4 +487,4 @@ _wsdl__simple = tests.wsdl_output("""\
             <xsd:element name="output_s" type="xsd:string" />
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "fResponse")
+      </xsd:element>""", output="fResponse")

@@ -179,7 +179,7 @@ def run_using_pytest(caller_globals):
 
 def wsdl(schema_content, input=None, output=None, operation_name="f"):
     """
-    Returns a WSDL schema used in different suds library tests.
+    Returns WSDL schema content used in different suds library tests.
 
     Defines a single operation taking an externally specified input structure
     and returning an externally defined output structure.
@@ -274,44 +274,3 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 """)
 
     return suds.byte_str("\n".join(wsdl))
-
-
-def wsdl_input(schema_content, *args, **kwargs):
-    """
-    Returns an input-only WSDL schema used in different suds library tests.
-
-    Defines a single operation taking an externally specified input structure
-    and returning no output. The operation is named 'f' by default, but a
-    custom name may be defined for it using the 'operation_name' keyword
-    argument.
-
-    Initial input argument is the schema part of the WSDL, any remaining
-    positional arguments are interpreted as names of included top level input
-    parameter elements.
-
-    """
-    assert len(args) >= 1
-    if kwargs:
-        assert len(kwargs) == 1
-        assert "operation_name" in kwargs
-    return wsdl(schema_content, input=args, **kwargs)
-
-
-def wsdl_output(schema_content, *args, **kwargs):
-    """
-    Returns an output-only WSDL schema used in different suds library tests.
-
-    Defines a single operation, taking no input and returning an externally
-    specified output structure. The operation is named 'f' by default, but a
-    custom name may be defined for it using the 'operation_name' keyword
-    argument.
-
-    The first input parameter is the schema part of the WSDL, the rest of the
-    parameters identify top level output parameter elements.
-
-    """
-    assert len(args) >= 1
-    if kwargs:
-        assert len(kwargs) == 1
-        assert "operation_name" in kwargs
-    return wsdl(schema_content, output=args, **kwargs)

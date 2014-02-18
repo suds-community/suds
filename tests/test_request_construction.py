@@ -45,7 +45,7 @@ import pytest
 # restriction's underlying data type.
 @pytest.mark.xfail
 def test_bare_input_restriction_types():
-    client_unnamed = tests.client_from_wsdl(tests.wsdl_input("""\
+    client_unnamed = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Elemento">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string">
@@ -54,9 +54,9 @@ def test_bare_input_restriction_types():
             <xsd:enumeration value="gamma"/>
           </xsd:restriction>
         </xsd:simpleType>
-      </xsd:element>""", "Elemento"))
+      </xsd:element>""", input="Elemento"))
 
-    client_named = tests.client_from_wsdl(tests.wsdl_input("""\
+    client_named = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyType">
         <xsd:restriction base="xsd:string">
           <xsd:enumeration value="alfa"/>
@@ -64,10 +64,10 @@ def test_bare_input_restriction_types():
           <xsd:enumeration value="gamma"/>
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType"/>""", "Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType"/>""", input="Elemento"))
 
-    assert not _isInputWrapped(client_unnamed, "f")
-    assert not _isInputWrapped(client_named, "f")
+    assert not _is_input_wrapped(client_unnamed, "f")
+    assert not _is_input_wrapped(client_named, "f")
 
 
 def parametrize_single_element_input_test(param_names, param_values):
@@ -257,8 +257,8 @@ def parametrize_single_element_input_test(param_names, param_values):
             #  - choice order indicators explicitly marked optional unsupported
             #  - not constructing correct input parameter values when using no
             #    input arguments for a choice
-            #"suds does not yet support minOccurs/maxOccurs attributes on "
-            #"all/choice/sequence order indicators"
+            #"suds does not yet support minOccurs/maxOccurs attributes on all/"
+            #"choice/sequence order indicators"),
             ),
         ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
         ([None, 1],
@@ -378,7 +378,7 @@ def parametrize_single_element_input_test(param_names, param_values):
     ))
 def test_document_literal_request_for_single_element_input(xsd,
         external_element_name, args, request_body):
-    wsdl = tests.wsdl_input(xsd, external_element_name)
+    wsdl = tests.wsdl(xsd, input=external_element_name)
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     assert _compare_request(client.service.f(*args), """\
@@ -390,15 +390,16 @@ def test_document_literal_request_for_single_element_input(xsd,
 
 
 def test_disabling_automated_simple_interface_unwrapping():
-    client = tests.client_from_wsdl(tests.wsdl_input("""\
+    client = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="Elemento" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"), nosend=True, prettyxml=True, unwrap=False)
-    assert not _isInputWrapped(client, "f")
+      </xsd:element>""", input="Wrapper"), nosend=True, prettyxml=True,
+        unwrap=False)
+    assert not _is_input_wrapped(client, "f")
     wrapper = client.factory.create("Wrapper")
     wrapper.Elemento = "Wonderwall"
     assert _compare_request(client.service.f(Wrapper=wrapper), """\
@@ -506,7 +507,7 @@ def test_invalid_input_parameter_type_handling():
     report this error.
 
     """
-    client = tests.client_from_wsdl(tests.wsdl_input("""\
+    client = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:complexType name="Freakazoid">
         <xsd:sequence>
           <xsd:element name="freak1" type="xsd:string"/>
@@ -522,7 +523,7 @@ def test_invalid_input_parameter_type_handling():
             <xsd:element name="p2" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"), nosend=True, prettyxml=True)
+      </xsd:element>""", input="Wrapper"), nosend=True, prettyxml=True)
 
     # Passing an unrelated Python type value.
     class SomeType:
@@ -566,7 +567,7 @@ def test_invalid_input_parameter_type_handling():
 
 def test_missing_parameters():
     """Missing non-optional parameters should get passed as empty values."""
-    service = _service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -574,7 +575,7 @@ def test_missing_parameters():
             <xsd:element name="anInteger" type="xsd:integer"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", input="Wrapper"))
 
     assert _compare_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -648,7 +649,7 @@ def test_named_parameter():
             assert _compare_request(request, self.expected_xml)
 
     # Test different ways to make the same web service operation call.
-    service = _service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -656,7 +657,7 @@ def test_named_parameter():
             <xsd:element name="due" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", input="Wrapper"))
     t = Tester(service, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -673,9 +674,9 @@ def test_named_parameter():
     t.test(due="zwei", uno="einz")
     t.test("einz", due="zwei")
 
-    #   The order of parameters in the constructed SOAP request should depend
+    # The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
-    service = _service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -683,7 +684,7 @@ def test_named_parameter():
             <xsd:element name="uno" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", input="Wrapper"))
     t = Tester(service, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -703,7 +704,7 @@ def test_named_parameter():
 
 def test_optional_parameter_handling():
     """Missing optional parameters should not get passed at all."""
-    service = _service_from_wsdl(tests.wsdl_input("""\
+    service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -711,7 +712,7 @@ def test_optional_parameter_handling():
             <xsd:element name="anInteger" type="xsd:integer" minOccurs="0"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper"))
+      </xsd:element>""", input="Wrapper"))
 
     assert _compare_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -781,11 +782,11 @@ def test_optional_parameter_handling():
 
 def test_twice_wrapped_parameter():
     """
-      Suds does not recognize 'twice wrapped' data structures and unwraps the
+    Suds does not recognize 'twice wrapped' data structures and unwraps the
     external one but keeps the internal wrapping structure in place.
 
     """
-    client = tests.client_from_wsdl(tests.wsdl_input("""\
+    client = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper1">
         <xsd:complexType>
           <xsd:sequence>
@@ -798,9 +799,9 @@ def test_twice_wrapped_parameter():
             </xsd:element>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", "Wrapper1"), nosend=True, prettyxml=True)
+      </xsd:element>""", input="Wrapper1"), nosend=True, prettyxml=True)
 
-    assert _isInputWrapped(client, "f")
+    assert _is_input_wrapped(client, "f")
 
     # Web service operation calls made with 'valid' parameters.
     #
@@ -841,8 +842,9 @@ def test_wrapped_parameter(monkeypatch):
     monkeypatch.delitem(locals(), "e", False)
 
     # Prepare web service proxies.
-    client = lambda *args : tests.client_from_wsdl(tests.wsdl_input(*args),
-        nosend=True, prettyxml=True)
+    def client(xsd, *input):
+        return tests.client_from_wsdl(tests.wsdl(xsd, input=input),
+            nosend=True, prettyxml=True)
     client_bare_single = client("""\
       <xsd:element name="Elemento" type="xsd:string"/>""", "Elemento")
     client_bare_multiple_simple = client("""\
@@ -874,15 +876,15 @@ def test_wrapped_parameter(monkeypatch):
       </xsd:complexType>
       <xsd:element name="Wrapper" type="ns:WrapperType"/>""", "Wrapper")
 
-    #   Make sure suds library interprets our WSDL definitions as wrapped or
-    # bare input interfaces as expected.
-    assert not _isInputWrapped(client_bare_single, "f")
-    assert not _isInputWrapped(client_bare_multiple_simple, "f")
-    assert not _isInputWrapped(client_bare_multiple_wrapped, "f")
-    assert _isInputWrapped(client_wrapped_unnamed, "f")
-    assert _isInputWrapped(client_wrapped_named, "f")
+    # Make sure suds library interprets our WSDL definitions as wrapped or bare
+    # input interfaces as expected.
+    assert not _is_input_wrapped(client_bare_single, "f")
+    assert not _is_input_wrapped(client_bare_multiple_simple, "f")
+    assert not _is_input_wrapped(client_bare_multiple_wrapped, "f")
+    assert _is_input_wrapped(client_wrapped_unnamed, "f")
+    assert _is_input_wrapped(client_wrapped_named, "f")
 
-    #   Both bare & wrapped single parameter input web service operations get
+    # Both bare & wrapped single parameter input web service operations get
     # called the same way even though the wrapped one actually has an extra
     # wrapper element around its input data.
     data = "Maestro"
@@ -910,12 +912,12 @@ def test_wrapped_parameter(monkeypatch):
     assert _compare_request(call_single(client_wrapped_unnamed), expected_xml)
     assert _compare_request(call_single(client_wrapped_named), expected_xml)
 
-    #   Suds library's automatic structure unwrapping prevents us from
-    # specifying the external wrapper structure directly.
+    # Suds library's automatic structure unwrapping prevents us from specifying
+    # the external wrapper structure directly.
     e = pytest.raises(TypeError, client_wrapped_unnamed.service.f, Wrapper="A")
     assert str(e.value) == "f() got an unexpected keyword argument 'Wrapper'"
 
-    #   Multiple parameter web service operations are never automatically
+    # Multiple parameter web service operations are never automatically
     # unwrapped.
     data = ("Unga", "Bunga")
     call_multiple = lambda c : c.service.f(*data)
@@ -945,7 +947,7 @@ def _compare_request(request, expected_xml):
     return tests.compare_xml_string_to_string(request.envelope, expected_xml)
 
 
-def _isInputWrapped(client, method_name):
+def _is_input_wrapped(client, method_name):
     assert len(client.wsdl.bindings) == 1
     operation = client.wsdl.bindings.values()[0].operations[method_name]
     return operation.soap.input.body.wrapped
