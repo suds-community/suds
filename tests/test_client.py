@@ -65,19 +65,19 @@ class MockCache(suds.cache.Cache):
         super(MockCache, self).__init__()
 
     def clear(self):
-        self.mock_operation_log.append("clear")
+        self.mock_operation_log.append(("clear", []))
         pytest.fail("Unexpected MockCache.clear() operation call.")
 
     def get(self, id):
-        self.mock_operation_log.append("get")
+        self.mock_operation_log.append(("get", [id]))
         return self.mock_data.get(id, None)
 
     def purge(self, id):
-        self.mock_operation_log.append("purge")
+        self.mock_operation_log.append(("purge", [id]))
         pytest.fail("Unexpected MockCache.purge() operation call.")
 
     def put(self, id, object):
-        self.mock_operation_log.append("put")
+        self.mock_operation_log.append(("put", [id, object]))
         if self.mock_put_config == MockCache.FAIL:
             pytest.fail("Unexpected MockCache.put() operation call.")
         if self.mock_put_config == MockCache.ALLOW:
@@ -160,7 +160,9 @@ class TestCacheStoreTransportUsage:
         store1 = MockDocumentStore(umpala=tests.wsdl(""))
         c1 = suds.client.Client("suds://umpala", cache=cache,
             documentStore=store1, transport=MockTransport())
-        assert cache.mock_operation_log == ["get", "put"]
+        assert [x for x, y in cache.mock_operation_log] == ["get", "put"]
+        id = cache.mock_operation_log[0][1][0]
+        assert id == cache.mock_operation_log[1][1][0]
         assert len(cache.mock_data) == 1
         wsdl_document = cache.mock_data.values()[0]
         assert c1.wsdl.root is wsdl_document.root()
@@ -172,7 +174,7 @@ class TestCacheStoreTransportUsage:
         store2 = MockDocumentStore(mock_fail=True)
         c2 = suds.client.Client("suds://umpala", cache=cache,
             documentStore=store2, transport=MockTransport())
-        assert cache.mock_operation_log == ["get"]
+        assert cache.mock_operation_log == [("get", [id])]
         assert c2.wsdl.root is wsdl_document.root()
 
     def test_fetching_wsdl_from_store_should_avoid_transport(self):
