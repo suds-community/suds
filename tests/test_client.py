@@ -183,12 +183,16 @@ class TestCacheStoreTransportUsage:
         assert c2.wsdl.root is wsdl_document.root()
 
     @pytest.mark.parametrize("importing_WSDL_cached", (False, True))
-    def test_importing_WSDL_from_cache_should_avoid_store_and_transport(self,
+    def test_importing_WSDL_from_cache_avoids_store_avoids_transport(self,
             importing_WSDL_cached):
         """
         When a requested WSDL schema is located in the client's cache, it
         should be read from there instead of fetching its data from the
         client's document store or using its registered transport.
+
+        When it is is not located in the cache but can be found in the client's
+        document store, it should be fetched from there but not using the
+        client's registered transport.
 
         Note that this test makes sense only when caching raw XML documents
         (cachingpolicy == 0) and not when caching final WSDL objects
@@ -293,12 +297,16 @@ class TestCacheStoreTransportUsage:
 
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
     @pytest.mark.parametrize("main_WSDL_cached", (False, True))
-    def test_using_cached_XSD_schema_should_avoid_store_and_transport(self,
+    def test_using_cached_XSD_schema_avoids_store_avoids_transport(self,
             external_reference_tag, main_WSDL_cached):
         """
         When an imported or included XSD schema is located in the client's
         cache, it should be read from there instead of fetching its data from
         the client's document store or using its registered transport.
+
+        When it is is not located in the cache but can be found in the client's
+        document store, it should be fetched from there but not using the
+        client's registered transport.
 
         Note that this test makes sense only when caching raw XML documents
         (cachingpolicy == 0) and not when caching final WSDL objects
