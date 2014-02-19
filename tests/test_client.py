@@ -142,6 +142,71 @@ class MockTransport(suds.transport.Transport):
         pytest.fail("Unexpected MockTransport.send() operation call.")
 
 
+# Test data used in different tests in this module testing suds WSDL schema
+# import implementation.
+#
+#TODO: Once a WSDL import bug illustrated by test_WSDL_import() is fixed, this
+# test data may be simplified to just:
+#   > wsdl = tests.wsdl("", wsdl_target_namespace="bingo-bongo")
+#   > wsdl_wrapper = suds.byte_str("""\
+#   > <?xml version='1.0' encoding='UTF-8'?>
+#   > <wsdl:definitions targetNamespace="bingo-bongo"
+#   >     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+#   >   <wsdl:import namespace="bingo-bongo" location="suds://wsdl"/>
+#   > </wsdl:definitions>
+#   > """)
+# This would also make caching the imported WSDL schema simpler as this makes
+# the imported WSDL schema usable without the extra importing wrapper as well.
+wsdl_imported_format = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="bingo-bongo"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="ice-scream"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+%s
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>"""
+wsdl_import_wrapper_format = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions
+    targetNamespace="bingo-bongo"
+    xmlns:my_wsdl="bingo-bongo"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="bingo-bongo" location="%s"/>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f"/>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="my_wsdl:dummyPortType">
+    <soap:binding style="document"
+        transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="document"/>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="my_wsdl:dummy">
+      <soap:address location="unga-bunga-location"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>"""
+wsdl_imported_xsd_namespace = "ice-scream"
+
+
+# Test URL data used by several tests in this test module.
+test_URL_data = (
+    "sudo://make-me-a-sammich",
+    "http://my little URL",
+    "https://my little URL",
+    "xxx://my little URL",
+    "xxx:my little URL",
+    "xxx:")
+
+
 class TestCacheStoreTransportUsage:
     """
     suds.client.Client cache/store/transport component usage interaction tests.
@@ -199,60 +264,20 @@ class TestCacheStoreTransportUsage:
         (cachingpolicy == 1).
 
         """
-        #TODO: Once a WSDL import bug illustrated by test_WSDL_import() is
-        # fixed, this test's test data may be simplified to just:
-        #   > wsdl = tests.wsdl("", wsdl_target_namespace="bingo-bongo")
-        #   > wsdl_wrapper = suds.byte_str("""\
-        #   > <?xml version='1.0' encoding='UTF-8'?>
-        #   > <wsdl:definitions targetNamespace="bingo-bongo"
-        #   >     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-        #   >   <wsdl:import namespace="bingo-bongo" location="suds://wsdl"/>
-        #   > </wsdl:definitions>
-        #   > """)
-        # This would also make adding the imported WSDL schema into the cache
-        # simpler as that stand-alone schema can be used without the wrapper.
-        wsdl_imported = suds.byte_str("""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="bingo-bongo"
-    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:types>
-    <xsd:schema targetNamespace="ice-scream"
-        elementFormDefault="qualified"
-        attributeFormDefault="unqualified"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-        <xsd:element name="Pistaccio" type="xsd:string"/>
-    </xsd:schema>
-  </wsdl:types>
-</wsdl:definitions>""")
-        wsdl = suds.byte_str("""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions
-    targetNamespace="bingo-bongo"
-    xmlns:my_wsdl="bingo-bongo"
-    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="bingo-bongo" location="suds://wsdl_imported"/>
-  <wsdl:portType name="dummyPortType">
-    <wsdl:operation name="f"/>
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="my_wsdl:dummyPortType">
-    <soap:binding style="document"
-        transport="http://schemas.xmlsoap.org/soap/http"/>
-    <wsdl:operation name="f">
-      <soap:operation soapAction="my-soap-action" style="document"/>
-    </wsdl:operation>
-  </wsdl:binding>
-  <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="my_wsdl:dummy">
-      <soap:address location="unga-bunga-location"/>
-    </wsdl:port>
-  </wsdl:service>
-</wsdl:definitions>""")
-        external_element_id = ("Pistaccio", "ice-scream")
+        # Prepare test data.
+        url_imported = "suds://wsdl_imported"
+        wsdl_import_wrapper = wsdl_import_wrapper_format % (url_imported,)
+        wsdl_import_wrapper = suds.byte_str(wsdl_import_wrapper)
+        wsdl_imported = suds.byte_str(wsdl_imported_format % (
+            '<xsd:element name="Pistachio" type="xsd:string"/>',))
+        wsdl_imported_element_id = ("Pistachio", wsdl_imported_xsd_namespace)
 
-        # Add to cache.
+        # Add to cache, making sure the imported WSDL schema is read from the
+        # document store and not fetched using the client's registered
+        # transport.
         cache = MockCache()
-        store1 = MockDocumentStore(wsdl=wsdl, wsdl_imported=wsdl_imported)
+        store1 = MockDocumentStore(wsdl=wsdl_import_wrapper,
+            wsdl_imported=wsdl_imported)
         c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
             cache=cache, documentStore=store1, transport=MockTransport())
         assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
@@ -267,7 +292,8 @@ class TestCacheStoreTransportUsage:
         cached_definitions_element = wsdl_imported_document.root().children[0]
         cached_schema_element = cached_definitions_element.children[0]
         cached_external_element = cached_schema_element.children[0]
-        external_element = c1.wsdl.schema.elements[external_element_id].root
+        schema = c1.wsdl.schema
+        external_element = schema.elements[wsdl_imported_element_id].root
         assert cached_external_element is external_element
 
         # Import the WSDL schema from the cache without fetching it using the
@@ -279,7 +305,7 @@ class TestCacheStoreTransportUsage:
         else:
             del cache.mock_data[id_wsdl]
             assert len(cache.mock_data) == 1
-            store2 = MockDocumentStore(wsdl=wsdl)
+            store2 = MockDocumentStore(wsdl=wsdl_import_wrapper)
         c2 = suds.client.Client("suds://wsdl", cachingpolicy=0, cache=cache,
             documentStore=store2, transport=MockTransport())
         expected_cache_operations = [("get", id_wsdl)]
@@ -292,7 +318,8 @@ class TestCacheStoreTransportUsage:
             assert store2.mock_log == ["suds://wsdl"]
         assert len(cache.mock_data) == 2
         assert cache.mock_data[id_wsdl_imported] is wsdl_imported_document
-        external_element = c2.wsdl.schema.elements[external_element_id].root
+        schema = c2.wsdl.schema
+        external_element = schema.elements[wsdl_imported_element_id].root
         assert cached_external_element is external_element
 
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
@@ -381,19 +408,6 @@ class TestCacheStoreTransportUsage:
         external_element = c2.wsdl.schema.elements[external_element_id].root
         assert cached_external_element is external_element
 
-    @pytest.mark.parametrize("url", (
-        "sudo://make-me-a-sammich",
-        "http://my little URL",
-        "https://my little URL",
-        "xxx://my little URL",
-        "xxx:my little URL",
-        "xxx:"))
-    def test_WSDL_not_found_in_cache_or_store_should_be_transported(self, url):
-        store = MockDocumentStore()
-        t = MockTransport(open_data=tests.wsdl(""))
-        suds.client.Client(url, cache=None, documentStore=store, transport=t)
-        assert t.mock_operation_log == [("open", url)]
-
 
 class TestCacheUsage:
     """suds.client.Client cache component usage tests."""
@@ -477,6 +491,37 @@ class TestTransportUsage:
             "suds://some_URL", transport=transport).value
         expected_error = '"transport" must be: (%r,)'
         assert str(e) == expected_error % (suds.transport.Transport,)
+
+    @pytest.mark.parametrize("url", test_URL_data)
+    def test_WSDL_transport(self, url):
+        store = MockDocumentStore()
+        t = MockTransport(open_data=tests.wsdl(""))
+        suds.client.Client(url, cache=None, documentStore=store, transport=t)
+        assert t.mock_operation_log == [("open", url)]
+
+    @pytest.mark.parametrize("url", test_URL_data)
+    def test_imported_WSDL_transport(self, url):
+        wsdl_import_wrapper = wsdl_import_wrapper_format % (url,)
+        wsdl_imported = suds.byte_str(wsdl_imported_format % ("",))
+        store = MockDocumentStore(wsdl=suds.byte_str(wsdl_import_wrapper))
+        t = MockTransport(open_data=wsdl_imported)
+        suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+            transport=t)
+        assert t.mock_operation_log == [("open", url)]
+
+    @pytest.mark.parametrize("url", test_URL_data)
+    @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
+    def test_external_XSD_transport(self, url, external_reference_tag):
+        xsd_content = '<xsd:%(tag)s schemaLocation="%(url)s"/>' % dict(
+            tag=external_reference_tag, url=url)
+        store = MockDocumentStore(wsdl=tests.wsdl(xsd_content))
+        t = MockTransport(open_data=suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"/>
+"""))
+        suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+            transport=t)
+        assert t.mock_operation_log == [("open", url)]
 
 
 @pytest.mark.xfail(reason="WSDL import buggy")
