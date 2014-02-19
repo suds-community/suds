@@ -213,6 +213,75 @@ class TestCacheStoreTransportUsage:
 
     """
 
+    class TestCachedWSDLObjectUsage:
+        """
+        Using a WSDL object read from the cache should not attempt to fetch any
+        of its referenced external documents from either the cache, the
+        document store or using the registered transport.
+
+        """
+
+        def test_avoid_imported_WSDL_fetching(self):
+            # Prepare data.
+            url_imported = "suds://wsdl_imported"
+            wsdl_import_wrapper = wsdl_import_wrapper_format % (url_imported,)
+            wsdl_import_wrapper = suds.byte_str(wsdl_import_wrapper)
+            wsdl_imported = suds.byte_str(wsdl_imported_format % ("",))
+
+            # Add to cache.
+            cache = MockCache()
+            store1 = MockDocumentStore(wsdl=wsdl_import_wrapper,
+                wsdl_imported=wsdl_imported)
+            c1 = suds.client.Client("suds://wsdl", cachingpolicy=1,
+                cache=cache, documentStore=store1, transport=MockTransport())
+            assert store1.mock_log == ["suds://wsdl", "suds://wsdl_imported"]
+            assert len(cache.mock_data) == 1
+            wsdl_object_id, wsdl_object = cache.mock_data.items()[0]
+            assert wsdl_object.__class__ is suds.wsdl.Definitions
+
+            # Reuse from cache.
+            cache.mock_operation_log = []
+            store2 = MockDocumentStore(wsdl=wsdl_import_wrapper)
+            c2 = suds.client.Client("suds://wsdl", cachingpolicy=1,
+                cache=cache, documentStore=store2, transport=MockTransport())
+            assert cache.mock_operation_log == [("get", [wsdl_object_id])]
+            assert store2.mock_log == []
+
+        def test_avoid_external_XSD_fetching(self):
+            # Prepare document content.
+            xsd_target_namespace = "balancana"
+            wsdl = tests.wsdl("""\
+              <xsd:import schemaLocation="suds://imported_xsd"/>
+              <xsd:include schemaLocation="suds://included_xsd"/>""",
+                xsd_target_namespace=xsd_target_namespace)
+            external_xsd_format = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema">
+    <element name="external%d" type="string"/>
+</schema>"""
+            external_xsd1 = suds.byte_str(external_xsd_format % (1,))
+            external_xsd2 = suds.byte_str(external_xsd_format % (2,))
+
+            # Add to cache.
+            cache = MockCache()
+            store1 = MockDocumentStore(wsdl=wsdl, imported_xsd=external_xsd1,
+                included_xsd=external_xsd2)
+            c1 = suds.client.Client("suds://wsdl", cachingpolicy=1,
+                cache=cache, documentStore=store1, transport=MockTransport())
+            assert store1.mock_log == ["suds://wsdl", "suds://imported_xsd",
+                "suds://included_xsd"]
+            assert len(cache.mock_data) == 1
+            wsdl_object_id, wsdl_object = cache.mock_data.items()[0]
+            assert wsdl_object.__class__ is suds.wsdl.Definitions
+
+            # Reuse from cache.
+            cache.mock_operation_log = []
+            store2 = MockDocumentStore(wsdl=wsdl)
+            c2 = suds.client.Client("suds://wsdl", cachingpolicy=1,
+                cache=cache, documentStore=store2, transport=MockTransport())
+            assert cache.mock_operation_log == [("get", [wsdl_object_id])]
+            assert store2.mock_log == []
+
     @pytest.mark.parametrize("importing_WSDL_cached", (False, True))
     def test_importing_WSDL_from_cache_avoids_store_avoids_transport(self,
             importing_WSDL_cached):
