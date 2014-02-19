@@ -294,8 +294,9 @@ class TestCacheStoreTransportUsage:
         assert cached_external_element is external_element
 
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
+    @pytest.mark.parametrize("main_WSDL_cached", (False, True))
     def test_using_cached_XSD_schema_should_avoid_store_and_transport(self,
-            external_reference_tag):
+            external_reference_tag, main_WSDL_cached):
         """
         When an imported or included XSD schema is located in the client's
         cache, it should be read from there instead of fetching its data from
@@ -331,35 +332,46 @@ class TestCacheStoreTransportUsage:
         c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
             cache=cache, documentStore=store1, transport=MockTransport())
         assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
-        id1 = cache.mock_operation_log[0][1][0]
-        assert id1 == cache.mock_operation_log[1][1][0]
-        id2 = cache.mock_operation_log[2][1][0]
-        assert id2 == cache.mock_operation_log[3][1][0]
+        id_wsdl = cache.mock_operation_log[0][1][0]
+        assert id_wsdl == cache.mock_operation_log[1][1][0]
+        id_xsd = cache.mock_operation_log[2][1][0]
+        assert id_xsd == cache.mock_operation_log[3][1][0]
         assert len(cache.mock_data) == 2
-        wsdl_document = cache.mock_data[id1]
+        wsdl_document = cache.mock_data[id_wsdl]
         assert c1.wsdl.root is wsdl_document.root()
-        # Making sure id2 refers to the actual external XSD is a bit tricky due
-        # to the fact that the WSDL object merged in the external XSD content
-        # and lost the reference to the external XSD object itself. As a
-        # workaround we make sure that the XSD schema XML element read from the
-        # XSD object cached as id2 matches the one read from the WSDL object's
-        # XSD schema.
-        cached_external_element = cache.mock_data[id2].root().children[0]
+        # Making sure id_xsd refers to the actual external XSD is a bit tricky
+        # due to the fact that the WSDL object merged in the external XSD
+        # content and lost the reference to the external XSD object itself. As
+        # a workaround we make sure that the XSD schema XML element read from
+        # the XSD object cached as id_xsd matches the one read from the WSDL
+        # object's XSD schema.
+        xsd_imported_document = cache.mock_data[id_xsd]
+        cached_external_element = xsd_imported_document.root().children[0]
         external_element = c1.wsdl.schema.elements[external_element_id].root
         assert cached_external_element is external_element
 
         # Make certain the same external XSD document is fetched from the cache
         # and not using the document store or the transport.
-        del cache.mock_data[id1]
-        assert len(cache.mock_data) == 1
         cache.mock_operation_log = []
-        store2 = MockDocumentStore(wsdl=wsdl)
+        if main_WSDL_cached:
+            cache.mock_put_config = MockCache.FAIL
+            store2 = MockDocumentStore(mock_fail=True)
+        else:
+            del cache.mock_data[id_wsdl]
+            assert len(cache.mock_data) == 1
+            store2 = MockDocumentStore(wsdl=wsdl)
         c2 = suds.client.Client("suds://wsdl", cachingpolicy=0, cache=cache,
             documentStore=store2, transport=MockTransport())
-        assert [(x, y[0]) for x, y in cache.mock_operation_log] == [
-            ("get", id1), ("put", id1), ("get", id2)]
+        expected_cache_operations = [("get", id_wsdl)]
+        if not main_WSDL_cached:
+            expected_cache_operations.append(("put", id_wsdl))
+        expected_cache_operations.append(("get", id_xsd))
+        cache_operations = [(x, y[0]) for x, y in cache.mock_operation_log]
+        assert cache_operations == expected_cache_operations
+        if not main_WSDL_cached:
+            assert store2.mock_log == ["suds://wsdl"]
         assert len(cache.mock_data) == 2
-        assert store2.mock_log == ["suds://wsdl"]
+        assert cache.mock_data[id_xsd] is xsd_imported_document
         external_element = c2.wsdl.schema.elements[external_element_id].root
         assert cached_external_element is external_element
 
