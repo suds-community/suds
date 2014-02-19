@@ -213,40 +213,6 @@ class TestCacheStoreTransportUsage:
 
     """
 
-    def test_fetching_WSDL_from_cache_avoids_store_avoids_transport(self):
-        """
-        When a requested WSDL schema is located in the client's cache, it
-        should be read from there instead of fetching its data from the
-        client's document store or using its registered transport.
-
-        When it is is not located in the cache but can be found in the client's
-        document store, it should be fetched from there but not using the
-        client's registered transport.
-
-        """
-        # Add to cache, making sure the WSDL schema is read from the document
-        # store and not fetched using the client's registered transport.
-        cache = MockCache()
-        store1 = MockDocumentStore(umpala=tests.wsdl(""))
-        c1 = suds.client.Client("suds://umpala", cache=cache,
-            documentStore=store1, transport=MockTransport())
-        assert [x for x, y in cache.mock_operation_log] == ["get", "put"]
-        id = cache.mock_operation_log[0][1][0]
-        assert id == cache.mock_operation_log[1][1][0]
-        assert len(cache.mock_data) == 1
-        wsdl_document = cache.mock_data.values()[0]
-        assert c1.wsdl.root is wsdl_document.root()
-
-        # Make certain the same WSDL schema is fetched from the cache and not
-        # using the document store or the transport.
-        cache.mock_operation_log = []
-        cache.mock_put_config = MockCache.FAIL
-        store2 = MockDocumentStore(mock_fail=True)
-        c2 = suds.client.Client("suds://umpala", cache=cache,
-            documentStore=store2, transport=MockTransport())
-        assert cache.mock_operation_log == [("get", [id])]
-        assert c2.wsdl.root is wsdl_document.root()
-
     @pytest.mark.parametrize("importing_WSDL_cached", (False, True))
     def test_importing_WSDL_from_cache_avoids_store_avoids_transport(self,
             importing_WSDL_cached):
@@ -321,6 +287,51 @@ class TestCacheStoreTransportUsage:
         schema = c2.wsdl.schema
         external_element = schema.elements[wsdl_imported_element_id].root
         assert cached_external_element is external_element
+
+    @pytest.mark.parametrize("caching_policy", (0, 1))
+    def test_using_cached_WSDL_avoids_store_avoids_transport(self,
+            caching_policy):
+        """
+        When a client's WSDL schema is located in the cache, it should be read
+        from there instead of fetching its data from the client's document
+        store or using its registered transport.
+
+        When it is is not located in the cache but can be found in the client's
+        document store, it should be fetched from there but not using the
+        client's registered transport.
+
+        """
+        # Add to cache, making sure the WSDL schema is read from the document
+        # store and not fetched using the client's registered transport.
+        cache = MockCache()
+        store1 = MockDocumentStore(umpala=tests.wsdl(""))
+        c1 = suds.client.Client("suds://umpala", cachingpolicy=caching_policy,
+            cache=cache, documentStore=store1, transport=MockTransport())
+        assert [x for x, y in cache.mock_operation_log] == ["get", "put"]
+        id = cache.mock_operation_log[0][1][0]
+        assert id == cache.mock_operation_log[1][1][0]
+        assert len(cache.mock_data) == 1
+        if caching_policy == 0:
+            # Cache contains SAX XML documents.
+            wsdl_document = cache.mock_data.values()[0]
+            assert wsdl_document.__class__ is suds.sax.document.Document
+            wsdl_cached_root = wsdl_document.root()
+        else:
+            # Cache contains complete suds WSDL objects.
+            wsdl = cache.mock_data.values()[0]
+            assert wsdl.__class__ is suds.wsdl.Definitions
+            wsdl_cached_root = wsdl.root
+        assert c1.wsdl.root is wsdl_cached_root
+
+        # Make certain the same WSDL schema is fetched from the cache and not
+        # using the document store or the transport.
+        cache.mock_operation_log = []
+        cache.mock_put_config = MockCache.FAIL
+        store2 = MockDocumentStore(mock_fail=True)
+        c2 = suds.client.Client("suds://umpala", cachingpolicy=caching_policy,
+            cache=cache, documentStore=store2, transport=MockTransport())
+        assert cache.mock_operation_log == [("get", [id])]
+        assert c2.wsdl.root is wsdl_cached_root
 
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
     @pytest.mark.parametrize("main_WSDL_cached", (False, True))
