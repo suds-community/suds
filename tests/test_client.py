@@ -184,6 +184,115 @@ class TestCacheStoreTransportUsage:
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert store.mock_log == [url]
 
+    @pytest.mark.parametrize("importing_WSDL_cached", (False, True))
+    def test_importing_WSDL_from_cache_should_avoid_store_and_transport(self,
+            importing_WSDL_cached):
+        """
+        When a requested WSDL schema is located in the client's cache, it
+        should be read from there instead of fetching its data from the
+        client's document store or using its registered transport.
+
+        Note that this test makes sense only when caching raw XML documents
+        (cachingpolicy == 0) and not when caching final WSDL objects
+        (cachingpolicy == 1).
+
+        """
+        #TODO: Once a WSDL import bug illustrated by test_WSDL_import() is
+        # fixed, this test's test data may be simplified to just:
+        #   > wsdl = tests.wsdl("", wsdl_target_namespace="bingo-bongo")
+        #   > wsdl_wrapper = suds.byte_str("""\
+        #   > <?xml version='1.0' encoding='UTF-8'?>
+        #   > <wsdl:definitions targetNamespace="bingo-bongo"
+        #   >     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+        #   >   <wsdl:import namespace="bingo-bongo" location="suds://wsdl"/>
+        #   > </wsdl:definitions>
+        #   > """)
+        # This would also make adding the imported WSDL schema into the cache
+        # simpler as that stand-alone schema can be used without the wrapper.
+        wsdl_imported = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="bingo-bongo"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="ice-scream"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <xsd:element name="Pistaccio" type="xsd:string"/>
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>""")
+        wsdl = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions
+    targetNamespace="bingo-bongo"
+    xmlns:my_wsdl="bingo-bongo"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="bingo-bongo" location="suds://wsdl_imported"/>
+  <wsdl:portType name="dummyPortType">
+    <wsdl:operation name="f"/>
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="my_wsdl:dummyPortType">
+    <soap:binding style="document"
+        transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="document"/>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="my_wsdl:dummy">
+      <soap:address location="unga-bunga-location"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""")
+        external_element_id = ("Pistaccio", "ice-scream")
+
+        # Add to cache.
+        cache = MockCache()
+        store1 = MockDocumentStore(wsdl=wsdl, wsdl_imported=wsdl_imported)
+        c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
+            cache=cache, documentStore=store1, transport=MockTransport())
+        assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
+        id_wsdl = cache.mock_operation_log[0][1][0]
+        assert cache.mock_operation_log[1][1][0] == id_wsdl
+        id_wsdl_imported = cache.mock_operation_log[2][1][0]
+        assert cache.mock_operation_log[3][1][0] == id_wsdl_imported
+        assert id_wsdl_imported != id_wsdl
+        assert store1.mock_log == ["suds://wsdl", "suds://wsdl_imported"]
+        assert len(cache.mock_data) == 2
+        wsdl_imported_document = cache.mock_data[id_wsdl_imported]
+        cached_definitions_element = wsdl_imported_document.root().children[0]
+        cached_schema_element = cached_definitions_element.children[0]
+        cached_external_element = cached_schema_element.children[0]
+        external_element = c1.wsdl.schema.elements[external_element_id].root
+        assert cached_external_element is external_element
+
+        # Import the WSDL schema from the cache without fetching it using the
+        # document store or the transport.
+        cache.mock_operation_log = []
+        if importing_WSDL_cached:
+            cache.mock_put_config = MockCache.FAIL
+            store2 = MockDocumentStore(mock_fail=True)
+        else:
+            del cache.mock_data[id_wsdl]
+            assert len(cache.mock_data) == 1
+            store2 = MockDocumentStore(wsdl=wsdl)
+        c2 = suds.client.Client("suds://wsdl", cachingpolicy=0, cache=cache,
+            documentStore=store2, transport=MockTransport())
+        expected_cache_operations = [("get", id_wsdl)]
+        if not importing_WSDL_cached:
+            expected_cache_operations.append(("put", id_wsdl))
+        expected_cache_operations.append(("get", id_wsdl_imported))
+        cache_operations = [(x, y[0]) for x, y in cache.mock_operation_log]
+        assert cache_operations == expected_cache_operations
+        if not importing_WSDL_cached:
+            assert store2.mock_log == ["suds://wsdl"]
+        assert len(cache.mock_data) == 2
+        assert cache.mock_data[id_wsdl_imported] is wsdl_imported_document
+        external_element = c2.wsdl.schema.elements[external_element_id].root
+        assert cached_external_element is external_element
+
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
     def test_using_cached_XSD_schema_should_avoid_store_and_transport(self,
             external_reference_tag):
