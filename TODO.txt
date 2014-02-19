@@ -1086,13 +1086,17 @@ PRIORETIZED:
 (+)             * Imported WSDL document.
 (+)             * Imported XSD schema.
 (+)             * Included XSD schema.
+(+)     * Client's cache/store/transport usage.
+(+)         * Different cachingpolicy option values.
+(+)             * cachingpolicy == 0 - XML documents are cached.
+(+)                 * Already tested.
+(+)             * cachingpolicy == 1 - final WSDL objects are cached.
+(+)                 * Loading a WSDL object from cache should avoid attempting
+(+)                   to fetch any additional external data either from the
+(+)                   cache, the document store or the registered transport.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
-        * Client's cache/store/transport usage.
-            * Different cachingpolicy option values.
-                * cachingpolicy == 0 - XML documents are cached.
-                * cachingpolicy == 1 - final WSDL objects are cached.
         * Transport.
         * _SoapClient.
             * Using Transport.
@@ -1587,3 +1591,14 @@ NON PRIORETIZED:
         * For example, 'integer' or 'string' elements defined in the
           'http://schemas.xmlsoap.org/soap/encoding/' namespace (stored
           internally by suds in the store.py module).
+
+    * See whether importing an external WSDL schema can benefit from that
+      schema's WSDL object already being cached.
+        * See if this has already been implemented, and if not - implement it.
+
+    * Additional test ideas.
+        * External XSD usage (including both imported and included external XSD
+          schemas).
+            * All the different external XSD usage tests should be run in
+              scenarios when the external XSD gets used from an imported WSDL.
+            * Using an external XSD schema using another external XSD schema.
