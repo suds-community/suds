@@ -1074,17 +1074,23 @@ PRIORETIZED:
 (+)         * If an object is found in cache it should not be looked up in the
 (+)           given document store or transported.
 (+)             * Imported WSDL document.
+(+)         * If an object is found in a given document store it should not be
+(+)           transported.
+(+)             * WSDL document.
+(+)             * Imported WSDL document.
+(+)             * Imported XSD schema.
+(+)             * Included XSD schema.
+(+)         * If an object is not cached or found in a given document store it
+(+)           should not transported.
+(+)             * WSDL document.
+(+)             * Imported WSDL document.
+(+)             * Imported XSD schema.
+(+)             * Included XSD schema.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
         * Client's cache/store/transport usage.
-            * If an object is found in a given document store it should not be
-              transported.
-                * WSDL document.
-                * Imported WSDL document.
-                * Imported XSD schema.
-                * Included XSD schema.
-            * Different cache types - cachingpolicy option.
+            * Different cachingpolicy option values.
                 * cachingpolicy == 0 - XML documents are cached.
                 * cachingpolicy == 1 - final WSDL objects are cached.
         * Transport.
