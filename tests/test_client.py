@@ -350,3 +350,25 @@ class TestTransportUsage:
             "suds://some_URL", transport=transport).value
         expected_error = '"transport" must be: (%r,)'
         assert str(e) == expected_error % (suds.transport.Transport,)
+
+
+@pytest.mark.xfail(reason="WSDL import buggy")
+def test_WSDL_import():
+    wsdl = tests.wsdl("", wsdl_target_namespace="bingo-bongo")
+    wsdl_wrapper = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions
+xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+targetNamespace="bingo-bongo">
+  <wsdl:import namespace="bingo-bongo" location="suds://wsdl"/>
+</wsdl:definitions>
+""")
+    store = suds.store.DocumentStore(wsdl=wsdl, wsdl_wrapper=wsdl_wrapper)
+    client = suds.client.Client("suds://wsdl_wrapper", documentStore=store,
+        cache=None, nosend=True)
+    client.service.f()
+    #TODO: client.service is empty but other parts of client's imported WSDL
+    # data, e.g. port_type, are there so my guess is that this is something
+    # that was intended to work. (19.02.2014.) (Jurko)
+    #TODO: Look into the exact client.wsdl.schema content. Its string
+    # representation does not seem to be valid.
