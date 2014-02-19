@@ -354,7 +354,7 @@ class TestCacheStoreTransportUsage:
         assert len(cache.mock_data) == 1
         cache.mock_operation_log = []
         store2 = MockDocumentStore(wsdl=wsdl)
-        c2 = suds.client.Client("suds://wsdl", cache=cache,
+        c2 = suds.client.Client("suds://wsdl", cachingpolicy=0, cache=cache,
             documentStore=store2, transport=MockTransport())
         assert [(x, y[0]) for x, y in cache.mock_operation_log] == [
             ("get", id1), ("put", id1), ("get", id2)]
