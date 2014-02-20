@@ -113,18 +113,23 @@ class MockTransport(suds.transport.Transport):
     Allows the tests to check which transport operations got triggered and to
     control what each of them returns.
 
+    open/send output data may be given either as a single value or a list of
+    values to be used in order. Specifying a single value is a shortcut with
+    the same semantics as specifying a single element list containing that
+    value. Each of the value items may be either a simple byte string to be
+    returned or an Exception subclass or instance indicating an exception to be
+    raised from a particular operation call.
+
     """
 
     def __init__(self, open_data=None, send_data=None):
         if open_data is None:
             open_data = []
         elif open_data.__class__ is not list:
-            assert open_data.__class__ is suds.byte_str_class, "bad test data"
             open_data = [open_data]
         if send_data is None:
             send_data = []
         elif send_data.__class__ is not list:
-            assert send_data.__class__ is suds.byte_str_class, "bad test data"
             send_data = [send_data]
         self.mock_log = []
         self.mock_open_data = open_data
@@ -133,18 +138,29 @@ class MockTransport(suds.transport.Transport):
 
     def open(self, request):
         self.mock_log.append(("open", [request.url]))
-        if self.mock_open_data:
-            return suds.BytesIO(self.mock_open_data.pop(0))
-        pytest.fail("Unexpected MockTransport.open() operation call.")
+        if not self.mock_open_data:
+            pytest.fail("Unexpected MockTransport.open() operation call.")
+        result = self.__next_operation_result(self.mock_open_data)
+        return suds.BytesIO(result)
 
     def send(self, request):
         self.mock_log.append(("send", [request.url, request.message]))
-        if self.mock_send_data:
-            status = httplib.OK
-            headers = {}
-            data = self.mock_send_data.pop(0)
-            return suds.transport.Reply(status, headers, data)
-        pytest.fail("Unexpected MockTransport.send() operation call.")
+        if not self.mock_send_data:
+            pytest.fail("Unexpected MockTransport.send() operation call.")
+        status = httplib.OK
+        headers = {}
+        data = self.__next_operation_result(self.mock_send_data)
+        return suds.transport.Reply(status, headers, data)
+
+    @staticmethod
+    def __next_operation_result(data_list):
+        value = data_list.pop(0)
+        if isinstance(value, Exception):
+            raise value
+        if value.__class__ is type and issubclass(value, Exception):
+            raise value()
+        assert value.__class__ is suds.byte_str_class, "bad test data"
+        return value
 
 
 # Test data used in different tests in this module testing suds WSDL schema
