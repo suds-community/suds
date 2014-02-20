@@ -62,24 +62,24 @@ class MockCache(suds.cache.Cache):
 
     def __init__(self):
         self.mock_data = {}
-        self.mock_operation_log = []
+        self.mock_log = []
         self.mock_put_config = MockCache.ALLOW
         super(MockCache, self).__init__()
 
     def clear(self):
-        self.mock_operation_log.append(("clear", []))
+        self.mock_log.append(("clear", []))
         pytest.fail("Unexpected MockCache.clear() operation call.")
 
     def get(self, id):
-        self.mock_operation_log.append(("get", [id]))
+        self.mock_log.append(("get", [id]))
         return self.mock_data.get(id, None)
 
     def purge(self, id):
-        self.mock_operation_log.append(("purge", [id]))
+        self.mock_log.append(("purge", [id]))
         pytest.fail("Unexpected MockCache.purge() operation call.")
 
     def put(self, id, object):
-        self.mock_operation_log.append(("put", [id, object]))
+        self.mock_log.append(("put", [id, object]))
         if self.mock_put_config == MockCache.FAIL:
             pytest.fail("Unexpected MockCache.put() operation call.")
         if self.mock_put_config == MockCache.ALLOW:
@@ -126,19 +126,19 @@ class MockTransport(suds.transport.Transport):
         elif send_data.__class__ is not list:
             assert send_data.__class__ is suds.byte_str_class, "bad test data"
             send_data = [send_data]
-        self.mock_operation_log = []
+        self.mock_log = []
         self.mock_open_data = open_data
         self.mock_send_data = send_data
         super(MockTransport, self).__init__()
 
     def open(self, request):
-        self.mock_operation_log.append(("open", request.url))
+        self.mock_log.append(("open", request.url))
         if self.mock_open_data:
             return suds.BytesIO(self.mock_open_data.pop(0))
         pytest.fail("Unexpected MockTransport.open() operation call.")
 
     def send(self, request):
-        self.mock_operation_log.append(("send", request.url))
+        self.mock_log.append(("send", request.url))
         if self.mock_send_data:
             status = httplib.OK
             headers = {}
@@ -245,11 +245,11 @@ class TestCacheStoreTransportUsage:
             assert wsdl_object.__class__ is suds.wsdl.Definitions
 
             # Reuse from cache.
-            cache.mock_operation_log = []
+            cache.mock_log = []
             store2 = MockDocumentStore(wsdl=wsdl_import_wrapper)
             c2 = suds.client.Client("suds://wsdl", cachingpolicy=1,
                 cache=cache, documentStore=store2, transport=MockTransport())
-            assert cache.mock_operation_log == [("get", [wsdl_object_id])]
+            assert cache.mock_log == [("get", [wsdl_object_id])]
             assert store2.mock_log == []
 
         def test_avoid_external_XSD_fetching(self):
@@ -280,11 +280,11 @@ class TestCacheStoreTransportUsage:
             assert wsdl_object.__class__ is suds.wsdl.Definitions
 
             # Reuse from cache.
-            cache.mock_operation_log = []
+            cache.mock_log = []
             store2 = MockDocumentStore(wsdl=wsdl)
             c2 = suds.client.Client("suds://wsdl", cachingpolicy=1,
                 cache=cache, documentStore=store2, transport=MockTransport())
-            assert cache.mock_operation_log == [("get", [wsdl_object_id])]
+            assert cache.mock_log == [("get", [wsdl_object_id])]
             assert store2.mock_log == []
 
     @pytest.mark.parametrize("importing_WSDL_cached", (False, True))
@@ -320,11 +320,11 @@ class TestCacheStoreTransportUsage:
             wsdl_imported=wsdl_imported)
         c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
             cache=cache, documentStore=store1, transport=MockTransport())
-        assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
-        id_wsdl = cache.mock_operation_log[0][1][0]
-        assert cache.mock_operation_log[1][1][0] == id_wsdl
-        id_wsdl_imported = cache.mock_operation_log[2][1][0]
-        assert cache.mock_operation_log[3][1][0] == id_wsdl_imported
+        assert [x for x, y in cache.mock_log] == ["get", "put"] * 2
+        id_wsdl = cache.mock_log[0][1][0]
+        assert cache.mock_log[1][1][0] == id_wsdl
+        id_wsdl_imported = cache.mock_log[2][1][0]
+        assert cache.mock_log[3][1][0] == id_wsdl_imported
         assert id_wsdl_imported != id_wsdl
         assert store1.mock_log == ["suds://wsdl", "suds://wsdl_imported"]
         assert len(cache.mock_data) == 2
@@ -338,7 +338,7 @@ class TestCacheStoreTransportUsage:
 
         # Import the WSDL schema from the cache without fetching it using the
         # document store or the transport.
-        cache.mock_operation_log = []
+        cache.mock_log = []
         if importing_WSDL_cached:
             cache.mock_put_config = MockCache.FAIL
             store2 = MockDocumentStore(mock_fail=True)
@@ -352,7 +352,7 @@ class TestCacheStoreTransportUsage:
         if not importing_WSDL_cached:
             expected_cache_operations.append(("put", id_wsdl))
         expected_cache_operations.append(("get", id_wsdl_imported))
-        cache_operations = [(x, y[0]) for x, y in cache.mock_operation_log]
+        cache_operations = [(x, y[0]) for x, y in cache.mock_log]
         assert cache_operations == expected_cache_operations
         if not importing_WSDL_cached:
             assert store2.mock_log == ["suds://wsdl"]
@@ -381,9 +381,9 @@ class TestCacheStoreTransportUsage:
         store1 = MockDocumentStore(umpala=tests.wsdl(""))
         c1 = suds.client.Client("suds://umpala", cachingpolicy=caching_policy,
             cache=cache, documentStore=store1, transport=MockTransport())
-        assert [x for x, y in cache.mock_operation_log] == ["get", "put"]
-        id = cache.mock_operation_log[0][1][0]
-        assert id == cache.mock_operation_log[1][1][0]
+        assert [x for x, y in cache.mock_log] == ["get", "put"]
+        id = cache.mock_log[0][1][0]
+        assert id == cache.mock_log[1][1][0]
         assert len(cache.mock_data) == 1
         if caching_policy == 0:
             # Cache contains SAX XML documents.
@@ -399,12 +399,12 @@ class TestCacheStoreTransportUsage:
 
         # Make certain the same WSDL schema is fetched from the cache and not
         # using the document store or the transport.
-        cache.mock_operation_log = []
+        cache.mock_log = []
         cache.mock_put_config = MockCache.FAIL
         store2 = MockDocumentStore(mock_fail=True)
         c2 = suds.client.Client("suds://umpala", cachingpolicy=caching_policy,
             cache=cache, documentStore=store2, transport=MockTransport())
-        assert cache.mock_operation_log == [("get", [id])]
+        assert cache.mock_log == [("get", [id])]
         assert c2.wsdl.root is wsdl_cached_root
 
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
@@ -449,11 +449,11 @@ class TestCacheStoreTransportUsage:
         store1 = MockDocumentStore(wsdl=wsdl, external=external_schema)
         c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
             cache=cache, documentStore=store1, transport=MockTransport())
-        assert [x for x, y in cache.mock_operation_log] == ["get", "put"] * 2
-        id_wsdl = cache.mock_operation_log[0][1][0]
-        assert id_wsdl == cache.mock_operation_log[1][1][0]
-        id_xsd = cache.mock_operation_log[2][1][0]
-        assert id_xsd == cache.mock_operation_log[3][1][0]
+        assert [x for x, y in cache.mock_log] == ["get", "put"] * 2
+        id_wsdl = cache.mock_log[0][1][0]
+        assert id_wsdl == cache.mock_log[1][1][0]
+        id_xsd = cache.mock_log[2][1][0]
+        assert id_xsd == cache.mock_log[3][1][0]
         assert len(cache.mock_data) == 2
         wsdl_document = cache.mock_data[id_wsdl]
         assert c1.wsdl.root is wsdl_document.root()
@@ -470,7 +470,7 @@ class TestCacheStoreTransportUsage:
 
         # Make certain the same external XSD document is fetched from the cache
         # and not using the document store or the transport.
-        cache.mock_operation_log = []
+        cache.mock_log = []
         if main_WSDL_cached:
             cache.mock_put_config = MockCache.FAIL
             store2 = MockDocumentStore(mock_fail=True)
@@ -484,7 +484,7 @@ class TestCacheStoreTransportUsage:
         if not main_WSDL_cached:
             expected_cache_operations.append(("put", id_wsdl))
         expected_cache_operations.append(("get", id_xsd))
-        cache_operations = [(x, y[0]) for x, y in cache.mock_operation_log]
+        cache_operations = [(x, y[0]) for x, y in cache.mock_log]
         assert cache_operations == expected_cache_operations
         if not main_WSDL_cached:
             assert store2.mock_log == ["suds://wsdl"]
@@ -582,7 +582,7 @@ class TestTransportUsage:
         store = MockDocumentStore()
         t = MockTransport(open_data=tests.wsdl(""))
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
-        assert t.mock_operation_log == [("open", url)]
+        assert t.mock_log == [("open", url)]
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_imported_WSDL_transport(self, url):
@@ -592,7 +592,7 @@ class TestTransportUsage:
         t = MockTransport(open_data=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
-        assert t.mock_operation_log == [("open", url)]
+        assert t.mock_log == [("open", url)]
 
     @pytest.mark.parametrize("url", test_URL_data)
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
@@ -606,7 +606,7 @@ class TestTransportUsage:
 """))
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
-        assert t.mock_operation_log == [("open", url)]
+        assert t.mock_log == [("open", url)]
 
 
 @pytest.mark.xfail(reason="WSDL import buggy")
