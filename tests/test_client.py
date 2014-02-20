@@ -36,6 +36,8 @@ import tests
 
 import pytest
 
+import httplib
+
 
 class MyException(Exception):
     """Local exception class used in this testing module."""
@@ -126,7 +128,7 @@ class MockTransport(suds.transport.Transport):
             send_data = [send_data]
         self.mock_operation_log = []
         self.mock_open_data = open_data
-        self.mock_send_config = send_data
+        self.mock_send_data = send_data
         super(MockTransport, self).__init__()
 
     def open(self, request):
@@ -138,7 +140,10 @@ class MockTransport(suds.transport.Transport):
     def send(self, request):
         self.mock_operation_log.append(("send", request.url))
         if self.mock_send_data:
-            return suds.BytesIO(self.mock_send_data.pop(0))
+            status = httplib.OK
+            headers = {}
+            data = self.mock_send_data.pop(0)
+            return suds.transport.Reply(status, headers, data)
         pytest.fail("Unexpected MockTransport.send() operation call.")
 
 
