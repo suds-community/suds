@@ -550,7 +550,7 @@ class TestStoreUsage:
     def test_reject_invalid_store_class(self, store, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(AttributeError, suds.client.Client,
-            "suds://some_URL", documentStore=store).value
+            "suds://some_URL", documentStore=store, cache=None).value
         expected_error = '"documentStore" must be: (%r,)'
         assert str(e) == expected_error % (suds.store.DocumentStore,)
 
@@ -587,7 +587,7 @@ class TestTransportUsage:
   </env:Body>
 </env:Envelope>""" % (xsd_target_namespace, test_output_data)))
         client = suds.client.Client("suds://wsdl", documentStore=store,
-            transport=transport)
+            cache=None, transport=transport)
         assert transport.mock_log == []
         reply = client.service.pi(test_input_data)
         assert len(transport.mock_log) == 1
@@ -602,7 +602,7 @@ class TestTransportUsage:
     def test_reject_invalid_transport_class(self, transport, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(AttributeError, suds.client.Client,
-            "suds://some_URL", transport=transport).value
+            "suds://some_URL", transport=transport, cache=None).value
         expected_error = '"transport" must be: (%r,)'
         assert str(e) == expected_error % (suds.transport.Transport,)
 
