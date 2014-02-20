@@ -318,8 +318,8 @@ class TestCacheStoreTransportUsage:
         cache = MockCache()
         store1 = MockDocumentStore(wsdl=wsdl_import_wrapper,
             wsdl_imported=wsdl_imported)
-        c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
-            cache=cache, documentStore=store1, transport=MockTransport())
+        c1 = suds.client.Client("suds://wsdl", cachingpolicy=0, cache=cache,
+            documentStore=store1, transport=MockTransport())
         assert [x for x, y in cache.mock_log] == ["get", "put"] * 2
         id_wsdl = cache.mock_log[0][1][0]
         assert cache.mock_log[1][1][0] == id_wsdl
@@ -447,8 +447,8 @@ class TestCacheStoreTransportUsage:
         # Add to cache.
         cache = MockCache()
         store1 = MockDocumentStore(wsdl=wsdl, external=external_schema)
-        c1 = suds.client.Client("suds://wsdl", cachingpolicy=0,
-            cache=cache, documentStore=store1, transport=MockTransport())
+        c1 = suds.client.Client("suds://wsdl", cachingpolicy=0, cache=cache,
+            documentStore=store1, transport=MockTransport())
         assert [x for x, y in cache.mock_log] == ["get", "put"] * 2
         id_wsdl = cache.mock_log[0][1][0]
         assert id_wsdl == cache.mock_log[1][1][0]
