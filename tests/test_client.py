@@ -117,12 +117,12 @@ class MockTransport(suds.transport.Transport):
         if open_data is None:
             open_data = []
         elif open_data.__class__ is not list:
-            assert open_data.__class__ is suds.byte_str_class
+            assert open_data.__class__ is suds.byte_str_class, "bad test data"
             open_data = [open_data]
         if send_data is None:
             send_data = []
         elif send_data.__class__ is not list:
-            assert send_data.__class__ is suds.byte_str_class
+            assert send_data.__class__ is suds.byte_str_class, "bad test data"
             send_data = [send_data]
         self.mock_operation_log = []
         self.mock_open_data = open_data

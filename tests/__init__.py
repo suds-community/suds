@@ -41,7 +41,7 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
     store.
 
     """
-    assert wsdl_content.__class__ is suds.byte_str_class
+    assert wsdl_content.__class__ is suds.byte_str_class, "bad test data"
     store = kwargs.get("documentStore")
     if store is None:
         store = suds.store.DocumentStore()
