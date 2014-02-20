@@ -569,6 +569,35 @@ class TestTransportUsage:
         client = tests.client_from_wsdl(wsdl, nosend=True, transport=t)
         client.service.f()
 
+    def test_operation_request_and_reply(self):
+        xsd_content = '<xsd:element name="Data" type="xsd:string"/>'
+        web_service_URL = "Great minds think alike"
+        xsd_target_namespace = "omicron psi"
+        wsdl = tests.wsdl(suds.byte_str(xsd_content), operation_name="pi",
+            xsd_target_namespace=xsd_target_namespace, input="Data",
+            output="Data", web_service_URL=web_service_URL)
+        test_input_data = "Riff-raff"
+        test_output_data = "La-di-da-da-da"
+        store = MockDocumentStore(wsdl=wsdl)
+        transport = MockTransport(send_data=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body>
+    <Data xmlns="%s">%s</Data>
+  </env:Body>
+</env:Envelope>""" % (xsd_target_namespace, test_output_data)))
+        client = suds.client.Client("suds://wsdl", documentStore=store,
+            transport=transport)
+        assert transport.mock_log == []
+        reply = client.service.pi(test_input_data)
+        assert len(transport.mock_log) == 1
+        assert transport.mock_log[0][0] == "send"
+        assert transport.mock_log[0][1][0] == web_service_URL
+        request_message = transport.mock_log[0][1][1]
+        assert suds.byte_str(xsd_target_namespace) in request_message
+        assert suds.byte_str(test_input_data) in request_message
+        assert reply == test_output_data
+
     @pytest.mark.parametrize("transport", (object(), suds.cache.NoCache()))
     def test_reject_invalid_transport_class(self, transport, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)
