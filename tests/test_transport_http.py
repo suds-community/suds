@@ -89,6 +89,16 @@ class CountedMock(object):
         self.__mock_call_counter = {}
 
 
+# Test URL data used by several tests in this test module.
+test_URL_data = (
+    "sudo://make-me-a-sammich",
+    "http://my little URL",
+    "https://my little URL",
+    "xxx://my little URL",
+    "xxx:my little URL",
+    "xxx:")
+
+
 def test_authenticated_http():
     t = suds.transport.http.HttpAuthenticated(username="Habul AfuFa",
         password="preCious")
@@ -272,13 +282,7 @@ def test_sending_using_network_sockets(monkeypatch, send_method,
         assert partial_ascii_byte_data not in mocker.mock_sent_data
 
 
-@pytest.mark.parametrize("url", (
-    "sudo://make-me-a-sammich",
-    "http://my little URL",
-    "https://my little URL",
-    "xxx://my little URL",
-    "xxx:my little URL",
-    "xxx:"))
+@pytest.mark.parametrize("url", test_URL_data)
 def test_urlopener_default(url, monkeypatch):
     """HttpTransport builds a new urlopener if not given an external one."""
     my_request = suds.transport.Request(url, u"Rumpelstiltskin")
@@ -293,13 +297,7 @@ def test_urlopener_default(url, monkeypatch):
     pytest.raises(MyException, transport.send, my_request)
 
 
-@pytest.mark.parametrize("url", (
-    "sudo://make-me-a-sammich",
-    "http://my little URL",
-    "https://my little URL",
-    "xxx://my little URL",
-    "xxx:my little URL",
-    "xxx:"))
+@pytest.mark.parametrize("url", test_URL_data)
 def test_urlopener_indirection(url, monkeypatch):
     """
     HttpTransport may be configured with an external urlopener.
