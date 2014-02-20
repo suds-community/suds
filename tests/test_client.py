@@ -132,13 +132,13 @@ class MockTransport(suds.transport.Transport):
         super(MockTransport, self).__init__()
 
     def open(self, request):
-        self.mock_log.append(("open", request.url))
+        self.mock_log.append(("open", [request.url]))
         if self.mock_open_data:
             return suds.BytesIO(self.mock_open_data.pop(0))
         pytest.fail("Unexpected MockTransport.open() operation call.")
 
     def send(self, request):
-        self.mock_log.append(("send", request.url))
+        self.mock_log.append(("send", [request.url, request.message]))
         if self.mock_send_data:
             status = httplib.OK
             headers = {}
@@ -582,7 +582,7 @@ class TestTransportUsage:
         store = MockDocumentStore()
         t = MockTransport(open_data=tests.wsdl(""))
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
-        assert t.mock_log == [("open", url)]
+        assert t.mock_log == [("open", [url])]
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_imported_WSDL_transport(self, url):
@@ -592,7 +592,7 @@ class TestTransportUsage:
         t = MockTransport(open_data=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
-        assert t.mock_log == [("open", url)]
+        assert t.mock_log == [("open", [url])]
 
     @pytest.mark.parametrize("url", test_URL_data)
     @pytest.mark.parametrize("external_reference_tag", ("import", "include"))
@@ -606,7 +606,7 @@ class TestTransportUsage:
 """))
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
-        assert t.mock_log == [("open", url)]
+        assert t.mock_log == [("open", [url])]
 
 
 @pytest.mark.xfail(reason="WSDL import buggy")
