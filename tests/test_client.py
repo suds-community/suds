@@ -579,6 +579,45 @@ class TestTransportUsage:
         expected = suds.transport.https.HttpAuthenticated
         assert client.options.transport.__class__ is expected
 
+    @pytest.mark.parametrize("exception", (
+        MyException(),  # non-TransportError exception
+        suds.transport.TransportError("huku", 666)))
+    def test_error_on_open(self, monkeypatch, exception):
+        monkeypatch.delitem(locals(), "e_info", False)
+        transport = MockTransport(open_data=exception)
+        e_info = pytest.raises(exception.__class__, suds.client.Client, "url",
+            cache=None, transport=transport)
+        assert e_info.value is exception
+
+    def test_error_on_send__non_transport(self):
+        e = MyException()
+        t = MockTransport(send_data=e)
+        store = MockDocumentStore(wsdl=tests.wsdl("", operation_name="g"))
+        client = suds.client.Client("suds://wsdl", documentStore=store,
+            cache=None, transport=t)
+        assert pytest.raises(MyException, client.service.g).value is e
+
+    #TODO: The test_error_on_send__transport() test should be made much more
+    # detailed. suds.transport.TransportError exceptions get handled in a much
+    # more complex way then is demonstrated here, for example:
+    #  - some HTTP status codes result in an exception being raised and some in
+    #    different handling
+    #  - an exception may be raised or returned depending no the
+    #    suds.options.faults suds option
+    # Also, the whole concept of re-raising a TransportError exception as a
+    # simple Exception instance seems like bad design. For now this rough test
+    # just demonstrates that suds.transport.TransportError exceptions get
+    # handled differently from other exception types.
+    def test_error_on_send__transport(self, monkeypatch):
+        monkeypatch.delitem(locals(), "e", False)
+        t = MockTransport(send_data=suds.transport.TransportError("huku", 666))
+        store = MockDocumentStore(wsdl=tests.wsdl("", operation_name="g"))
+        client = suds.client.Client("suds://wsdl", documentStore=store,
+            cache=None, transport=t)
+        e = pytest.raises(Exception, client.service.g).value
+        assert e.__class__ is Exception
+        assert e.args == ((666, "huku"),)
+
     def test_nosend_should_avoid_transport_sends(self):
         wsdl = tests.wsdl("")
         t = MockTransport()
