@@ -89,6 +89,43 @@ class CountedMock(object):
         self.__mock_call_counter = {}
 
 
+class MockURLOpenerSaboteur:
+    """
+    Mock URLOpener raising an exception in its open() method.
+
+    If no open_exception is given in its initializer, simply marks the current
+    test as a failure if its open() method is called. Otherwise raises the
+    given exception from that call.
+
+    """
+
+    def __init__(self, open_exception=None):
+        self.__open_exception = open_exception
+
+    def open(self, *args, **kwargs):
+        if self.__open_exception:
+            raise self.__open_exception
+        pytest.fail("urllib urlopener.open() must not be called.")
+
+
+class SendMethodFixture:
+    """
+    Instances of this class get returned by the send_method test fixture.
+
+    Each instance is connected to a specific suds.transport.http.HttpTransport
+    request sending method and may be used to call that method on a specific
+    suds.transport.http.HttpTransport instance.
+
+    """
+
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self, transport, *args, **kwargs):
+        assert isinstance(transport, suds.transport.http.HttpTransport)
+        return getattr(transport, self.name)(*args, **kwargs)
+
+
 # Test URL data used by several tests in this test module.
 test_URL_data = (
     "sudo://make-me-a-sammich",
@@ -99,96 +136,82 @@ test_URL_data = (
     "xxx:")
 
 
-def test_authenticated_http():
-    t = suds.transport.http.HttpAuthenticated(username="Habul AfuFa",
-        password="preCious")
-    assert t.credentials() == ("Habul AfuFa", "preCious")
-
-    t = suds.transport.http.HttpAuthenticated(username="macro")
-    assert t.credentials() == ("macro", None)
+def assert_default_transport(transport):
+    """Test utility verifying default constructed transport content."""
+    assert isinstance(transport, suds.transport.http.HttpTransport)
+    assert transport.urlopener is None
 
 
-def test_authenticated_http_add_credentials_to_request():
+def create_request(url="protocol://default-url", data=u"Rumpelstiltskin"):
+    """Test utility constructing a suds.transport.Request instance."""
+    return suds.transport.Request(url, data)
+
+
+@pytest.fixture(params=["open", "send"])
+def send_method(request):
+    """
+    pytest testing framework based test fixture causing tests using that
+    fixture to be called for each suds.transport.http.HttpTransport request
+    sending method.
+
+    """
+    return SendMethodFixture(request.param)
+
+
+@pytest.mark.parametrize("input", (
+    dict(),
+    dict(password="Humpty"),
+    dict(username="Dumpty"),
+    dict(username="Habul Afufa", password="preCious"),
+    # Regression test: Extremely long username & password combinations must not
+    # cause suds to add additional newlines in the constructed 'Authorization'
+    # HTTP header.
+    dict(username="An Extremely Long Username that could be usable only to "
+        "Extremely Important People whilst on Extremely Important Missions.",
+        password="An Extremely Long Password that could be usable only to "
+        "Extremely Important People whilst on Extremely Important Missions. "
+        "And some extra 'funny' characters to improve security: "
+        "!@#$%^&*():|}|{{.\nEven\nSome\nNewLines\n"
+        "  and spaces at the start of a new line.   ")))
+def test_authenticated_http_add_credentials_to_request(input):
     class MockRequest:
         def __init__(self):
             self.headers = {}
 
-    def check_Authorization_header(request, username, password):
-        assert len(request.headers) == 1
-        header = request.headers["Authorization"]
-        assert header == _encode_basic_credentials(username, password)
+    def assert_Authorization_header(request, username, password):
+        if username is None or password is None:
+            assert len(request.headers) == 0
+        else:
+            assert len(request.headers) == 1
+            header = request.headers["Authorization"]
+            assert header == _encode_basic_credentials(username, password)
 
-    t = suds.transport.http.HttpAuthenticated(username="Humpty")
+    username = input.get("username", None)
+    password = input.get("password", None)
+    t = suds.transport.http.HttpAuthenticated(**input)
     r = MockRequest()
     t.addcredentials(r)
-    assert len(r.headers) == 0
-
-    t = suds.transport.http.HttpAuthenticated(password="Dumpty")
-    r = MockRequest()
-    t.addcredentials(r)
-    assert len(r.headers) == 0
-
-    username = "Habul Afufa"
-    password = "preCious"
-    t = suds.transport.http.HttpAuthenticated(username=username,
-        password=password)
-    r = MockRequest()
-    t.addcredentials(r)
-    check_Authorization_header(r, username, password)
-
-    # Regression test: Extremely long username & password combinations must not
-    # cause suds to add additional newlines in the constructed 'Authorization'
-    # HTTP header.
-    username = ("An Extremely Long Username that could be usable only to "
-        "Extremely Important People whilst on Extremely Important Missions.")
-    password = ("An Extremely Long Password that could be usable only to "
-        "Extremely Important People whilst on Extremely Important Missions. "
-        "And some extra 'funny' characters to improve security: "
-        "!@#$%^&*():|}|{{.\nEven\nSome\nNewLines\n"
-        "  and spaces at the start of a new line.   ")
-    t = suds.transport.http.HttpAuthenticated(username=username,
-        password=password)
-    r = MockRequest()
-    t.addcredentials(r)
-    check_Authorization_header(r, username, password)
+    assert_Authorization_header(r, username, password)
 
 
-@pytest.mark.parametrize("url", (
-    "my no-protocol URL",
-    ":my no-protocol URL"))
-def test_sending_to_URL_with_a_missing_protocol_identifier(url):
-    """
-    Test suds reporting URLs with a missing protocol identifier.
+@pytest.mark.parametrize("input", (
+    dict(password="riff raff..!@#"),
+    dict(username="macro"),
+    dict(username="Hab AfuFa", password="preCious")))
+def test_construct_authenticated_http(input):
+    expected_username = input.get("username", None)
+    expected_password = input.get("password", None)
+    transport = suds.transport.http.HttpAuthenticated(**input)
+    assert transport.credentials() == (expected_username, expected_password)
+    assert_default_transport(transport)
 
-    Python urllib library makes this check under Python 3.x, but not under
-    earlier Python versions.
 
-    """
-    class MockURLOpener:
-        def open(self, request, timeout=None):
-            raise MyException
+def test_construct_http():
     transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    if sys.version_info < (3, 0):
-        exception_class = MyException
-        def check_exception(e):
-            pass
-    else:
-        exception_class = ValueError
-        def check_exception(e):
-            assert "unknown url type" in str(e)
-    request_data = object()
-    request = suds.transport.Request(url, request_data)
-    check_exception(pytest.raises(exception_class, transport.open, request))
-    check_exception(pytest.raises(exception_class, transport.send, request))
+    assert_default_transport(transport)
 
 
-@pytest.mark.parametrize(
-    ("send_method", "expected_sent_data_start", "expect_request_data_send"), (
-    (suds.transport.http.HttpTransport.open, "GET", False),
-    (suds.transport.http.HttpTransport.send, "POST", True)))
-def test_sending_using_network_sockets(monkeypatch, send_method,
-        expected_sent_data_start, expect_request_data_send):
+def test_sending_using_network_sockets(send_method, monkeypatch):
     """
     Test that telling HttpTransport to send a request actually causes it to
     send the expected data over the network.
@@ -201,6 +224,7 @@ def test_sending_using_network_sockets(monkeypatch, send_method,
     back data from the network.
 
     """
+
     class Mocker(CountedMock):
         def __init__(self, expected_host, expected_port):
             self.expected_host = expected_host
@@ -244,6 +268,7 @@ def test_sending_using_network_sockets(monkeypatch, send_method,
         def readline(self, *args, **kwargs):
             raise MyException
 
+    # Setup.
     host = "an-easily-recognizable-host-name-214894932"
     port = 9999
     host_port = "%s:%s" % (host, port)
@@ -257,7 +282,14 @@ def test_sending_using_network_sockets(monkeypatch, send_method,
     monkeypatch.setattr("socket.socket", mocker.socket)
     request = suds.transport.Request(url, non_ascii_byte_data)
     transport = suds.transport.http.HttpTransport()
+    expected_sent_data_start, expected_request_data_send = {
+        "open": ("GET", False),
+        "send": ("POST", True)}[send_method.name]
+
+    # Execute.
     pytest.raises(MyException, send_method, transport, request)
+
+    # Verify.
     assert mocker.mock_call_count("getaddrinfo") == 1
     assert mocker.mock_call_count("socket") == 1
     assert mocker.mock_socket.mock_call_count("connect") == 1
@@ -276,49 +308,94 @@ def test_sending_using_network_sockets(monkeypatch, send_method,
     expected_sent_data_start = suds.byte_str(expected_sent_data_start)
     assert mocker.mock_sent_data.startswith(expected_sent_data_start)
     assert host_port.encode("utf-8") in mocker.mock_sent_data
-    if expect_request_data_send:
+    if expected_request_data_send:
         assert mocker.mock_sent_data.endswith(non_ascii_byte_data)
     else:
         assert partial_ascii_byte_data not in mocker.mock_sent_data
 
 
-@pytest.mark.parametrize("url", test_URL_data)
-def test_urlopener_default(url, monkeypatch):
-    """HttpTransport builds a new urlopener if not given an external one."""
-    my_request = suds.transport.Request(url, u"Rumpelstiltskin")
-    def mock_build_urlopener(*handlers):
-        assert len(handlers) == 1
-        assert handlers[0].__class__ is urllib2.ProxyHandler
-        raise MyException
-    monkeypatch.setattr(urllib_request, "build_opener", mock_build_urlopener)
-    transport = suds.transport.http.HttpTransport()
-    assert transport.urlopener is None
-    pytest.raises(MyException, transport.open, my_request)
-    pytest.raises(MyException, transport.send, my_request)
-
-
-@pytest.mark.parametrize("url", test_URL_data)
-def test_urlopener_indirection(url, monkeypatch):
+class TestSendingToURLWithAMissingProtocolIdentifier:
     """
-    HttpTransport may be configured with an external urlopener.
+    Test suds reporting URLs with a missing protocol identifier.
 
-    In that case, a new urlopener is not built and the given urlopener is used
-    as-is, without adding any extra handlers to it.
+    Python urllib library makes this check under Python 3.x, but not under
+    earlier Python versions.
 
     """
-    my_request = suds.transport.Request(url, u"Rumpelstiltskin")
-    class MockURLOpener:
-        def open(self, urllib_request, timeout=None):
-            assert urllib_request.__class__ is urllib2.Request
-            assert urllib_request.get_full_url() == url
+
+    # We can not set this 'url' fixture data using a class decorator since that
+    # Python feature has been introduced in Python 2.6 and we need to keep this
+    # code backward compatible with Python 2.4.
+    invalid_URL_parametrization = pytest.mark.parametrize("url", (
+        "my no-protocol URL",
+        ":my no-protocol URL"))
+
+    @pytest.mark.skipif(sys.version_info >= (3, 0), reason="Python 2 specific")
+    @invalid_URL_parametrization
+    def test_python2(self, url, send_method):
+        transport = suds.transport.http.HttpTransport()
+        transport.urlopener = MockURLOpenerSaboteur(MyException)
+        request = create_request(url)
+        pytest.raises(MyException, send_method, transport, request)
+
+    @pytest.mark.skipif(sys.version_info < (3, 0), reason="Python 3+ specific")
+    @invalid_URL_parametrization
+    def test_python3(self, url, send_method, monkeypatch):
+        monkeypatch.delitem(locals(), "e", False)
+        transport = suds.transport.http.HttpTransport()
+        transport.urlopener = MockURLOpenerSaboteur()
+        request = create_request(url)
+        e = pytest.raises(ValueError, send_method, transport, request)
+        assert "unknown url type" in str(e)
+
+
+class TestURLOpenerUsage:
+    """
+    Test demonstrating how suds.transport.http.HttpTransport makes use of the
+    urllib library to perform the actual network transfers.
+
+    The main contact point with the urllib library are its OpenerDirector
+    objects we refer to as 'urlopener'.
+
+    """
+
+    @pytest.mark.parametrize("url", test_URL_data)
+    def test_urlopener_default(self, url, send_method, monkeypatch):
+        """
+        HttpTransport builds a new urlopener if not given an external one.
+
+        """
+        def my_build_urlopener(*handlers):
+            assert len(handlers) == 1
+            assert handlers[0].__class__ is urllib2.ProxyHandler
             raise MyException
-    def mock_build_urlopener(*args, **kwargs):
-        pytest.fail("urllib2.build_opener() called when not expected.")
-    monkeypatch.setattr(urllib_request, "build_opener", mock_build_urlopener)
-    transport = suds.transport.http.HttpTransport()
-    transport.urlopener = MockURLOpener()
-    pytest.raises(MyException, transport.open, my_request)
-    pytest.raises(MyException, transport.send, my_request)
+        monkeypatch.setattr(urllib_request, "build_opener", my_build_urlopener)
+        transport = suds.transport.http.HttpTransport()
+        request = create_request(url=url)
+        pytest.raises(MyException, send_method, transport, request)
+
+    @pytest.mark.parametrize("url", test_URL_data)
+    def test_urlopener_indirection(self, url, send_method, monkeypatch):
+        """
+        HttpTransport may be configured with an external urlopener.
+
+        In that case, when opening or sending a HTTP request, a new urlopener
+        is not built and the given urlopener is used as-is, without adding any
+        extra handlers to it.
+
+        """
+        class MockURLOpener:
+            def open(self, urllib_request, timeout=None):
+                assert urllib_request.__class__ is urllib2.Request
+                assert urllib_request.get_full_url() == url
+                raise MyException
+        transport = suds.transport.http.HttpTransport()
+        transport.urlopener = MockURLOpener()
+        def my_build_urlopener(*args, **kwargs):
+            pytest.fail("urllib build_opener() called when not expected.")
+        monkeypatch.setattr(urllib_request, "build_opener", my_build_urlopener)
+        request = create_request(url=url)
+        pytest.raises(MyException, send_method, transport, request)
 
 
 def _encode_basic_credentials(username, password):
