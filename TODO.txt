@@ -1095,18 +1095,44 @@ PRIORETIZED:
 (+)                   to fetch any additional external data either from the
 (+)                   cache, the document store or the registered transport.
 
+(20.02.2014.)
+
+(+) * (Jurko) Add tests for the functionality potentially affected by a planned
+(+)   _SoapClient/_SimClient refactoring.
+(+)     * Transport.
+(+)         * Base Transport, Reply & Request classes already tested.
+(+)         * HttpTransport.
+(+)             * urllib2.HTTPError raised from urllib's open() operation.
+(+)                 * ACCEPT/NO_CONTENT status handling - buggy but YAGNI for
+(+)                   now.
+(+)                     * Add a separate todo item to look into this at some
+(+)                       later time.
+(+)                 * Other HTTPError exceptions.
+(+)             * Other functionality already tested well enough.
+(+)     * _SoapClient - currently can only be tested via suds.client.Client.
+(+)         * Using Transport.
+(+)             * 'nosend' option avoids transport usage.
+(+)             * Sending data via & using data returned by transport.
+(+)                 * Opening a WSDL already tested.
+(+)                 * Sending a web service operation invocation request.
+(+)             * Handling transport errors.
+(+)                 * This seems like a complex topic. Prepare a rough test and
+(+)                   add a todo item to deal with this in more detail later on.
+(+)                     * Embed a TODO comment next to the new test.
+
+(23.02.2014.)
+
+(+) * (Jurko) Refactor suds.transport.http module unit tests to make them
+(+)   clearer.
+
+(24.02.2014.)
+
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
-        * Transport.
-        * _SoapClient.
-            * Using Transport.
-            * 'nosend' option.
-            * 'retxml' option.
+        * _SoapClient - currently can only be tested via suds.client.Client.
             * 'prettyxml' option.
-            * Variants.
-                * Subclasses modifying _init_invocation_context(),
-                  _get_request() & _get_reply().
-        * _SimClient.
+            * 'retxml' option.
+        * _SimClient - currently can only be tested via suds.client.Client.
             * Using Transport for sending an injected request.
             * Not using Transport when a reply has been injected.
             * _SimClient using injected request.
@@ -1149,6 +1175,9 @@ PRIORETIZED:
         * Refactor.
             * Already prepared as client_1.py on Jurko's notebook but need to
               add relevant tests first.
+        * Test.
+            * _SoapClient subclasses modifying _init_invocation_context(),
+              _get_request() & _get_reply().
         * Update release notes.
             * Client debug log messages changed.
             * Removed the RequestContext.original_envelope attribute.
@@ -1602,3 +1631,16 @@ NON PRIORETIZED:
             * All the different external XSD usage tests should be run in
               scenarios when the external XSD gets used from an imported WSDL.
             * Using an external XSD schema using another external XSD schema.
+
+    * A HttpTransport.send() operation will return None if the web service
+      server responds with HTTP status code ACCEPTED (202) or NO_CONTENT (204),
+      but the _SoapClient method using this operation is not prepared to handle
+      this and will attempt to access the 'message' member on the returned
+      value. See how to fix this -
+        * Alternatice ideas on how to fix this.
+            * Continue returning None in these cases and fix up the calling
+              code.
+            * Raise a separate exception.
+            * Wrap this information in a regular suds.transport.Reply instance.
+            * Possibly handle this differently based based on whether the web
+              service operation invoked has any defined output message parts.
