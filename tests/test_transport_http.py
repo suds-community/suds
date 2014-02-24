@@ -30,10 +30,12 @@ if __name__ == "__main__":
 import suds
 import suds.transport
 import suds.transport.http
+import tests
 
 import pytest
 
 import base64
+import httplib
 import re
 import sys
 import urllib2
@@ -44,8 +46,18 @@ else:
     urllib_request = urllib2
 
 
+class MustNotBeCalled(Exception):
+    """Local exception used in this test module."""
+    pass
+
+
 class MyException(Exception):
     """Local exception used in this test module."""
+    pass
+
+
+class Undefined:
+    """Internal tag class indicating undefined function call parameters."""
     pass
 
 
@@ -87,6 +99,23 @@ class CountedMock(object):
 
     def mock_reset(self):
         self.__mock_call_counter = {}
+
+
+class MockFP:
+    """
+    Mock FP 'File object' as stored inside a urllib2.HTTPError exception.
+
+    Must have several 'File object' methods defined on it as Python's
+    urllib2.HTTPError implementation expects them and stores references to them
+    internally, at least with Python 2.4.
+
+    """
+
+    def read():
+        raise MustNotBeCalled
+
+    def readline():
+        raise MustNotBeCalled
 
 
 class MockURLOpenerSaboteur:
@@ -358,6 +387,173 @@ class TestURLOpenerUsage:
     objects we refer to as 'urlopener'.
 
     """
+
+    @staticmethod
+    def create_HTTPError(url=Undefined, code=Undefined, msg=Undefined,
+            hdrs=Undefined, fp=None):
+        """
+        Test utility method constructing a HTTPError instance. Allows callers
+        to construct a HTTPError instance using input data they are interested
+        in, with some built-in default values used for any input data they are
+        not interested in.
+
+        """
+        if url is Undefined:
+            url = object()
+        if code is Undefined:
+            code = object()
+        if msg is Undefined:
+            msg = object()
+        if hdrs is Undefined:
+            hdrs = object()
+        return urllib2.HTTPError(url=url, code=code, msg=msg, hdrs=hdrs, fp=fp)
+
+    @pytest.mark.parametrize("status_code", (
+        httplib.ACCEPTED,
+        httplib.NO_CONTENT,
+        httplib.RESET_CONTENT,
+        httplib.MOVED_PERMANENTLY,
+        httplib.BAD_REQUEST,
+        httplib.PAYMENT_REQUIRED,
+        httplib.FORBIDDEN,
+        httplib.NOT_FOUND,
+        httplib.INTERNAL_SERVER_ERROR,
+        httplib.NOT_IMPLEMENTED,
+        httplib.HTTP_VERSION_NOT_SUPPORTED))
+    def test_open_propagating_HTTPError_exceptions(self, status_code,
+            monkeypatch):
+        """
+        HttpTransport open() operation should transform HTTPError urlopener
+        exceptions to suds.transport.TransportError exceptions.
+
+        """
+        # Setup.
+        monkeypatch.delattr(locals(), "e", False)
+        fp = MockFP()
+        e_original = self.create_HTTPError(code=status_code, fp=fp)
+        t = suds.transport.http.HttpTransport()
+        t.urlopener = MockURLOpenerSaboteur(open_exception=e_original)
+        request = create_request()
+
+        # Execute.
+        e = pytest.raises(suds.transport.TransportError, t.open, request).value
+
+        # Verify.
+        assert e.args == (str(e_original),)
+        assert e.httpcode is status_code
+        assert e.fp is fp
+
+    @pytest.mark.xfail(reason="original suds library bug")
+    @pytest.mark.parametrize("status_code", (
+        httplib.ACCEPTED,
+        httplib.NO_CONTENT))
+    def test_operation_invoke_with_urlopen_accept_no_content__data(self,
+            status_code):
+        """
+        suds.client.Client web service operation invocation expecting output
+        data, and for which a corresponding urlopen call raises a HTTPError
+        with status code ACCEPTED or NO_CONTENT, should report this as a
+        TransportError.
+
+        """
+        e = self.create_HTTPError(code=status_code)
+        transport = suds.transport.http.HttpTransport()
+        transport.urlopener = MockURLOpenerSaboteur(open_exception=e)
+        wsdl = tests.wsdl('<xsd:element name="o" type="xsd:string"/>',
+            output="o", operation_name="f")
+        client = tests.client_from_wsdl(wsdl, transport=transport)
+        pytest.raises(suds.transport.TransportError, client.service.f)
+
+    @pytest.mark.xfail(reason="original suds library bug")
+    @pytest.mark.parametrize("status_code", (
+        httplib.ACCEPTED,
+        httplib.NO_CONTENT))
+    def test_operation_invoke_with_urlopen_accept_no_content__no_data(self,
+            status_code):
+        """
+        suds.client.Client web service operation invocation expecting no output
+        data, and for which a corresponding urlopen call raises a HTTPError
+        with status code ACCEPTED or NO_CONTENT, should treat this as a
+        successful invocation.
+
+        """
+        # We are not yet sure that the behaviour checked for in this test is
+        # actually desired. The test is only an 'educated guess' prepared to
+        # demonstrate a related problem in the original suds library
+        # implementation. The original implementation is definitely buggy as
+        # its web service operation invocation raises an AttributeError
+        # exception by attempting to access a non-existing 'None.message'
+        # attribute internally.
+        e = self.create_HTTPError(code=status_code)
+        transport = suds.transport.http.HttpTransport()
+        transport.urlopener = MockURLOpenerSaboteur(open_exception=e)
+        wsdl = tests.wsdl('<xsd:element name="o" type="xsd:string"/>',
+            output="o", operation_name="f")
+        client = tests.client_from_wsdl(wsdl, transport=transport)
+        assert client.service.f() is None
+
+    def test_propagating_non_HTTPError_exceptions(self, send_method):
+        """
+        HttpTransport data sending operations need to propagate non-HTTPError
+        exceptions raised by the underlying urlopen call.
+
+        """
+        e = MyException()
+        t = suds.transport.http.HttpTransport()
+        t.urlopener = MockURLOpenerSaboteur(open_exception=e)
+        assert pytest.raises(e.__class__, t.open, create_request()).value is e
+
+    @pytest.mark.parametrize("status_code", (
+        httplib.RESET_CONTENT,
+        httplib.MOVED_PERMANENTLY,
+        httplib.BAD_REQUEST,
+        httplib.PAYMENT_REQUIRED,
+        httplib.FORBIDDEN,
+        httplib.NOT_FOUND,
+        httplib.INTERNAL_SERVER_ERROR,
+        httplib.NOT_IMPLEMENTED,
+        httplib.HTTP_VERSION_NOT_SUPPORTED))
+    def test_send_transforming_HTTPError_exceptions(self, status_code,
+            monkeypatch):
+        """
+        HttpTransport send() operation should transform HTTPError urlopener
+        exceptions with status codes other than ACCEPTED or NO_CONTENT to
+        suds.transport.TransportError exceptions.
+
+        """
+        # Setup.
+        monkeypatch.delattr(locals(), "e", False)
+        msg = object()
+        fp = MockFP()
+        e_original = self.create_HTTPError(msg=msg, code=status_code, fp=fp)
+        t = suds.transport.http.HttpTransport()
+        t.urlopener = MockURLOpenerSaboteur(open_exception=e_original)
+        request = create_request()
+
+        # Execute.
+        e = pytest.raises(suds.transport.TransportError, t.send, request).value
+
+        # Verify.
+        assert len(e.args) == 1
+        assert e.args[0] is e_original.msg
+        assert e.httpcode is status_code
+        assert e.fp is fp
+
+    @pytest.mark.parametrize("status_code", (
+        httplib.ACCEPTED,
+        httplib.NO_CONTENT))
+    def test_send_transforming_HTTPError_exceptions__accepted_no_content(self,
+            status_code):
+        """
+        HttpTransport send() operation should return None when their underlying
+        urlopen operation raises a HTTPError exception with status code
+        ACCEPTED or NO_CONTENT.
+
+        """
+        e_original = self.create_HTTPError(code=status_code)
+        t = suds.transport.http.HttpTransport()
+        t.urlopener = MockURLOpenerSaboteur(open_exception=e_original)
+        assert t.send(create_request()) is None
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_urlopener_default(self, url, send_method, monkeypatch):
