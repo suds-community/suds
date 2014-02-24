@@ -180,7 +180,7 @@ def run_using_pytest(caller_globals):
 def wsdl(schema_content, input=None, output=None, operation_name="f",
         wsdl_target_namespace="my-wsdl-namespace",
         xsd_target_namespace="my-xsd-namespace",
-        web_service_URL="unga-bunga-location"):
+        web_service_URL="protocol://unga-bunga-location"):
     """
     Returns WSDL schema content used in different suds library tests.
 
