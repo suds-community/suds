@@ -68,7 +68,6 @@ class HttpTransport(Transport):
             raise TransportError(str(e), e.code, e.fp)
 
     def send(self, request):
-        result = None
         url = self.__get_request_url_for_urllib(request)
         msg = request.message
         headers = request.headers
@@ -83,14 +82,12 @@ class HttpTransport(Transport):
             headers = fp.headers
             if sys.version_info < (3, 0):
                 headers = headers.dict
-            result = Reply(httplib.OK, headers, fp.read())
-            log.debug('received:\n%s', result)
+            reply = Reply(httplib.OK, headers, fp.read())
+            log.debug('received:\n%s', reply)
+            return reply
         except urllib2.HTTPError, e:
-            if e.code in (httplib.ACCEPTED, httplib.NO_CONTENT):
-                result = None
-            else:
+            if e.code not in (httplib.ACCEPTED, httplib.NO_CONTENT):
                 raise TransportError(e.msg, e.code, e.fp)
-        return result
 
     def addcookies(self, u2request):
         """
