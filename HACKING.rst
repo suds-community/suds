@@ -86,6 +86,7 @@ versions:
 
   * ``bytes`` type.
   * Byte literals, e.g. ``b"quack"``.
+  * Class decorators.
   * ``fractions`` module.
   * ``numbers`` module.
   * String ``format()`` method.
