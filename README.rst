@@ -232,6 +232,7 @@ version 0.7 (development)
 
 * ``suds.tostr()`` utility function may no longer silently eat internal Python
   exceptions like ``KeyboardInterrupt`` or ``SystemExit``.
+* Removed the unused ``SoapHeadersNotPermitted`` exception class.
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
 * Using injected requests/replies/error-information with a web service operation

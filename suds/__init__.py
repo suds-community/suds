@@ -59,15 +59,6 @@ class BuildError(Exception):
     def __init__(self, name, exception):
         Exception.__init__(self, BuildError.msg % (name, exception))
 
-class SoapHeadersNotPermitted(Exception):
-    msg = """
-        Method (%s) was invoked with SOAP headers. The WSDL does not define
-        SOAP headers for this method. Retry without the soapheaders keyword
-        argument.
-        """
-    def __init__(self, name):
-        Exception.__init__(self, self.msg % name)
-
 class WebFault(Exception):
     def __init__(self, fault, document):
         if hasattr(fault, 'faultstring'):
