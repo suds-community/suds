@@ -49,15 +49,12 @@ class TypeNotFound(Exception):
         Exception.__init__(self, u"Type not found: '%s'" % tostr(name))
 
 class BuildError(Exception):
-    msg = """
-        An error occurred while building an instance of (%s). As a result the
-        object you requested could not be constructed. It is recommended that
-        you construct the type manually using a Suds object. Please open a
-        ticket with a description of this error.
-        Reason: %s
-        """
     def __init__(self, name, exception):
-        Exception.__init__(self, BuildError.msg % (name, exception))
+        Exception.__init__(self, u"An error occurred while building an "
+            "instance of (%s). As a result the object you requested could not "
+            "be constructed. It is recommended that you construct the type "
+            "manually using a Suds object. Please open a ticket with a "
+            "description of this error. Reason: %s" % (name, exception))
 
 class WebFault(Exception):
     def __init__(self, fault, document):
