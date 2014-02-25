@@ -14,7 +14,8 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Provides classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
+Classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
+
 """
 
 from suds import *
@@ -24,12 +25,11 @@ from suds.bindings.binding import Binding, envns
 from suds.sax.element import Element
 
 
-encns = ('SOAP-ENC', 'http://schemas.xmlsoap.org/soap/encoding/')
+encns = ("SOAP-ENC", "http://schemas.xmlsoap.org/soap/encoding/")
+
 
 class RPC(Binding):
-    """
-    RPC/Literal binding style.
-    """
+    """RPC/Literal binding style."""
 
     def param_defs(self, method):
         return self.bodypart_types(method)
@@ -37,8 +37,7 @@ class RPC(Binding):
     def envelope(self, header, body):
         env = Binding.envelope(self, header, body)
         env.addPrefix(encns[0], encns[1])
-        env.set('%s:encodingStyle' % envns[0],
-                'http://schemas.xmlsoap.org/soap/encoding/')
+        env.set("%s:encodingStyle" % (envns[0],), encns[1])
         return env
 
     def bodycontent(self, method, args, kwargs):
@@ -60,24 +59,23 @@ class RPC(Binding):
 
     def method(self, method):
         """
-        Get the document root.  For I{rpc/(literal|encoded)}, this is the
-        name of the method qualified by the schema tns.
+        Get the document root. For I{rpc/(literal|encoded)}, this is the name
+        of the method qualified by the schema tns.
+
         @param method: A service method.
         @type method: I{service.Method}
         @return: A root element.
         @rtype: L{Element}
+
         """
         ns = method.soap.input.body.namespace
         if ns[0] is None:
             ns = ('ns0', ns[1])
-        method = Element(method.name, ns=ns)
-        return method
+        return Element(method.name, ns=ns)
 
 
 class Encoded(RPC):
-    """
-    RPC/Encoded (section 5)  binding style.
-    """
+    """RPC/Encoded (section 5) binding style."""
 
     def marshaller(self):
         return MxEncoded(self.schema())
@@ -85,7 +83,9 @@ class Encoded(RPC):
     def unmarshaller(self):
         """
         Get the appropriate schema based XML decoder.
+
         @return: Typed unmarshaller.
         @rtype: L{UmxTyped}
+
         """
         return UmxEncoded(self.schema())
