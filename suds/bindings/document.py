@@ -14,7 +14,7 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Provides classes for the (WS) SOAP I{document/literal} binding.
+Classes for the (WS) SOAP I{document/literal} binding.
 
 """
 
@@ -95,8 +95,7 @@ class Document(Binding):
         return root
 
     def replycontent(self, method, body):
-        wrapped = method.soap.output.body.wrapped
-        if wrapped:
+        if method.soap.output.body.wrapped:
             return body[0].children
         return body.children
 
@@ -104,10 +103,12 @@ class Document(Binding):
         """
         Get the document root. For I{document/literal}, this is the name of the
         wrapper element qualified by the schema's target namespace.
+
         @param wrapper: The method name.
         @type wrapper: L{xsd.sxbase.SchemaObject}
         @return: A root element.
         @rtype: L{Element}
+
         """
         tag = wrapper[1].name
         ns = wrapper[1].namespace("ns0")
@@ -121,35 +122,19 @@ class Document(Binding):
 
         """
         if isinstance(object, (list, tuple)):
-            tags = []
-            for item in object:
-                tags.append(self.mkparam(method, pdef, item))
-            return tags
+            return [self.mkparam(method, pdef, item) for item in object]
         return Binding.mkparam(self, method, pdef, object)
 
     def param_defs(self, method):
         """Get parameter definitions for document literal."""
         pts = self.bodypart_types(method)
-        wrapped = method.soap.input.body.wrapped
-        if not wrapped:
+        if not method.soap.input.body.wrapped:
             return pts
-        result = []
-        for p in pts:
-            for child, ancestry in p[1].resolve():
-                if not child.isattr():
-                    result.append((child.name, child, ancestry))
-        return result
+        pt = pts[0][1].resolve()
+        return [(c.name, c, a) for c, a in pt if not c.isattr()]
 
     def returned_types(self, method):
-        result = []
-        wrapped = method.soap.output.body.wrapped
-        rts = self.bodypart_types(method, input=False)
-        if wrapped:
-            for pt in rts:
-                resolved = pt.resolve(nobuiltin=True)
-                for child, ancestry in resolved:
-                    result.append(child)
-                break
-        else:
-            result += rts
-        return result
+        rts = Binding.returned_types(self, method)
+        if not method.soap.output.body.wrapped:
+            return rts
+        return [child for child, ancestry in rts[0].resolve(nobuiltin=True)]
