@@ -38,7 +38,7 @@ from copy import deepcopy
 envns = ("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/")
 
 
-class Binding:
+class Binding(object):
     """
     The SOAP binding class used to process outgoing and incoming SOAP messages
     per the WSDL port binding.

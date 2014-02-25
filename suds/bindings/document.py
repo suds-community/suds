@@ -123,7 +123,7 @@ class Document(Binding):
         """
         if isinstance(object, (list, tuple)):
             return [self.mkparam(method, pdef, item) for item in object]
-        return Binding.mkparam(self, method, pdef, object)
+        return super(Document, self).mkparam(method, pdef, object)
 
     def param_defs(self, method):
         """Get parameter definitions for document literal."""
@@ -134,7 +134,7 @@ class Document(Binding):
         return [(c.name, c, a) for c, a in pt if not c.isattr()]
 
     def returned_types(self, method):
-        rts = Binding.returned_types(self, method)
+        rts = super(Document, self).returned_types(method)
         if not method.soap.output.body.wrapped:
             return rts
         return [child for child, ancestry in rts[0].resolve(nobuiltin=True)]
