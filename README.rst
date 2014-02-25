@@ -230,6 +230,11 @@ version 0.7 (development)
     * ``DocumentReader.download()`` --> ``DocumentReader.__fetch()``
     * ``DefinitionsReader.cache()`` --> ``DefinitionsReader.__cache()``
 
+* Updated the ``BuildError`` exception message.
+
+  * Reformatted.
+  * Converted to a unicode string.
+
 * ``suds.tostr()`` utility function may no longer silently eat internal Python
   exceptions like ``KeyboardInterrupt`` or ``SystemExit``.
 * Removed the unused ``SoapHeadersNotPermitted`` exception class.
