@@ -35,7 +35,7 @@ class RPC(Binding):
         return self.bodypart_types(method)
 
     def envelope(self, header, body):
-        env = Binding.envelope(self, header, body)
+        env = super(RPC, self).envelope(header, body)
         env.addPrefix(encns[0], encns[1])
         env.set("%s:encodingStyle" % (envns[0],), encns[1])
         return env

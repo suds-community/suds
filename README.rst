@@ -235,6 +235,7 @@ version 0.7 (development)
   * Reformatted.
   * Converted to a unicode string.
 
+* ``suds.binding.Binding`` converted to a new-style class.
 * ``suds.tostr()`` utility function may no longer silently eat internal Python
   exceptions like ``KeyboardInterrupt`` or ``SystemExit``.
 * Removed the unused ``SoapHeadersNotPermitted`` exception class.
