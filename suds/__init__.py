@@ -103,35 +103,23 @@ def tostr(object, encoding=None):
     if isinstance(object, tuple):
         s = ['(']
         for item in object:
-            if isinstance(item, basestring):
-                s.append(item)
-            else:
-                s.append(tostr(item))
+            s.append(tostr(item))
             s.append(', ')
         s.append(')')
         return ''.join(s)
     if isinstance(object, list):
         s = ['[']
         for item in object:
-            if isinstance(item, basestring):
-                s.append(item)
-            else:
-                s.append(tostr(item))
+            s.append(tostr(item))
             s.append(', ')
         s.append(']')
         return ''.join(s)
     if isinstance(object, dict):
         s = ['{']
         for item in object.items():
-            if isinstance(item[0], basestring):
-                s.append(item[0])
-            else:
-                s.append(tostr(item[0]))
+            s.append(tostr(item[0]))
             s.append(' = ')
-            if isinstance(item[1], basestring):
-                s.append(item[1])
-            else:
-                s.append(tostr(item[1]))
+            s.append(tostr(item[1]))
             s.append(', ')
         s.append('}')
         return ''.join(s)
