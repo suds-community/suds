@@ -1,21 +1,21 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
-Suds is a lightweight SOAP Python client providing a Web Service proxy.
+Lightweight SOAP Python client providing a Web Service proxy.
+
 """
 
 import sys
@@ -34,19 +34,19 @@ from version import __build__, __version__
 
 class MethodNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Method not found: '%s'" % name)
+        Exception.__init__(self, u"Method not found: '%s'" % (name,))
 
 class PortNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Port not found: '%s'" % name)
+        Exception.__init__(self, u"Port not found: '%s'" % (name,))
 
 class ServiceNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Service not found: '%s'" % name)
+        Exception.__init__(self, u"Service not found: '%s'" % (name,))
 
 class TypeNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Type not found: '%s'" % tostr(name))
+        Exception.__init__(self, u"Type not found: '%s'" % (tostr(name),))
 
 class BuildError(Exception):
     def __init__(self, name, exception):
@@ -58,9 +58,9 @@ class BuildError(Exception):
 
 class WebFault(Exception):
     def __init__(self, fault, document):
-        if hasattr(fault, 'faultstring'):
+        if hasattr(fault, "faultstring"):
             Exception.__init__(self, u"Server raised fault: '%s'" %
-                fault.faultstring)
+                (fault.faultstring,))
         self.fault = fault
         self.document = document
 
@@ -81,45 +81,41 @@ class Repr:
 #
 
 class null:
-    """
-    The I{null} object.
-    Used to pass NULL for optional XML nodes.
-    """
+    """I{null} object used to pass NULL for optional XML nodes."""
     pass
 
 def objid(obj):
-    return obj.__class__.__name__ + ':' + hex(id(obj))
+    return obj.__class__.__name__ + ":" + hex(id(obj))
 
 def tostr(object, encoding=None):
-    """ get a unicode safe string representation of an object """
+    """Get a unicode safe string representation of an object."""
     if isinstance(object, basestring):
         if encoding is None:
             return object
-        else:
-            return object.encode(encoding)
+        return object.encode(encoding)
     if isinstance(object, tuple):
-        s = ['(']
+        s = ["("]
         for item in object:
             s.append(tostr(item))
-            s.append(', ')
-        s.append(')')
-        return ''.join(s)
+            s.append(", ")
+        s.append(")")
+        return "".join(s)
     if isinstance(object, list):
-        s = ['[']
+        s = ["["]
         for item in object:
             s.append(tostr(item))
-            s.append(', ')
-        s.append(']')
-        return ''.join(s)
+            s.append(", ")
+        s.append("]")
+        return "".join(s)
     if isinstance(object, dict):
-        s = ['{']
+        s = ["{"]
         for item in object.items():
             s.append(tostr(item[0]))
-            s.append(' = ')
+            s.append(" = ")
             s.append(tostr(item[1]))
-            s.append(', ')
-        s.append('}')
-        return ''.join(s)
+            s.append(", ")
+        s.append("}")
+        return "".join(s)
     try:
         return unicode(object)
     except Exception:
@@ -141,13 +137,13 @@ class UnicodeMixin(object):
         # For Python 3, __str__() and __unicode__() should be identical.
         __str__ = lambda x: x.__unicode__()
     else:
-        __str__ = lambda x: unicode(x).encode('utf-8')
+        __str__ = lambda x: unicode(x).encode("utf-8")
 
-#   Used instead of byte literals because they are not supported on Python
-# versions prior to 2.6.
-def byte_str(s='', encoding='utf-8', input_encoding='utf-8', errors='strict'):
+# Used instead of byte literals as they are not supported on Python versions
+# prior to 2.6.
+def byte_str(s="", encoding="utf-8", input_encoding="utf-8", errors="strict"):
     """
-    Returns a bytestring version of 's', encoded as specified in 'encoding'.
+    Returns a byte string version of 's', encoded as specified in 'encoding'.
 
     Accepts str & unicode objects, interpreting non-unicode strings as byte
     strings encoded using the given input encoding.
