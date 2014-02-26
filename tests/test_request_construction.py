@@ -783,6 +783,65 @@ def test_optional_parameter_handling():
 </SOAP-ENV:Envelope>""")
 
 
+def test_SOAP_headers():
+    """Rudimentary 'soapheaders' option usage test."""
+    wsdl = suds.byte_str("""\
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions targetNamespace="my-target-namespace"
+    xmlns:tns="my-target-namespace"
+    xmlns:s="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified"
+        targetNamespace="my-target-namespace">
+      <s:element name="MyHeader">
+        <s:complexType>
+          <s:sequence>
+            <s:element name="Freaky" type="s:hexBinary"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="myOperationHeader">
+    <wsdl:part name="MyHeader" element="tns:MyHeader"/>
+  </wsdl:message>
+  <wsdl:portType name="MyWSSOAP">
+    <wsdl:operation name="my_operation"/>
+  </wsdl:portType>
+  <wsdl:binding name="MyWSSOAP" type="tns:MyWSSOAP">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="my_operation">
+      <soap:operation soapAction="my-SOAP-action" style="document"/>
+      <wsdl:input>
+        <soap:header message="tns:myOperationHeader" part="MyHeader"
+            use="literal"/>
+      </wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="MyWS">
+    <wsdl:port name="MyWSSOAP" binding="tns:MyWSSOAP">
+      <soap:address location="protocol://my-WS-URL"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+""")
+    header_data = "fools rush in where angels fear to tread"
+    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client.options.soapheaders = header_data
+    assert _compare_request(client.service.my_operation(), """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope
+    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:tns="my-target-namespace">
+  <SOAP-ENV:Header>
+    <tns:MyHeader>%s</tns:MyHeader>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body/>
+</SOAP-ENV:Envelope>""" % (header_data,))
+
+
 def test_twice_wrapped_parameter():
     """
     Suds does not recognize 'twice wrapped' data structures and unwraps the
