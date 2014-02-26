@@ -168,19 +168,19 @@ class MockTransport(suds.transport.Transport):
 #
 #TODO: Once a WSDL import bug illustrated by test_WSDL_import() is fixed, this
 # test data may be simplified to just:
-#   > wsdl = tests.wsdl("", wsdl_target_namespace="bingo-bongo")
+#   > wsdl_target_namespace = "bingo-bongo"
+#   > wsdl = tests.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
 #   > wsdl_wrapper = suds.byte_str("""\
 #   > <?xml version='1.0' encoding='UTF-8'?>
-#   > <wsdl:definitions targetNamespace="bingo-bongo"
-#   >     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-#   >   <wsdl:import namespace="bingo-bongo" location="suds://wsdl"/>
-#   > </wsdl:definitions>
-#   > """)
+#   > <definitions targetNamespace="%(tns)s"
+#   >     xmlns="http://schemas.xmlsoap.org/wsdl/">
+#   >   <import namespace="%(tns)s" location="suds://wsdl"/>
+#   > </definitions>""" % {"tns": wsdl_target_namespace})
 # This would also make caching the imported WSDL schema simpler as this makes
 # the imported WSDL schema usable without the extra importing wrapper as well.
 wsdl_imported_format = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="bingo-bongo"
+<wsdl:definitions targetNamespace="bye-bye"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
   <wsdl:types>
     <xsd:schema targetNamespace="ice-scream"
@@ -193,12 +193,11 @@ wsdl_imported_format = """\
 </wsdl:definitions>"""
 wsdl_import_wrapper_format = """\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions
-    targetNamespace="bingo-bongo"
-    xmlns:my_wsdl="bingo-bongo"
+<wsdl:definitions targetNamespace="bye-bye"
+    xmlns:my_wsdl="bye-bye"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="bingo-bongo" location="%s"/>
+  <wsdl:import namespace="bye-bye" location="%s"/>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f"/>
   </wsdl:portType>
@@ -695,15 +694,14 @@ class TestTransportUsage:
 
 @pytest.mark.xfail(reason="WSDL import buggy")
 def test_WSDL_import():
-    wsdl = tests.wsdl("", wsdl_target_namespace="bingo-bongo")
+    wsdl_target_namespace = "bingo-bongo"
+    wsdl = tests.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
     wsdl_wrapper = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-targetNamespace="bingo-bongo">
-  <wsdl:import namespace="bingo-bongo" location="suds://wsdl"/>
-</wsdl:definitions>
-""")
+<definitions targetNamespace="%(tns)s"
+    xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <import namespace="%(tns)s" location="suds://wsdl"/>
+</definitions>""" % {"tns": wsdl_target_namespace})
     store = suds.store.DocumentStore(wsdl=wsdl, wsdl_wrapper=wsdl_wrapper)
     client = suds.client.Client("suds://wsdl_wrapper", documentStore=store,
         cache=None, nosend=True)
