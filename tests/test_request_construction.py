@@ -54,7 +54,7 @@ def test_bare_input_restriction_types():
             <xsd:enumeration value="gamma"/>
           </xsd:restriction>
         </xsd:simpleType>
-      </xsd:element>""", input="Elemento"))
+      </xsd:element>""", input="Elemento", operation_name="f"))
 
     client_named = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyType">
@@ -64,7 +64,8 @@ def test_bare_input_restriction_types():
           <xsd:enumeration value="gamma"/>
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType"/>""", input="Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType"/>""", input="Elemento",
+        operation_name="f"))
 
     assert not _is_input_wrapped(client_unnamed, "f")
     assert not _is_input_wrapped(client_named, "f")
@@ -101,12 +102,12 @@ def parametrize_single_element_input_test(param_names, param_values):
     ("xsd", "external_element_name", "args", "request_body"), (
     # Bare non-optional element.
     ('<xsd:element name="a" type="xsd:integer"/>', "a",
-        ([], "<ns0:a/>"),
-        ([5], "<ns0:a>5</ns0:a>")),
+        ([], "<a/>"),
+        ([5], "<a>5</a>")),
     # Bare optional element.
     ('<xsd:element name="a" type="xsd:integer" minOccurs="0"/>', "a",
         ([], ""),
-        ([5], "<ns0:a>5</ns0:a>")),
+        ([5], "<a>5</a>")),
     # Choice with a non-empty sub-sequence.
     ("""\
       <xsd:element name="Wrapper">
@@ -120,15 +121,15 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper><ns0:a/></ns0:Wrapper>",
+        ([], "<Wrapper><a/></Wrapper>",
             "non-optional choice handling buggy"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
-        ([None, 1], "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2/></ns0:Wrapper>",
+        ([5], "<Wrapper><a>5</a></Wrapper>"),
+        ([None, 1], "<Wrapper><b1>1</b1><b2/></Wrapper>",
             "non-optional choice handling buggy"),
         ([None, 1, 2],
-            "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2>2</ns0:b2></ns0:Wrapper>"),
+            "<Wrapper><b1>1</b1><b2>2</b2></Wrapper>"),
         ([None, None, 1],
-            "<ns0:Wrapper><ns0:b1/><ns0:b2>1</ns0:b2></ns0:Wrapper>",
+            "<Wrapper><b1/><b2>1</b2></Wrapper>",
             "non-optional choice handling buggy")),
     # Choice with a non-optional element.
     ("""\
@@ -139,9 +140,9 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper><ns0:a/></ns0:Wrapper>",
+        ([], "<Wrapper><a/></Wrapper>",
             "non-optional choice handling buggy"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+        ([5], "<Wrapper><a>5</a></Wrapper>")),
     # Choice with an optional element.
     ("""\
       <xsd:element name="Wrapper">
@@ -151,8 +152,8 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+        ([], "<Wrapper/>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>")),
     # Choices with multiple elements, at least one of which is optional.
     ("""\
       <xsd:element name="Wrapper">
@@ -163,9 +164,9 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
-        ([None, 5], "<ns0:Wrapper><ns0:b>5</ns0:b></ns0:Wrapper>")),
+        ([], "<Wrapper/>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>"),
+        ([None, 5], "<Wrapper><b>5</b></Wrapper>")),
     ("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -175,9 +176,9 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
-        ([None, 5], "<ns0:Wrapper><ns0:b>5</ns0:b></ns0:Wrapper>")),
+        ([], "<Wrapper/>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>"),
+        ([None, 5], "<Wrapper><b>5</b></Wrapper>")),
     ("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -187,9 +188,9 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
-        ([None, 5], "<ns0:Wrapper><ns0:b>5</ns0:b></ns0:Wrapper>")),
+        ([], "<Wrapper/>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>"),
+        ([None, 5], "<Wrapper><b>5</b></Wrapper>")),
     # Choice with multiple non-empty sub-sequences.
     ("""\
       <xsd:element name="Wrapper">
@@ -206,24 +207,24 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper><ns0:a1/><ns0:a2/></ns0:Wrapper>",
+        ([], "<Wrapper><a1/><a2/></Wrapper>",
             "non-optional choice handling buggy"),
-        ([5], "<ns0:Wrapper><ns0:a1>5</ns0:a1><ns0:a2/></ns0:Wrapper>",
+        ([5], "<Wrapper><a1>5</a1><a2/></Wrapper>",
             "non-optional choice handling buggy"),
         ([5, 9], """\
-          <ns0:Wrapper>
-            <ns0:a1>5</ns0:a1>
-            <ns0:a2>9</ns0:a2>
-          </ns0:Wrapper>"""),
-        ([None, 1], "<ns0:Wrapper><ns0:a1/><ns0:a2>1</ns0:a2></ns0:Wrapper>",
+          <Wrapper>
+            <a1>5</a1>
+            <a2>9</a2>
+          </Wrapper>"""),
+        ([None, 1], "<Wrapper><a1/><a2>1</a2></Wrapper>",
             "non-optional choice handling buggy"),
         ([None, None, 1],
-            "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2/></ns0:Wrapper>",
+            "<Wrapper><b1>1</b1><b2/></Wrapper>",
             "non-optional choice handling buggy"),
         ([None, None, 1, 2],
-            "<ns0:Wrapper><ns0:b1>1</ns0:b1><ns0:b2>2</ns0:b2></ns0:Wrapper>"),
+            "<Wrapper><b1>1</b1><b2>2</b2></Wrapper>"),
         ([None, None, None, 1],
-            "<ns0:Wrapper><ns0:b1/><ns0:b2>1</ns0:b2></ns0:Wrapper>",
+            "<Wrapper><b1/><b2>1</b2></Wrapper>",
             "non-optional choice handling buggy")),
     # Empty choice.
     ("""\
@@ -232,7 +233,7 @@ def parametrize_single_element_input_test(param_names, param_values):
           <xsd:choice/>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>")),
+        ([], "<Wrapper/>")),
     # Empty sequence.
     ("""\
       <xsd:element name="Wrapper">
@@ -240,7 +241,7 @@ def parametrize_single_element_input_test(param_names, param_values):
           <xsd:sequence/>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>")),
+        ([], "<Wrapper/>")),
     # Optional choice.
     ("""\
       <xsd:element name="Wrapper">
@@ -251,7 +252,7 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>",
+        ([], "<Wrapper/>",
             # This test passes by accident - the following two bugs seem to
             # cancel each other out:
             #  - choice order indicators explicitly marked optional unsupported
@@ -260,9 +261,9 @@ def parametrize_single_element_input_test(param_names, param_values):
             #"suds does not yet support minOccurs/maxOccurs attributes on all/"
             #"choice/sequence order indicators"),
             ),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>"),
         ([None, 1],
-            "<ns0:Wrapper><ns0:b>1</ns0:b></ns0:Wrapper>")),
+            "<Wrapper><b>1</b></Wrapper>")),
     # Optional sequence.
     ("""\
       <xsd:element name="Wrapper">
@@ -273,17 +274,17 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>",
+        ([], "<Wrapper/>",
             "suds does not yet support minOccurs/maxOccurs attributes on all/"
             "choice/sequence order indicators"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a><ns0:b/></ns0:Wrapper>"),
+        ([5], "<Wrapper><a>5</a><b/></Wrapper>"),
         ([None, 1],
-            "<ns0:Wrapper><ns0:a/><ns0:b>1</ns0:b></ns0:Wrapper>"),
+            "<Wrapper><a/><b>1</b></Wrapper>"),
         ([1, 2], """\
-            <ns0:Wrapper>
-              <ns0:a>1</ns0:a>
-              <ns0:b>2</ns0:b>
-            </ns0:Wrapper>""")),
+            <Wrapper>
+              <a>1</a>
+              <b>2</b>
+            </Wrapper>""")),
     # Sequence with a non-empty sub-sequence.
     ("""\
       <xsd:element name="Wrapper">
@@ -297,18 +298,18 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper><ns0:a/><ns0:b1/><ns0:b2/></ns0:Wrapper>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a><ns0:b1/><ns0:b2/></ns0:Wrapper>"),
+        ([], "<Wrapper><a/><b1/><b2/></Wrapper>"),
+        ([5], "<Wrapper><a>5</a><b1/><b2/></Wrapper>"),
         ([None, 1],
-            "<ns0:Wrapper><ns0:a/><ns0:b1>1</ns0:b1><ns0:b2/></ns0:Wrapper>"),
+            "<Wrapper><a/><b1>1</b1><b2/></Wrapper>"),
         ([None, 1, 2], """\
-            <ns0:Wrapper>
-              <ns0:a/>
-              <ns0:b1>1</ns0:b1>
-              <ns0:b2>2</ns0:b2>
-            </ns0:Wrapper>"""),
+            <Wrapper>
+              <a/>
+              <b1>1</b1>
+              <b2>2</b2>
+            </Wrapper>"""),
         ([None, None, 1],
-            "<ns0:Wrapper><ns0:a/><ns0:b1/><ns0:b2>1</ns0:b2></ns0:Wrapper>")),
+            "<Wrapper><a/><b1/><b2>1</b2></Wrapper>")),
     # Sequence with a non-optional element.
     ("""\
       <xsd:element name="Wrapper">
@@ -318,8 +319,8 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper><ns0:a/></ns0:Wrapper>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+        ([], "<Wrapper><a/></Wrapper>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>")),
     # Sequence with an optional element.
     ("""\
       <xsd:element name="Wrapper">
@@ -329,8 +330,8 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>")),
+        ([], "<Wrapper/>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>")),
     # Sequence with multiple consecutive choices.
     ("""\
       <xsd:element name="Wrapper">
@@ -347,19 +348,19 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper><ns0:aString1/></ns0:Wrapper>",
+        ([], "<Wrapper><aString1/></Wrapper>",
             "non-optional choice handling buggy"),
-        ([5], "<ns0:Wrapper><ns0:aString1>5</ns0:aString1></ns0:Wrapper>"),
+        ([5], "<Wrapper><aString1>5</aString1></Wrapper>"),
         ([None, 1, 2], """\
-            <ns0:Wrapper>
-              <ns0:anInt1>1</ns0:anInt1>
-              <ns0:aString2>2</ns0:aString2>
-            </ns0:Wrapper>"""),
+            <Wrapper>
+              <anInt1>1</anInt1>
+              <aString2>2</aString2>
+            </Wrapper>"""),
         ([None, 1, None, 2], """\
-            <ns0:Wrapper>
-              <ns0:anInt1>1</ns0:anInt1>
-              <ns0:anInt2>2</ns0:anInt2>
-            </ns0:Wrapper>""")),
+            <Wrapper>
+              <anInt1>1</anInt1>
+              <anInt2>2</anInt2>
+            </Wrapper>""")),
     # Sequence with multiple optional elements.
     ("""\
       <xsd:element name="Wrapper">
@@ -370,27 +371,27 @@ def parametrize_single_element_input_test(param_names, param_values):
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper",
-        ([], "<ns0:Wrapper/>"),
-        ([5], "<ns0:Wrapper><ns0:a>5</ns0:a></ns0:Wrapper>"),
-        ([None, 1], "<ns0:Wrapper><ns0:b>1</ns0:b></ns0:Wrapper>"),
+        ([], "<Wrapper/>"),
+        ([5], "<Wrapper><a>5</a></Wrapper>"),
+        ([None, 1], "<Wrapper><b>1</b></Wrapper>"),
         ([5, 1],
-            "<ns0:Wrapper><ns0:a>5</ns0:a><ns0:b>1</ns0:b></ns0:Wrapper>")),
+            "<Wrapper><a>5</a><b>1</b></Wrapper>")),
     ))
 def test_document_literal_request_for_single_element_input(xsd,
         external_element_name, args, request_body):
     wsdl = tests.wsdl(xsd, input=external_element_name,
-        xsd_target_namespace="dr. Doolittle")
+        xsd_target_namespace="dr. Doolittle", operation_name="f")
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
-
     assert _compare_request(client.service.f(*args), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="dr. Doolittle" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>%s</ns1:Body>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header/>
+  <SOAP-ENV:Body xmlns="dr. Doolittle">%s</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>""" % (request_body,))
 
 
 def test_disabling_automated_simple_interface_unwrapping():
+    xsd_target_namespace = "woof"
     wsdl = tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -398,33 +399,34 @@ def test_disabling_automated_simple_interface_unwrapping():
             <xsd:element name="Elemento" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper", xsd_target_namespace="woof")
+      </xsd:element>""", input="Wrapper", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace)
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True,
         unwrap=False)
     assert not _is_input_wrapped(client, "f")
+    element_data = "Wonderwall"
     wrapper = client.factory.create("my_xsd:Wrapper")
-    wrapper.Elemento = "Wonderwall"
+    wrapper.Elemento = element_data
     assert _compare_request(client.service.f(Wrapper=wrapper), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="woof" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:Elemento>Wonderwall</ns0:Elemento>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <Elemento>%s</Elemento>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace, element_data))
 
 
 def test_element_references_to_different_namespaces():
     wsdl = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions
+<wsdl:definitions targetNamespace="first-namespace"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-    xmlns:tns="first-namespace"
-    targetNamespace="first-namespace">
+    xmlns:tns="first-namespace">
 
   <wsdl:types>
     <xsd:schema
@@ -469,17 +471,14 @@ def test_element_references_to_different_namespaces():
       <soap:address location="BoogaWooga"/>
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>
-""")
+</wsdl:definitions>""")
 
     external_schema = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<schema
-    xmlns="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="second-namespace">
+<schema targetNamespace="second-namespace"
+    xmlns="http://www.w3.org/2001/XMLSchema">
   <element name="external" type="string"/>
-</schema>
-""")
+</schema>""")
 
     store = suds.store.DocumentStore(external_schema=external_schema,
         wsdl=wsdl)
@@ -488,16 +487,16 @@ def test_element_references_to_different_namespaces():
     assert _compare_request(client.service.f(local="--L--",
         local_referenced="--LR--", external="--E--"), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns1="first-namespace" xmlns:ns2="second-namespace" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <SOAP-ENV:Body>
-      <ns1:fRequest>
-         <ns1:local>--L--</ns1:local>
-         <ns1:local_referenced>--LR--</ns1:local_referenced>
-         <ns2:external>--E--</ns2:external>
-      </ns1:fRequest>
-   </SOAP-ENV:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body xmlns:ns1="first-namespace" xmlns:ns2="second-namespace">
+    <ns1:fRequest>
+      <ns1:local>--L--</ns1:local>
+      <ns1:local_referenced>--LR--</ns1:local_referenced>
+      <ns2:external>--E--</ns2:external>
+    </ns1:fRequest>
+  </Body>
+</Envelope>""")
 
 
 def test_invalid_input_parameter_type_handling():
@@ -509,6 +508,7 @@ def test_invalid_input_parameter_type_handling():
     report this error.
 
     """
+    xsd_target_namespace = "1234567890"
     wsdl = tests.wsdl("""\
       <xsd:complexType name="Freakazoid">
         <xsd:sequence>
@@ -525,7 +525,8 @@ def test_invalid_input_parameter_type_handling():
             <xsd:element name="p2" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper", xsd_target_namespace="1234567890")
+      </xsd:element>""", input="Wrapper", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace)
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     # Passing an unrelated Python type value.
@@ -534,16 +535,16 @@ def test_invalid_input_parameter_type_handling():
             return "Some string representation."
     assert _compare_request(client.service.f(anInteger=SomeType()), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="1234567890" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:p1/>
-         <ns0:anInteger>Some string representation.</ns0:anInteger>
-         <ns0:p2/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <p1/>
+      <anInteger>Some string representation.</anInteger>
+      <p2/>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     # Passing a value of a WSDL schema defined type.
     value = client.factory.create("my_xsd:Freakazoid")
@@ -552,24 +553,25 @@ def test_invalid_input_parameter_type_handling():
     value.freak3 = "Mo"
     assert _compare_request(client.service.f(anInteger=value), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="1234567890" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:p1/>
-         <ns0:anInteger>
-            <ns0:freak1>Tiny</ns0:freak1>
-            <ns0:freak2>Miny</ns0:freak2>
-            <ns0:freak3>Mo</ns0:freak3>
-         </ns0:anInteger>
-         <ns0:p2/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <p1/>
+      <anInteger>
+        <freak1>Tiny</freak1>
+        <freak2>Miny</freak2>
+        <freak3>Mo</freak3>
+      </anInteger>
+      <p2/>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
 
 def test_missing_parameters():
     """Missing non-optional parameters should get passed as empty values."""
+    xsd_target_namespace = "plonker"
     service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -578,67 +580,68 @@ def test_missing_parameters():
             <xsd:element name="anInteger" type="xsd:integer"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper", xsd_target_namespace="plonker"))
+      </xsd:element>""", input="Wrapper", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace))
 
     assert _compare_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="plonker" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString/>
-         <ns0:anInteger/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString/>
+      <anInteger/>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     assert _compare_request(service.f(u"Pero Ždero"), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="plonker" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>Pero Ždero</ns0:aString>
-         <ns0:anInteger/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString>Pero Ždero</aString>
+      <anInteger/>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     assert _compare_request(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="plonker" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString/>
-         <ns0:anInteger>666</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString/>
+      <anInteger>666</anInteger>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     # None value is treated the same as undefined.
     assert _compare_request(service.f(aString=None, anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="plonker" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString/>
-         <ns0:anInteger>666</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString/>
+      <anInteger>666</anInteger>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
     assert _compare_request(service.f(aString="Omega", anInteger=None), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="plonker" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>Omega</ns0:aString>
-         <ns0:anInteger/>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString>Omega</aString>
+      <anInteger/>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
 
 def test_named_parameter():
@@ -652,6 +655,7 @@ def test_named_parameter():
             assert _compare_request(request, self.expected_xml)
 
     # Test different ways to make the same web service operation call.
+    xsd_target_namespace = "qwerty"
     service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -660,18 +664,19 @@ def test_named_parameter():
             <xsd:element name="due" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper", xsd_target_namespace="qwerty"))
+      </xsd:element>""", input="Wrapper", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace))
     t = Tester(service, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="qwerty" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:uno>einz</ns0:uno>
-         <ns0:due>zwei</ns0:due>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <uno>einz</uno>
+      <due>zwei</due>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
     t.test("einz", "zwei")
     t.test(uno="einz", due="zwei")
     t.test(due="zwei", uno="einz")
@@ -679,6 +684,7 @@ def test_named_parameter():
 
     # The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
+    xsd_target_namespace = "abracadabra"
     service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -687,18 +693,19 @@ def test_named_parameter():
             <xsd:element name="uno" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper", xsd_target_namespace="abracadabra"))
+      </xsd:element>""", input="Wrapper", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace))
     t = Tester(service, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="abracadabra" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:due>zwei</ns0:due>
-         <ns0:uno>einz</ns0:uno>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <due>zwei</due>
+      <uno>einz</uno>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
     t.test("zwei", "einz")
     t.test(uno="einz", due="zwei")
     t.test(due="zwei", uno="einz")
@@ -707,6 +714,7 @@ def test_named_parameter():
 
 def test_optional_parameter_handling():
     """Missing optional parameters should not get passed at all."""
+    xsd_target_namespace = "RoOfIe"
     service = _service_from_wsdl(tests.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
@@ -715,72 +723,73 @@ def test_optional_parameter_handling():
             <xsd:element name="anInteger" type="xsd:integer" minOccurs="0"/>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper", xsd_target_namespace="RoOfIe"))
+      </xsd:element>""", input="Wrapper", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace))
 
     assert _compare_request(service.f(), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="RoOfIe" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper/>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s"/>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     # None is treated as an undefined value.
     assert _compare_request(service.f(None), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="RoOfIe" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper/>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s"/>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     # Empty string values are treated as well defined values.
     assert _compare_request(service.f(""), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="RoOfIe" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString></ns0:aString>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString/>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     assert _compare_request(service.f("Kiflica"), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="RoOfIe" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>Kiflica</ns0:aString>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString>Kiflica</aString>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     assert _compare_request(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="RoOfIe" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:anInteger>666</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <anInteger>666</anInteger>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
     assert _compare_request(service.f("Alfa", 9), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="RoOfIe" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:aString>Alfa</ns0:aString>
-         <ns0:anInteger>9</ns0:anInteger>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="%s">
+      <aString>Alfa</aString>
+      <anInteger>9</anInteger>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (xsd_target_namespace,))
 
 
 def test_SOAP_headers():
@@ -792,6 +801,7 @@ def test_SOAP_headers():
     xmlns:s="http://www.w3.org/2001/XMLSchema"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+
   <wsdl:types>
     <s:schema elementFormDefault="qualified"
         targetNamespace="my-target-namespace">
@@ -804,12 +814,15 @@ def test_SOAP_headers():
       </s:element>
     </s:schema>
   </wsdl:types>
+
   <wsdl:message name="myOperationHeader">
     <wsdl:part name="MyHeader" element="tns:MyHeader"/>
   </wsdl:message>
+
   <wsdl:portType name="MyWSSOAP">
     <wsdl:operation name="my_operation"/>
   </wsdl:portType>
+
   <wsdl:binding name="MyWSSOAP" type="tns:MyWSSOAP">
     <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="my_operation">
@@ -820,6 +833,7 @@ def test_SOAP_headers():
       </wsdl:input>
     </wsdl:operation>
   </wsdl:binding>
+
   <wsdl:service name="MyWS">
     <wsdl:port name="MyWSSOAP" binding="tns:MyWSSOAP">
       <soap:address location="protocol://my-WS-URL"/>
@@ -832,14 +846,12 @@ def test_SOAP_headers():
     client.options.soapheaders = header_data
     assert _compare_request(client.service.my_operation(), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope
-    xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:tns="my-target-namespace">
-  <SOAP-ENV:Header>
-    <tns:MyHeader>%s</tns:MyHeader>
-  </SOAP-ENV:Header>
-  <SOAP-ENV:Body/>
-</SOAP-ENV:Envelope>""" % (header_data,))
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header>
+    <MyHeader xmlns="my-target-namespace">%s</MyHeader>
+  </Header>
+  <Body/>
+</Envelope>""" % (header_data,))
 
 
 def test_twice_wrapped_parameter():
@@ -848,6 +860,7 @@ def test_twice_wrapped_parameter():
     external one but keeps the internal wrapping structure in place.
 
     """
+    xsd_target_namespace = "spank me"
     wsdl = tests.wsdl("""\
       <xsd:element name="Wrapper1">
         <xsd:complexType>
@@ -861,7 +874,8 @@ def test_twice_wrapped_parameter():
             </xsd:element>
           </xsd:sequence>
         </xsd:complexType>
-      </xsd:element>""", input="Wrapper1", xsd_target_namespace="spank me")
+      </xsd:element>""", input="Wrapper1", operation_name="f",
+        xsd_target_namespace=xsd_target_namespace)
     client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     assert _is_input_wrapped(client, "f")
@@ -874,21 +888,21 @@ def test_twice_wrapped_parameter():
     # the current simpler solution is good enough for what we want to test
     # here.
     value = "A B C"
-    expectedRequest = """\
+    expected_request = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="spank me" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper1>
-         <ns0:Wrapper2>%s</ns0:Wrapper2>
-      </ns0:Wrapper1>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""" % (value,)
-    assert _compare_request(client.service.f(value), expectedRequest)
-    assert _compare_request(client.service.f(Wrapper2=value), expectedRequest)
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper1 xmlns="%s">
+      <Wrapper2>%s</Wrapper2>
+    </Wrapper1>
+  </Body>
+</Envelope>""" % (xsd_target_namespace, value)
+    assert _compare_request(client.service.f(value), expected_request)
+    assert _compare_request(client.service.f(Wrapper2=value), expected_request)
 
     # Web service operation calls made with 'invalid' parameters.
-    def testInvalidParameter(**kwargs):
+    def test_invalid_parameter(**kwargs):
         assert len(kwargs) == 1
         element = kwargs.keys()[0]
         expected = "f() got an unexpected keyword argument '%s'" % (element,)
@@ -897,8 +911,8 @@ def test_twice_wrapped_parameter():
             assert str(e) == expected
         finally:
             del e
-    testInvalidParameter(Elemento="A B C")
-    testInvalidParameter(Wrapper1="A B C")
+    test_invalid_parameter(Elemento=value)
+    test_invalid_parameter(Wrapper1=value)
 
 
 def test_wrapped_parameter(monkeypatch):
@@ -906,7 +920,8 @@ def test_wrapped_parameter(monkeypatch):
 
     # Prepare web service proxies.
     def client(xsd, *input):
-        wsdl = tests.wsdl(xsd, input=input, xsd_target_namespace="toolyan")
+        wsdl = tests.wsdl(xsd, input=input, xsd_target_namespace="toolyan",
+            operation_name="f")
         return tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     client_bare_single = client("""\
       <xsd:element name="Elemento" type="xsd:string"/>""", "Elemento")
@@ -951,27 +966,28 @@ def test_wrapped_parameter(monkeypatch):
     # called the same way even though the wrapped one actually has an extra
     # wrapper element around its input data.
     data = "Maestro"
-    call_single = lambda c : c.service.f(data)
+    def call_single(c):
+        return c.service.f(data)
 
     assert _compare_request(call_single(client_bare_single), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="toolyan" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Elemento>%s</ns0:Elemento>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""" % data)
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Elemento xmlns="toolyan">%s</Elemento>
+  </Body>
+</Envelope>""" % (data,))
 
     expected_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="toolyan" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Wrapper>
-         <ns0:Elemento>%s</ns0:Elemento>
-      </ns0:Wrapper>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""" % data
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body>
+    <Wrapper xmlns="toolyan">
+      <Elemento>%s</Elemento>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (data,)
     assert _compare_request(call_single(client_wrapped_unnamed), expected_xml)
     assert _compare_request(call_single(client_wrapped_named), expected_xml)
 
@@ -983,27 +999,28 @@ def test_wrapped_parameter(monkeypatch):
     # Multiple parameter web service operations are never automatically
     # unwrapped.
     data = ("Unga", "Bunga")
-    call_multiple = lambda c : c.service.f(*data)
+    def call_multiple(c):
+        return c.service.f(*data)
 
     assert _compare_request(call_multiple(client_bare_multiple_simple), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="toolyan" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Elemento1>%s</ns0:Elemento1>
-      <ns0:Elemento2>%s</ns0:Elemento2>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""" % data)
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body xmlns:ns="toolyan">
+    <ns:Elemento1>%s</ns:Elemento1>
+    <ns:Elemento2>%s</ns:Elemento2>
+  </Body>
+</Envelope>""" % data)
 
     assert _compare_request(call_multiple(client_bare_multiple_wrapped), """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="toolyan" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Elemento1>%s</ns0:Elemento1>
-      <ns0:Elemento2>%s</ns0:Elemento2>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""" % data)
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body xmlns:ns="toolyan">
+    <ns:Elemento1>%s</ns:Elemento1>
+    <ns:Elemento2>%s</ns:Elemento2>
+  </Body>
+</Envelope>""" % data)
 
 
 def _compare_request(request, expected_xml):
@@ -1024,5 +1041,4 @@ def _service_from_wsdl(wsdl):
     invocation requests and does not attempt to actually send them.
 
     """
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
-    return client.service
+    return tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True).service
