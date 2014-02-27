@@ -371,7 +371,7 @@ class Schema(UnicodeMixin):
             prefix = splitPrefix(ref)[0]
             prefixes = context.findPrefixes(w3, 'startswith')
             return ( prefix in prefixes and ref[0] in Factory.tags )
-        except:
+        except Exception:
             return False
 
     def instance(self, root, baseurl, options):

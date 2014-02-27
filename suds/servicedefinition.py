@@ -222,7 +222,7 @@ class ServiceDefinition(UnicodeMixin):
                 sig.append(')')
                 try:
                     s.append(''.join(sig))
-                except:
+                except Exception:
                     pass
             s.append(indent(3))
             s.append('Types (%d):' % len(self.types))
