@@ -114,6 +114,8 @@ version 0.7 (development)
       ``XDecimal`` implementation using ``suds.xsd.sxbuiltin.Factory.maptag()``
       if they want to use more specialized ``decimal`` value handling.
 
+* Fixed places in code where ``suds`` could eat up & silently ignore internal
+  Python exceptions like SystemExit or KeyboardInterrupt.
 * ``suds.cache`` module cleanup.
 
   * Fixed ``FileCache`` default cache location related security issue. Many

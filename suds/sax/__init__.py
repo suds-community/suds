@@ -73,7 +73,7 @@ class Namespace:
     def xsd(cls, ns):
         try:
             return cls.w3(ns) and ns[1].endswith('XMLSchema')
-        except:
+        except Exception:
             pass
         return False
 
@@ -81,7 +81,7 @@ class Namespace:
     def xsi(cls, ns):
         try:
             return cls.w3(ns) and ns[1].endswith('XMLSchema-instance')
-        except:
+        except Exception:
             pass
         return False
 
@@ -93,7 +93,7 @@ class Namespace:
     def w3(cls, ns):
         try:
             return ns[1].startswith('http://www.w3.org')
-        except:
+        except Exception:
             pass
         return False
 
@@ -101,6 +101,6 @@ class Namespace:
     def isns(cls, ns):
         try:
             return isinstance(ns, tuple) and len(ns) == len(cls.default)
-        except:
+        except Exception:
             pass
         return False

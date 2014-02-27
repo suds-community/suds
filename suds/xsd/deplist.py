@@ -123,7 +123,7 @@ class DepList:
         try:
             frame = self.stack.pop()
             return frame[0]
-        except:
+        except Exception:
             pass
 
 
