@@ -365,14 +365,13 @@ class Printer:
 
     def unwrap(self, d, item):
         """Translate (unwrap) using an optional wrapper function."""
-        nopt = lambda x: x
         try:
             md = d.__metadata__
             pmd = getattr(md, "__print__", None)
             if pmd is None:
                 return item
             wrappers = getattr(pmd, "wrappers", {})
-            fn = wrappers.get(item[0], nopt)
+            fn = wrappers.get(item[0], lambda x: x)
             return (item[0], fn(item[1]))
         except Exception:
             pass
