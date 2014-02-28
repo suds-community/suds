@@ -1,4 +1,4 @@
-PRIORETIZED:
+PRIORITIZED:
 =================================================
 
 (21.12.2011.)
@@ -30,7 +30,7 @@ PRIORETIZED:
 (+)         * 'dependancies' --> 'dependencies'.
 (+)         * 'imcoming' --> 'incoming'.
 (+)         * 'relavent' --> 'relevant'.
-(+)         * 'indicat' --> 'inidcat'.
+(+)         * 'inidcat' --> 'indicat'.
 
 (22.12.2011.)
 
@@ -96,18 +96,18 @@ PRIORETIZED:
 (+)   inside a choice.
 (+)     * Test scenario (syntax not precise).
 (+)         <choice>
-(+)             <element "a" - string />
+(+)             <element "a" - string/>
 (+)             <element "s">
 (+)                 <sequence>
-(+)                     <element "s1" - string />
-(+)                     <element "s2" - string />
+(+)                     <element "s1" - string/>
+(+)                     <element "s2" - string/>
 (+)                 </sequence>
 (+)             </element>
 (+)         </choice>
 (+)     * When 's' is None and 'a' is not - 'a' should be used.
 (+)     * When 'a' is None and 's' is not - 's' should be used.
-(+)     * When 's' is used, all of its subelements should be used independent of
-(+)       whether they are None or not.
+(+)     * When 's' is used, all of its child elements should be used independent
+(+)       of whether they are None or not.
 (+)     * Add related test.
 (+) * (Jurko) Prepare the '0.4.1 jurko 1' release.
 (+)     * Follow the documented release procedure.
@@ -359,8 +359,8 @@ PRIORETIZED:
 (+) * (Jurko) Reorganize SimClient injection keywords.
 (+)     * 'msg' - request message.
 (+)     * 'reply' - reply message ('msg' must not be set).
-(+)     * 'status' - HTTP status code acompanying the 'reply' message.
-(+)     * 'description' - description string acompanying the 'reply' message.
+(+)     * 'status' - HTTP status code accompanying the 'reply' message.
+(+)     * 'description' - description string accompanying the 'reply' message.
 (+) * (Jurko) Check failing tests.
 (+)     * All tests now pass except for ones related to SOAP Fault unicode
 (+)       faultstring processing.
@@ -499,10 +499,10 @@ PRIORETIZED:
 (18.11.2013.)
 
 (+) * (Jurko) Fix suds time-zone handling according to a pull request received
-(+)   on bitbucket from MDuggan1.
+(+)   on BitBucket from MDuggan1.
 (+)     * Research.
 (+)         * Suds assumes that all timezones have a full-hour offset from the
-(+)           UTC timeone and does not work correctly with those that do not.
+(+)           UTC timezone and does not work correctly with those that do not.
 (+)             * This seems to be a suds specific problem and not a more
 (+)               general Python issue as some information on the net implies.
 (+)         * FixedOffsetTimezone.
@@ -516,7 +516,7 @@ PRIORETIZED:
 (19.11.2013.)
 
 (+) * (Jurko) Fix suds time-zone handling according to a pull request received
-(+)   on bitbucket from MDuggan1.
+(+)   on BitBucket from MDuggan1.
 (+)     * Research.
 (+)     * Prepare date/time string parsing tests.
 
@@ -524,7 +524,7 @@ PRIORETIZED:
 
 (+) * (Jurko) Start documenting the upcoming suds 0.4.1 jurko 6 release.
 (+) * (Jurko) Fix suds time-zone handling according to a pull request received
-(+)   on bitbucket from MDuggan1.
+(+)   on BitBucket from MDuggan1.
 (+)     * Research.
 (+)     * Implement parsing.
 (+)     * DateTime no longer derived from Date & Time.
@@ -553,7 +553,7 @@ PRIORETIZED:
 (21.11.2013.)
 
 (+) * (Jurko) Fix suds time-zone handling according to a pull request received
-(+)   on bitbucket from MDuggan1.
+(+)   on BitBucket from MDuggan1.
 (+)     * Check for feedback from users requesting this patch.
 (+)     * Add tests.
 (+)         * FixedOffsetTimezone class.
@@ -706,7 +706,7 @@ PRIORETIZED:
 (+) * (Jurko) See if the suds HttpTransport.open() method ever gets called.
 (+)     * Yup, transport open() methods get called from DocumentReader, e.g.
 (+)       when downloading a WSDL schema from the net.
-(+)     * It seems like Transport's open() & send() methods might be megreable,
+(+)     * It seems like Transport's open() & send() methods might be mergeable,
 (+)       but that would first require further research. For now - YAGNI.
 (+) * (Jurko) Process pull requests received on 'bitbucket.org'.
 (+)     * Fix setup.py current working folder path comparison so it works with
@@ -733,7 +733,7 @@ PRIORETIZED:
 (+) * (Jurko) Remove unnecessary logger objects.
 (+) * (Jurko) Process the project issue #2 reported on BitBucket by Arthur
 (+)   Clune, related to not being able to set the option cache location if the
-(+)   default cache location is not a writeable folder.
+(+)   default cache location is not a writable folder.
 (+)     * Research.
 (+)     * Prepare tests.
 (+)         * Default cache.
@@ -796,7 +796,7 @@ PRIORETIZED:
 (+)             * Test against the current HEAD commit.
 (+)             * Find a commit not that works correctly.
 (+)     * Status.
-(+)         * Could not reproduce the issue. Truely suds-jurko returns a
+(+)         * Could not reproduce the issue. Truly suds-jurko returns a
 (+)           suds.sudsobject.Fault object, but the original suds library
 (+)           implementation does not return a suds.WebFault object either.
 (+)           Further work on this can be done only once the exact desired
@@ -814,13 +814,13 @@ PRIORETIZED:
 (+)           performed.
 (+)             * Expected locations.
 (+)                 * When constructing a web service operation invocation
-(+)                   request, i.e. when marshalling Python data to a SOAP
-(+)                   request XMLS (mx package).
+(+)                   request, i.e. when marshaling Python data to a SOAP
+(+)                   request XML (mx package).
 (+)         * Where a SOAP representation to Python type transformation is
 (+)           performed.
 (+)             * Expected locations.
 (+)                 * When processing a web service operation reply, i.e. when
-(+)                   unmarshalling Python data from a SOAP reponse XML (umx
+(+)                   unmarshaling Python data from a SOAP response XML (umx
 (+)                   package).
 
 (28.01.2014.)
@@ -1013,7 +1013,7 @@ PRIORETIZED:
 
 (+) * (Jurko) Clean up Transport ASCII/Unicode URL/data handling.
 (+)     * Design desired behaviour.
-(+)         * URL may be specfied as either a byte string or a unicode string.
+(+)         * URL may be specified as either a byte string or a unicode string.
 (+)         * URL input data may contain ASCII characters only.
 (+)         * URL stored internally as a native str type (byte string with
 (+)           Python versions prior to 3, unicode string with Python 3+).
@@ -1125,7 +1125,33 @@ PRIORETIZED:
 (+) * (Jurko) Refactor suds.transport.http module unit tests to make them
 (+)   clearer.
 
-(24.02.2014.)
+(27.02.2014.)
+
+(+) * (Jurko) Fix the raw try:/except: exception handling suds which may eat up
+(+)   internal exceptions like SystemExit or KeyboardInterrupt but should not.
+(+)     * Just replace with Exception subclass catching. A more detailed
+(+)       exception class can be used later on if needed.
+
+(28.02.2014.)
+
+(+) * (Jurko) Fix Exception message used when attempting to construct a
+(+)   suds.sax.element.Element with a non-Element parent. It seems like someone
+(+)   forgot to apply % formatting there.
+(+) * (Jurko) Extract XML comparison test utilities into a separate
+(+)   tests/test_utility.py module.
+
+    * (Jurko) Fix the problem with different processes using different cache ids
+      for matching documents, causing them not to be able to reuse each other's
+      cache entries. Original suds implementation used the built-in hash
+      function which should be replaced with a md5 hash.
+        * On Python 3.3 and above hash function results are seeded with a random
+          value for each process.
+        * 32-bit & 64-bit Python implementations use different hash
+          implementations giving different results.
+        * Update readme.
+            * Problem reported by Eugene Yakubovich at bitbucket.
+        * See project related comments at: 'http://bitbucket.org/eyakubovich/
+          suds/commits/fec6efd9c10b48114bbd9c06847a264453a51620'.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
@@ -1420,13 +1446,13 @@ PRIORETIZED:
           object is empty.
         * suds.sudsobject.footprint() - see if the len() check is really needed
           just to see if the object is empty.
-            * Check other len() usage in suds.sudsboject.
+            * Check other len() usage in suds.sudsobject.
         * Check all 'except:' blocks to see if they actually need to be such
           catch-all blocks.
 
     * (Jurko) Clean up the project's basic development script for running the
       full suds test suite using multiple Python interpreter versions.
-        * Reimplement in Python.
+        * Re-implement in Python.
         * Name better.
 
     * (Jurko) Find a cleaner way to install suds tests. Currently they get
@@ -1443,7 +1469,7 @@ PRIORETIZED:
     * (Jurko) Look into issues #7 & #13 on BitBucket - problems loading a WSDL
       containing a recursively defined XML schema.
 
-NON PRIORETIZED:
+NON PRIORITIZED:
 =================================================
 
     * Resolving XSD schema elements currently returns an XSD schema type object
@@ -1636,11 +1662,102 @@ NON PRIORETIZED:
       server responds with HTTP status code ACCEPTED (202) or NO_CONTENT (204),
       but the _SoapClient method using this operation is not prepared to handle
       this and will attempt to access the 'message' member on the returned
-      value. See how to fix this -
-        * Alternatice ideas on how to fix this.
+      value.
+        * Failing tests have already been added for this.
+        * Alternative ideas on how to fix this.
             * Continue returning None in these cases and fix up the calling
               code.
             * Raise a separate exception.
             * Wrap this information in a regular suds.transport.Reply instance.
             * Possibly handle this differently based based on whether the web
               service operation invoked has any defined output message parts.
+
+    * 'soapheaders' suds option usage cleanup.
+        * Add tests.
+            * SOAP headers given as a list/tuple.
+                * Strings.
+                * Elements.
+                    * Initial.
+                    * Middle.
+                    * Last.
+                    * Multiple.
+            * SOAP headers given as a dictionary.
+                * Strings.
+                * Elements - error.
+            * Unknown header handling.
+                * Too many when given as list/tuple.
+                * Unknown key when given as dictionary.
+            * Plugins modifying SOAP header elements should not affect future
+              requests constructed using those same headers.
+        * Note that Elements found in the soapheaders option need to be copied
+          into each request so any plugins updating that request's content would
+          not update the original SOAP header elements and thus affect all
+          future requests constructed using those same SOAP headers.
+        * Fix bug: Elements added to a soapheaders list before all expected
+          headers have been added, but later ones are ignored.
+        * Raise an exception in case of an unrecognized header.
+            * Unrecognized header name in a dictionary.
+            * Too many non-Element headers in a list/tuple.
+        * Better document the 'soapheaders' suds option.
+        * At first glance it seems suds does not use reply headers the same as
+          it does its request headers. See if SOAP web service HTTP bindings
+          allow output headers at all, and if so, how suds should support this.
+        * See if header elements can be marked as required, and if so, see if
+          suds should report an error if a required header value has not been
+          provided.
+        * See if header elements can be marked as optional and how suds should
+          handle this.
+        * See if header elements can have multiple occurrences, and if so, how
+          suds should support them.
+        * See how header values can be specified more easily for a single method
+          invocation.
+
+    * See if input message parts defined using the 'type' attribute (as opposed
+      to those marked using the 'element' attribute) respect their optional/
+      required status. PartElement class used to model such part's element
+      information seems to always return True from its optional() method.
+        * If this is wrong - add a test demonstrating the problem.
+        * If this is correct - see what the suspicious optional() method is for.
+
+    * Look at suds.sax.element.Element.insert() - its documentation says it
+      accepts either an element or an attribute or a collection of elements or
+      attributes and adds it/them as a child/children under the current element.
+        * From glancing through the code it does not seem to work when passed a
+          collection of elements or attributes.
+            * Most likely it needs a check whether the passed objects parameter
+              is a list or a tuple before it wraps it inside a tuple.
+        * From glancing through the code it does not seems to work when passed
+          an Attribute.
+        * See what to do about this - either update the related function
+          documentation or update it to work as documented.
+        * See how similar functionality has been implemented in
+          suds.sax.element.Element.append().
+
+    * Look at suds.sax.element.Element.childAtPath() and see whether it should
+      return None or self if given an empty string or a string consisting only
+      of slashes.
+        * Currently it returns None in this case as if the given path could not
+          be found.
+        * Returning self or raising an exception seems consistent with the fact
+          that a non-empty path is interpreted relative to self.
+
+    * suds.sax.element.Element.__childrenAtPath() seems smelly. See how it can
+      be simplified and made to work for paths not containing slashes as well as
+      those containing slashes.
+        * This should simplify the suds.sax.element.Element.childrenAtPath()
+          implementation as well.
+
+    * suds.sax parser peculiarities to look into.
+        * Handling mixed content elements, i.e. those that have both child
+          elements and textual content.
+            * All the textual content is concatenated into a single string,
+              independent of how it distributed between child elements in the
+              original parsed XML string.
+                * As a consequence, converting the parsed XML document back into
+                  an XML string will place all the element's textual content
+                  before its child elements.
+            * The textual content has its whitespace trimmed.
+                * Note that this causes the '<a>  42 <b/> <c/> 42  </a>' XML to
+                  be parsed so that <a> element's textual data is: '42   42'
+                  where the whitespace outside the '42' markers is trimmed but
+                  the whitespace between them is preserved.
