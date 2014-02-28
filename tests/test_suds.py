@@ -61,12 +61,12 @@ def test_choice_parameter_implementation_inconsistencies():
         return tests.client_from_wsdl(tests.wsdl(x, input=y))
 
     client_simple_short = client("""\
-      <xsd:element name="Elemento" type="xsd:string" />""", "Elemento")
+      <xsd:element name="Elemento" type="xsd:string"/>""", "Elemento")
 
     client_simple_long = client("""\
       <xsd:element name="Elemento">
         <xsd:simpleType>
-          <xsd:restriction base="xsd:string" />
+          <xsd:restriction base="xsd:string"/>
         </xsd:simpleType>
       </xsd:element>""", "Elemento")
 
@@ -74,7 +74,7 @@ def test_choice_parameter_implementation_inconsistencies():
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="Elemento" type="xsd:string" />
+            <xsd:element name="Elemento" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>""", "Wrapper")
@@ -90,7 +90,7 @@ def test_choice_parameter_implementation_inconsistencies():
 
 def test_converting_client_to_string_must_not_raise_an_exception():
     client = tests.client_from_wsdl(suds.byte_str(
-        "<?xml version='1.0' encoding='UTF-8'?><root />"))
+        "<?xml version='1.0' encoding='UTF-8'?><root/>"))
     str(client)
 
 
@@ -108,9 +108,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="AAA">
         <xsd:sequence>
-          <xsd:element name="u1" type="xsd:string" />
-          <xsd:element name="u2" type="xsd:string" />
-          <xsd:element name="u3" type="xsd:string" />
+          <xsd:element name="u1" type="xsd:string"/>
+          <xsd:element name="u2" type="xsd:string"/>
+          <xsd:element name="u3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
     </xsd:schema>
@@ -119,11 +119,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -150,7 +150,7 @@ def test_empty_invalid_WSDL(monkeypatch):
 
 def test_empty_valid_WSDL():
     client = tests.client_from_wsdl(suds.byte_str(
-        "<?xml version='1.0' encoding='UTF-8'?><root />"))
+        "<?xml version='1.0' encoding='UTF-8'?><root/>"))
     assert not client.wsdl.services, "No service definitions must be read "  \
         "from an empty WSDL."
 
@@ -169,9 +169,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:simpleType name="AAA">
         <xsd:restriction base="xsd:string">
-          <xsd:enumeration value="One" />
-          <xsd:enumeration value="Two" />
-          <xsd:enumeration value="Thirty-Two" />
+          <xsd:enumeration value="One"/>
+          <xsd:enumeration value="Two"/>
+          <xsd:enumeration value="Thirty-Two"/>
         </xsd:restriction>
       </xsd:simpleType>
     </xsd:schema>
@@ -180,11 +180,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -223,42 +223,42 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="UngaBunga">
         <xsd:sequence>
-          <xsd:element name="u1" type="xsd:string" />
-          <xsd:element name="u2" type="xsd:string" />
-          <xsd:element name="u3" type="xsd:string" />
+          <xsd:element name="u1" type="xsd:string"/>
+          <xsd:element name="u2" type="xsd:string"/>
+          <xsd:element name="u3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
-            <xsd:element name="x2" type="UngaBunga" />
-            <xsd:element name="x3" type="xsd:string" />
+            <xsd:element name="x1" type="xsd:string"/>
+            <xsd:element name="x2" type="UngaBunga"/>
+            <xsd:element name="x3" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:Elemento" />
+    <wsdl:part name="parameters" element="ns:Elemento"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -309,33 +309,33 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:choice>
-            <xsd:element name="u1" type="xsd:string" />
-            <xsd:element name="u2" type="xsd:string" />
+            <xsd:element name="u1" type="xsd:string"/>
+            <xsd:element name="u2" type="xsd:string"/>
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:Elemento" />
+    <wsdl:part name="parameters" element="ns:Elemento"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -386,42 +386,42 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
+            <xsd:element name="x1" type="xsd:string"/>
             <xsd:element name="x2">
               <xsd:complexType>
                 <xsd:choice>
-                  <xsd:element name="u1" type="xsd:string" />
-                  <xsd:element name="u2" type="xsd:string" />
-                  <xsd:element name="u3" type="xsd:string" />
+                  <xsd:element name="u1" type="xsd:string"/>
+                  <xsd:element name="u2" type="xsd:string"/>
+                  <xsd:element name="u3" type="xsd:string"/>
                 </xsd:choice>
               </xsd:complexType>
             </xsd:element>
-            <xsd:element name="x3" type="xsd:string" />
+            <xsd:element name="x3" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:Elemento" />
+    <wsdl:part name="parameters" element="ns:Elemento"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -486,42 +486,42 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
+            <xsd:element name="x1" type="xsd:string"/>
             <xsd:element name="x2">
               <xsd:complexType>
                 <xsd:sequence>
-                  <xsd:element name="u1" type="xsd:string" />
-                  <xsd:element name="u2" type="xsd:string" />
-                  <xsd:element name="u3" type="xsd:string" />
+                  <xsd:element name="u1" type="xsd:string"/>
+                  <xsd:element name="u2" type="xsd:string"/>
+                  <xsd:element name="u3" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
             </xsd:element>
-            <xsd:element name="x3" type="xsd:string" />
+            <xsd:element name="x3" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:Elemento" />
+    <wsdl:part name="parameters" element="ns:Elemento"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -590,42 +590,42 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="Choice">
         <xsd:complexType>
           <xsd:choice>
-            <xsd:element name="a1" type="xsd:string" />
+            <xsd:element name="a1" type="xsd:string"/>
             <xsd:element name="sequence">
               <xsd:complexType>
                 <xsd:sequence>
-                  <xsd:element name="e1" type="xsd:string" />
-                  <xsd:element name="e2" type="xsd:string" />
-                  <xsd:element name="e3" type="xsd:string" />
+                  <xsd:element name="e1" type="xsd:string"/>
+                  <xsd:element name="e2" type="xsd:string"/>
+                  <xsd:element name="e3" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
             </xsd:element>
-            <xsd:element name="a2" type="xsd:string" />
+            <xsd:element name="a2" type="xsd:string"/>
           </xsd:choice>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:Choice" />
+    <wsdl:part name="parameters" element="ns:Choice"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -635,14 +635,14 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
     assert tests.compare_xml_to_string(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Choice>
-         <ns0:a1>Wackadoodle</ns0:a1>
-      </ns0:Choice>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+   <Header/>
+   <Body>
+      <Choice xmlns="my-namespace">
+         <a1>Wackadoodle</a1>
+      </Choice>
+   </Body>
+</Envelope>""")
 
     # Input #2.
     param = client.factory.create("Choice.sequence")
@@ -650,18 +650,18 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     request = _construct_SOAP_request(client, 'f', sequence=param)
     assert tests.compare_xml_to_string(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:Choice>
-         <ns0:sequence>
-            <ns0:e1/>
-            <ns0:e2>Wackadoodle</ns0:e2>
-            <ns0:e3/>
-         </ns0:sequence>
-      </ns0:Choice>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+   <Header/>
+   <Body>
+      <Choice xmlns="my-namespace">
+         <sequence>
+            <e1/>
+            <e2>Wackadoodle</e2>
+            <e3/>
+         </sequence>
+      </Choice>
+   </Body>
+</Envelope>""")
 
 
 def test_function_parameters_sequence_in_a_choice_in_a_sequence():
@@ -682,17 +682,17 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
             <xsd:element name="choice">
               <xsd:complexType>
                 <xsd:choice>
-                  <xsd:element name="a1" type="xsd:string" />
+                  <xsd:element name="a1" type="xsd:string"/>
                   <xsd:element name="sequence">
                     <xsd:complexType>
                       <xsd:sequence>
-                        <xsd:element name="e1" type="xsd:string" />
-                        <xsd:element name="e2" type="xsd:string" />
-                        <xsd:element name="e3" type="xsd:string" />
+                        <xsd:element name="e1" type="xsd:string"/>
+                        <xsd:element name="e2" type="xsd:string"/>
+                        <xsd:element name="e3" type="xsd:string"/>
                       </xsd:sequence>
                     </xsd:complexType>
                   </xsd:element>
-                  <xsd:element name="a2" type="xsd:string" />
+                  <xsd:element name="a2" type="xsd:string"/>
                 </xsd:choice>
               </xsd:complexType>
             </xsd:element>
@@ -702,25 +702,25 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:External" />
+    <wsdl:part name="parameters" element="ns:External"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -735,20 +735,20 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     request = _construct_SOAP_request(client, 'f', param)
     assert tests.compare_xml_to_string(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Header/>
-   <ns1:Body>
-      <ns0:External>
-         <ns0:choice>
-            <ns0:sequence>
-               <ns0:e1/>
-               <ns0:e2>Wackadoodle</ns0:e2>
-               <ns0:e3/>
-            </ns0:sequence>
-         </ns0:choice>
-      </ns0:External>
-   </ns1:Body>
-</SOAP-ENV:Envelope>""")
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+   <Header/>
+   <Body>
+      <External xmlns="my-namespace">
+         <choice>
+            <sequence>
+               <e1/>
+               <e2>Wackadoodle</e2>
+               <e3/>
+            </sequence>
+         </choice>
+      </External>
+   </Body>
+</Envelope>""")
 
 
 def test_function_parameters_strings():
@@ -766,34 +766,34 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
-            <xsd:element name="x2" type="xsd:string" />
-            <xsd:element name="x3" type="xsd:string" />
+            <xsd:element name="x1" type="xsd:string"/>
+            <xsd:element name="x2" type="xsd:string"/>
+            <xsd:element name="x3" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:Elemento" />
+    <wsdl:part name="parameters" element="ns:Elemento"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -843,9 +843,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:simpleType name="AAA">
         <xsd:restriction base="xsd:string">
-          <xsd:enumeration value="One" />
-          <xsd:enumeration value="Two" />
-          <xsd:enumeration value="Thirty-Two" />
+          <xsd:enumeration value="One"/>
+          <xsd:enumeration value="Two"/>
+          <xsd:enumeration value="Thirty-Two"/>
         </xsd:restriction>
       </xsd:simpleType>
     </xsd:schema>
@@ -854,11 +854,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -906,16 +906,16 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Oklahoma">
         <xsd:sequence>
-          <xsd:element name="c1" type="xsd:string" />
-          <xsd:element name="c2" type="xsd:string" />
-          <xsd:element name="c3" type="xsd:string" />
+          <xsd:element name="c1" type="xsd:string"/>
+          <xsd:element name="c2" type="xsd:string"/>
+          <xsd:element name="c3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="Wackadoodle">
         <xsd:sequence>
-          <xsd:element name="x1" type="xsd:string" />
-          <xsd:element name="x2" type="Oklahoma" />
-          <xsd:element name="x3" type="xsd:string" />
+          <xsd:element name="x1" type="xsd:string"/>
+          <xsd:element name="x2" type="Oklahoma"/>
+          <xsd:element name="x3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
     </xsd:schema>
@@ -924,11 +924,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -992,9 +992,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Oklahoma">
         <xsd:sequence>
-          <xsd:element name="c1" type="xsd:string" />
-          <xsd:element name="c2" type="xsd:string" />
-          <xsd:element name="c3" type="xsd:string" />
+          <xsd:element name="c1" type="xsd:string"/>
+          <xsd:element name="c2" type="xsd:string"/>
+          <xsd:element name="c3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
     </xsd:schema>
@@ -1003,11 +1003,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1077,16 +1077,16 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
           <xsd:element name="x1">
               <xsd:complexType name="Oklahoma">
                 <xsd:sequence>
-                  <xsd:element name="c1" type="xsd:string" />
-                  <xsd:element name="c2" type="xsd:string" />
-                  <xsd:element name="c3" type="xsd:string" />
+                  <xsd:element name="c1" type="xsd:string"/>
+                  <xsd:element name="c2" type="xsd:string"/>
+                  <xsd:element name="c3" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
           </xsd:element>
           <xsd:element name="x2">
               <xsd:complexType>
                 <xsd:sequence>
-                  <xsd:element name="s" type="xsd:string" />
+                  <xsd:element name="s" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
           </xsd:element>
@@ -1098,11 +1098,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1165,31 +1165,31 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="InputData">
         <xsd:complexType>
-          <xsd:sequence />
+          <xsd:sequence/>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:InputData" />
+    <wsdl:part name="parameters" element="ns:InputData"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1213,32 +1213,32 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="InputData">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
+            <xsd:element name="x1" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:InputData" />
+    <wsdl:part name="parameters" element="ns:InputData"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1262,34 +1262,34 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="InputData">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
-            <xsd:element name="x2" type="xsd:string" />
-            <xsd:element name="x3" type="xsd:string" />
+            <xsd:element name="x1" type="xsd:string"/>
+            <xsd:element name="x2" type="xsd:string"/>
+            <xsd:element name="x3" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:InputData" />
+    <wsdl:part name="parameters" element="ns:InputData"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
