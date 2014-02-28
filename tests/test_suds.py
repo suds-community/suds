@@ -1309,17 +1309,17 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     <xsd:schema targetNamespace="my-namespace"
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
   </wsdl:types>
   <wsdl:portType name="dummyPortType">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1350,9 +1350,9 @@ def test_restrictions():
       <xsd:element name="Elemento">
         <xsd:simpleType>
           <xsd:restriction base="xsd:int">
-            <xsd:enumeration value="1" />
-            <xsd:enumeration value="3" />
-            <xsd:enumeration value="5" />
+            <xsd:enumeration value="1"/>
+            <xsd:enumeration value="3"/>
+            <xsd:enumeration value="5"/>
           </xsd:restriction>
         </xsd:simpleType>
       </xsd:element>""", input="Elemento"))
@@ -1360,31 +1360,31 @@ def test_restrictions():
     client_named = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyType">
         <xsd:restriction base="xsd:int">
-          <xsd:enumeration value="1" />
-          <xsd:enumeration value="3" />
-          <xsd:enumeration value="5" />
+          <xsd:enumeration value="1"/>
+          <xsd:enumeration value="3"/>
+          <xsd:enumeration value="5"/>
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", input="Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType"/>""", input="Elemento"))
 
     client_twice_restricted = tests.client_from_wsdl(tests.wsdl("""\
       <xsd:simpleType name="MyTypeGeneric">
         <xsd:restriction base="xsd:int">
-          <xsd:enumeration value="1" />
-          <xsd:enumeration value="2" />
-          <xsd:enumeration value="3" />
-          <xsd:enumeration value="4" />
-          <xsd:enumeration value="5" />
+          <xsd:enumeration value="1"/>
+          <xsd:enumeration value="2"/>
+          <xsd:enumeration value="3"/>
+          <xsd:enumeration value="4"/>
+          <xsd:enumeration value="5"/>
         </xsd:restriction>
       </xsd:simpleType>
       <xsd:simpleType name="MyType">
         <xsd:restriction base="ns:MyTypeGeneric">
-          <xsd:enumeration value="1" />
-          <xsd:enumeration value="3" />
-          <xsd:enumeration value="5" />
+          <xsd:enumeration value="1"/>
+          <xsd:enumeration value="3"/>
+          <xsd:enumeration value="5"/>
         </xsd:restriction>
       </xsd:simpleType>
-      <xsd:element name="Elemento" type="ns:MyType" />""", input="Elemento"))
+      <xsd:element name="Elemento" type="ns:MyType"/>""", input="Elemento"))
 
     element_qref = ("Elemento", "my-namespace")
     type_named_qref = ("MyType", "my-namespace")
@@ -1521,28 +1521,28 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Typo">
         <xsd:sequence>
-          <xsd:element name="u1" type="xsd:string" />
-          <xsd:element name="u2" type="xsd:string" />
-          <xsd:element name="u3" type="xsd:string" />
+          <xsd:element name="u1" type="xsd:string"/>
+          <xsd:element name="u2" type="xsd:string"/>
+          <xsd:element name="u3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
-            <xsd:element name="x2" type="Typo" />
+            <xsd:element name="x1" type="xsd:string"/>
+            <xsd:element name="x2" type="Typo"/>
             <xsd:element name="x3">
               <xsd:complexType>
                 <xsd:sequence>
-                  <xsd:element name="a1" type="xsd:string" />
-                  <xsd:element name="a2" type="xsd:string" />
+                  <xsd:element name="a1" type="xsd:string"/>
+                  <xsd:element name="a2" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
             </xsd:element>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
-      <xsd:element name="ElementoTyped" type="Typo" />
+      <xsd:element name="ElementoTyped" type="Typo"/>
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
@@ -1600,10 +1600,10 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-      <xsd:element name="Elemento1" type="xsd:string" />
-      <xsd:element name="Elemento2" type="xsd:string" />
-      <xsd:element name="Elemento3" type="xsd:string" />
-      <xsd:element name="Elemento4" type="xsd:string" />
+      <xsd:element name="Elemento1" type="xsd:string"/>
+      <xsd:element name="Elemento2" type="xsd:string"/>
+      <xsd:element name="Elemento3" type="xsd:string"/>
+      <xsd:element name="Elemento4" type="xsd:string"/>
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
@@ -1648,9 +1648,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     elementFormDefault="qualified"
     attributeFormDefault="unqualified"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-      <xsd:element name="Elemento1" type="Elemento1" />
-      <xsd:element name="Elemento2" type="Elemento1" />
-      <xsd:element name="Elemento3" type="XXX" />
+      <xsd:element name="Elemento1" type="Elemento1"/>
+      <xsd:element name="Elemento2" type="Elemento1"/>
+      <xsd:element name="Elemento3" type="XXX"/>
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
@@ -1679,21 +1679,21 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Typo">
         <xsd:sequence>
-          <xsd:element name="u1" type="xsd:string" />
-          <xsd:element name="u2" type="xsd:string" />
-          <xsd:element name="u3" type="xsd:string" />
+          <xsd:element name="u1" type="xsd:string"/>
+          <xsd:element name="u2" type="xsd:string"/>
+          <xsd:element name="u3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
-      <xsd:element name="ElementoTyped" type="Typo" />
-      <xsd:element name="ElementoTyped11" ref="ElementoTyped" />
-      <xsd:element name="ElementoTyped12" ref="ElementoTyped11" />
-      <xsd:element name="ElementoTyped13" ref="ElementoTyped12" />
-      <xsd:element name="ElementoTyped21" ref="ElementoTyped" />
-      <xsd:element name="ElementoTyped22" ref="ElementoTyped21" />
-      <xsd:element name="ElementoTyped23" ref="ElementoTyped22" />
-      <xsd:element name="ElementoTypedX" ref="ElementoTypedX" />
-      <xsd:element name="ElementoTypedX1" ref="ElementoTypedX2" />
-      <xsd:element name="ElementoTypedX2" ref="ElementoTypedX1" />
+      <xsd:element name="ElementoTyped" type="Typo"/>
+      <xsd:element name="ElementoTyped11" ref="ElementoTyped"/>
+      <xsd:element name="ElementoTyped12" ref="ElementoTyped11"/>
+      <xsd:element name="ElementoTyped13" ref="ElementoTyped12"/>
+      <xsd:element name="ElementoTyped21" ref="ElementoTyped"/>
+      <xsd:element name="ElementoTyped22" ref="ElementoTyped21"/>
+      <xsd:element name="ElementoTyped23" ref="ElementoTyped22"/>
+      <xsd:element name="ElementoTypedX" ref="ElementoTypedX"/>
+      <xsd:element name="ElementoTypedX1" ref="ElementoTypedX2"/>
+      <xsd:element name="ElementoTypedX2" ref="ElementoTypedX1"/>
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
@@ -1756,9 +1756,9 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Oklahoma">
         <xsd:sequence>
-          <xsd:element name="c1" type="xsd:string" />
-          <xsd:element name="c2" type="xsd:string" />
-          <xsd:element name="c3" type="xsd:string" />
+          <xsd:element name="c1" type="xsd:string"/>
+          <xsd:element name="c2" type="xsd:string"/>
+          <xsd:element name="c3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
     </xsd:schema>
@@ -1767,11 +1767,11 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1826,44 +1826,44 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
       <xsd:element name="f">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="a" type="xsd:string" />
-            <xsd:element name="b" type="xsd:string" />
+            <xsd:element name="a" type="xsd:string"/>
+            <xsd:element name="b" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
       <xsd:element name="fResponse">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="c" type="xsd:string" />
+            <xsd:element name="c" type="xsd:string"/>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
     </xsd:schema>
   </wsdl:types>
   <wsdl:message name="fRequestMessage">
-    <wsdl:part name="parameters" element="ns:f" />
+    <wsdl:part name="parameters" element="ns:f"/>
   </wsdl:message>
   <wsdl:message name="fResponseMessage">
-    <wsdl:part name="parameters" element="ns:fResponse" />
+    <wsdl:part name="parameters" element="ns:fResponse"/>
   </wsdl:message>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f">
-      <wsdl:input message="ns:fRequestMessage" />
-      <wsdl:output message="ns:fResponseMessage" />
+      <wsdl:input message="ns:fRequestMessage"/>
+      <wsdl:output message="ns:fResponseMessage"/>
     </wsdl:operation>
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+    transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
-      <soap:operation soapAction="f" style="document" />
-      <wsdl:input><soap:body use="literal" /></wsdl:input>
-      <wsdl:output><soap:body use="literal" /></wsdl:output>
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
     </wsdl:operation>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
-      <soap:address location="https://localhost/dummy" />
+      <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
@@ -1972,26 +1972,26 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="UngaBunga">
         <xsd:sequence>
-          <xsd:element name="u1" type="xsd:string" />
-          <xsd:element name="u2" type="xsd:string" />
-          <xsd:element name="u3" type="xsd:string" />
+          <xsd:element name="u1" type="xsd:string"/>
+          <xsd:element name="u2" type="xsd:string"/>
+          <xsd:element name="u3" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:complexType name="Fifi">
         <xsd:sequence>
-          <xsd:element name="x" type="xsd:string" />
+          <xsd:element name="x" type="xsd:string"/>
         </xsd:sequence>
       </xsd:complexType>
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
-            <xsd:element name="x1" type="xsd:string" />
-            <xsd:element name="x2" type="UngaBunga" />
+            <xsd:element name="x1" type="xsd:string"/>
+            <xsd:element name="x2" type="UngaBunga"/>
             <xsd:element name="x3">
               <xsd:complexType>
                 <xsd:sequence>
-                  <xsd:element name="a1" type="xsd:string" />
-                  <xsd:element name="a2" type="xsd:string" />
+                  <xsd:element name="a1" type="xsd:string"/>
+                  <xsd:element name="a2" type="xsd:string"/>
                 </xsd:sequence>
               </xsd:complexType>
             </xsd:element>
