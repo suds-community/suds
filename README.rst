@@ -116,6 +116,8 @@ version 0.7 (development)
 
 * Fixed places in code where ``suds`` could eat up & silently ignore internal
   Python exceptions like SystemExit or KeyboardInterrupt.
+* Fixed the exception message used when attempting to construct a
+  ``suds.sax.element.Element`` with a non-``Element`` parent.
 * ``suds.cache`` module cleanup.
 
   * Fixed ``FileCache`` default cache location related security issue. Many

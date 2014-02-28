@@ -92,7 +92,7 @@ class Element(UnicodeMixin):
             if isinstance(parent, Element):
                 self.parent = parent
             else:
-                raise Exception('parent (%s) not-valid', parent.__class__.__name__)
+                raise Exception('parent (%s) not-valid' % parent.__class__.__name__)
         else:
             self.parent = None
         self.children = []
