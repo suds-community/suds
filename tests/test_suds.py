@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
 import suds
 import tests
+from tests.test_utility import CompareSAX
 
 import pytest
 
@@ -633,7 +634,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Input #1.
     request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
-    assert tests.compare_xml_to_string(request, """\
+    assert CompareSAX.document2data(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
@@ -648,7 +649,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     param = client.factory.create("Choice.sequence")
     param.e2 = "Wackadoodle"
     request = _construct_SOAP_request(client, 'f', sequence=param)
-    assert tests.compare_xml_to_string(request, """\
+    assert CompareSAX.document2data(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
@@ -733,7 +734,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct a SOAP request containing our input parameters.
     request = _construct_SOAP_request(client, 'f', param)
-    assert tests.compare_xml_to_string(request, """\
+    assert CompareSAX.document2data(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
