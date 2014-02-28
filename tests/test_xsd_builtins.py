@@ -32,6 +32,7 @@ import suds.sax.date
 from suds.xsd.sxbuiltin import (Factory, XAny, XBoolean, XBuiltin, XDate,
     XDateTime, XDecimal, XFloat, XInteger, XLong, XString, XTime)
 import tests
+from tests.test_utility import CompareSAX
 
 import pytest
 
@@ -728,7 +729,7 @@ def test_translation(monkeypatch):
     request = client.service.f(55)
     assert schema_object_in._mock_translate_log == [(55, False)]
     assert schema_object_out._mock_translate_log == []
-    assert tests.compare_xml_string_to_string(request.envelope, """\
+    assert CompareSAX.data2data(request.envelope, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
