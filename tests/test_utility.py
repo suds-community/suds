@@ -62,12 +62,6 @@ class CompareSAX:
     their namespace names match even if their namespace prefixes do not or if
     those namespaces have been declared on different XML elements.
 
-    Empty string & None XML element texts are considered the same to compensate
-    for different XML object tree construction methods representing 'no text'
-    elements differently, e.g. depending on whether a particular SAX parsed XML
-    element had any whitespace characters in its textual data or whether the
-    element got constructed in code to represent a SOAP request.
-
     """
 
     @classmethod
@@ -96,19 +90,10 @@ class CompareSAX:
         """Compares two SAX XML elements."""
         assert lhs.__class__ is suds.sax.element.Element
         assert rhs.__class__ is suds.sax.element.Element
-        if lhs.namespace()[1] != rhs.namespace()[1]:
-            return False
-        if lhs.name != rhs.name:
-            return False
-        lhs_text = lhs.text
-        rhs_text = rhs.text
-        if lhs_text == "":
-            lhs_text = None
-        if rhs_text == "":
-            rhs_text = None
-        if lhs_text != rhs_text:
-            return False
-        return cls.__compare_child_elements(lhs, rhs)
+        return (lhs.namespace()[1] == rhs.namespace()[1]
+            and lhs.name == rhs.name
+            and cls.__compare_element_text(lhs, rhs)
+            and cls.__compare_child_elements(lhs, rhs))
 
     @classmethod
     def data2data(cls, lhs, rhs):
@@ -135,6 +120,27 @@ class CompareSAX:
             if not cls.element2element(l, r):
                 return False
         return True
+
+    @classmethod
+    def __compare_element_text(cls, lhs, rhs):
+        """
+        Compares the given elements' textual content.
+
+        Empty string & None XML element texts are considered the same to
+        compensate for different XML object tree construction methods
+        representing 'no text' elements differently, e.g. depending on whether
+        a particular SAX parsed XML element had any whitespace characters in
+        its textual data or whether the element got constructed in code to
+        represent a SOAP request.
+
+        """
+        lhs_text = lhs.text
+        rhs_text = rhs.text
+        if lhs_text == "":
+            lhs_text = None
+        if rhs_text == "":
+            rhs_text = None
+        return lhs_text == rhs_text
 
     @staticmethod
     def __parse_data(data):
