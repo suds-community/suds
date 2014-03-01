@@ -75,9 +75,7 @@ class CompareSAX:
         """Compares two SAX XML documents."""
         assert lhs.__class__ is suds.sax.document.Document
         assert rhs.__class__ is suds.sax.document.Document
-        assert len(lhs.getChildren()) == 1
-        assert len(rhs.getChildren()) == 1
-        return cls.element2element(lhs.getChildren()[0], rhs.getChildren()[0])
+        return cls.__compare_child_elements(lhs, rhs)
 
     @classmethod
     def document2element(cls, document, element):
@@ -110,12 +108,7 @@ class CompareSAX:
             rhs_text = None
         if lhs_text != rhs_text:
             return False
-        if len(lhs.getChildren()) != len(rhs.getChildren()):
-            return False
-        for l, r in zip(lhs.getChildren(), rhs.getChildren()):
-            if not cls.element2element(l, r):
-                return False
-        return True
+        return cls.__compare_child_elements(lhs, rhs)
 
     @classmethod
     def data2data(cls, lhs, rhs):
@@ -132,6 +125,16 @@ class CompareSAX:
 
         """
         return cls.document2document(lhs, cls.__parse_data(rhs))
+
+    @classmethod
+    def __compare_child_elements(cls, lhs, rhs):
+        """Compares the given entities' child elements."""
+        if len(lhs.getChildren()) != len(rhs.getChildren()):
+            return False
+        for l, r in zip(lhs.getChildren(), rhs.getChildren()):
+            if not cls.element2element(l, r):
+                return False
+        return True
 
     @staticmethod
     def __parse_data(data):
