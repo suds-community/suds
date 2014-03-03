@@ -31,6 +31,8 @@ import suds.sax.document
 import suds.sax.element
 import suds.sax.parser
 
+import sys
+
 
 class CompareSAX:
     """
@@ -64,12 +66,18 @@ class CompareSAX:
 
     """
 
+    def __init__(self):
+        self.__context = []
+
     @classmethod
     def document2document(cls, lhs, rhs):
         """Compares two SAX XML documents."""
-        assert lhs.__class__ is suds.sax.document.Document
-        assert rhs.__class__ is suds.sax.document.Document
-        cls.__compare_child_elements(lhs, rhs)
+        self = cls()
+        try:
+            self.__document2document(lhs, rhs, context=u"document2document")
+        except Exception:
+            self.__report_context()
+            raise
 
     @classmethod
     def document2element(cls, document, element):
@@ -80,27 +88,39 @@ class CompareSAX:
         document consists of a single XML element matching the given one.
 
         """
-        assert document.__class__ is suds.sax.document.Document
-        assert element.__class__ is suds.sax.element.Element
-        assert len(document.getChildren()) == 1
-        cls.element2element(document.getChildren()[0], element)
+        self = cls()
+        self.__push_context(u"document2element")
+        try:
+            assert document.__class__ is suds.sax.document.Document
+            assert element.__class__ is suds.sax.element.Element
+            assert len(document.getChildren()) == 1
+            self.__element2element(document.getChildren()[0], element)
+        except Exception:
+            self.__report_context()
+            raise
 
     @classmethod
     def element2element(cls, lhs, rhs):
         """Compares two SAX XML elements."""
-        assert lhs.__class__ is suds.sax.element.Element
-        assert rhs.__class__ is suds.sax.element.Element
-        assert lhs.name == rhs.name
-        cls.__compare_element_namespace(lhs, rhs)
-        cls.__compare_element_text(lhs, rhs)
-        cls.__compare_child_elements(lhs, rhs)
+        self = cls()
+        self.__push_context(u"element2element")
+        try:
+            self.__element2element(lhs, rhs)
+        except Exception:
+            self.__report_context()
+            raise
 
     @classmethod
     def data2data(cls, lhs, rhs):
         """Compares two SAX XML documents given as strings or bytes objects."""
-        lhs_document = cls.__parse_data(lhs)
-        rhs_document = cls.__parse_data(rhs)
-        cls.document2document(lhs_document, rhs_document)
+        self = cls()
+        try:
+            lhs_doc = self.__parse_data(lhs)
+            rhs_doc = self.__parse_data(rhs)
+            self.__document2document(lhs_doc, rhs_doc, context=u"data2data")
+        except Exception:
+            self.__report_context()
+            raise
 
     @classmethod
     def document2data(cls, lhs, rhs):
@@ -109,17 +129,22 @@ class CompareSAX:
         object.
 
         """
-        cls.document2document(lhs, cls.__parse_data(rhs))
+        self = cls()
+        try:
+            rhs_doc = self.__parse_data(rhs)
+            self.__document2document(lhs, rhs_doc, context=u"document2data")
+        except Exception:
+            self.__report_context()
+            raise
 
-    @classmethod
-    def __compare_child_elements(cls, lhs, rhs):
+    def __compare_child_elements(self, lhs, rhs):
         """Compares the given entities' child elements."""
         assert len(lhs.getChildren()) == len(rhs.getChildren())
-        for l, r in zip(lhs.getChildren(), rhs.getChildren()):
-            cls.element2element(l, r)
+        count = len(lhs.getChildren())
+        for i, (l, r) in enumerate(zip(lhs.getChildren(), rhs.getChildren())):
+            self.__element2element(l, r, context_info=(i, count))
 
-    @classmethod
-    def __compare_element_namespace(cls, lhs, rhs):
+    def __compare_element_namespace(self, lhs, rhs):
         """
         Compares the given elements' namespaces.
 
@@ -133,6 +158,7 @@ class CompareSAX:
         """
         #TODO: Make suds SAX element model consistently represent empty/missing
         # namespaces and then update both this method and its docstring.
+        self.__push_context(u"namespace")
         lhs_namespace = lhs.namespace()[1]
         rhs_namespace = rhs.namespace()[1]
         if not lhs_namespace:
@@ -140,9 +166,9 @@ class CompareSAX:
         if not rhs_namespace:
             rhs_namespace = None
         assert lhs_namespace == rhs_namespace
+        self.__pop_context()
 
-    @classmethod
-    def __compare_element_text(cls, lhs, rhs):
+    def __compare_element_text(self, lhs, rhs):
         """
         Compares the given elements' textual content.
 
@@ -156,6 +182,7 @@ class CompareSAX:
         """
         #TODO: Make suds SAX element model consistently represent empty/missing
         # text content and then update both this method and its docstring.
+        self.__push_context(u"text")
         lhs_text = lhs.text
         rhs_text = rhs.text
         if not lhs_text:
@@ -163,6 +190,70 @@ class CompareSAX:
         if not rhs_text:
             rhs_text = None
         assert lhs_text == rhs_text
+        self.__pop_context()
+
+    def __document2document(self, lhs, rhs, context):
+        """
+        Internal document2document comparison worker.
+
+        See document2document() docstring for more detailed information.
+
+        """
+        self.__push_context(context)
+        assert lhs.__class__ is suds.sax.document.Document
+        assert rhs.__class__ is suds.sax.document.Document
+        self.__compare_child_elements(lhs, rhs)
+        self.__pop_context()
+
+    @staticmethod
+    def __element_name(element):
+        """Returns a given SAX element's name as unicode or '???' on error."""
+        try:
+            return unicode(element.name)
+        except Exception:
+            return u"???"
+
+    def __element2element(self, lhs, rhs, context_info=(0, 1)):
+        """
+        Internal element2element comparison worker.
+
+        See element2element() docstring for more detailed information.
+
+        The context information is an (n, count) 2-element collection
+        indicating which element2element() call ('n') this is in a sequence of
+        such calls ('count'). The exact context string is constructed based on
+        the given elements' names and context information.
+
+        """
+        context = self.__element2element_context(lhs, rhs, context_info)
+        self.__push_context(context)
+        assert lhs.__class__ is suds.sax.element.Element
+        assert rhs.__class__ is suds.sax.element.Element
+        assert lhs.name == rhs.name
+        self.__compare_element_namespace(lhs, rhs)
+        self.__compare_element_text(lhs, rhs)
+        self.__compare_child_elements(lhs, rhs)
+        self.__pop_context()
+
+    @classmethod
+    def __element2element_context(cls, lhs, rhs, context_info):
+        """
+        Return a context string for a given element2element call.
+
+        See the __element2element() docstring for more detailed information.
+
+        """
+        n, count = context_info
+        assert 0 <= n < count, "broken CompareSAX implementation"
+        context_lhs_name = cls.__element_name(lhs)
+        context_rhs_name = cls.__element_name(rhs)
+        if context_lhs_name == context_rhs_name:
+            context_name = context_lhs_name
+        else:
+            context_name = u"%s/%s" % (context_lhs_name, context_rhs_name)
+        if count == 1:
+            return u"<%s>" % (context_name,)
+        return u"<%s(%d/%d)>" % (context_name, n + 1, count)
 
     @staticmethod
     def __parse_data(data):
@@ -174,3 +265,14 @@ class CompareSAX:
         if isinstance(data, unicode):
             data = data.encode("utf-8")
         return suds.sax.parser.Parser().parse(string=data)
+
+    def __pop_context(self):
+        self.__context.pop()
+
+    def __push_context(self, context):
+        self.__context.append(context)
+
+    def __report_context(self):
+        if self.__context:
+            sys.stderr.write("Failed SAX XML comparison context:\n")
+            sys.stderr.write(u"  %s\n" % (u".".join(self.__context)))
