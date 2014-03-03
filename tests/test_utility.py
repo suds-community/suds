@@ -90,8 +90,8 @@ class CompareSAX:
         """Compares two SAX XML elements."""
         assert lhs.__class__ is suds.sax.element.Element
         assert rhs.__class__ is suds.sax.element.Element
-        assert lhs.namespace()[1] == rhs.namespace()[1]
         assert lhs.name == rhs.name
+        cls.__compare_element_namespace(lhs, rhs)
         cls.__compare_element_text(lhs, rhs)
         cls.__compare_child_elements(lhs, rhs)
 
@@ -119,6 +119,29 @@ class CompareSAX:
             cls.element2element(l, r)
 
     @classmethod
+    def __compare_element_namespace(cls, lhs, rhs):
+        """
+        Compares the given elements' namespaces.
+
+        Empty string & None XML element namespaces are considered the same to
+        compensate for the suds SAX document model representing the following
+        'default namespace' scenarios differently:
+          <a/>
+          <a xmlns=""/>
+          <ns:a xmlns:ns=""/>
+
+        """
+        #TODO: Make suds SAX element model consistently represent empty/missing
+        # namespaces and then update both this method and its docstring.
+        lhs_namespace = lhs.namespace()[1]
+        rhs_namespace = rhs.namespace()[1]
+        if lhs_namespace == "":
+            lhs_namespace = None
+        if rhs_namespace == "":
+            rhs_namespace = None
+        assert lhs_namespace == rhs_namespace
+
+    @classmethod
     def __compare_element_text(cls, lhs, rhs):
         """
         Compares the given elements' textual content.
@@ -131,6 +154,8 @@ class CompareSAX:
         represent a SOAP request.
 
         """
+        #TODO: Make suds SAX element model consistently represent empty/missing
+        # text content and then update both this method and its docstring.
         lhs_text = lhs.text
         rhs_text = rhs.text
         if lhs_text == "":
