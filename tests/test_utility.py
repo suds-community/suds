@@ -69,7 +69,7 @@ class CompareSAX:
         """Compares two SAX XML documents."""
         assert lhs.__class__ is suds.sax.document.Document
         assert rhs.__class__ is suds.sax.document.Document
-        return cls.__compare_child_elements(lhs, rhs)
+        cls.__compare_child_elements(lhs, rhs)
 
     @classmethod
     def document2element(cls, document, element):
@@ -82,25 +82,25 @@ class CompareSAX:
         """
         assert document.__class__ is suds.sax.document.Document
         assert element.__class__ is suds.sax.element.Element
-        return (len(document.getChildren()) == 1 and
-            cls.element2element(document.getChildren()[0], element))
+        assert len(document.getChildren()) == 1
+        cls.element2element(document.getChildren()[0], element)
 
     @classmethod
     def element2element(cls, lhs, rhs):
         """Compares two SAX XML elements."""
         assert lhs.__class__ is suds.sax.element.Element
         assert rhs.__class__ is suds.sax.element.Element
-        return (lhs.namespace()[1] == rhs.namespace()[1]
-            and lhs.name == rhs.name
-            and cls.__compare_element_text(lhs, rhs)
-            and cls.__compare_child_elements(lhs, rhs))
+        assert lhs.namespace()[1] == rhs.namespace()[1]
+        assert lhs.name == rhs.name
+        cls.__compare_element_text(lhs, rhs)
+        cls.__compare_child_elements(lhs, rhs)
 
     @classmethod
     def data2data(cls, lhs, rhs):
         """Compares two SAX XML documents given as strings or bytes objects."""
         lhs_document = cls.__parse_data(lhs)
         rhs_document = cls.__parse_data(rhs)
-        return cls.document2document(lhs_document, rhs_document)
+        cls.document2document(lhs_document, rhs_document)
 
     @classmethod
     def document2data(cls, lhs, rhs):
@@ -109,17 +109,14 @@ class CompareSAX:
         object.
 
         """
-        return cls.document2document(lhs, cls.__parse_data(rhs))
+        cls.document2document(lhs, cls.__parse_data(rhs))
 
     @classmethod
     def __compare_child_elements(cls, lhs, rhs):
         """Compares the given entities' child elements."""
-        if len(lhs.getChildren()) != len(rhs.getChildren()):
-            return False
+        assert len(lhs.getChildren()) == len(rhs.getChildren())
         for l, r in zip(lhs.getChildren(), rhs.getChildren()):
-            if not cls.element2element(l, r):
-                return False
-        return True
+            cls.element2element(l, r)
 
     @classmethod
     def __compare_element_text(cls, lhs, rhs):
@@ -140,7 +137,7 @@ class CompareSAX:
             lhs_text = None
         if rhs_text == "":
             rhs_text = None
-        return lhs_text == rhs_text
+        assert lhs_text == rhs_text
 
     @staticmethod
     def __parse_data(data):
