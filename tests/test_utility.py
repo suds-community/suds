@@ -135,9 +135,9 @@ class CompareSAX:
         # namespaces and then update both this method and its docstring.
         lhs_namespace = lhs.namespace()[1]
         rhs_namespace = rhs.namespace()[1]
-        if lhs_namespace == "":
+        if not lhs_namespace:
             lhs_namespace = None
-        if rhs_namespace == "":
+        if not rhs_namespace:
             rhs_namespace = None
         assert lhs_namespace == rhs_namespace
 
@@ -158,9 +158,9 @@ class CompareSAX:
         # text content and then update both this method and its docstring.
         lhs_text = lhs.text
         rhs_text = rhs.text
-        if lhs_text == "":
+        if not lhs_text:
             lhs_text = None
-        if rhs_text == "":
+        if not rhs_text:
             rhs_text = None
         assert lhs_text == rhs_text
 
