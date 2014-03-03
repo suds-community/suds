@@ -69,6 +69,22 @@ class CompareSAX:
     def __init__(self):
         self.__context = []
 
+    @staticmethod
+    def assertions_enabled():
+        """
+        Returns whether Python assertions have been enabled in this module.
+
+        CompareSAX class uses Python assertions to report failed comparison
+        results so this information in order to know whether related tests
+        should be disabled.
+
+        """
+        try:
+            assert False
+        except AssertionError:
+            return True
+        return False
+
     @classmethod
     def document2document(cls, lhs, rhs):
         """Compares two SAX XML documents."""
@@ -276,3 +292,226 @@ class CompareSAX:
         if self.__context:
             sys.stderr.write("Failed SAX XML comparison context:\n")
             sys.stderr.write(u"  %s\n" % (u".".join(self.__context)))
+
+
+import suds
+
+import pytest
+
+import xml.sax
+
+
+# CompareSAX class uses Python assertions to report failed comparison results
+# so we need to skip the tests in this module if Python assertions have been
+# disabled in the CompareSAX implementation module.
+skip_test_if_CompareSAX_assertions_disabled = pytest.mark.skipif(
+    not CompareSAX.assertions_enabled(),
+    reason="CompareSAX assertions disabled")
+
+
+@skip_test_if_CompareSAX_assertions_disabled
+@pytest.mark.parametrize("data", (
+    "",
+    "<bad1/><bad2/>",
+    '<bad a="1" a="1"/>',
+    "<bad><bad>xml</document></bad>"))
+def test_failed_parsing(data, capsys):
+    pytest.raises(xml.sax.SAXParseException, CompareSAX.data2data, data, data)
+    _assert_no_output(capsys)
+
+
+class TestMatched:
+    """Successful CompareSAX matching tests."""
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_empty_document(self, capsys):
+        a = suds.sax.document.Document()
+        b = suds.sax.document.Document()
+        CompareSAX.document2document(a, b)
+        _assert_no_output(capsys)
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    @pytest.mark.parametrize(("data1", "data2"), (
+        # Simple matches.
+        ('<a><ns:b xmlns:ns="x"/></a>', '<a><ns:b xmlns:ns="x"/></a>'),
+        ('<a><b xmlns="x"/></a>', '<a><b xmlns="x"/></a>'),
+        ('<a xmlns="x"><b/></a>', '<a xmlns="x"><b/></a>'),
+        # Extra namespace declarations.
+        ('<ns1:b xmlns:ns1="two"/>', '<ns2:b xmlns="one" xmlns:ns2="two"/>'),
+        ('<ns1:b xmlns:ns1="2"/>', '<ns2:b xmlns:ns3="1" xmlns:ns2="2"/>'),
+        ('<b xmlns="1"/>', '<ns1:b xmlns="0" xmlns:ns1="1" xmlns:ns2="2"/>'),
+        # Mismatched namespace prefixes.
+        ('<a xmlns="one"/>', '<ns:a xmlns:ns="one"/>'),
+        ('<ns1:b xmlns:ns1="two"/>', '<ns2:b xmlns:ns2="two"/>'),
+        # Numeric unicode character references.
+        (u"<a>☆</a>", "<a>&#9734;</a>")))
+    def test_data2data(self, data1, data2, capsys):
+        CompareSAX.data2data(data1, data2)
+        _assert_no_output(capsys)
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    @pytest.mark.parametrize("type1", (suds.byte_str, unicode))
+    @pytest.mark.parametrize("type2", (suds.byte_str, unicode))
+    def test_string_input_types(self, type1, type2, capsys):
+        xml = "<a/>"
+        CompareSAX.data2data(type1(xml), type2(xml))
+        _assert_no_output(capsys)
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_xml_encoding(self, capsys):
+        """Test that the encoding listed in the XML declaration is honored."""
+        xml_format = u'<?xml version="1.0" encoding="%s"?><a>Ø</a>'
+        data1 = (xml_format % ("UTF-8",)).encode('utf-8')
+        data2 = (xml_format % ("latin1",)).encode('latin1')
+        CompareSAX.data2data(data1, data2)
+        _assert_no_output(capsys)
+
+
+class TestMismatched:
+    """Failed CompareSAX matching tests."""
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    @pytest.mark.parametrize(("data1", "data2", "expected_context"), (
+        # Different element namespaces.
+        ("<a/>", '<a xmlns="x"/>', u"data2data.<a>.namespace"),
+        ('<a xmlns="1"/>', '<a xmlns="2"/>', u"data2data.<a>.namespace"),
+        ('<r><a xmlns="1"/></r>', '<r><a xmlns="2"/></r>',
+            u"data2data.<r>.<a>.namespace"),
+        ('<r><tag><a xmlns="1"/></tag><y/></r>',
+            '<r><tag><a xmlns="2"/></tag><y/></r>',
+            u"data2data.<r>.<tag(1/2)>.<a>.namespace"),
+        # Different textual content in text only nodes.
+        ("<a>one</a>", "<a>two</a>", u"data2data.<a>.text"),
+        ("<a>x</a>", "<a>x </a>", u"data2data.<a>.text"),
+        ("<a>x</a>", "<a>x  </a>", u"data2data.<a>.text"),
+        ("<a>x </a>", "<a>x  </a>", u"data2data.<a>.text"),
+        ("<a> x</a>", "<a>x</a>", u"data2data.<a>.text"),
+        ("<a>  x</a>", "<a>x</a>", u"data2data.<a>.text"),
+        ("<a>  x</a>", "<a> x</a>", u"data2data.<a>.text"),
+        ("<a><b><c>x</c><c2/></b></a>", "<a><b><c>X</c><c2/></b></a>",
+            u"data2data.<a>.<b>.<c(1/2)>.text"),
+        ("<a><b><c>x</c><d>y</d></b></a>", "<a><b><c>x</c><d>Y</d></b></a>",
+            u"data2data.<a>.<b>.<d(2/2)>.text"),
+        # Different textual content in mixed content nodes with children.
+        ("<a>42<b/><b/>42</a>", "<a>42<b/> <b/>42</a>", u"data2data.<a>.text"),
+        # Differently named elements.
+        ("<a/>", "<b/>", u"data2data.<a/b>"),
+        ("<a><b/></a>", "<a><c/></a>", u"data2data.<a>.<b/c>"),
+        ("<a><b/><x/></a>", "<a><c/><x/></a>", u"data2data.<a>.<b/c(1/2)>"),
+        ("<a><x/><b/></a>", "<a><x/><c/></a>", u"data2data.<a>.<b/c(2/2)>"),
+        ("<a><b><c/></b></a>", "<a><b><d/></b></a>",
+            u"data2data.<a>.<b>.<c/d>"),
+        ("<a><b><y1/><y2/><c/></b><x/></a>",
+            "<a><b><y1/><y2/><d/></b><x/></a>",
+            u"data2data.<a>.<b(1/2)>.<c/d(3/3)>"),
+        # Extra/missing non-root element.
+        ("<a><b/></a>", "<a/>", u"data2data.<a>"),
+        ("<a/>", "<a><b/></a>", u"data2data.<a>"),
+        ("<a><x/><b/></a>", "<a><b/></a>", u"data2data.<a>"),
+        ("<a><b/><x/></a>", "<a><b/></a>", u"data2data.<a>"),
+        ("<a><b/></a>", "<a><x/><b/></a>", u"data2data.<a>"),
+        ("<a><b/></a>", "<a><b/><x/></a>", u"data2data.<a>"),
+        # Multiple differences.
+        ("<a><b/></a>", "<c><d/></c>", u"data2data.<a/c>"),
+        ("<a><b/></a>", '<a xmlns="o"><c/></a>', u"data2data.<a>.namespace"),
+        ("<r><a><b/></a></r>", "<r><c><d/></c></r>", u"data2data.<r>.<a/c>"),
+        ("<r><a><b/></a></r>", '<r><a xmlns="o"><c/></a></r>',
+            u"data2data.<r>.<a>.namespace")))
+    def test_data2data(self, data1, data2, expected_context, capsys):
+        pytest.raises(AssertionError, CompareSAX.data2data, data1, data2)
+        _assert_context_output(capsys, expected_context)
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_document2document_context(self, capsys):
+        a = suds.sax.document.Document()
+        b = suds.sax.parser.Parser().parse(string=suds.byte_str("<a/>"))
+        pytest.raises(AssertionError, CompareSAX.document2document, a, b)
+        _assert_context_output(capsys, "document2document")
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_document2element_context(self, capsys):
+        a = suds.sax.parser.Parser().parse(string=suds.byte_str("<xx>1</xx>"))
+        b = suds.sax.parser.Parser().parse(string=suds.byte_str("<xx>2</xx>"))
+        pytest.raises(AssertionError, CompareSAX.document2element, a, b.root())
+        _assert_context_output(capsys, "document2element.<xx>.text")
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_element2element_context(self, capsys):
+        Parser = suds.sax.parser.Parser
+        e1 = Parser().parse(string=suds.byte_str("<x/>")).root()
+        e2 = Parser().parse(string=suds.byte_str("<y/>")).root()
+        pytest.raises(AssertionError, CompareSAX.element2element, e1, e2)
+        _assert_context_output(capsys, "element2element.<x/y>")
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_element2element_context_invalid_name__left(self, capsys):
+        Parser = suds.sax.parser.Parser
+        e = Parser().parse(string=suds.byte_str("<x/>")).root()
+        e_invalid = object()
+        pytest.raises(AssertionError, CompareSAX.element2element, e_invalid, e)
+        _assert_context_output(capsys, "element2element.<???/x>")
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_element2element_context_invalid_name__right(self, capsys):
+        Parser = suds.sax.parser.Parser
+        e = Parser().parse(string=suds.byte_str("<y/>")).root()
+        e_invalid = object()
+        pytest.raises(AssertionError, CompareSAX.element2element, e, e_invalid)
+        _assert_context_output(capsys, "element2element.<y/???>")
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    def test_empty_vs_non_empty_document(self, capsys):
+        document = suds.sax.document.Document()
+        data = "<a/>"
+        pytest.raises(AssertionError, CompareSAX.document2data, document, data)
+        _assert_context_output(capsys, "document2data")
+
+
+#TODO: TestSAXModelFeatures tests should be removed once their respective SAX
+# document model features get tested by SAX document model specific unit tests.
+#TODO: Additional missing suds SAX document model unit tests:
+#  * SAX parser fails on documents with multiple root elements.
+#  * SAX document may contain at most one element, accessible as root().
+#  * SAX document append() overwrites the root element silently.
+class TestSAXModelFeatures:
+    """SAX document model feature testing using the CompareSAX interface."""
+
+    @skip_test_if_CompareSAX_assertions_disabled
+    @pytest.mark.parametrize(("data1", "data2"), (
+        # Differently placed default namespace declaration.
+        ('<ns:a xmlns:ns="1" xmlns="2"><b/></ns:a>',
+        '<ns:a xmlns:ns="1"><b xmlns="2"/></ns:a>'),
+        # Differently placed namespace prefix declaration.
+        ('<a xmlns:ns="1"><ns:b/></a>', '<a><ns:b xmlns:ns="1"/></a>'),
+        # Element's textual content merged.
+        ("<a>111<b/>222</a>", "<a>111222<b/></a>"),
+        ("<a>111<b/>222</a>", "<a><b/>111222</a>"),
+        ("<a>111<b/>222</a>", "<a>11<b/>1222</a>"),
+        # Explicit "" namespace == no prefix or default namespace.
+        ('<a xmlns=""/>', "<a/>"),
+        ('<ns:a xmlns:ns=""/>', "<a/>"),
+        # Extra leading/trailing textual whitespace trimmed in mixed content
+        # elements with more than one child element.
+        ("<a>   \n\n <b/> \t\t\n\n</a>", "<a><b/></a>"),
+        ("<a>   \nxxx\n <b/> \t\t\n\n</a>", "<a>xxx<b/></a>")))
+    def test_data2data(self, data1, data2, capsys):
+        CompareSAX.data2data(data1, data2)
+        _assert_no_output(capsys)
+
+
+def _assert_context_output(capsys, context):
+    """
+    Test utility asserting an expected captured stderr context output and no
+    captured stdout output.
+
+    """
+    out, err = capsys.readouterr()
+    assert not out
+    assert err == u"Failed SAX XML comparison context:\n  %s\n" % (context,)
+
+
+def _assert_no_output(capsys):
+    """Test utility asserting there was no captured stdout or stderr output."""
+    out, err = capsys.readouterr()
+    assert not out
+    assert not err
