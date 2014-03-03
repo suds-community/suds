@@ -729,7 +729,7 @@ def test_translation(monkeypatch):
     request = client.service.f(55)
     assert schema_object_in._mock_translate_log == [(55, False)]
     assert schema_object_out._mock_translate_log == []
-    assert CompareSAX.data2data(request.envelope, """\
+    CompareSAX.data2data(request.envelope, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>

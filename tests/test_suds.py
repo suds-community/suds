@@ -634,7 +634,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Input #1.
     request = _construct_SOAP_request(client, 'f', a1="Wackadoodle")
-    assert CompareSAX.document2data(request, """\
+    CompareSAX.document2data(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
@@ -649,7 +649,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     param = client.factory.create("Choice.sequence")
     param.e2 = "Wackadoodle"
     request = _construct_SOAP_request(client, 'f', sequence=param)
-    assert CompareSAX.document2data(request, """\
+    CompareSAX.document2data(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
@@ -734,7 +734,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     # Construct a SOAP request containing our input parameters.
     request = _construct_SOAP_request(client, 'f', param)
-    assert CompareSAX.document2data(request, """\
+    CompareSAX.document2data(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
    <Header/>
