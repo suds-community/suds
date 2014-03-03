@@ -474,14 +474,14 @@ class TestDocumentCache:
         assert cache.get("unga1") is None
         monkeypatch.undo()
         assert mock_open.counter == 1
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
         self.compare_document_to_content(cache.get("unga1"), content1)
 
         mock_open.apply(monkeypatch)
         assert cache.get("unga2") is None
         monkeypatch.undo()
         assert mock_open.counter == 2
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
         self.compare_document_to_content(cache.get("unga1"), content1)
         assert cache.get("unga2") is None
 
@@ -492,7 +492,7 @@ class TestDocumentCache:
         assert cache.get("unga1") is None
         monkeypatch.undo()
         assert mock_open.counter == 3
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
 
         self.compare_document_to_content(cache.get("unga1"), content1)
         self.compare_document_to_content(cache.get("unga2"), content2)
@@ -524,7 +524,7 @@ class TestDocumentCache:
         monkeypatch.undo()
         assert mock.counter == 1
         assert extra_checks[0](mock)
-        assert _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder)
 
         mock.reset()
         assert cache.get("unga1") is None
@@ -539,7 +539,7 @@ class TestDocumentCache:
         monkeypatch.undo()
         assert mock.counter == 1
         assert extra_checks[2](mock)
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
 
         mock.reset()
         assert cache.get("unga1") is None
@@ -628,36 +628,36 @@ class TestFileCache:
         cache = suds.cache.FileCache(cache_folder)
         cache.put("unga1", value_empty)
         assert cache.get("unga1") == value_empty
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
 
     def test_cached_content_unicode(self, tmpdir):
         cache_folder = tmpdir.strpath
         cache = suds.cache.FileCache(cache_folder)
         cache.put("unga1", value_unicode)
         assert cache.get("unga1") == value_unicode
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
 
     def test_clear(self, tmpdir):
         cache_folder1 = tmpdir.join("fungus").strpath
         cache1 = suds.cache.FileCache(cache_folder1)
         cache1.put("unga1", value_p1)
-        assert not _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
         cache1.put("unga2", value_p2)
-        assert not _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
         assert cache1.get("unga1") == value_p1
         assert cache1.get("unga2") == value_p2
-        assert not _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
         cache1.clear()
-        assert _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1)
         assert cache1.get("unga1") is None
         assert cache1.get("unga2") is None
-        assert _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1)
         cache1.put("unga1", value_p11)
         cache1.put("unga2", value_p2)
-        assert not _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
         assert cache1.get("unga1") == value_p11
         assert cache1.get("unga2") == value_p2
-        assert not _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
 
         cache_folder2 = tmpdir.join("broccoli").strpath
         cache2 = suds.cache.FileCache(cache_folder2)
@@ -665,8 +665,8 @@ class TestFileCache:
         assert cache2.get("unga2") == value_f2
         assert cache1.get("unga2") == value_p2
         cache2.clear()
-        assert not _is_empty_cache_folder(cache_folder1)
-        assert _is_empty_cache_folder(cache_folder2)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
+        _assert_empty_cache_folder(cache_folder2)
         assert cache2.get("unga2") is None
         assert cache1.get("unga1") == value_p11
         assert cache1.get("unga2") == value_p2
@@ -695,10 +695,10 @@ class TestFileCache:
     def test_get_put(self, tmpdir):
         cache_folder1 = tmpdir.join("firefly").strpath
         cache1 = suds.cache.FileCache(cache_folder1)
-        assert _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1)
         assert cache1.get("unga1") is None
         cache1.put("unga1", value_p1)
-        assert not _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
         assert cache1.get("unga1") == value_p1
         assert cache1.get("unga2") is None
         cache1.put("unga1", value_p11)
@@ -710,10 +710,10 @@ class TestFileCache:
 
         cache_folder2 = tmpdir.join("semper fi").strpath
         cache2 = suds.cache.FileCache(cache_folder2)
-        assert _is_empty_cache_folder(cache_folder2)
+        _assert_empty_cache_folder(cache_folder2)
         assert cache2.get("unga2") is None
         cache2.put("unga2", value_f2)
-        assert not _is_empty_cache_folder(cache_folder2)
+        _assert_empty_cache_folder(cache_folder2, expected=False)
         assert cache2.get("unga2") == value_f2
         assert cache2.get("unga3") is None
         cache2.put("unga2", value_f22)
@@ -723,8 +723,8 @@ class TestFileCache:
         assert cache2.get("unga2") == value_f22
         assert cache2.get("unga3") == value_f3
 
-        assert not _is_empty_cache_folder(cache_folder1)
-        assert not _is_empty_cache_folder(cache_folder2)
+        _assert_empty_cache_folder(cache_folder1, expected=False)
+        _assert_empty_cache_folder(cache_folder2, expected=False)
         assert cache1.get("unga1") == value_p11
         assert cache1.get("unga2") == value_p2
         assert cache1.get("unga3") is None
@@ -797,12 +797,12 @@ class TestFileCache:
         cache_folder1 = tmpdir.join("flip-flop1").strpath
         assert not os.path.isdir(cache_folder1)
         assert FileCache(location=cache_folder1).location == cache_folder1
-        assert _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1)
 
         cache_folder2 = tmpdir.join("flip-flop2").strpath
         assert not os.path.isdir(cache_folder2)
         assert FileCache(cache_folder2).location == cache_folder2
-        assert _is_empty_cache_folder(cache_folder2)
+        _assert_empty_cache_folder(cache_folder2)
 
     def test_purge(self, tmpdir):
         cache_folder1 = tmpdir.join("flamenco").strpath
@@ -810,7 +810,7 @@ class TestFileCache:
         cache1.put("unga1", value_p1)
         assert cache1.get("unga1") == value_p1
         cache1.purge("unga1")
-        assert _is_empty_cache_folder(cache_folder1)
+        _assert_empty_cache_folder(cache_folder1)
         assert cache1.get("unga1") is None
         cache1.put("unga1", value_p11)
         cache1.put("unga2", value_p2)
@@ -825,7 +825,7 @@ class TestFileCache:
         cache2 = suds.cache.FileCache(cache_folder2)
         cache2.put("unga2", value_f2)
         cache2.purge("unga2")
-        assert _is_empty_cache_folder(cache_folder2)
+        _assert_empty_cache_folder(cache_folder2)
         assert cache1.get("unga1") == value_p111
         assert cache1.get("unga2") == value_p2
         assert cache2.get("unga2") is None
@@ -833,7 +833,7 @@ class TestFileCache:
     def test_reused_cache_folder(self, tmpdir):
         cache_folder = tmpdir.strpath
         cache1 = suds.cache.FileCache(cache_folder)
-        assert _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder)
         assert cache1.get("unga1") is None
         cache1.put("unga1", value_p1)
         assert cache1.get("unga1") == value_p1
@@ -893,7 +893,7 @@ class TestFileCache:
         assert cache.get("unga1") == value_p1
 
         cache2 = suds.cache.FileCache(cache_folder)
-        assert _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder)
         assert cache.get("unga1") is None
         assert cache2.get("unga1") is None
         assert version_file.read() == suds.__version__
@@ -905,7 +905,7 @@ class TestFileCache:
         assert cache.get("unga2") == value_p22
 
         cache3 = suds.cache.FileCache(cache_folder)
-        assert _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder)
         assert cache.get("unga1") is None
         assert cache.get("unga2") is None
         assert cache2.get("unga1") is None
@@ -962,14 +962,14 @@ class TestObjectCache:
         assert cache.get("unga1") is None
         monkeypatch.undo()
         assert mock_open.counter == 1
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
         assert cache.get("unga1").x == 1
 
         mock_open.apply(monkeypatch)
         assert cache.get("unga2") is None
         monkeypatch.undo()
         assert mock_open.counter == 2
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
         assert cache.get("unga1").x == 1
         assert cache.get("unga2") is None
 
@@ -980,7 +980,7 @@ class TestObjectCache:
         assert cache.get("unga1") is None
         monkeypatch.undo()
         assert mock_open.counter == 3
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
 
         assert cache.get("unga1").x == 1
         assert cache.get("unga2").x == 2
@@ -1010,7 +1010,7 @@ class TestObjectCache:
         monkeypatch.undo()
         assert mock.counter == 1
         assert extra_checks[0](mock)
-        assert _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder)
 
         mock.reset()
         assert cache.get("unga1") is None
@@ -1025,7 +1025,7 @@ class TestObjectCache:
         monkeypatch.undo()
         assert mock.counter == 1
         assert extra_checks[2](mock)
-        assert not _is_empty_cache_folder(cache_folder)
+        _assert_empty_cache_folder(cache_folder, expected=False)
 
         mock.reset()
         assert cache.get("unga1") is None
@@ -1044,12 +1044,29 @@ class TestObjectCache:
             current_time, expect_remove)
 
 
-def _is_empty_cache_folder(folder):
+def _assert_empty_cache_folder(folder, expected=True):
+    """Test utility asserting that a cache folder is or is not empty."""
+    if not _is_assert_enabled():
+        return
     assert os.path.isdir(folder)
-    def walkError(error):
-        pytest.fail("Error attempting to walk through cache folder contents.")
-    count = 0
-    for root, folders, files in os.walk(folder, onerror=walkError):
-        assert root == folder
-        return len(folders) == 0 and len(files) == 1 and files[0] == 'version'
+    def walk_error(error):
+        pytest.fail("Error walking through cache folder content.")
+    root, folders, files = os.walk(folder, onerror=walk_error).next()
+    assert root == folder
+    empty = len(folders) == 0 and len(files) == 1 and files[0] == 'version'
+    if expected:
+        assert len(folders) == 0
+        assert len(files) == 1
+        assert files[0] == 'version'
+        assert empty, "bad test code"
+    else:
+        assert not empty, "unexpected empty cache folder"
+
+
+def _is_assert_enabled():
+    """Return whether Python assertions have been enabled in this module."""
+    try:
+        assert False
+    except AssertionError:
+        return True
     return False
