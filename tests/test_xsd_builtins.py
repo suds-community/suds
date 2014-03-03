@@ -32,7 +32,7 @@ import suds.sax.date
 from suds.xsd.sxbuiltin import (Factory, XAny, XBoolean, XBuiltin, XDate,
     XDateTime, XDecimal, XFloat, XInteger, XLong, XString, XTime)
 import tests
-from tests.test_utility import CompareSAX
+from tests.compare_sax import CompareSAX
 
 import pytest
 
