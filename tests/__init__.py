@@ -18,6 +18,9 @@
 import suds.client
 import suds.store
 
+import subprocess
+import sys
+
 
 def client_from_wsdl(wsdl_content, *args, **kwargs):
     """
@@ -50,6 +53,47 @@ def client_from_wsdl(wsdl_content, *args, **kwargs):
     store.update({test_file_id: wsdl_content})
     kwargs.update(cache=None)
     return suds.client.Client("suds://" + test_file_id, *args, **kwargs)
+
+
+def run_test_process(script):
+    """
+    Runs the given Python test script as a separate process.
+
+    Expects the script to return an exit code 0 and output nothing on either
+    stdout or stderr output streams.
+
+    """
+    popen = subprocess.Popen([sys.executable], stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=script.dirname,
+        universal_newlines=True)
+    out, err = popen.communicate("""\
+import sys
+sys.path = %(sys.path)s
+import suds
+if suds.__version__ != %(suds.__version__)r:
+    print("Unexpected suds version imported - '%%s'." %% (suds.__version__))
+    sys.exit(-2)
+
+if sys.version_info >= (3, 0):
+    def exec_file(x):
+        e = getattr(__builtins__, "exec")
+        return e(open(x).read(), globals(), globals())
+else:
+    exec_file = execfile
+exec_file(%(script)r)
+""" % {"suds.__version__": suds.__version__,
+    "script": script.basename,
+    "sys.path": sys.path})
+    if popen.returncode != 0 or err or out:
+        if popen.returncode != 0:
+            print("Test process exit code: %d" % (popen.returncode,))
+        if out:
+            print("Test process stdout:")
+            print(out)
+        if err:
+            print("Test process stderr:")
+            print(err)
+        pytest.fail("Test subprocess failed.")
 
 
 def run_using_pytest(caller_globals):
