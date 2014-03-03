@@ -36,7 +36,7 @@ if __name__ == "__main__":
 import suds
 import suds.store
 import tests
-from tests.test_utility import CompareSAX
+from tests.compare_sax import CompareSAX
 
 import pytest
 
