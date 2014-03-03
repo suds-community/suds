@@ -1137,8 +1137,30 @@ PRIORITIZED:
 (+) * (Jurko) Fix Exception message used when attempting to construct a
 (+)   suds.sax.element.Element with a non-Element parent. It seems like someone
 (+)   forgot to apply % formatting there.
-(+) * (Jurko) Extract XML comparison test utilities into a separate
-(+)   tests/test_utility.py module.
+(+) * (Jurko) Extract existing XML comparison test utilities into a separate
+(+)   tests/test_utility.py module (CompareSAX class).
+
+(03.03.2014.)
+
+(+) * (Jurko) CompareSAX test utility improvements.
+(+)     * Use pytest assertions to report errors.
+(+)     * Add tests.
+(+)     * Extract tests into a separate module.
+
+    * (Jurko) Add an XML comparison test utility supporting raw XML data
+      comparison with the following features.
+        * Important comparison features.
+            * How textual data is split between child elements.
+            * Child element ordering.
+            * Element/attribute namespace + name.
+            * Non-namespace declaration related attribute ordering.
+        * Unimportant comparison features.
+            * Leading/trailing textual data whitespace per line for mixed
+              content nodes containing at least one child element.
+            * Element/attribute namespace prefix.
+            * Namespace declaration related attribute ordering.
+            * Namespace declarations (no prefix).
+            * Namespace prefix declarations.
 
     * (Jurko) Fix the problem with different processes using different cache ids
       for matching documents, causing them not to be able to reuse each other's
@@ -1761,3 +1783,34 @@ NON PRIORITIZED:
                   be parsed so that <a> element's textual data is: '42   42'
                   where the whitespace outside the '42' markers is trimmed but
                   the whitespace between them is preserved.
+
+    * Improve the XML comparison test utilities.
+        * Add test utility tests.
+        * Make SAX comparison compare XML attributes - order is irrelevant.
+        * Support for comparing two XML data strings in more detail, with
+          explicitly enabling/disabling which differences to consider important.
+            * Some ideas on what might or might not be considered important.
+                * Leading/trailing textual data whitespace.
+                    * Per element.
+                    * Per block between child elements.
+                    * Per input line.
+                    * All whitespace blocks considered equivalent.
+                    * Possibly consider leading/trailing textual data whitespace
+                      unimportant only inside mixed content nodes containing at
+                      least one child element.
+                * How a mixed content node's textual content is split between
+                  its child elements.
+                * Attribute declaration order.
+                * Child element ordering.
+                * Namespace declarations (no prefix).
+                * Namespace prefix declarations.
+                * External references - to parse them or not.
+                * Extra elements on either side.
+                * XML node namespace prefixes.
+                * XML node namespaces.
+                * Input code-page.
+                * Extra data.
+                     * Before XML.
+                     * Surrounding top level XML nodes.
+                * Each feature importance might be enabled/disabled globally or
+                  for a specific XML part only.
