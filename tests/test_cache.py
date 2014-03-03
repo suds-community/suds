@@ -30,13 +30,13 @@ if __name__ == "__main__":
 import suds
 import suds.cache
 import suds.sax.parser
+import tests
 
 import pytest
 
 import datetime
 import os
 import os.path
-import subprocess
 import sys
 
 
@@ -221,41 +221,6 @@ def test_Cache_methods_abstract(monkeypatch, method_name, params):
 class TestDefaultFileCacheLocation:
     """Default FileCache cache location handling tests."""
 
-    @staticmethod
-    def run_test_process(script):
-        """Runs the given Python test script as a separate process."""
-        popen = subprocess.Popen([sys.executable], stdin=subprocess.PIPE,
-            stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=script.dirname,
-            universal_newlines=True)
-        out, err = popen.communicate("""\
-import sys
-sys.path = %(sys.path)s
-import suds
-if suds.__version__ != %(suds.__version__)r:
-    print("Unexpected suds version imported - '%%s'." %% (suds.__version__))
-    sys.exit(-2)
-
-if sys.version_info >= (3, 0):
-    def exec_file(x):
-        e = getattr(__builtins__, "exec")
-        return e(open(x).read(), globals(), globals())
-else:
-    exec_file = execfile
-exec_file(%(script)r)
-""" % {"suds.__version__": suds.__version__,
-    "script": script.basename,
-    "sys.path": sys.path})
-        if popen.returncode != 0 or err or out:
-            if popen.returncode != 0:
-                print("Test process exit code: %d" % (popen.returncode,))
-            if out:
-                print("Test process stdout:")
-                print(out)
-            if err:
-                print("Test process stderr:")
-                print(err)
-            pytest.fail("Test subprocess failed.")
-
     @pytest.mark.parametrize("cache_class", (
         suds.cache.DocumentCache,
         suds.cache.FileCache,
@@ -348,7 +313,7 @@ check_cache_folder(True, 1, "final caches with default location")
     "fake_cache_folder": fake_cache_folder})
 
         assert not os.path.exists(cache_folder)
-        self.run_test_process(test_file)
+        tests.run_test_process(test_file)
 
     @pytest.mark.parametrize("removal_enabled", (True, False))
     def test_remove_on_exit(self, tmpdir, removal_enabled):
@@ -398,7 +363,7 @@ if not os.path.isdir(cache_folder):
 """ % {"cache_folder": cache_folder, "removal_enabled": removal_enabled})
 
         assert not os.path.exists(cache_folder)
-        self.run_test_process(test_file)
+        tests.run_test_process(test_file)
         if removal_enabled:
             assert not os.path.exists(cache_folder)
         else:
