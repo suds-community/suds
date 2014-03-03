@@ -114,6 +114,18 @@ version 0.7 (development)
       ``XDecimal`` implementation using ``suds.xsd.sxbuiltin.Factory.maptag()``
       if they want to use more specialized ``decimal`` value handling.
 
+* Updated how ``suds`` constructs its cached WSDL & XML identifiers to allow
+  cached data reuse between different processes with Python's hash randomization
+  feature enabled.
+
+  * Previously constructed using the built-in Python ``hash()`` function, while
+    now it gets constructed using ``md5`` hash.
+  * Python's hash randomization (implemented since Python 2.6.8, enabled by
+    default since Python 3.3) was causing different processes to mangle their
+    cached data names differently.
+  * Many thanks to Eugene Yakubovich for reporting the issue as well as
+    providing the initial fix.
+
 * Fixed places in code where ``suds`` could eat up & silently ignore internal
   Python exceptions like SystemExit or KeyboardInterrupt.
 * Fixed the exception message used when attempting to construct a

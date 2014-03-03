@@ -24,6 +24,13 @@ import suds.plugin
 import suds.sax.parser
 import suds.transport
 
+try:
+    from hashlib import md5
+except ImportError:
+    # 'hashlib' package added in Python 2.5 so use the now deprecated/removed
+    # 'md5' package in older Python versions.
+    from md5 import md5
+
 
 class Reader(object):
     """
@@ -51,8 +58,8 @@ class Reader(object):
         @rtype: str
 
         """
-        h = abs(hash(name))
-        return "%s-%s" % (h, x)
+        h = md5(name.encode()).hexdigest()
+        return '%s-%s' % (h, x)
 
 
 class DefinitionsReader(Reader):
