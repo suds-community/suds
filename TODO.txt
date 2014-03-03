@@ -1146,6 +1146,18 @@ PRIORITIZED:
 (+)     * Use pytest assertions to report errors.
 (+)     * Add tests.
 (+)     * Extract tests into a separate module.
+(+) * (Jurko) Fix the problem with different processes using different cache ids
+(+)   for matching documents, causing them not to be able to reuse each other's
+(+)   cache entries. Original suds implementation used the built-in hash
+(+)   function which should be replaced with a md5 hash.
+(+)     * On Python 3.3 and above hash function results are seeded with a random
+(+)       value for each process.
+(+)     * 32-bit & 64-bit Python implementations use different hash
+(+)       implementations giving different results.
+(+)     * Update readme.
+(+)         * Problem reported by Eugene Yakubovich at bitbucket.
+(+)     * See project related comments at: 'http://bitbucket.org/eyakubovich/
+(+)       suds/commits/fec6efd9c10b48114bbd9c06847a264453a51620'.
 
     * (Jurko) Add an XML comparison test utility supporting raw XML data
       comparison with the following features.
@@ -1161,19 +1173,6 @@ PRIORITIZED:
             * Namespace declaration related attribute ordering.
             * Namespace declarations (no prefix).
             * Namespace prefix declarations.
-
-    * (Jurko) Fix the problem with different processes using different cache ids
-      for matching documents, causing them not to be able to reuse each other's
-      cache entries. Original suds implementation used the built-in hash
-      function which should be replaced with a md5 hash.
-        * On Python 3.3 and above hash function results are seeded with a random
-          value for each process.
-        * 32-bit & 64-bit Python implementations use different hash
-          implementations giving different results.
-        * Update readme.
-            * Problem reported by Eugene Yakubovich at bitbucket.
-        * See project related comments at: 'http://bitbucket.org/eyakubovich/
-          suds/commits/fec6efd9c10b48114bbd9c06847a264453a51620'.
 
     * (Jurko) Add tests for the functionality potentially affected by a planned
       _SoapClient/_SimClient refactoring.
