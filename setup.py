@@ -1,19 +1,18 @@
 #!/usr/bin/python
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 # Automatically download & install an appropriate setuptools version if needed.
@@ -36,7 +35,7 @@ def read_python_code(filename):
         source = file.read()
     finally:
         file.close()
-    #   Python 2.6 and below did not support passing strings to exec() &
+    # Python 2.6 and below did not support passing strings to exec() &
     # compile() functions containing line separators other than '\n'. To
     # support them we need to manually make sure such line endings get
     # converted even on platforms where this is not handled by native text file
@@ -94,15 +93,15 @@ if sys.version_info >= (2, 5):
 if sys.version_info >= (3, 0):
     extra_setup_params["use_2to3"] = True
 
-    #   Teach Python's urllib lib2to3 fixer that the old urllib2.__version__
-    # data member is now stored in the urllib.request module.
+    # Teach Python's urllib lib2to3 fixer that the old urllib2.__version__ data
+    # member is now stored in the urllib.request module.
     import lib2to3.fixes.fix_urllib
     for x in lib2to3.fixes.fix_urllib.MAPPING["urllib2"]:
         if x[0] == "urllib.request":
             x[1].append("__version__")
             break;
 
-#   Wrap long_description at 72 characters since PKG-INFO package distribution
+# Wrap long_description at 72 characters since PKG-INFO package distribution
 # metadata file stores this text with an 8 space indentation.
 long_description = """
 ---------------------------------------
@@ -187,7 +186,7 @@ setup(
     maintainer="Jurko Gospodnetic",
     maintainer_email="jurko.gospodnetic@pke.hr",
 
-    #   See PEP-301 for the classifier specification. For a complete list of
+    # See PEP-301 for the classifier specification. For a complete list of
     # available classifiers see
     # 'http://pypi.python.org/pypi?%3Aaction=list_classifiers'.
     classifiers=["Development Status :: 5 - Production/Stable",
@@ -209,7 +208,7 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Topic :: Internet"],
 
-    #   PEP-314 states that if possible license & platform should be specified
+    # PEP-314 states that if possible license & platform should be specified
     # using 'classifiers'.
     license="(specified using classifiers)",
     platforms=["(specified using classifiers)"],
