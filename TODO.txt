@@ -8,12 +8,12 @@ PRIORITIZED:
 (+)     * Document how to access this forked project's development sources &
 (+)       released files.
 (+)         * Jurko's Mercurial repository hosted at BitBucket and accessible
-(+)           from 'https://bitbucket.org/jurko/suds'.
+(+)           from 'http://bitbucket.org/jurko/suds'.
 (+)             * Already documented in README.
 (+)             * Add more details to HACKING.
 (+)         * Suds library Python 3 patches hosted in a Mercurial patch queue
 (+)           repository at BitBucket and accessible from
-(+)           'https://bitbucket.org/bernh/suds-python-3-patches'.
+(+)           'http://bitbucket.org/bernh/suds-python-3-patches'.
 (+)             * Already documented in HACKING.
 (+) * (Jurko) Minor stylistic changes & typo corrections.
 (+)     * Code.
@@ -309,7 +309,7 @@ PRIORITIZED:
 (01.03.2013.)
 
 (+) * (Jurko) Sync with external related repositories.
-(+)     * 'https://bitbucket.org/palday/suds'.
+(+)     * 'http://bitbucket.org/palday/suds'.
 
 (27.03.2013.)
 
@@ -368,7 +368,7 @@ PRIORITIZED:
 (29.03.2013.)
 
 (+) * (Jurko) Sync with external related repositories.
-(+)     * 'https://bitbucket.org/blarghmatey/suds-blarghmatey'.
+(+)     * 'http://bitbucket.org/blarghmatey/suds-blarghmatey'.
 (+) * (Jurko) Additional SOAP web service reply tests.
 (+) * (Jurko) Fix detected unicode problems.
 (+)     * Remove invalid WebFault fix merged from an external source.
@@ -895,11 +895,11 @@ PRIORITIZED:
 (+)     * Research background.
 (+)         * Requested by.
 (+)             * andreebrazeau as BitBucket.
-(+)                 * 'https://bitbucket.org/andreebrazeau'.
+(+)                 * 'http://bitbucket.org/andreebrazeau'.
 (+)             * FerCesar at BitBucket.
-(+)                 * 'https://bitbucket.org/FerCesar'.
+(+)                 * 'http://bitbucket.org/FerCesar'.
 (+)             * Lucas Sampaio at BitBucket.
-(+)                 * 'https://bitbucket.org/lucassmagal'.
+(+)                 * 'http://bitbucket.org/lucassmagal'.
 (+)         * Related links.
 (+)             * 'http://stackoverflow.com/questions/4426204/
 (+)               how-can-i-output-what-suds-is-generating-receiving'.
@@ -1158,6 +1158,49 @@ PRIORITIZED:
 (+)         * Problem reported by Eugene Yakubovich at bitbucket.
 (+)     * See project related comments at: 'http://bitbucket.org/eyakubovich/
 (+)       suds/commits/fec6efd9c10b48114bbd9c06847a264453a51620'.
+
+(04.03.2014.)
+
+(+) * (Jurko) suds.sax.enc module cleanup.
+(+)     * Code & comment cleanup.
+(+)     * Add unit tests.
+(+) * (Jurko) Look into CDATA related encoding issues reported at BitBucket
+(+)   (issue #14 + pull requests #25 & #26).
+(+)     * Prepare tests.
+(+)     * Prepare profiling scripts for comparing different solutions.
+(+)         * Design input types.
+(+)             * Long input.
+(+)                 * Replacements.
+(+)                     * None.
+(+)                     * Rare.
+(+)                     * Lots.
+(+)                 * CDATA.
+(+)                     * None.
+(+)                     * Short.
+(+)                     * Long.
+(+)             * Short input.
+(+)                 * Has replacements.
+(+)                     * False.
+(+)                     * True.
+(+)                 * Has CDATA
+(+)                     * False.
+(+)                     * True.
+
+(05.03.2014.)
+
+(+) * (Jurko) Consider reimplementing suds.sax.enc.Encoder.decode() using
+(+)   xml.sax.saxutils.unescape() as suggested by Stephen Fuhry (fuhrysteve at
+(+)   BitBucket).
+(+)     * Profile using the prepared tests.profiling.profile_sax_encoder module.
+(+)         * Python 2.4.3.
+(+)             * About the same for data containing many replacements.
+(+)             * New solution much slower for data containing no replacements.
+(+)         * Python 3.3.3.
+(+)             * New solution a bit slower for data containing many
+(+)               replacements.
+(+)             * New solution much slower for data containing no replacements.
+(+)     * Discard the new solution as it works the same or worse than the
+(+)       current one.
 
     * (Jurko) Add an XML comparison test utility supporting raw XML data
       comparison with the following features.
@@ -1493,6 +1536,22 @@ PRIORITIZED:
 NON PRIORITIZED:
 =================================================
 
+    * Look into CDATA related encoding issues reported at BitBucket (issue #14 +
+      pull requests #25 & #26).
+        * Current status: waiting for further feedback or progress on BitBucket.
+        * Implement a working solution satisfying the prepared tests.
+            * Use the prepared profiling script to make sure this change does
+              not degrade general suds performance.
+        * Get more feedback on a seemingly bad 'embedded CDATA section' test
+          included in the pull request #26 on BitBucket.
+            * Support for nested CDATA sections, in violation of the CDATA
+              related documentation found at
+              'http://en.wikipedia.org/wiki/CDATA#Nesting' and
+              'http://www.w3.org/TR/REC-xml/#sec-cdata-sect'.
+        * Decide how unclosed CDATA sections should be handled.
+            * Suggestion: raise an exception since this is not allowed in well
+              formed XML documents.
+
     * Resolving XSD schema elements currently returns an XSD schema type object
       representing the element's type. Different elements with matching types
       should possibly resolve to the same XSD schema type object but currently
@@ -1558,7 +1617,7 @@ NON PRIORITIZED:
         * See how this sort of data is supposed to be entered anyway.
 
     * FileCache class fixes.
-        * Remove incorrectly created cache files, e.g. if it gets created but
+        * Remove incorrectly created cache files, e.g. if one gets created but
           then writing to it fails.
         * Make sure reading a cache file does not crash the whole Python
           interpreter process.
@@ -1678,6 +1737,9 @@ NON PRIORITIZED:
             * All the different external XSD usage tests should be run in
               scenarios when the external XSD gets used from an imported WSDL.
             * Using an external XSD schema using another external XSD schema.
+        * Test pluggable sax character reference encoder support.
+            * Have tests plug in a custom character reference encoder and try it
+              out.
 
     * A HttpTransport.send() operation will return None if the web service
       server responds with HTTP status code ACCEPTED (202) or NO_CONTENT (204),
