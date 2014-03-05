@@ -53,6 +53,32 @@ invariant_decoded_encoded_test_data = (
     "  \t\f\v   something   \r\r\n\freal\f\f\r\n\f\t\f")
 
 """
+Data that should not be affected by encode()/decode() operations but for which
+the current encode()/decode() operation implementations are broken.
+
+"""
+invariant_decoded_encoded_test_data__broken = (
+    # CDATA handling.
+    "<![CDATA['\"&<> \t\r\n\v\f &lt; &gt; &apos; &quot; &amp;]]>",
+    "<![CDATA[\\'\\\"\\&\\<\\> \\&lt; \\&gt; \\&apos; \\&quot; ]\&amp;]]>",
+    "<![CDATA[&&<><><><>>>>><<<< This is !!!&& &amp; a test...."
+        "<<>>>>>>>>}}>]?]>>>>]]>")
+
+"""
+Data that should not be affected by encode()/decode() operations but for which
+the current encode() operation implementation is broken.
+
+"""
+invariant_decoded_encoded_test_data__broken_encode = (
+    # CDATA handling.
+    "<![CDATA[]]>",
+    "<![CDATA[wonderful]]>",
+    "<![CDATA[&]] >]]>",
+    "<![CDATA[\"It's a wonderful life!\", said the smurf.]]>",
+    "<![CDATA[<![CDATA[<![CDATA[<![CDATA[]]>",
+    "<![CDATA[<![CDATA[]]]]><![CDATA[>]]>")
+
+"""
 Decoded/encoded data convertible in either direction using encode()/decode()
 operations.
 
@@ -79,13 +105,45 @@ symmetric_decoded_encoded_test_data = [
     ("<a></b>", "&lt;a&gt;&lt;/b&gt;"),
     ("<&></\n>", "&lt;&amp;&gt;&lt;/\n&gt;"),
     ("<a id=\"fluffy's\"> && </a>",
-        "&lt;a id=&quot;fluffy&apos;s&quot;&gt; &amp;&amp; &lt;/a&gt;")] + [
+        "&lt;a id=&quot;fluffy&apos;s&quot;&gt; &amp;&amp; &lt;/a&gt;"),
+    # CDATA handling.
+    ("< ![CDATA[&]]>", "&lt; ![CDATA[&amp;]]&gt;"),
+    ("<! [CDATA[&]]>", "&lt;! [CDATA[&amp;]]&gt;"),
+    ("<![ CDATA[&]]>", "&lt;![ CDATA[&amp;]]&gt;"),
+    ("<![CDATA [&]]>", "&lt;![CDATA [&amp;]]&gt;")] + [
     # Invarant data.
     (x, x) for x in invariant_decoded_encoded_test_data]
 
+"""
+Decoded/encoded data that should be convertible in either direction using
+encode()/decode() operations but for which the current encode()/decode()
+operation implementations are broken.
+
+"""
+symmetric_decoded_encoded_test_data__broken = [
+    # CDATA handling.
+    (x, x) for x in invariant_decoded_encoded_test_data__broken]
+
+"""
+Decoded/encoded data that should be convertible in either direction using
+encode()/decode() operations but for which the current encode() operation
+implementation is broken.
+
+"""
+symmetric_decoded_encoded_test_data__broken_encode = [
+    # CDATA handling.
+    (x, x) for x in invariant_decoded_encoded_test_data__broken_encode] + [
+    ("<a><![CDATA[<a></a>]]></a>", "&lt;a&gt;<![CDATA[<a></a>]]>&lt;/a&gt;"),
+    ("&<![CDATA[&<![CDATA[&]]>&]]>&",
+        "&amp;<![CDATA[&<![CDATA[&]]>&amp;]]&gt;&amp;")]
+
 
 @pytest.mark.parametrize(("input", "expected"), [
-    (e, d) for d, e in symmetric_decoded_encoded_test_data] + [
+    (e, d) for d, e in
+        symmetric_decoded_encoded_test_data +
+        symmetric_decoded_encoded_test_data__broken_encode] + [
+    pytest.mark.xfail((e, d), reason="CDATA encoding not supported yet")
+        for d, e in symmetric_decoded_encoded_test_data__broken] + [
     # Character reference lookalikes.
     (x, x) for x in (
         "& lt;",
@@ -107,6 +165,9 @@ def test_decode(input, expected):
 
 @pytest.mark.parametrize(("input", "expected"),
     symmetric_decoded_encoded_test_data + [
+    pytest.mark.xfail(x, reason="CDATA encoding not supported yet") for x in
+        symmetric_decoded_encoded_test_data__broken +
+        symmetric_decoded_encoded_test_data__broken_encode] + [
     # Double encoding.
     #TODO: See whether this 'avoid double encoding' behaviour is actually
     # desirable. That is how XML entity reference encoding has been implemented
