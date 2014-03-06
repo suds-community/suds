@@ -609,7 +609,8 @@ class TestXTime:
 
 
 @pytest.mark.parametrize(("xsd_type_name", "xsd_type"),
-    builtins.items() + [("...unknown...", XBuiltin)])
+    sorted(builtins.items()) +  # See 'Project implementation note #1'.
+    [("...unknown...", XBuiltin)])
 def test_create_builtin_type_schema_objects(xsd_type_name, xsd_type):
     schema = _create_dummy_schema()
     xsd_object = Factory.create(schema, xsd_type_name)
@@ -635,14 +636,16 @@ def test_create_custom_mapped_builtin_type_schema_objects(xsd_type_name,
     assert xsd_object.schema is schema
 
 
-@pytest.mark.parametrize("name", builtins.keys())
+# See 'Project implementation note #1'.
+@pytest.mark.parametrize("name", sorted(builtins.keys()))
 @pytest.mark.parametrize("namespace", builtin_namespaces)
 def test_recognize_builtin_types(name, namespace):
     schema = _create_dummy_schema()
     assert schema.builtin((name, namespace))
 
 
-@pytest.mark.parametrize("name", builtins.keys())
+# See 'Project implementation note #1'.
+@pytest.mark.parametrize("name", sorted(builtins.keys()))
 @pytest.mark.parametrize("namespace", ("", " ", "some-dummy-namespace"))
 def test_recognize_builtin_types_in_unknown_namespace(name, namespace):
     schema = _create_dummy_schema()
