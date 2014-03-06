@@ -635,25 +635,23 @@ def test_create_custom_mapped_builtin_type_schema_objects(xsd_type_name,
     assert xsd_object.schema is schema
 
 
-@pytest.mark.parametrize(("name", "namespace"), ((n, ns)
-    for n in builtins.keys()
-    for ns in builtin_namespaces))
+@pytest.mark.parametrize("name", builtins.keys())
+@pytest.mark.parametrize("namespace", builtin_namespaces)
 def test_recognize_builtin_types(name, namespace):
     schema = _create_dummy_schema()
     assert schema.builtin((name, namespace))
 
 
-@pytest.mark.parametrize(("name", "namespace"), ((n, ns)
-    for n in builtins.keys()
-    for ns in ["", " ", "some-dummy-namespace"]))
+@pytest.mark.parametrize("name", builtins.keys())
+@pytest.mark.parametrize("namespace", ("", " ", "some-dummy-namespace"))
 def test_recognize_builtin_types_in_unknown_namespace(name, namespace):
     schema = _create_dummy_schema()
     assert not schema.builtin((name, namespace))
 
 
-@pytest.mark.parametrize(("name", "namespace"), ((n, ns)
-    for n in ["", " ", "x", "xyz"]
-    for ns in builtin_namespaces + ["", " ", "some-dummy-namespace"]))
+@pytest.mark.parametrize("name", ("", " ", "x", "xyz"))
+@pytest.mark.parametrize("namespace", builtin_namespaces +
+    ["", " ", "some-dummy-namespace"])
 def test_recognize_non_builtin_types(name, namespace):
     schema = _create_dummy_schema()
     assert not schema.builtin((name, namespace))
