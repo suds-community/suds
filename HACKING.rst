@@ -544,3 +544,41 @@ WSDL XSD schema interpretation
 
     * Such same-named values break other web service related tools as well, e.g.
       WSDL analyzer & invoker at `<http://www.validwsdl.com>`_.
+
+
+PROJECT IMPLEMENTATION NOTES
+=================================================
+
+Sometimes we have a reason for implementing a feature in a certain way that may
+not be obvious at first and which thus deserves an implementation comment
+explaining the rationale behind it. In cases when such rationale would then be
+duplicated at different places in code, and project implementation note should
+be added and identified here, and its respective implementation locations marked
+using a comment such as::
+
+  # See 'Project implementation note #42'.
+
+Project implementation note #1
+-------------------------------
+``pytest`` test parametrizations must be defined so they get ordered the same in
+different test processes.
+
+Doing otherwise may confuse the ``pytest`` ``xdist`` plugin used for running
+parallel tests using multiple test processes (last tested using
+``pytest 2.5.2``, ``xdist 1.10`` & ``execnet 1.2.0``) and may cause it to exit
+with errors such as::
+
+  AssertionError: Different tests were collected between gw1 and gw0
+
+Specifically, this means that ``pytest`` test parametrizations should not be
+constructed using iteration over unordered collections such as sets or
+dictionaries, at least not with Python's hash randomization feature enabled
+(implemented as optional since Python 2.6.8, enabled by default since Python
+3.3).
+
+See the following ``pytest`` issues for more detailed information:
+
+* `#301 <http://bitbucket.org/hpk42/pytest/issue/301>`_ - serializing collection
+  process (per host) on xdist to avoid conflicts/collection errors
+* `#437 <http://bitbucket.org/hpk42/pytest/issue/437>`_ - different tests
+  collected on two nodes with xdist

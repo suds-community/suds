@@ -266,6 +266,13 @@ version 0.7 (development)
   * Added tests demonstrating how additional or replacement built-in XSD types
     can be registered with suds.
   * Added new and updated existing suds.cache module related tests.
+  * Documented that all ``pytest`` test parametrizations should be prepared so
+    they get ordered the same on all test runs. See ``Project implementation
+    note #1`` in ``HACKING.rst`` for more detailed information.
+
+    * Many thanks to Bruno Oliveira (nicoddemus at BitBucket) for researching
+      related ``pytest`` ``xdist`` usage problems, discovering & explaining the
+      underlying issue as well as providing an initial project patch for it.
 
 version 0.6 (2014-01-24)
 -------------------------
