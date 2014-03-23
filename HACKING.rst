@@ -104,19 +104,6 @@ versions:
   * Dictionary & set comprehensions.
   * Set literals.
 
-Handling Python 3 related patches applicable to the original suds development
-project.
-
-* Originally synchronized with the `Mercurial patch queue
-  <http://bitbucket.org/bernh/suds-python-3-patches>`_ maintained by Bernhard
-  Leiner.
-* Used to be kept synchronized with the originating queue but no longer. It
-  became more and more difficult to keep them synchronized as our work
-  progressed and both the original suds project and this patch queue seem dead
-  otherwise.
-* Used to be committed first to the 'Python 3 support' branch and then merged
-  back to the trunk from there.
-
 External documentation:
 
 * SOAP
