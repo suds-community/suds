@@ -366,6 +366,8 @@ Notes on setting up specific Python versions
 
 Python 2.4.3
 
+* First see more general Python 2.4.x related notes below (list of compatible
+  required package versions, general caveats, etc).
 * Does not work with HTTPS links so you can not use the Python package index
   directly, since it, at some point, switched to using HTTPS links only.
 
@@ -373,25 +375,34 @@ Python 2.4.3
     links to http: ones or download its link page manually, locally modify it to
     contain http: links and then use that download link page instead of the
     default downloaded one.
-  * An alternative and tested solution is to install into Python 2.4.4 and then
-    copy all the related site-packages entries from that installation into this
-    one.
+  * An alternative and tested solution is to download the required installation
+    packages locally using Python 2.4.4 and then install them locally into the
+    Python 2.4.3 environment.
 
-    * For ``pytest`` 2.4.1 with ``py`` library version 1.4.15 the following data
-      was copied.
+    * In the example code below, we name the local installation package storage
+      folder ``target_folder`` for illustration purposes only, with
+      ``full_target_folder_path`` representing its full path.
 
-      * Folders::
+    * First use the ``ez_setup.py`` script from the ``setuptools`` 1.4.2 release
+      to install ``setuptools``::
 
-          _pytest
-          argparse-1.2.1-py2.4.egg-info
-          py
-          py-1.4.15-py2.4.egg-info
-          pytest-2.4.1-py2.4.egg-info
+        py243 ez_setup_1.4.2.py
 
-      * Files::
+    * Then use Python 2.4.4 to download the pip & pytest related installation packages::
 
-          argparse.py
-          pytest.py
+        py244 -m easy_install --zip-ok --multi-version --always-copy --exclude-scripts --install-dir "target_folder" pip==1.1
+        py244 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15 -d "target_folder" --exists-action=i
+
+    * Install ``pip`` from its local installation package (``target_folder``
+      name used in this command must not contain any whitespace characters)::
+
+        py243 -m easy_install -f "target_folder" --allow-hosts=None pip==1.1
+
+    * Install ``pytest`` from its local installation packages (``target_folder``
+      must be specified as a local file URL in this command, e.g.
+      ``file:///full_target_folder_path``)::
+
+        py243 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15 -f "file:///full_target_folder_path" --no-index
 
 Python 2.4.x
 
@@ -420,26 +431,17 @@ Python 2.4.x
 
   * 2.4.1 - last version supporting Python 2.4.
 
-    * Install using::
+    * Install::
 
-        py244 -c "import pip;pip.main()" install pytest==2.4.1
+        py244 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15
 
-  * Depends on the ``py`` package library version >= 1.4.16. However those
-    versions fail to install with Python 2.4 (tested up to and including
-    1.4.18).
+      * ``pytest`` marked as depending on ``py`` package version >= 1.4.16 which
+        is not Python 2.4 compatible (tested up to and including 1.4.18), so
+        ``py`` package version 1.4.15 is used instead.
 
-    * May be worked around by forcing ``pytest`` to use an older ``py`` package
-      library version:
-
-      1. Run the ``pytest`` installation using ``pip``. It will fail but it will
-         install everything needed except the ``py`` package library.
-      #. Install the ``py`` package library version 1.4.15 using::
-
-           py244 -c "import pip;pip.main()" install py==1.4.15
-
-    * If worked around by using the ``py`` 1.4.15 library version, ``pytest``'s
-      startup scripts will not work (as they explicitly check ``pytest``'s
-      package dependencies), but ``pytest`` can still be run using::
+    * With the described configuration ``pytest``'s startup scripts will not
+      work (as they explicitly check ``pytest``'s package dependencies), but
+      ``pytest`` can still be run using::
 
         py244 -m pytest <regular-pytest-options>
 
