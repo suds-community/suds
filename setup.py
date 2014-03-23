@@ -15,17 +15,61 @@
 # 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
-# Automatically download & install an appropriate setuptools version if needed.
-import ez_setup
-ez_setup.use_setuptools()
-
-# 'setuptools' related packages.
-import pkg_resources
-from setuptools import setup, find_packages
-
 import os
 import os.path
 import sys
+
+
+# Using setuptools provides us with the following benefits:
+#   - integrated py2to3 source code conversion when building from sources
+#   - PyPI upload support - uploading source distributions and eggs to PyPI
+#   - deploying the project in 'development mode', such that it is available on
+#     sys.path, yet can still be edited directly from its source checkout
+#   - using the setup 'test' command as a standard way to run the project's
+#     test suite
+#   - setuptools.find_packages()
+
+def use_compatible_setuptools():
+    """
+    Makes sure a compatible setuptools version is used for this installation.
+
+    As a general rule, uses the most recent setuptools distribution tested to
+    work with our project and the current platform, and will accept as
+    compatible only that setuptools version or newer.
+
+    If a compatible setuptools version is detected, automatically imports its
+    modules into sys.modules.
+
+    If a compatible setuptools package is not already installed, downloads a
+    compatible one from PyPI, imports it and configures it to install itself
+    as a part of our project's setup procedure. This includes automatically
+    upgrading an already installed incompatible setuptools version.
+
+    """
+    # We considered reusing an existing setuptools installation even if it is
+    # older than the one downloaded by our setuptools installation scripts, as
+    # that could help simplify the installation in some cases and certain older
+    # versions have been seen to install our project without problems. However,
+    # such older setuptools releases have known usability issues we really do
+    # not want to waste time dealing with in some more esoteric usage
+    # scenarios. Also, not all older setuptools versions have been tested and
+    # some of them have documented regressions that would most likely break our
+    # project installation as well, e.g. upgrading to setuptools 3.0 is
+    # documented to fail on Python 2.6 due to an accidental backward
+    # incompatibility corrected in the setuptools 3.1 release.
+
+    if sys.version_info < (2, 6):
+        # setuptools 1.4.2 - the final release supporting Python 2.4 & 2.5.
+        import ez_setup_1_4_2 as ez_setup
+    else:
+        import ez_setup
+    ez_setup.use_setuptools()
+
+
+# 'setuptools' related packages.
+use_compatible_setuptools()
+import pkg_resources
+from setuptools import setup, find_packages
 
 
 def read_python_code(filename):

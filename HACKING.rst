@@ -247,10 +247,14 @@ RELEASE PROCEDURE
 2. Test the project build with the latest available ``setuptools`` project and
    update the ``ez_setup.py`` ``setuptools`` installation script as needed.
 
-  * Chosen ``setuptools`` version needs to support all the Python interpreter
-    versions supported by our project.
+  * Use the latest available & tested ``setuptools`` release.
+  * If a new ``setuptools`` release drops support for an older Python release,
+    update our ``setup.py`` script to use an older ``setuptools`` installation
+    script when run using the no longer supported Python release.
 
-  * ``setuptools`` version 2.0 dropped support for Python 2.4 & 2.5.
+    * For example, ``setuptools`` version 2.0 dropped support for Python 2.4 &
+      2.5 and so ``setup.py`` uses a separate ``ez_setup_1_4_2.py``
+      ``setuptools`` installation script with Python versions older than 2.6.
 
 3. Version identification.
 

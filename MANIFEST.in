@@ -8,6 +8,7 @@
 include notes/*.rst
 include notes/*.txt
 include ez_setup.py
+include ez_setup_1_4_2.py
 include HACKING.rst
 include LICENSE.txt
 include TODO.txt
