@@ -1202,6 +1202,116 @@ PRIORITIZED:
 (+)     * Discard the new solution as it works the same or worse than the
 (+)       current one.
 
+(20.03.2014.)
+
+(+) * (Jurko) Internal project development cleanup.
+(+)     * Setting up Python installations used for testing suds.
+(+)         * Research exact steps for installing required Python packages for
+(+)           each specific Python version used.
+(+)         * Prepare Windows batch script performing this operation en-masse.
+
+(23.03.2014.)
+
+(+) * (Jurko) Report 'except:' issues in setuptools project's ez_setup.py
+(+)   script.
+(+) * (Jurko) Update the project setup procedure to use any preexisting
+(+)   setuptools installation of version >= 1.4 but install the latest
+(+)   compatible setuptools version if a suitable one is not already installed.
+(+)     * YAGNI - using an older and potentially untested setuptools version
+(+)       risks our project installation failing without the user 'doing
+(+)       anything wrong', and gains us only a bit lighter installation in some
+(+)       scenarios.
+(+) * (Jurko) Update the project setup procedure to use setuptools 1.4.2 for
+(+)   Python versions prior to 2.6, and the latest setuptools version 3.3 for
+(+)   all newer Python versions.
+(+)     * Update the project's setup.py script.
+(+)         * Use setuptools 1.4.2 with Python < 2.6.
+(+)         * Use setuptools 3.3 with Python >= 2.6.
+(+)     * Update project hacking documentation.
+(+)         * Check for newer setuptools versions with every new suds release
+(+)           and update the project's setup.py script as needed.
+(+)     * Update release notes.
+
+    * (Jurko) Plan preparing a wheel based distribution.
+
+    * (Jurko) Try out virtualenv to make it easier to run tests using multiple
+      Python versions and to allow us to automate suds installation testing in
+      the future.
+        * Compatible virtualenv versions.
+            * virtualenv - 1.7.2 (last before 1.8) - last on Python 2.4.
+            * virtualenv - 1.9.1 (last before 1.10) - last on Python 2.5.
+
+    * (Jurko) Internal project development cleanup.
+        * Setting up Python installations used for testing suds.
+            * Prepare a script for installing required Python packages.
+                * Convert prepared Windows batch script to Python.
+                    * Required Python packages.
+                        * setuptools.
+                        * pip.
+                        * pytest.
+                * Update project hacking documentation.
+                * Allow setting up only specific Python versions.
+                * Update to only install packages that have not already been
+                  installed.
+                * Make sure the prepared Python script runs using any of the
+                  suds project supported Python versions.
+                * Collect all downloaded data under a single folder.
+                    * Targeted content.
+                        * ez_setup.py downloaded data.
+                        * easy_install downloaded data.
+                        * pip downloaded data.
+                * See if using the pip download cache folder is useful at all
+                  since we already pre-download all the required installation
+                  packages and use them from there.
+                * Update project hacking documentation.
+                * Recheck error handling to make sure all failed commands are
+                  correctly detected.
+                    * Some might not set a non-0 exit code on error and so their
+                      output must be used as a success/failure indicator.
+        * Running a full suds test suite on multiple Python versions.
+            * Re-implement the existing Windows batch script in Python.
+                * Make sure the prepared Python script runs using any of the
+                  suds project supported Python versions.
+            * Update the environment covered by the full suds test suite.
+                * OS targets.
+                    * Windows 7 SP1 x64.
+                * Python version targets.
+                    * Python 2.4.3 - 32-bit.
+                    * Python 2.4.4 - 32-bit.
+                    * Python 2.5.4 - 32-bit, 64-bit.
+                    * Python 2.6.6 - 32-bit, 64-bit.
+                    * Python 2.7.6 - 32-bit, 64-bit.
+                    * Python 3.1.3 - 64-bit.
+                    * Python 3.2.5 - 32-bit, 64-bit.
+                    * Python 3.3.3 - 32-bit, 64-bit.
+                    * Python 3.3.5 - 32-bit, 64-bit.
+                    * Python 3.4.0 - 32-bit, 64-bit.
+                * Update the full suds test suite script.
+                * Update the project documentation, including the the
+                  documentation included in the packaged release's meta-data and
+                  displayed on PyPI.
+            * Prepare a full suds test suite subset that can be used for regular
+              development - select only a few platforms to test suds on
+              regularly and run the full test suite only 'when needed', e.g.
+              before pushing changes onto BitBucket or at the end of a single
+              development session.
+            * Update project hacking documentation.
+        * Prepare a test script installing suds into multiple Python versions.
+            * Without setuptools preinstalled.
+            * With setuptools preinstalled.
+                * setuptools 1.4.
+                * Latest compatible setuptools release.
+                    * setuptools 1.4.2 for Python releases prior to 2.6.
+
+    * (Jurko) Clean up the project's basic development script for running the
+      full suds test suite using multiple Python interpreter versions.
+        * Name better.
+
+    * (Jurko) See if we can make the project setup.py script work when run from
+      a folder other than the project's root folder.
+        * Report any problems back to the now again actively maintained
+          setuptools project.
+
     * (Jurko) Add an XML comparison test utility supporting raw XML data
       comparison with the following features.
         * Important comparison features.
@@ -1514,21 +1624,28 @@ PRIORITIZED:
         * Check all 'except:' blocks to see if they actually need to be such
           catch-all blocks.
 
-    * (Jurko) Clean up the project's basic development script for running the
-      full suds test suite using multiple Python interpreter versions.
-        * Re-implement in Python.
-        * Name better.
-
     * (Jurko) Find a cleaner way to install suds tests. Currently they get
       installed into a top-level 'tests' folder and so may cause conflicts with
       some other 'tests' package that might exist in the target Python
       environment.
         * Ideas to consider.
+            * We want all suds users to have easy access to the suds test suite.
+                * Suds users are programmers themselves, and so we want to make
+                  it easy for them to reproduce their issues as easily,
+                  concisely and directly as possible, and using existing suds
+                  tests seems like a perfect starting point for doing just that.
             * Placing the 'tests' folder under the 'suds' folder.
             * Placing the top level suds folder outside the egg folder (similar
               to how this is done for the pytest package), not having the egg
               folder added to the Python path and leaving the tests folder
               inside the egg folder.
+            * Have setup.py install suds tests as a setuptools 'extra' - only if
+              explicitly requested.
+                * At first glance, this does not seem like something we would
+                  like done, as we want all suds users to have easy access to
+                  the suds test suite and not just those installing suds from
+                  its source distribution and providing some magic
+                  '--install-tests'-like command-line option.
 
     * (Jurko) Look into issues #7 & #13 on BitBucket - problems loading a WSDL
       containing a recursively defined XML schema.
@@ -1639,14 +1756,19 @@ NON PRIORITIZED:
             * May be run without additional pytest options by running 'setup.py
               test' from the root project folder.
                 * This method will automatically download & install pytest from
-                  PyPI if needed, but will leave them installed in the project's
-                  root folder.
+                  PyPI if needed, but will leave their installations behind in
+                  the project's root folder.
             * May be run from the root project folder by first building the
               project to a temporary location: 'setup.py build & pytest build'.
                 * This method allows specifying additional pytest command-line
                   arguments.
         * Do some more thinking on this and, when done, update related HACKING
           notes.
+            * Some ideas from reading through the setuptools documentation.
+                * 'setup.py test' command could be implemented better to support
+                  pytest arguments - look at the setuptools project's
+                  test_loader setup keyword (https://pythonhosted.org/setuptools
+                  /setuptools.html#test-loader).
 
     * Generate suds Python library documentation (epydoc).
         * Research.
