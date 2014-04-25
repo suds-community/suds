@@ -1,14 +1,16 @@
-#   Additional files to be included in the source distribution package (created
+# Additional files to be included in the source distribution package (created
 # by running 'setup.py sdist'). Theoretically we could avoid having to manually
 # maintain this list by using a setuptools plugin that would automatically
 # include all files under Mercurial version control, but the setuptools_hg we
 # tried out did not work correctly with Python 3.
 
 # Top level project files.
-include notes/*.rst
-include notes/*.txt
 include ez_setup.py
 include ez_setup_1_4_2.py
 include HACKING.rst
 include LICENSE.txt
 include TODO.txt
+
+# Notes.
+include notes/*.rst
+include notes/*.txt
