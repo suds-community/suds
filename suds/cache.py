@@ -28,6 +28,7 @@ try:
     import cPickle as pickle
 except Exception:
     import pickle
+import shutil
 import tempfile
 
 from logging import getLogger
@@ -250,7 +251,11 @@ class FileCache(Cache):
 
         """
         if FileCache.remove_default_location_on_exit:
-            import shutil
+            # We must not load shutil here on-demand as under some
+            # circumstances this may cause the shutil.rmtree() operation to
+            # fail due to not having some internal module loaded. E.g. this
+            # happens if you run the project's test suite using the setup.py
+            # test command on Python 2.4.x.
             shutil.rmtree(FileCache.__default_location, ignore_errors=True)
 
     def __remove_if_expired(self, filename):
