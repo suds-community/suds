@@ -266,10 +266,10 @@ RELEASE PROCEDURE
 
   * Official releases should always be prepared based on tagged revisions with
     no local changes in the used sandbox.
-  * Prepare source distribution packages (both .zip & .tar.bz2 formats),
-    register the new release at PyPI and upload the prepared source packages.
+  * Prepare source distribution packages (both .zip & .tar.bz2 formats) and
+    upload the prepared source packages.
 
-    * Run ``setup.py sdist register upload``.
+    * Run ``setup.py sdist upload``.
 
   * Upload the prepared source package to the project site.
 
