@@ -145,20 +145,23 @@ TOP-LEVEL FILES & FOLDERS
     show detailed ``setup.py`` command list
   ``setup.py build``
     build the project
-  ``setup.py develop``
-    prepare the development environment (add the project folder to the Python
-    module search path) the same as if installed using ``easy_install -e`` or
-    ``pip install -e``
   ``setup.py install``
     build & install the project
   ``setup.py register``
     register a project release at PyPI
   ``setup.py sdist``
     prepare a source distribution
-  ``setup.py test``
-    run the project's test suite (requires ``pytest``)
   ``setup.py upload``
     upload prepared packages to PyPI
+
+* Usage examples requiring ``setuptools``:
+
+  ``setup.py develop``
+    prepare the development environment (add the project folder to the Python
+    module search path) the same as if installed using ``easy_install -e`` or
+    ``pip install -e``
+  ``setup.py test``
+    run the project's test suite (requires ``pytest``)
 
 
 PYTHON COMPATIBILITY

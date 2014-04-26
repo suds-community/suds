@@ -19,10 +19,11 @@
 """
 Main installation and project management script for this project.
 
-Requires setuptools, and even attempts to install it automatically if it is
-not available, downloading it from PyPI if needed. Having setuptools available
-provides us with the following benefits:
-  - py2to3/distutils integration
+Attempts to use setuptools if available, and even attempts to install it
+automatically if it is not, downloading it from PyPI if needed. However, its
+main functionality will function just fine without setuptools as well. Having
+setuptools available provides us with the following benefits:
+  - simpler py2to3/distutils integration
   - setup.py 'egg_info' command constructing the project's metadata
   - setup.py 'develop' command deploying the project in 'development mode',
     thus making it available on sys.path, yet still editable directly in its
@@ -55,50 +56,163 @@ import re
 distutils_cmdclass = {}
 extra_setup_params = {}
 
+# Hardcoded configuration.
+attempt_to_use_setuptools = True
+attempt_to_install_setuptools = True
+
 
 # -----------------------------------------------------------------------------
-# Use setuptools for this installation.
+# Attempt to use setuptools for this installation.
 # -----------------------------------------------------------------------------
+# setuptools brings us several useful features (see the main setup script
+# docstring) but if it causes problems for our users or even only
+# inconveniences them, they tend to complain about why we are using setuptools
+# at all. Therefore we try to use setuptools as silently as possible, with a
+# clear error messages displayed to the user, but only in cases when we
+# absolutely need setuptools.
+#
+# Setuptools usage logic:
+# 1. attempt to use a preinstalled setuptools version
+# 2. if a preinstalled setuptools version is not available, attempt to install
+#    and use the most recent tested compatible setuptools release, possibly
+#    downloading the installation from PyPI into the current folder
+# 3. if we still do not have setuptools available, fall back to using distutils
+#
+# Note that we have made a slight trade-off here and chose to reuse an existing
+# setuptools installation if available instead of always downloading and
+# installing the most recent compatible setuptools release.
+#
+# Alternative designs and rationale for selecting the current design:
+#
+# distutils/setuptools usage:
+#   * always use distutils
+#       - misses out on all the setuptools features
+#   * use setuptools if available, or fall back to using distutils
+#       - chosen design
+#       - gets us setuptools features if available, with clear end-user error
+#         messages in case an operation is triggered that absolutely requires
+#         setuptools to be available
+#       - see below for notes on different setuptools installation alternatives
+#   * always use setuptools
+#       - see below for notes on different setuptools installation alternatives
+#
+# setuptools installation:
+#   * expect setuptools to be preinstalled
+#       - if not available, burden the user with installing setuptools manually
+#       - see below for notes on using different setuptools versions
+#   * use preinstalled setuptools if possible, or fall back to installing it
+#     on-demand
+#       - chosen design
+#       - see below for notes on using different setuptools versions
+#       - automated setuptools installations, and especially in-place upgrades,
+#         can fail for various reasons (see below)
+#       - reduces the risk of a stalled download stalling the whole setup
+#         operation, e.g. because of an unavailable or unresponsive DNS server
+#   * always install setuptools
+#       - automated setuptools installations, and especially in-place upgrades,
+#         can fail for various reasons (see below)
+#       - user has no way to avoid setuptools installation issues by installing
+#         setuptools himself, which would force us to make our setuptools
+#         installation support universally applicable and that is just not
+#         possible, e.g. users might be wanting to use customized package
+#         management or their own package index instead of PyPI.
+#
+# setuptools version usage:
+#   - basic problem here is that our project can be and has been tested only
+#     with certain setuptools versions
+#   - using a different version may have issues causing our setup procedures to
+#     fail outside our control, either due to a setuptools bug or due to an
+#     incompatibility between our implementation and the used setuptools
+#     version
+#   - some setuptools releases have known regressions, e.g. setuptools 3.0
+#     which is documented to fail on Python 2.6 due to an accidental backward
+#     incompatibility corrected in the setuptools 3.1 release
+#   * allow using any setuptools version
+#       - chosen design
+#       - problems caused by incompatible setuptools version usage are
+#         considered highly unlikely and can therefore be patched up as needed
+#         when and if they appear
+#       - users will most likely not have a setuptools version preinstalled
+#         into their Python environment that is incompatible with that
+#         environment
+#       - if there is no setuptools version installed, our setup will attempt
+#         to install the most recent tested setuptools release
+#   * allow using only tested setuptools versions or possibly more recent ones
+#       - unless we can automatically install a suitable setuptools version, we
+#         will need to burden the user with installing it manually or fall back
+#         to using distutils
+#       - automated setuptools installations, and especially in-place upgrades,
+#         can fail for various reasons (see below)
+#       - extra implementation effort required compared to the chosen design,
+#         with no significant benefit
+#
+# Some known scenarios causing automated setuptools installation failures:
+#   * Download failures, e.g. because user has no access to PyPI.
+#   * In-place setuptool upgrades can fail due to a known setuptools issue (see
+#     'https://bitbucket.org/pypa/setuptools/issue/168') when both the original
+#     and the new setuptools version is installed as a zipped egg distribution.
+#     Last seen using setuptools 3.4.4.
+#   * If the Python environment running our setup has already loaded setuptools
+#     packages, then upgrading that installation in-place will fail with an
+#     error message instructing the user to do the upgrade manually.
+#   * When installing our project using pip, pip will load setuptools
+#     internally, and it typically uses an older setuptools version which can
+#     trigger the in-place upgrade failure as described above. What is worse,
+#     we ignore this failure, we run into the following combination problem:
+#       * pip calls our setup twice - once to collect the package requirement
+#         information and once to perform the actual installation, and we do
+#         not want to display multiple potentially complex error messages to
+#         user for what is effectively the same error.
+#       * Since we can not affect how external installers call our setup, to
+#         avoid this we would need to either:
+#           * Somehow cache the information that we already attempted and
+#             failed to upgrade setuptools (complicated + possibly not robust).
+#           * Patch the setuptools installation script to not display those
+#             error messages (we would prefer to not be forced to maintain our
+#             own patches for this script and use it as is).
+#           * Avoid the issue by never upgrading an existing setuptools
+#             installation (chosen design).
 
-def use_compatible_setuptools():
-    """
-    Makes sure a compatible setuptools version is used for this installation.
+def acquire_setuptools_setup():
+    if not attempt_to_use_setuptools:
+        return
 
-    As a general rule, uses the most recent setuptools distribution tested to
-    work with our project and the current platform, and will accept as
-    compatible only that setuptools version or newer.
+    def import_setuptools_setup():
+        try:
+            from setuptools import setup
+        except ImportError:
+            return
+        return setup
 
-    If a compatible setuptools version is detected, automatically imports its
-    modules into sys.modules.
-
-    If a compatible setuptools package is not already installed, downloads a
-    compatible one from PyPI, imports it and configures it to install itself as
-    a part of our project's setup procedure. This includes automatically
-    upgrading an already installed incompatible setuptools version.
-
-    """
-    # We considered reusing an existing setuptools installation even if it is
-    # older than the one downloaded by our setuptools installation scripts, as
-    # that could help simplify the installation in some cases and certain older
-    # versions have been seen to install our project without problems. However,
-    # such older setuptools releases have known usability issues we really do
-    # not want to waste time dealing with in some more esoteric usage
-    # scenarios. Also, not all older setuptools versions have been tested and
-    # some of them have documented regressions that would most likely break our
-    # project installation as well, e.g. upgrading to setuptools 3.0 is
-    # documented to fail on Python 2.6 due to an accidental backward
-    # incompatibility corrected in the setuptools 3.1 release.
-
+    setup = import_setuptools_setup()
+    if setup or not attempt_to_install_setuptools:
+        return setup
     if sys.version_info < (2, 6):
         # setuptools 1.4.2 - the final release supporting Python 2.4 & 2.5.
         import ez_setup_1_4_2 as ez_setup
     else:
         import ez_setup
-    ez_setup.use_setuptools()
+    try:
+        # Since we know there is no setuptools package in the current
+        # environment, this will:
+        # 1. download a setuptools source distribution to the current folder
+        # 2. prepare an installable setuptools egg distribution in the current
+        #    folder
+        # 3. schedule for the prepared setuptools distribution to be installed
+        #    together with our package (if our package is getting installed at
+        #    all and setup has not been called for some other purpose, e.g.
+        #    displaying its help information or running a non-install related
+        #    setup command)
+        ez_setup.use_setuptools()
+    except (Exception, SystemExit):
+        return
+    return import_setuptools_setup()
 
-
-use_compatible_setuptools()
-from setuptools import setup
+setup = acquire_setuptools_setup()
+using_setuptools = bool(setup)
+if not using_setuptools:
+    # Fall back to using distutils.
+    from distutils.core import setup
 
 
 # -----------------------------------------------------------------------------
@@ -224,6 +338,7 @@ exec(read_python_code(os.path.join(script_folder, "suds", "version.py")))
 # current folder as zipped egg distributions.
 #
 # Requirements:
+#   - setup must be using setuptools
 #   - if running Python version prior to 2.5, a suitable pytest version must
 #     already be installed and will not be installed on demand (see the related
 #     comment embedded int the code below for more detailed information)
@@ -250,6 +365,9 @@ def test_requirements():
     for some of the Python versions we still support in this project.
 
     """
+    if not using_setuptools:
+        return "test command not available without setuptools"
+
     result = []
 
     try:
@@ -386,7 +504,11 @@ if sys.version_info >= (2, 5):
 
 if sys.version_info >= (3, 0):
     # Integrate the py2to3 step into our build.
-    extra_setup_params["use_2to3"] = True
+    if using_setuptools:
+        extra_setup_params["use_2to3"] = True
+    else:
+        from distutils.command.build_py import build_py_2to3
+        distutils_cmdclass["build_py"] = build_py_2to3
 
     # Teach Python's urllib lib2to3 fixer that the old urllib2.__version__ data
     # member is now stored in the urllib.request module.
