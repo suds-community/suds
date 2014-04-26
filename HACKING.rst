@@ -167,6 +167,12 @@ PYTHON COMPATIBILITY
 Base sources should remain Python 2.x compatible. Since the original project
 states aiming for Python 2.4 compatibility we should do so as well.
 
+This backward compatibility requirement does not affect internal development
+operations such as ``setup.py`` support for uploading a new project distribution
+package to PyPI. Such operations need to be supported on the latest Python 2 & 3
+releases only and no additional backward compatibility is either tested or
+guaranteed for them.
+
 The following is a list of backward incompatible Python features not used in
 this project to maintain backward compatibility, grouped by Python version they
 were first introduced in:
