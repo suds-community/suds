@@ -41,6 +41,14 @@ versions:
 
   * ``any`` & ``all`` functions.
   * ``with`` statement.
+  * BaseException class introduced and KeyboardInterrupt & SystemExit exception
+    classes stopped being Exception subclasses.
+
+    * This means that code wanting to support Python versions prior to this
+      release needs to re-raise KeyboardInterrupt & SystemExit exceptions
+      before handling the generic 'Exception' case, unless it really wants to
+      gobble up those special infrastructural exceptions as well.
+
   * ``try``/``except``/``finally`` blocks.
 
     * Prior to this Python release, code like the following::
