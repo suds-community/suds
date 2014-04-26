@@ -219,35 +219,155 @@ exec(read_python_code(os.path.join(script_folder, "suds", "version.py")))
 # -----------------------------------------------------------------------------
 # Custom setup.py 'test' command for running the project test suite.
 # -----------------------------------------------------------------------------
-# Support for integrating running the project' pytest based test suite directly
-# into this setup script so the test suite can be run by 'setup.py test'. Since
-# Python's distutils framework does not allow passing all received command-line
-# arguments to its commands, it does not seem easy to customize how pytest runs
-# its tests this way. To have better control over this, user should run the
-# pytest on the target source tree directly, possibly after first building a
-# temporary one to work around problems like Python 2/3 compatibility.
+# pytest and any of its requirements not already installed in the target Python
+# environment will be automatically downloaded from PyPI and installed into the
+# current folder as zipped egg distributions.
+#
+# Requirements:
+#   - if running Python version prior to 2.5, a suitable pytest version must
+#     already be installed and will not be installed on demand (see the related
+#     comment embedded int the code below for more detailed information)
+#
+# If the requirements are not met, the command simply reports an end-user error
+# message explaining why the test functionality is unavailable.
+#
+# Since Python's distutils framework does not allow passing all received
+# command-line arguments to its commands, it does not seem easy to customize
+# how pytest runs its tests this way. To have better control over this, user
+# should run the pytest on the target source tree directly, possibly after
+# first building a temporary one to work around problems like Python 2/3
+# compatibility.
 
-import setuptools.command.test
+def test_requirements():
+    """
+    Return test requirements for the 'test' command or an error string.
 
-class TestCommand(setuptools.command.test.test):
+    An error is reported if the requirements can not be satisfied for some
+    reason.
 
-    def finalize_options(self):
-        setuptools.command.test.test.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
+    Exact required packages and their versions vary depending on our target
+    Python environment version as pytest dropped backward compatibility support
+    for some of the Python versions we still support in this project.
 
-    def run_tests(self):
-        # Make sure the tests are run on the correct test sources. E.g. when
-        # using Python 3, the tests need to be run in the temporary build
-        # folder where they have been previously processed using py2to3.
-        # Running them directly on the original source tree would fail due to
-        # Python 2/3 source code incompatibility.
-        ei_cmd = self.get_finalized_command("egg_info")
-        build_path = setuptools.command.test.normalize_path(ei_cmd.egg_base)
+    """
+    result = []
+
+    try:
         import pytest
-        sys.exit(pytest.main(["--pyargs", build_path]))
+        have_pytest = True
+    except ImportError:
+        have_pytest = False
+    if sys.version_info < (2, 5):
+        # pytest 2.4.0 release broke compatibility with Python releases prior
+        # to 2.5. The last officially supported pytest version on Python 2.4
+        # platforms is 2.3.5 and that versions can not parse all of the pytest
+        # constructs used in this project, e.g. skipif expressions not given as
+        # strings.
+        #
+        # However, our tests can still be run using Python 2.4 if that
+        # environment contains suitable pytest & py package versions - pytest
+        # must not be older than 2.4.0 nor equal to or newer than 2.4.2, and
+        # the py release must be prior to 1.4.16. Those pytest versions specify
+        # py version 1.4.16+ as their requirement but will still work well
+        # enough for us with this older py release. They can be installed
+        # together using a pip command like 'install pytest<2.4.2 py<1.4.16'.
+        # See the project's Python compatibility related hacking docs for more
+        # detailed information.
+        #
+        # Note though that this combination can not be installed automatically
+        # by this setup script as we found no way to make setuptools' test
+        # command succeed even though its installed packages do not have all
+        # their formal requirements satisfied.
+        if have_pytest:
+            try:
+                # Versions prior to 2.4.0 may be installed but will fail at
+                # runtime when running our test suite. Versions 2.4.2 and later
+                # can not be installed at all.
+                have_pytest = "2.4.0" <= pytest.__version__ < "2.4.2"
+            except Exception:
+                have_pytest = False
+        if not have_pytest:
+            return "compatible preinstalled pytest needed prior to Python 2.5"
 
-extra_setup_params["tests_require"] = ["pytest"]
+        try:
+            import py
+            have_py = True
+        except ImportError:
+            have_py = False
+        if have_py:
+            try:
+                # Version 1.4.16 may be installed but will cause pytest to fail
+                # when running our test suite.
+                have_py = py.__version__ < "1.4.16"
+            except Exception:
+                have_py = False
+        if not have_py:
+            return "compatible preinstalled py needed prior to Python 2.5"
+    else:
+        result.append("pytest>=2.4.0")
+
+    if (3, 0) <= sys.version_info < (3, 2):
+        # 'pytest' requires 'argparse' but does not explicitly list it as a
+        # requirement when packaged for Python 3+ environments. That is why we
+        # need to explicitly list 'argparse' as an extra test requirement when
+        # run using Python versions that do not include that module in their
+        # standard library.
+        try:
+            import argparse
+        except ImportError:
+            result.append("argparse")
+    return result
+
+test_error = None
+tests_require = test_requirements()
+if isinstance(tests_require, str):
+    test_error = tests_require
+else:
+    extra_setup_params["tests_require"] = tests_require
+
+if test_error:
+    import distutils.cmd
+    import distutils.errors
+
+    class TestCommand(distutils.cmd.Command):
+        description = test_error
+        user_options = []
+        def initialize_options(self):
+            pass
+        def finalize_options(self):
+            pass
+        def run(self):
+            raise distutils.errors.DistutilsPlatformError(self.description)
+else:
+    from setuptools.command.test import (normalize_path as _normalize_path,
+        test as _test)
+
+    class TestCommand(_test):
+
+        # The test build can not be done in-place with Python 3+ as it requires
+        # py2to3 conversion which we do not want modifying our original project
+        # sources.
+        if sys.version_info < (3, 0):
+            description = "run pytest based unit tests after an in-place build"
+        else:
+            description = "run pytest based unit tests after a build"
+
+        def finalize_options(self):
+            _test.finalize_options(self)
+            self.test_args = []
+            self.test_suite = True
+
+        def run_tests(self):
+            # Make sure the tests are run on the correct test sources. E.g.
+            # when using Python 3, the tests need to be run in the build folder
+            # where they have been previously processed using py2to3. Running
+            # them directly on the original source tree would fail due to
+            # Python 2/3 source code incompatibility.
+            ei_cmd = self.get_finalized_command("egg_info")
+            build_path = _normalize_path(ei_cmd.egg_base)
+            import pytest
+            sys.exit(pytest.main(["--pyargs", build_path]))
+
 distutils_cmdclass["test"] = TestCommand
 
 
