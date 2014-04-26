@@ -98,7 +98,7 @@ def use_compatible_setuptools():
 
 
 use_compatible_setuptools()
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 # -----------------------------------------------------------------------------
@@ -119,6 +119,40 @@ def read_python_code(filename):
     # read operations.
     source = source.replace("\r\n", "\n").replace("\r", "\n")
     return compile(source, filename, "exec")
+
+def recursive_package_list(*packages):
+    """
+    Returns a list of all the given packages and all their subpackages.
+
+    Given packages are expected to be found relative to this script's location.
+
+    Subpackages are detected by scanning the given packages' subfolder
+    hierarchy for any folders containing the '__init__.py' module. As a
+    consequence, namespace packages are not supported.
+
+    This is our own specialized setuptools.find_packages() replacement so we
+    can avoid the setuptools dependency.
+
+    """
+    result = set()
+    todo = []
+    for package in packages:
+        folder = os.path.join(script_folder, *package.split("."))
+        if not os.path.isdir(folder):
+            raise Exception("Folder not found for package '%s'." % (package,))
+        todo.append((package, folder))
+    while todo:
+        package, folder = todo.pop()
+        if package in result:
+            continue
+        result.add(package)
+        for subitem in os.listdir(folder):
+            subpackage = ".".join((package, subitem))
+            subfolder = os.path.join(folder, subitem)
+            if not os.path.isfile(os.path.join(subfolder, "__init__.py")):
+                continue
+            todo.append((subpackage, subfolder))
+    return list(result)
 
 # Shamelessly stolen from setuptools project's pkg_resources module.
 def safe_version(version_string):
@@ -146,10 +180,10 @@ def safe_version(version_string):
 #   * Changing the current working folder internally makes any passed path
 #     parameters be interpreted relative to the setup script folder when they
 #     should be interpreted relative to the initial current working folder.
-#   * Passing the script folder as setup() & find_packages() function
-#     parameters makes the final installed distribution contain the absolute
-#     package source location information and not include some other meta-data
-#     package information as well.
+#   * Passing the script folder to setup() using the parameter
+#       package_dir={"": script_folder}
+#     makes the setup 'build' command work from any folder but 'egg-info'
+#     (together with any related commands) still fails.
 script_folder = os.path.realpath(os.path.dirname(__file__))
 current_folder = os.path.realpath(os.getcwd())
 if script_folder != current_folder:
@@ -283,7 +317,7 @@ setup(
     keywords=["SOAP", "web", "service", "client"],
     url=project_url,
     download_url=download_url,
-    packages=find_packages(),
+    packages=recursive_package_list("suds", "tests"),
 
     # 'maintainer' will be listed as the distribution package author.
     # Warning: Due to a 'distribute' package defect when used with Python 3
