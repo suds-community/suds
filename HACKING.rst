@@ -10,13 +10,10 @@ Project development should be tracked in the ``TODO.txt`` file.
   consistently.
 * Done tasks should be marked as such and not deleted.
 
-Testing:
+Separate sections below:
 
-* ``pytest`` testing framework needed to run unit tests.
-* To run the tests using Python 3 first process them and the rest of the library
-  sources using the Python ``py2to3`` conversion tool.
-* For more detailed information see the `DEVELOPMENT & TESTING ENVIRONMENT`_
-  section below.
+* `DEVELOPMENT & TESTING ENVIRONMENT`_
+* `PYTHON COMPATIBILITY`_
 
 Reproducing problematic use cases:
 
@@ -30,79 +27,6 @@ Reproducing problematic use cases:
     one based on the loaded WSDL schema and received arguments.
   * Have a client object process a fixed reply string without having it send a
     request to an actual external web service.
-
-Base sources should remain Python 2.x compatible. Since the original project
-states aiming for Python 2.4 compatibility we should do so as well.
-
-Python features that need to be avoided for compatibility with older Python
-versions:
-
-* Features introduced in Python 2.5.
-
-  * ``any`` & ``all`` functions.
-  * ``with`` statement.
-  * BaseException class introduced and KeyboardInterrupt & SystemExit exception
-    classes stopped being Exception subclasses.
-
-    * This means that code wanting to support Python versions prior to this
-      release needs to re-raise KeyboardInterrupt & SystemExit exceptions
-      before handling the generic 'Exception' case, unless it really wants to
-      gobble up those special infrastructural exceptions as well.
-
-  * ``try``/``except``/``finally`` blocks.
-
-    * Prior to this Python release, code like the following::
-
-        try:
-            A
-        except XXX:
-            B
-        finally:
-            C
-
-      was considered illegal and needed to be written using nested ``try``
-      blocks as in::
-
-        try:
-            try:
-                A
-            except XXX:
-                B
-        finally:
-            C
-
-  * ``yield`` expression inside a ``try`` block with a ``finally`` clause.
-
-    * Prior to this Python release, code like the following::
-
-        try:
-            yield x
-        finally:
-            do_something()
-
-      is considered illegal, but can be replaced with legal code similar to the
-      following::
-
-        try:
-            yield x
-        except:
-            do_something()
-            raise
-        do_something()
-
-* Features introduced in Python 2.6.
-
-  * ``bytes`` type.
-  * Byte literals, e.g. ``b"quack"``.
-  * Class decorators.
-  * ``fractions`` module.
-  * ``numbers`` module.
-  * String ``format()`` method.
-
-* Features introduced in Python 2.7.
-
-  * Dictionary & set comprehensions.
-  * Set literals.
 
 External documentation:
 
@@ -235,6 +159,87 @@ TOP-LEVEL FILES & FOLDERS
     run the project's test suite (requires ``pytest``)
   ``setup.py upload``
     upload prepared packages to PyPI
+
+
+PYTHON COMPATIBILITY
+=================================================
+
+Base sources should remain Python 2.x compatible. Since the original project
+states aiming for Python 2.4 compatibility we should do so as well.
+
+The following is a list of backward incompatible Python features not used in
+this project to maintain backward compatibility, grouped by Python version they
+were first introduced in:
+
+Features introduced in Python 2.5.
+----------------------------------
+
+* ``any`` & ``all`` functions.
+* ``with`` statement.
+* BaseException class introduced and KeyboardInterrupt & SystemExit exception
+  classes stopped being Exception subclasses.
+
+  * This means that code wanting to support Python versions prior to this
+    release needs to re-raise KeyboardInterrupt & SystemExit exceptions
+    before handling the generic 'Exception' case, unless it really wants to
+    gobble up those special infrastructural exceptions as well.
+
+* ``try``/``except``/``finally`` blocks.
+
+  * Prior to this Python release, code like the following::
+
+      try:
+          A
+      except XXX:
+          B
+      finally:
+          C
+
+    was considered illegal and needed to be written using nested ``try`` blocks
+    as in::
+
+      try:
+          try:
+              A
+          except XXX:
+              B
+      finally:
+          C
+
+* ``yield`` expression inside a ``try`` block with a ``finally`` clause.
+
+  * Prior to this Python release, code like the following::
+
+      try:
+          yield x
+      finally:
+          do_something()
+
+    is considered illegal, but can be replaced with legal code similar to the
+    following::
+
+      try:
+          yield x
+      except:
+          do_something()
+          raise
+      do_something()
+
+Features introduced in Python 2.6.
+----------------------------------
+
+* ``bytes`` type.
+* Byte literals, e.g. ``b"quack"``.
+* Class decorators.
+* ``fractions`` module.
+* ``numbers`` module.
+* String ``format()`` method.
+
+Features introduced in Python 2.7.
+----------------------------------
+
+* Dictionary & set comprehensions.
+* Set literals.
 
 
 RELEASE PROCEDURE
