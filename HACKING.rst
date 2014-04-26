@@ -337,6 +337,7 @@ options. Some interesting ones:
   -l          show local variable state in tracebacks
   --tb=short  shorter traceback information for each failure
   -x          stop on first failure
+  --pdb       enter Python debugger on failure
 
 On Windows you might have a problem setting up multiple parallel Python
 interpreter versions in case they match their major and minor version numbers,
