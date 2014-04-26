@@ -38,9 +38,13 @@ provides us with the following benefits:
 
 """
 
+import sys
+if sys.version_info < (2, 4):
+    print("ERROR: Python 2.4+ required")
+    sys.exit(-2)
+
 import os
 import os.path
-import sys
 
 
 # -----------------------------------------------------------------------------
