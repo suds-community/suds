@@ -184,6 +184,8 @@ def has_powershell():
     try:
         try:
             subprocess.check_call(cmd, stdout=devnull, stderr=devnull)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             return False
     finally:
@@ -202,6 +204,8 @@ def has_curl():
     try:
         try:
             subprocess.check_call(cmd, stdout=devnull, stderr=devnull)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             return False
     finally:
@@ -220,6 +224,8 @@ def has_wget():
     try:
         try:
             subprocess.check_call(cmd, stdout=devnull, stderr=devnull)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
             return False
     finally:
