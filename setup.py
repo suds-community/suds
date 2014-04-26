@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the (LGPL) GNU Lesser General Public License as published by the
@@ -13,21 +14,46 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-# written by: Jeff Ortel ( jortel@redhat.com )
+# written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
+
+"""
+Main installation and project management script for this project.
+
+Requires setuptools, and even attempts to install it automatically if it is
+not available, downloading it from PyPI if needed. Having setuptools available
+provides us with the following benefits:
+  - py2to3/distutils integration
+  - setup.py 'egg_info' command constructing the project's metadata
+  - setup.py 'develop' command deploying the project in 'development mode',
+    thus making it available on sys.path, yet still editable directly in its
+    source checkout - equivalent to running a pip based installation using
+    'easy_install -e' or 'pip install -e'
+  - setup.py 'test' command as a standard way to run the project's test suite
+  - when running the installation directly from the source tree setup.py
+    'install' command:
+      - automatically installs the project's metadata so package management
+        tools like pip recognize the installation correctly, e.g. this allows
+        using 'pip uninstall' to undo the installation
+      - package installed as a zipped egg by default
+
+"""
 
 import os
 import os.path
 import sys
 
 
-# Using setuptools provides us with the following benefits:
-#   - integrated py2to3 source code conversion when building from sources
-#   - PyPI upload support - uploading source distributions and eggs to PyPI
-#   - deploying the project in 'development mode', such that it is available on
-#     sys.path, yet can still be edited directly from its source checkout
-#   - using the setup 'test' command as a standard way to run the project's
-#     test suite
-#   - setuptools.find_packages()
+# -----------------------------------------------------------------------------
+# Global variables.
+# -----------------------------------------------------------------------------
+
+distutils_cmdclass = {}
+extra_setup_params = {}
+
+
+# -----------------------------------------------------------------------------
+# Use setuptools for this installation.
+# -----------------------------------------------------------------------------
 
 def use_compatible_setuptools():
     """
@@ -41,8 +67,8 @@ def use_compatible_setuptools():
     modules into sys.modules.
 
     If a compatible setuptools package is not already installed, downloads a
-    compatible one from PyPI, imports it and configures it to install itself
-    as a part of our project's setup procedure. This includes automatically
+    compatible one from PyPI, imports it and configures it to install itself as
+    a part of our project's setup procedure. This includes automatically
     upgrading an already installed incompatible setuptools version.
 
     """
@@ -66,11 +92,14 @@ def use_compatible_setuptools():
     ez_setup.use_setuptools()
 
 
-# 'setuptools' related packages.
 use_compatible_setuptools()
 import pkg_resources
 from setuptools import setup, find_packages
 
+
+# -----------------------------------------------------------------------------
+# Support functions.
+# -----------------------------------------------------------------------------
 
 def read_python_code(filename):
     "Returns the given Python source file's compiled content."
@@ -88,11 +117,15 @@ def read_python_code(filename):
     return compile(source, filename, "exec")
 
 
+# -----------------------------------------------------------------------------
+# Detect the setup.py environment - current & script folder.
+# -----------------------------------------------------------------------------
+
 # Setup documentation incorrectly states that it will search for packages
 # relative to the setup script folder by default when in fact it will search
 # for them relative to the current working folder. It seems avoiding this
 # problem cleanly and making the setup script runnable with any current working
-# folder would require better setup() support.
+# folder would require better distutils and/or setuptools support.
 # Attempted alternatives:
 #   * Changing the current working folder internally makes any passed path
 #     parameters be interpreted relative to the setup script folder when they
@@ -111,6 +144,11 @@ if script_folder != current_folder:
     print("Script folder: %s" % script_folder)
     sys.exit(-2)
 
+
+# -----------------------------------------------------------------------------
+# Load the suds library version information.
+# -----------------------------------------------------------------------------
+
 # Load the suds library version information directly into this module without
 # having to import the whole suds library itself. Importing the suds package
 # would have caused problems like the following:
@@ -121,20 +159,63 @@ if script_folder != current_folder:
 #     forcing the user to install them manually (since the setup procedure that
 #     is supposed to install them automatically will not be able to run unless
 #     they are already installed).
-#   We execute explicitly compiled source code instead of having the exec()
+# We execute explicitly compiled source code instead of having the exec()
 # function compile it to get a better error messages. If we used exec() on the
 # source code directly, the source file would have been listed as just
 # '<string>'.
-exec(read_python_code(os.path.join("suds", "version.py")))
+exec(read_python_code(os.path.join(script_folder, "suds", "version.py")))
 
-extra_setup_params = {}
-extra_setup_cmdclass = {}
+
+# -----------------------------------------------------------------------------
+# Custom setup.py 'test' command for running the project test suite.
+# -----------------------------------------------------------------------------
+# Support for integrating running the project' pytest based test suite directly
+# into this setup script so the test suite can be run by 'setup.py test'. Since
+# Python's distutils framework does not allow passing all received command-line
+# arguments to its commands, it does not seem easy to customize how pytest runs
+# its tests this way. To have better control over this, user should run the
+# pytest on the target source tree directly, possibly after first building a
+# temporary one to work around problems like Python 2/3 compatibility.
+
+import setuptools.command.test
+
+class TestCommand(setuptools.command.test.test):
+
+    def finalize_options(self):
+        setuptools.command.test.test.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        # Make sure the tests are run on the correct test sources. E.g. when
+        # using Python 3, the tests need to be run in the temporary build
+        # folder where they have been previously processed using py2to3.
+        # Running them directly on the original source tree would fail due to
+        # Python 2/3 source code incompatibility.
+        ei_cmd = self.get_finalized_command("egg_info")
+        build_path = setuptools.command.test.normalize_path(ei_cmd.egg_base)
+        import pytest
+        sys.exit(pytest.main(["--pyargs", build_path]))
+
+extra_setup_params["tests_require"] = ["pytest"]
+distutils_cmdclass["test"] = TestCommand
+
+
+# -----------------------------------------------------------------------------
+# Mark the original suds project as obsolete.
+# -----------------------------------------------------------------------------
 
 if sys.version_info >= (2, 5):
     # distutils.setup() 'obsoletes' parameter not introduced until Python 2.5.
     extra_setup_params["obsoletes"] = ["suds"]
 
+
+# -----------------------------------------------------------------------------
+# Integrate py2to3 into our build operation.
+# -----------------------------------------------------------------------------
+
 if sys.version_info >= (3, 0):
+    # Integrate the py2to3 step into our build.
     extra_setup_params["use_2to3"] = True
 
     # Teach Python's urllib lib2to3 fixer that the old urllib2.__version__ data
@@ -145,8 +226,13 @@ if sys.version_info >= (3, 0):
             x[1].append("__version__")
             break;
 
-# Wrap long_description at 72 characters since PKG-INFO package distribution
-# metadata file stores this text with an 8 space indentation.
+
+# -----------------------------------------------------------------------------
+# Set up project metadata and run the actual setup.
+# -----------------------------------------------------------------------------
+
+# Wrap long_description at 72 characters since the PKG-INFO package
+# distribution metadata file stores this text with an 8 space indentation.
 long_description = """
 ---------------------------------------
 Lightweight SOAP client (Jurko's fork).
@@ -172,35 +258,6 @@ project_url = "http://bitbucket.org/jurko/suds"
 base_download_url = project_url + "/downloads"
 download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
 download_url = "%s/%s" % (base_download_url, download_distribution_name)
-
-# Support for integrating running the project' pytest based test suite directly
-# into this setup script so the test suite can be run by 'setup.py test'. Since
-# Python's distutils framework does not allow passing all received command-line
-# arguments to its commands, it does not seem easy to customize how pytest runs
-# its tests this way. To have better control over this, user should run the
-# pytest on the target source tree directly, possibly after first building a
-# temporary one to work around problems like Python 2/3 compatibility.
-import setuptools.command.test
-class PyTest(setuptools.command.test.test):
-    def finalize_options(self):
-        setuptools.command.test.test.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-    def run_tests(self):
-        # Make sure the tests are run on the correct test sources. E.g. when
-        # using Python 3, the tests need to be run in the temporary build
-        # folder where they have been previously processed using py2to3.
-        # Running them directly on the original source tree would fail due to
-        # Python 2/3 source code incompatibility.
-        ei_cmd = self.get_finalized_command("egg_info")
-        build_path = setuptools.command.test.normalize_path(ei_cmd.egg_base)
-        test_args = ["--pyargs", build_path]
-        import pytest
-        errno = pytest.main(test_args)
-        sys.exit(errno)
-extra_setup_params.update(tests_require=["pytest"])
-extra_setup_cmdclass.update(test=PyTest)
-
 
 setup(
     name=package_name,
@@ -253,13 +310,12 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Topic :: Internet"],
 
-    # PEP-314 states that if possible license & platform should be specified
+    # PEP-314 states that, if possible, license & platform should be specified
     # using 'classifiers'.
     license="(specified using classifiers)",
     platforms=["(specified using classifiers)"],
 
-    # Register custom distutils commands.
-    cmdclass=extra_setup_cmdclass,
+    # Register distutils command customizations.
+    cmdclass=distutils_cmdclass,
 
-    **extra_setup_params
-)
+    **extra_setup_params)
