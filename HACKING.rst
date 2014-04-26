@@ -217,11 +217,14 @@ TOP-LEVEL FILES & FOLDERS
 
   ``setup.py --help``
     show detailed usage information
+  ``setup.py --help-commands``
+    show detailed ``setup.py`` command list
   ``setup.py build``
     build the project
   ``setup.py develop``
-    prepare the development environment (add the project folder to the
-    Python module search path)
+    prepare the development environment (add the project folder to the Python
+    module search path) the same as if installed using ``easy_install -e`` or
+    ``pip install -e``
   ``setup.py install``
     build & install the project
   ``setup.py register``
