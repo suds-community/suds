@@ -23,6 +23,7 @@ CompareSAX testing utility unit tests.
 import suds
 import suds.sax.document
 import suds.sax.parser
+from tests.assertion import assert_no_output
 from tests.compare_sax import CompareSAX
 
 import pytest
@@ -46,7 +47,7 @@ skip_test_if_CompareSAX_assertions_disabled = pytest.mark.skipif(
     "<bad><bad>xml</document></bad>"))
 def test_failed_parsing(data, capsys):
     pytest.raises(xml.sax.SAXParseException, CompareSAX.data2data, data, data)
-    _assert_no_output(capsys)
+    assert_no_output(capsys)
 
 
 class TestMatched:
@@ -57,7 +58,7 @@ class TestMatched:
         a = suds.sax.document.Document()
         b = suds.sax.document.Document()
         CompareSAX.document2document(a, b)
-        _assert_no_output(capsys)
+        assert_no_output(capsys)
 
     @skip_test_if_CompareSAX_assertions_disabled
     @pytest.mark.parametrize(("data1", "data2"), (
@@ -76,7 +77,7 @@ class TestMatched:
         (u"<a>☆</a>", "<a>&#9734;</a>")))
     def test_data2data(self, data1, data2, capsys):
         CompareSAX.data2data(data1, data2)
-        _assert_no_output(capsys)
+        assert_no_output(capsys)
 
     @skip_test_if_CompareSAX_assertions_disabled
     @pytest.mark.parametrize("type1", (suds.byte_str, unicode))
@@ -84,7 +85,7 @@ class TestMatched:
     def test_string_input_types(self, type1, type2, capsys):
         xml = "<a/>"
         CompareSAX.data2data(type1(xml), type2(xml))
-        _assert_no_output(capsys)
+        assert_no_output(capsys)
 
     @skip_test_if_CompareSAX_assertions_disabled
     def test_xml_encoding(self, capsys):
@@ -93,7 +94,7 @@ class TestMatched:
         data1 = (xml_format % ("UTF-8",)).encode('utf-8')
         data2 = (xml_format % ("latin1",)).encode('latin1')
         CompareSAX.data2data(data1, data2)
-        _assert_no_output(capsys)
+        assert_no_output(capsys)
 
 
 class TestMismatched:
@@ -225,7 +226,7 @@ class TestSAXModelFeatures:
         ("<a>   \nxxx\n <b/> \t\t\n\n</a>", "<a>xxx<b/></a>")))
     def test_data2data(self, data1, data2, capsys):
         CompareSAX.data2data(data1, data2)
-        _assert_no_output(capsys)
+        assert_no_output(capsys)
 
 
 def _assert_context_output(capsys, context):
@@ -237,10 +238,3 @@ def _assert_context_output(capsys, context):
     out, err = capsys.readouterr()
     assert not out
     assert err == u"Failed SAX XML comparison context:\n  %s\n" % (context,)
-
-
-def _assert_no_output(capsys):
-    """Test utility asserting there was no captured stdout or stderr output."""
-    out, err = capsys.readouterr()
-    assert not out
-    assert not err
