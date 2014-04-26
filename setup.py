@@ -45,6 +45,7 @@ if sys.version_info < (2, 4):
 
 import os
 import os.path
+import re
 
 
 # -----------------------------------------------------------------------------
@@ -97,7 +98,6 @@ def use_compatible_setuptools():
 
 
 use_compatible_setuptools()
-import pkg_resources
 from setuptools import setup, find_packages
 
 
@@ -119,6 +119,18 @@ def read_python_code(filename):
     # read operations.
     source = source.replace("\r\n", "\n").replace("\r", "\n")
     return compile(source, filename, "exec")
+
+# Shamelessly stolen from setuptools project's pkg_resources module.
+def safe_version(version_string):
+    """
+    Convert an arbitrary string to a standard version string
+
+    Spaces become dots, and all other non-alphanumeric characters become
+    dashes, with runs of multiple dashes condensed to a single dash.
+
+    """
+    version_string = version_string.replace(" ", ".")
+    return re.sub("[^A-Za-z0-9.]+", "-", version_string)
 
 
 # -----------------------------------------------------------------------------
@@ -257,7 +269,7 @@ if it ever gets revived again.
 """
 
 package_name = "suds-jurko"
-version_tag = pkg_resources.safe_version(__version__)
+version_tag = safe_version(__version__)
 project_url = "http://bitbucket.org/jurko/suds"
 base_download_url = project_url + "/downloads"
 download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
