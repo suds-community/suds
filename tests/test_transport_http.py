@@ -327,7 +327,7 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
     # Socket's sendall() method twice - once for sending the HTTP request
     # headers and once for its body.
     assert mocker.mock_socket.mock_call_count("sendall") in (1, 2)
-    # With older Python versions , e.g. Python 2.4, Socket class does not
+    # With older Python versions, e.g. Python 2.4, Socket class does not
     # implement the settimeout() method.
     assert mocker.mock_socket.mock_call_count("settimeout") in (0, 1)
     assert mocker.mock_socket.mock_reader.mock_call_count("readline") == 1
