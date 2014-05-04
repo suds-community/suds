@@ -170,7 +170,10 @@ PYTHON COMPATIBILITY
 Base sources should remain Python 2.x compatible. Since the original project
 states aiming for Python 2.4 compatibility we should do so as well.
 
-This backward compatibility requirement does not affect internal development
+The Python 3.0 minor release is not supported. See `Python 3.0 support`_
+subsection below for more detailed information.
+
+These backward compatibility requirements do not affect internal development
 operations such as ``setup.py`` support for uploading a new project distribution
 package to PyPI. Such operations need to be supported on the latest Python 2 & 3
 releases only and no additional backward compatibility is either tested or
@@ -249,6 +252,31 @@ Features introduced in Python 2.7
 
 * Dictionary & set comprehensions.
 * Set literals.
+
+Python 3.0 support
+------------------
+
+Python 3.0 release has been marked as deprecated almost immediately after the
+release 3.1. It is not expected that this Python release is actively used
+anywhere in the wild. That said, if anyone really wants this version supported
+- patches are welcome.
+
+At least the following problems have been found with Python 3.0:
+
+* None of the tools required to properly test our project (setuptools, pip,
+  virtualenv, tox, etc.) will work on it.
+* When you attempt to setuptools project with Python 3.0, it attempts to use the
+  ``sys.stdout.detach()`` method introduced only in Python 3.1. This specific
+  issue could be worked around by using ``sys.stdout.buffer`` directly but the
+  actual fix has not been attempted. If anyone wants to take this route though
+  and work on supporting setuptools on Python 3.0 - be warned that it will most
+  likely have other issues after this one as well.
+* When applying py2to3 to the project sources, Python will use the current
+  user's locale encoding instead of the one specified in the project sources,
+  thus causing the operation to fail on some source files containing different
+  unicode characters unless the user's environement uses some sort of unicode
+  encoding by default, e.g. will fail on some test scripts when run on Windows
+  with eastern European regional settings (uses the CP1250 encoding).
 
 
 RELEASE PROCEDURE
