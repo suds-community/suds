@@ -54,6 +54,16 @@ Here are the basic instructions for 3 different installation methods:
 Installation troubleshooting:
 -----------------------------
 
+* Releases ``0.4.1. jurko 5 < x <= 0.6`` may not be installed using ``pip`` into
+  a Python environment with an already installed ``setuptools`` package older
+  than the version expected by our project. Displayed error message includes
+  instructions on how to manually upgrade the installed ``setuptools`` package
+  before rerunning our installation.
+
+  * ``pip`` internally imports existing ``setuptools`` packages before running
+    our setup, thus preventing us from upgrading the existing ``setuptools``
+    installation inplace.
+
 * If automated ``setuptools`` Python package installation fails (used in
   releases ``0.4.1 jurko 5`` and later), e.g. due to PyPI web site not being
   available, user might need to install it manually and then rerun the
