@@ -43,6 +43,9 @@ import sys
 if sys.version_info < (2, 4):
     print("ERROR: Python 2.4+ required")
     sys.exit(-2)
+if (3, 0) <= sys.version_info < (3, 1):
+    print("ERROR: Python 3.0 not supported - please use Python 3.1+ instead")
+    sys.exit(-2)
 
 import os
 import os.path
@@ -576,7 +579,7 @@ setup(
     # been corrected there or not.
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
-    maintainer="Jurko Gospodnetic",
+    maintainer="Jurko Gospodnetić",
     maintainer_email="jurko.gospodnetic@pke.hr",
 
     # See PEP-301 for the classifier specification. For a complete list of
@@ -595,7 +598,6 @@ setup(
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.0",
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",
         "Programming Language :: Python :: 3.3",
