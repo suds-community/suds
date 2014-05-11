@@ -68,9 +68,9 @@ class CountedMock(object):
     Ignores attributes whose name starts with 'mock_' or '__mock_' or their
     transformed variant '_<className>__mock_'.
 
-    Derived classes must call this class's __init__() or mock_reset()
-    methods during their initialization, but both calls are not needed.
-    Before this initialization, all counters will be reported as None.
+    Derived classes must call this class's __init__() or mock_reset() methods
+    during their initialization, but both calls are not needed. Before this
+    initialization, all counters will be reported as None.
 
     """
 
