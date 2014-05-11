@@ -105,7 +105,7 @@ version 0.7 (development)
     * Python 3.4.0/x32, on Windows 7/SP1/x64.
     * Python 3.4.0/x64, on Windows 7/SP1/x64.
 
-* Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools`` 3.3
+* Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools`` 3.6
   with all more recent Python releases.
 * Improved support for ``decimal`` XSD types.
 
