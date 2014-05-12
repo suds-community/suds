@@ -467,7 +467,7 @@ def test_requirements():
         except (AttributeError, ImportError):
             pass
 
-    if (3, 0) <= sys.version_info < (3, 2):
+    if (3,) <= sys.version_info < (3, 2):
         # 'pytest' requires 'argparse' but does not explicitly list it as a
         # requirement when packaged for Python 3+ environments. That is why we
         # need to explicitly list 'argparse' as an extra test requirement when
