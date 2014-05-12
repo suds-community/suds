@@ -12,79 +12,20 @@ Project development should be tracked in the ``TODO.txt`` file.
 
 Separate sections below:
 
-* `DEVELOPMENT & TESTING ENVIRONMENT`_
+* `TOP-LEVEL PROJECT FILES & FOLDERS`_
 * `PYTHON COMPATIBILITY`_
-
-Reproducing problematic use cases:
-
-* Failing web service processing examples can be easily packaged as reproducible
-  test cases using the suds library 'message & reply injection' technique.
-* Some things you can achieve using this technique (for examples, see existing
-  project unit tests):
-
-  * Create a client object based on a fixed WSDL string.
-  * Have a client object send a fixed request string without having it construct
-    one based on the loaded WSDL schema and received arguments.
-  * Have a client object process a fixed reply string without having it send a
-    request to an actual external web service.
-
-External documentation:
-
-* SOAP
-
-  * http://www.w3.org/TR/soap
-
-  * Version 1.1.
-
-    * http://www.w3.org/TR/2000/NOTE-SOAP-20000508
-
-  * Version 1.2.
-
-    * Part0: Primer
-
-      * http://www.w3.org/TR/2007/REC-soap12-part0-20070427
-      * Errata: http://www.w3.org/2007/04/REC-soap12-part0-20070427-errata.html
-
-    * Part1: Messaging Framework
-
-      * http://www.w3.org/TR/2007/REC-soap12-part1-20070427
-      * Errata: http://www.w3.org/2007/04/REC-soap12-part1-20070427-errata.html
-
-    * Part2: Adjuncts
-
-      * http://www.w3.org/TR/2007/REC-soap12-part2-20070427
-      * Errata: http://www.w3.org/2007/04/REC-soap12-part2-20070427-errata.html
-
-    * Specification Assertions and Test Collection
-
-      * http://www.w3.org/TR/2007/REC-soap12-testcollection-20070427
-      * Errata:
-        http://www.w3.org/2007/04/REC-soap12-testcollection-20070427-errata.html
-
-* WS-I Basic Profile 1.1
-
-  * http://www.ws-i.org/Profiles/BasicProfile-1.1.html
-
-* WSDL 1.1
-
-  * http://www.w3.org/TR/wsdl
-
-* XML Schema
-
-  * Part 0: Primer Second Edition - http://www.w3.org/TR/xmlschema-0
-
-    * Non-normative document intended to provide an easily readable description
-      of the XML Schema facilities, and is oriented towards quickly
-      understanding how to create schemas using the XML Schema language.
-
-  * Part 1: Structures - http://www.w3.org/TR/xmlschema-1
-  * Part 2: Datatypes - http://www.w3.org/TR/xmlschema-2
+* `RELEASE PROCEDURE`_
+* `DEVELOPMENT & TESTING ENVIRONMENT`_
+* `EXTERNAL DOCUMENTATION`_
+* `STANDARDS CONFORMANCE`_
+* `PROJECT IMPLEMENTATION NOTES`_
+* `REPRODUCING PROBLEMATIC USE CASES`_
 
 For additional design, research & development project notes see the project's
 ``notes/`` folder.
 
 
-TOP-LEVEL FILES & FOLDERS
+TOP-LEVEL PROJECT FILES & FOLDERS
 =================================================
 
 | .hg/
@@ -522,6 +463,60 @@ Python 2.4.3
         py243 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15 -f "file:///full_target_folder_path" --no-index
 
 
+EXTERNAL DOCUMENTATION
+=================================================
+
+* SOAP
+
+  * http://www.w3.org/TR/soap
+
+  * Version 1.1.
+
+    * http://www.w3.org/TR/2000/NOTE-SOAP-20000508
+
+  * Version 1.2.
+
+    * Part0: Primer
+
+      * http://www.w3.org/TR/2007/REC-soap12-part0-20070427
+      * Errata: http://www.w3.org/2007/04/REC-soap12-part0-20070427-errata.html
+
+    * Part1: Messaging Framework
+
+      * http://www.w3.org/TR/2007/REC-soap12-part1-20070427
+      * Errata: http://www.w3.org/2007/04/REC-soap12-part1-20070427-errata.html
+
+    * Part2: Adjuncts
+
+      * http://www.w3.org/TR/2007/REC-soap12-part2-20070427
+      * Errata: http://www.w3.org/2007/04/REC-soap12-part2-20070427-errata.html
+
+    * Specification Assertions and Test Collection
+
+      * http://www.w3.org/TR/2007/REC-soap12-testcollection-20070427
+      * Errata:
+        http://www.w3.org/2007/04/REC-soap12-testcollection-20070427-errata.html
+
+* WS-I Basic Profile 1.1
+
+  * http://www.ws-i.org/Profiles/BasicProfile-1.1.html
+
+* WSDL 1.1
+
+  * http://www.w3.org/TR/wsdl
+
+* XML Schema
+
+  * Part 0: Primer Second Edition - http://www.w3.org/TR/xmlschema-0
+
+    * Non-normative document intended to provide an easily readable description
+      of the XML Schema facilities, and is oriented towards quickly
+      understanding how to create schemas using the XML Schema language.
+
+  * Part 1: Structures - http://www.w3.org/TR/xmlschema-1
+  * Part 2: Datatypes - http://www.w3.org/TR/xmlschema-2
+
+
 STANDARDS CONFORMANCE
 =================================================
 
@@ -659,3 +654,19 @@ See the following ``pytest`` issues for more detailed information:
   process (per host) on xdist to avoid conflicts/collection errors
 * `#437 <http://bitbucket.org/hpk42/pytest/issue/437>`_ - different tests
   collected on two nodes with xdist
+
+
+REPRODUCING PROBLEMATIC USE CASES
+=================================================
+
+Failing web service processing examples can be easily packaged as reproducible
+test cases using the suds library 'message & reply injection' technique.
+
+Some things you can achieve using this technique (for examples, see existing
+project unit tests):
+
+* Create a client object based on a fixed WSDL string.
+* Have a client object send a fixed request string without having it construct
+  one based on the loaded WSDL schema and received arguments.
+* Have a client object process a fixed reply string without having it send a
+  request to an actual external web service.
