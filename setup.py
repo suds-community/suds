@@ -450,6 +450,23 @@ def test_requirements():
     else:
         result.append("pytest>=2.4.0")
 
+    if using_setuptools and ((3,) <= sys.version_info < (3, 2, 3)):
+        # Python 3.x versions prior to Python 3.2.3 have a bug in their inspect
+        # module causing inspect.getmodule() calls to fail if some module lazy
+        # loads other modules when some of its attributes are accessed. For
+        # more detailed information see Python development issue #13487
+        # (http://bugs.python.org/issue13487).
+        #
+        # This occurs when using setuptools to install our project into a
+        # Python 3.1 environment. There py.error module seems to do such lazy
+        # loading which we force done here before the setuptools installation
+        # procedure to avoid the issue.
+        try:
+            import py.error
+            py.error.__attribute_access_to_force_this_module_to_lazy_load__
+        except (AttributeError, ImportError):
+            pass
+
     if (3, 0) <= sys.version_info < (3, 2):
         # 'pytest' requires 'argparse' but does not explicitly list it as a
         # requirement when packaged for Python 3+ environments. That is why we
