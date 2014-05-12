@@ -180,8 +180,8 @@ The following is a list of backward incompatible Python features not used in
 this project to maintain backward compatibility, grouped by Python version they
 were first introduced in:
 
-Features introduced in Python 2.5.
-----------------------------------
+Features introduced in Python 2.5
+---------------------------------
 
 * ``any`` & ``all`` functions.
 * ``with`` statement.
@@ -189,9 +189,9 @@ Features introduced in Python 2.5.
   classes stopped being Exception subclasses.
 
   * This means that code wanting to support Python versions prior to this
-    release needs to re-raise KeyboardInterrupt & SystemExit exceptions
-    before handling the generic 'Exception' case, unless it really wants to
-    gobble up those special infrastructural exceptions as well.
+    release needs to re-raise KeyboardInterrupt & SystemExit exceptions before
+    handling the generic 'Exception' case, unless it really wants to gobble up
+    those special infrastructural exceptions as well.
 
 * ``try``/``except``/``finally`` blocks.
 
@@ -234,8 +234,8 @@ Features introduced in Python 2.5.
           raise
       do_something()
 
-Features introduced in Python 2.6.
-----------------------------------
+Features introduced in Python 2.6
+---------------------------------
 
 * ``bytes`` type.
 * Byte literals, e.g. ``b"quack"``.
@@ -244,8 +244,8 @@ Features introduced in Python 2.6.
 * ``numbers`` module.
 * String ``format()`` method.
 
-Features introduced in Python 2.7.
-----------------------------------
+Features introduced in Python 2.7
+---------------------------------
 
 * Dictionary & set comprehensions.
 * Set literals.
