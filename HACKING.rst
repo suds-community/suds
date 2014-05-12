@@ -180,11 +180,10 @@ releases only and no additional backward compatibility is either tested or
 guaranteed for them.
 
 The following is a list of backward incompatible Python features not used in
-this project to maintain backward compatibility, grouped by Python version they
-were first introduced in:
+this project to maintain backward compatibility:
 
-Features introduced in Python 2.5
----------------------------------
+Features missing prior to Python 2.5
+------------------------------------
 
 * ``any`` & ``all`` functions.
 * ``with`` statement.
@@ -237,8 +236,8 @@ Features introduced in Python 2.5
           raise
       do_something()
 
-Features introduced in Python 2.6
----------------------------------
+Features missing prior to Python 2.6
+------------------------------------
 
 * ``bytes`` type.
 * Byte literals, e.g. ``b"quack"``.
@@ -247,11 +246,17 @@ Features introduced in Python 2.6
 * ``numbers`` module.
 * String ``format()`` method.
 
-Features introduced in Python 2.7
----------------------------------
+Features missing prior to Python 2.7
+------------------------------------
 
 * Dictionary & set comprehensions.
 * Set literals.
+
+Features missing in Python 3.0 & 3.1
+------------------------------------
+
+* py2to3 conversion for source files with an explicitly specified UTF-8 BOM.
+
 
 Python 3.0 support
 ------------------
