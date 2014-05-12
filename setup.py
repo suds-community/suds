@@ -190,6 +190,29 @@ def acquire_setuptools_setup():
     setup = import_setuptools_setup()
     if setup or not attempt_to_install_setuptools:
         return setup
+    if (3,) <= sys.version_info[:2] < (3, 2):
+        # Setuptools contains a test module with an explicitly specified UTF-8
+        # BOM, which is not supported by Python's py2to3 tool prior to Python
+        # 3.2 (see Python issue #7313). Setuptools can still be installed
+        # manually using its ez_setup.py installer script (it will report and
+        # ignore the error), but if we use the ez_setup.use_setuptools()
+        # programmatic setup invocation from here - it will fail.
+        #
+        # There are several things that could be done here - patches welcome if
+        # anyone actually needs them:
+        #  - the issue could be worked around by running the setuptools
+        #    installation as a separate process in this case
+        #  - warning display could be more cleanly integrated into distutils
+        #    command execution process so the warning does not get displayed
+        #    if setuptools would not actually be useful, e.g. if user just ran
+        #    our setup script with no command or with the --help option
+        print("---")
+        print("WARNING: can not install setuptools automatically using Python "
+            "3.0 & 3.1")
+        print("WARNING: if needed, install setuptools manually before running "
+            "this installation using Python prior to version 3.2")
+        print("---")
+        return
     if sys.version_info < (2, 6):
         # setuptools 1.4.2 - the final release supporting Python 2.4 & 2.5.
         import ez_setup_1_4_2 as ez_setup
