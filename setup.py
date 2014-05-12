@@ -306,6 +306,10 @@ def safe_version(version_string):
     version_string = version_string.replace(" ", ".")
     return re.sub("[^A-Za-z0-9.]+", "-", version_string)
 
+def unicode2ascii(unicode):
+    """Convert a unicode string to its approximate ASCII equivalent."""
+    return unicode.encode("ascii", 'xmlcharrefreplace').decode("ascii")
+
 
 # -----------------------------------------------------------------------------
 # Detect the setup.py environment - current & script folder.
@@ -565,6 +569,29 @@ if sys.version_info >= (3, 0):
 # -----------------------------------------------------------------------------
 # Set up project metadata and run the actual setup.
 # -----------------------------------------------------------------------------
+# Package meta-data needs may be specified as:
+#  * Python 2.x - UTF-8 encoded bytes
+#  * Python [2.6, 3.0> - unicode string
+#      - unicode strings containing non-ASCII characters supported since Python
+#        commit 4c683ec4415b3c4bfbc7fe7a836b949cb7beea03
+#  * Python [3.0, 3.2.2>
+#      - may only contain ASCII characters due to a distutils bug (given input
+#        can only be a unicode string and is encoded using the user's default
+#        system code-page, e.g. typically CP1250 on eastern European Windows,
+#        CP1252 on western European Windows, UTF-8 on Linux or any other)
+#      - setuptools 3.5 works around the issue by overriding relevant distutils
+#        functionality, allowing the use of non-ASCII characters, but only for
+#        Python 3.1
+#  * Python 3.2.2+ - unicode string
+#      - unicode strings containing non-ASCII characters supported since Python
+#        commit fb4d2e6d393e96baac13c4efc216e361bf12c293
+
+can_not_use_non_ASCII_meta_data = (3,) <= sys.version_info < (3, 2, 2)
+if (can_not_use_non_ASCII_meta_data and using_setuptools and
+        sys.version_info[:2] == (3, 1)):
+    from setuptools import __version__ as setuptools_version
+    from pkg_resources import parse_version as pv
+    can_not_use_non_ASCII_meta_data = pv(setuptools_version) < pv("3.5")
 
 # Wrap long_description at 72 characters since the PKG-INFO package
 # distribution metadata file stores this text with an 8 space indentation.
@@ -594,6 +621,10 @@ base_download_url = project_url + "/downloads"
 download_distribution_name = "%s-%s.tar.bz2" % (package_name, version_tag)
 download_url = "%s/%s" % (base_download_url, download_distribution_name)
 
+maintainer="Jurko Gospodnetić"
+if can_not_use_non_ASCII_meta_data:
+    maintainer = unicode2ascii(maintainer)
+
 setup(
     name=package_name,
     version=__version__,
@@ -604,22 +635,9 @@ setup(
     download_url=download_url,
     packages=recursive_package_list("suds", "tests"),
 
-    # 'maintainer' will be listed as the distribution package author.
-    # Warning: Due to a 'distribute' package defect when used with Python 3
-    # (verified using 'distribute' package version 0.6.25), given strings must
-    # be given using ASCII characters only. This is needed because 'distribute'
-    # stores the strings by doing a simple write to a PKG-INFO file opened as a
-    # 'default text file' thus attempting to encode the given characters using
-    # the user's default system code-page, e.g. typically CP1250 on eastern
-    # European Windows, CP1252 on western European Windows, UTF-8 on Linux or
-    # any other.
-    #
-    # 'distribute' package merged back with the 'setuptools' package in the
-    # setuptools 0.7 release but we have not yet checked whether this bug has
-    # been corrected there or not.
     author="Jeff Ortel",
     author_email="jortel@redhat.com",
-    maintainer="Jurko Gospodnetić",
+    maintainer=maintainer,
     maintainer_email="jurko.gospodnetic@pke.hr",
 
     # See PEP-301 for the classifier specification. For a complete list of
