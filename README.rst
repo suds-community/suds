@@ -116,8 +116,6 @@ version 0.7 (development)
     * Python 3.4.0/x86 on Windows 7/SP1/x64.
     * Python 3.4.0/x64 on Windows 7/SP1/x64.
 
-* Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools`` 3.6
-  with all more recent Python releases.
 * Improved support for ``decimal`` XSD types.
 
   * Now modeled internally using Python's ``decimal.Decimal`` type instead of
@@ -153,7 +151,7 @@ version 0.7 (development)
     providing the initial fix.
 
 * Fixed places in code where ``suds`` could eat up & silently ignore internal
-  Python exceptions like SystemExit or KeyboardInterrupt.
+  Python exceptions like ``KeyboardInterrupt`` or ``SystemExit``.
 * Fixed the exception message used when attempting to construct a
   ``suds.sax.element.Element`` with a non-``Element`` parent.
 * ``suds.cache`` module cleanup.
@@ -286,12 +284,55 @@ version 0.7 (development)
 * Using injected requests/replies/error-information with a web service operation
   taking at least one input parameter no longer causes suds to report an invalid
   extra argument error.
+* Improved internal project ``HACKING.rst`` documentation.
+* ``setup.py`` improvements.
+
+  * Python 3.0.x releases explicitly marked as not supported.
+  * Attempting to run ``setup.py`` in an unsupported Python environment now
+    reports a clean error message.
+  * Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools`` 3.6
+    with all more recent Python releases.
+  * Project may now be installed without even in environments when you can not
+    install ``setuptools``.
+
+    * In such cases ``setup.py`` will attempt to use any preinstalled
+      ``setuptools`` version, and if none is available, it will disable some of
+      its features and fall back to using a plain ``distutils`` based setup. See
+      the ``setup.py`` script comments for a more detailed listing of all
+      ``setup.py`` features affected by this.
+
+  * Several installation issues fixes when installing into Python 3.x
+    environments prior to Python 3.2.3.
+  * When installing the project into a Python 3.x environment prior to Python
+    3.2, ``setuptools`` is not installed automatically since one of its test
+    modules contains UTF-8 BOM characters, which would cause such automated
+    installation to fail.
+
+    * If needed, ``setuptools`` can still be installed into such environments by
+      manually running its ``ez_setup.py`` installation script. Such an
+      installation will encounter the same errors but will ignore them,
+      effectively just leaving the installed ``setuptools`` package with one
+      defective test module, but fully operational at run-time.
+
+  * Package meta-data may now contain non-ASCII characters on platforms where
+    that is allowed, namely with all Python versions except Python 3.x prior to
+    3.2.2.
+  * ``setup.py test`` command improvements.
+
+    * Now works in Python 2.4.x environments.
+    * Now reports cleanly if it can not be used for some reason, both when run
+      and in the command's ``--help-commands`` listing.
+    * Better commented the related implementation.
+
 * Test suite improvements.
 
+  * Refactored the quick & dirty batch script used to run all the project tests
+    in multiple Python environments to remove much code duplication.
+  * Automated project testing in several additional Python environment versions.
   * Added more detailed XSD modeling tests.
   * Added tests demonstrating how additional or replacement built-in XSD types
     can be registered with suds.
-  * Added new and updated existing suds.cache module related tests.
+  * Added new and updated existing ``suds.cache`` module related tests.
   * Documented that all ``pytest`` test parametrizations should be prepared so
     they get ordered the same on all test runs. See ``Project implementation
     note #1`` in ``HACKING.rst`` for more detailed information.
