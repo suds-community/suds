@@ -462,6 +462,14 @@ Python 2.4.3
 
         py243 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15 -f "file:///full_target_folder_path" --no-index
 
+Python 3.1.x
+~~~~~~~~~~~~
+
+* Unfortunately pytest prior to release 2.6 does not support Python versions
+  3.1.x out of the box, but can be patched to do so. See pytest pull request
+  #168 ('https://bitbucket.org/hpk42/pytest/pull-request/168') which has been
+  successfully applied to a pytest 2.5.2 release.
+
 
 EXTERNAL DOCUMENTATION
 =================================================
