@@ -27,6 +27,14 @@
 @call :test "3.2.5 x64" "py325"     || goto :fail
 @call :test "3.3.3 x64" "py333"     || goto :fail
 @call :test "3.3.5 x64" "py335"     || goto :fail
+@call :test "2.5.4 x86" "py254_x86" || goto :fail
+@call :test "2.5.4 x64" "py254"     || goto :fail
+@call :test "2.6.6 x86" "py266_x86" || goto :fail
+@call :test "2.6.6 x64" "py266"     || goto :fail
+@call :test "2.7.6 x86" "py276_x86" || goto :fail
+@call :test "3.1.3 x64" "py313"     || goto :fail
+@call :test "3.2.5 x86" "py325_x86" || goto :fail
+@call :test "3.3.5 x86" "py335_x86" || goto :fail
 
 @echo All tests passed.
 @exit /b 0

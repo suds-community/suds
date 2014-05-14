@@ -89,21 +89,32 @@ version 0.7 (development)
 
 * Supported Python versions.
 
-  * Intended to work with Python 2.4+.
+  * Intended to work with Python 2.4+, except for the following versions:
+
+    * Python 3.0.x - not supported by setuptools, pip or pytest.
+
   * Basic sources prepared for Python 2.x.
   * For using Python 3 the sources first processed by the Python ``py2to3`` tool
     during the setup procedure.
   * Tested in the following environments:
 
-    * Python 2.4.3/x86, on Windows 7/SP1/x64.
-    * Python 2.4.4/x86, on Windows 7/SP1/x64.
-    * Python 2.7.6/x64, on Windows 7/SP1/x64.
-    * Python 3.2.5/x64, on Windows 7/SP1/x64.
-    * Python 3.3.3/x86, on Windows 7/SP1/x64.
-    * Python 3.3.3/x64, on Windows 7/SP1/x64.
-    * Python 3.3.5/x64, on Windows 7/SP1/x64.
-    * Python 3.4.0/x32, on Windows 7/SP1/x64.
-    * Python 3.4.0/x64, on Windows 7/SP1/x64.
+    * Python 2.4.3/x86 on Windows 7/SP1/x64.
+    * Python 2.4.4/x86 on Windows 7/SP1/x64.
+    * Python 2.5.4/x86 on Windows 7/SP1/x64.
+    * Python 2.5.4/x64 on Windows 7/SP1/x64.
+    * Python 2.6.6/x86 on Windows 7/SP1/x64.
+    * Python 2.6.6/x64 on Windows 7/SP1/x64.
+    * Python 2.7.6/x86 on Windows 7/SP1/x64.
+    * Python 2.7.6/x64 on Windows 7/SP1/x64.
+    * Python 3.1.3/x64 on Windows 7/SP1/x64.
+    * Python 3.2.5/x86 on Windows 7/SP1/x64.
+    * Python 3.2.5/x64 on Windows 7/SP1/x64.
+    * Python 3.3.3/x86 on Windows 7/SP1/x64.
+    * Python 3.3.3/x64 on Windows 7/SP1/x64.
+    * Python 3.3.5/x86 on Windows 7/SP1/x64.
+    * Python 3.3.5/x64 on Windows 7/SP1/x64.
+    * Python 3.4.0/x86 on Windows 7/SP1/x64.
+    * Python 3.4.0/x64 on Windows 7/SP1/x64.
 
 * Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools`` 3.6
   with all more recent Python releases.
