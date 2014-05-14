@@ -10,152 +10,23 @@
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 @setlocal
 
-:: Commands for running specific Python interpreter versions.
-@set PY243_X86=call py243
-@set PY244_X86=call py244
-@set PY276_X64=call py276
-@set PY325_X64=call py325
-@set PY333_X86=call py333_x86
-@set PY333_X64=call py333
-@set PY335_X64=call py335
-@set PY340_X86=call py340_x86
-@set PY340_X64=call py340
+:: Process script environment.
+@for %%i in ("%~f0\..") do @set SCRIPT_FOLDER=%%~fi
+@cd /d "%SCRIPT_FOLDER%"
 
 :: Python command-line options used for running specific scripts.
 @set PYTEST_OPTIONS=-m pytest -q -x --tb=short
 @set SETUP_OPTIONS=setup.py -q develop
 
-@for %%i in ("%~f0\..") do @set SCRIPT_FOLDER=%%~fi
-@cd /d "%SCRIPT_FOLDER%"
-
-@echo ------------------------
-@echo --- Python 3.4.0 x64 ---
-@echo ------------------------
-@if exist "build\" (rd /s /q build || goto :fail)
-@%PY340_X64% %SETUP_OPTIONS% || goto :fail
-@%PY340_X64% %PYTEST_OPTIONS% build || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 3.4.0 x64 - no assertions ---
-@echo ----------------------------------------
-::Reuse the project built for the previous 'assertions enabled' test run.
-::@if exist "build\" (rd /s /q build || goto :fail)
-::@%PY340_X64% %SETUP_OPTIONS% || goto :fail
-@%PY340_X64% -O %PYTEST_OPTIONS% build || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 3.3.5 x64 ---
-@echo ------------------------
-@if exist "build\" (rd /s /q build || goto :fail)
-@%PY335_X64% %SETUP_OPTIONS% || goto :fail
-@%PY335_X64% %PYTEST_OPTIONS% build || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 3.3.5 x64 - no assertions ---
-@echo ----------------------------------------
-::Reuse the project built for the previous 'assertions enabled' test run.
-::@if exist "build\" (rd /s /q build || goto :fail)
-::@%PY335_X64% %SETUP_OPTIONS% || goto :fail
-@%PY335_X64% -O %PYTEST_OPTIONS% build || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 2.4.3 x86 ---
-@echo ------------------------
-@%PY243_X86% %PYTEST_OPTIONS% || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 2.4.3 x86 - no assertions ---
-@echo ----------------------------------------
-@%PY243_X86% -O %PYTEST_OPTIONS% || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 2.7.6 x64 ---
-@echo ------------------------
-@%PY276_X64% %PYTEST_OPTIONS% || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 2.7.6 x64 - no assertions ---
-@echo ----------------------------------------
-@%PY276_X64% -O %PYTEST_OPTIONS% || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 3.4.0 x86 ---
-@echo ------------------------
-@if exist "build\" (rd /s /q build || goto :fail)
-@%PY340_X86% %SETUP_OPTIONS% || goto :fail
-@%PY340_X86% %PYTEST_OPTIONS% build || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 3.4.0 x86 - no assertions ---
-@echo ----------------------------------------
-::Reuse the project built for the previous 'assertions enabled' test run.
-::@if exist "build\" (rd /s /q build || goto :fail)
-::@%PY340_X86% %SETUP_OPTIONS% || goto :fail
-@%PY340_X86% -O %PYTEST_OPTIONS% build || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 2.4.4 x86 ---
-@echo ------------------------
-@%PY244_X86% %PYTEST_OPTIONS% || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 2.4.4 x86 - no assertions ---
-@echo ----------------------------------------
-@%PY244_X86% -O %PYTEST_OPTIONS% || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 3.3.3 x86 ---
-@echo ------------------------
-@if exist "build\" (rd /s /q build || goto :fail)
-@%PY333_X86% %SETUP_OPTIONS% || goto :fail
-@%PY333_X86% %PYTEST_OPTIONS% build || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 3.3.3 x86 - no assertions ---
-@echo ----------------------------------------
-::Reuse the project built for the previous 'assertions enabled' test run.
-::@if exist "build\" (rd /s /q build || goto :fail)
-::@%PY333_X86% %SETUP_OPTIONS% || goto :fail
-@%PY333_X86% -O %PYTEST_OPTIONS% build || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 3.2.5 x64 ---
-@echo ------------------------
-@if exist "build\" (rd /s /q build || goto :fail)
-@%PY325_X64% %SETUP_OPTIONS% || goto :fail
-@%PY325_X64% %PYTEST_OPTIONS% build || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 3.2.5 x64 - no assertions ---
-@echo ----------------------------------------
-::Reuse the project built for the previous 'assertions enabled' test run.
-::@if exist "build\" (rd /s /q build || goto :fail)
-::@%PY325_X64% %SETUP_OPTIONS% || goto :fail
-@%PY325_X64% -O %PYTEST_OPTIONS% build || goto :fail
-@echo.
-
-@echo ------------------------
-@echo --- Python 3.3.3 x64 ---
-@echo ------------------------
-@if exist "build\" (rd /s /q build || goto :fail)
-@%PY333_X64% %SETUP_OPTIONS% || goto :fail
-@%PY333_X64% %PYTEST_OPTIONS% build || goto :fail
-@echo.
-@echo ----------------------------------------
-@echo --- Python 3.3.3 x64 - no assertions ---
-@echo ----------------------------------------
-::Reuse the project built for the previous 'assertions enabled' test run.
-::@if exist "build\" (rd /s /q build || goto :fail)
-::@%PY333_X64% %SETUP_OPTIONS% || goto :fail
-@%PY333_X64% -O %PYTEST_OPTIONS% build || goto :fail
-@echo.
+@call :test "3.4.0 x64" "py340"     || goto :fail
+@call :test "2.4.3 x86" "py243"     || goto :fail
+@call :test "2.7.6 x64" "py276"     || goto :fail
+@call :test "3.4.0 x86" "py340_x86" || goto :fail
+@call :test "2.4.4 x86" "py244"     || goto :fail
+@call :test "3.3.3 x86" "py333_x86" || goto :fail
+@call :test "3.2.5 x64" "py325"     || goto :fail
+@call :test "3.3.3 x64" "py333"     || goto :fail
+@call :test "3.3.5 x64" "py335"     || goto :fail
 
 @echo All tests passed.
 @exit /b 0
@@ -165,3 +36,30 @@
     @echo.
     @echo Test failed.
     @exit /b -2
+
+
+:test
+    @setlocal
+    @set TITLE=%~1
+    @set PYTHON="%~2"
+    @set LOCATION=tests
+    @if "%TITLE:~0,1%" == "2" goto :test__skip_build
+        @echo ---------------------------------------------------------------
+        @echo --- Building suds for Python %TITLE%
+        @echo ---------------------------------------------------------------
+        @set LOCATION=build/lib/%LOCATION%
+        @if exist "build\" (rd /s /q build || exit /b -2)
+        @call %PYTHON% %SETUP_OPTIONS% || exit /b -2
+        @echo.
+    :test__skip_build
+    @echo ---------------------------------------------------------------
+    @echo --- Testing suds with Python %TITLE%
+    @echo ---------------------------------------------------------------
+    @call %PYTHON% %PYTEST_OPTIONS% %LOCATION% || exit /b -2
+    @echo.
+    @echo ---------------------------------------------------------------
+    @echo --- Testing suds with Python %TITLE% - no assertions
+    @echo ---------------------------------------------------------------
+    @call %PYTHON% -O %PYTEST_OPTIONS% %LOCATION% || exit /b -2
+    @echo.
+    @exit /b 0
