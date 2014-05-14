@@ -51,6 +51,27 @@ import os
 import os.path
 import re
 
+# Workaround for a Python issue detected with Python 3.1.3 when running our
+# pytest based 'setup.py test' command. At the end of the test run, Python
+# would report an error:
+#
+#   > Error in atexit._run_exitfuncs:
+#   > TypeError: print_exception(): Exception expected for value, str found
+#
+# Workaround found suggested by Richard Oudkerk in Python's issue tracker at:
+#   http://bugs.python.org/issue15881#msg170215
+#
+# The error is caused by two chained Python bugs:
+#  1. The multiprocessing module seems to call its global cleanup function only
+#     after all of its globals have already been released, thus raising an
+#     exception.
+#  2. atexit exception handling implementation is not prepared to handle and
+#     correctly report the exception as raised by the multiprocessing module
+#     cleanup.
+if (3,) <= sys.version_info < (3, 2):
+    import multiprocessing
+    del multiprocessing
+
 
 # -----------------------------------------------------------------------------
 # Global variables.
