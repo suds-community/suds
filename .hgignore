@@ -1,12 +1,19 @@
 syntax: regexp
 
-# Root folders - 'setup.py install' artifacts.
+# 'setup.py' artifacts.
 ^build/
 ^dist/
-^[^/]+.egg-info/
+\.egg$
+\.egg-info/
+\.gz$
+\.zip$
 
-# Precompiled Python modules.
-/__pycache__$
+# Temporary or cache files & folders created by Python (e.g. __pycache__
+# folders) or our internal development tools.
+^__
+/__
+
+# Precompiled Python modules outside a __pycache__ folder.
 \.pyc$
 \.pyo$
 
