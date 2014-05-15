@@ -259,7 +259,12 @@ RELEASE PROCEDURE
 
     * Run ``setup.py sdist upload``.
 
-  * Upload the prepared source package to the project site.
+  * Prepare wheel packages for Python 2 & 3 using the latest Python 2 & 3
+    environments with the ``wheel`` package installed.
+
+    * Run ``setup.py bdist_wheel upload`` using both Python 2 & 3.
+
+  * Upload the prepared source & wheel packages to the project site.
 
     * Use the BitBucket project web interface.
 

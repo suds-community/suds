@@ -1272,10 +1272,13 @@ PRIORITIZED:
 (+)             * setuptools 1.4.
 (+)             * Latest compatible setuptools release.
 (+)                 * setuptools 1.4.2 for Python releases prior to 2.6.
+(+) * (Jurko) Plan preparing a wheel based distribution.
+(+)     * Test it.
+(+)     * Document.
+(+)         * Setting up the necessary development environment.
+(+)         * Release notes.
 
 (16.05.2014.)
-
-    * (Jurko) Plan preparing a wheel based distribution.
 
     * (Jurko) Try out virtualenv to make it easier to run tests using multiple
       Python versions and to allow us to automate suds installation testing in
