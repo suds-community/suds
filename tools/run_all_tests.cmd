@@ -1,18 +1,18 @@
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::
-:: Development script used on Windows to run the full suds-jurko test suite
-:: using multiple Python interpreter versions.
+:: "poor man's tox" development script used on Windows to run the full
+:: suds-jurko test suite using multiple Python interpreter versions.
 ::
 :: Intended to be used as a general 'all tests passed' check. To see more
 :: detailed information on specific failures, run the failed test group
-:: manually, configured for greater verbosity that is done here.
+:: manually, configured for greater verbosity than is done here.
 ::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 @setlocal
 
 :: Process script environment.
-@for %%i in ("%~f0\..") do @set SCRIPT_FOLDER=%%~fi
-@cd /d "%SCRIPT_FOLDER%"
+@for %%i in ("%~f0\..\..") do @set PROJECT_FOLDER=%%~fi
+@cd /d "%PROJECT_FOLDER%"
 
 :: Python command-line options used for running specific scripts.
 @set PYTEST_OPTIONS=-m pytest -q -x --tb=short

@@ -14,3 +14,7 @@ include TODO.txt
 # Notes.
 include notes/*.rst
 include notes/*.txt
+
+# Tools.
+include tools/*.cmd
+include tools/*.txt
