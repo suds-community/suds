@@ -107,6 +107,9 @@ compatibility support packages.
 # single script run, or with a separate script, or use devpi. Currently, if a
 # suitable package is found locally, a more suitable one will not be checked
 # for on PyPI.
+#TODO: Recheck error handling to make sure all failed commands are correctly
+# detected. Some might not set a non-0 exit code on error and so their output
+# must be used as a success/failure indicator.
 
 import os
 import os.path
