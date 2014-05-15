@@ -52,6 +52,10 @@ TOP-LEVEL PROJECT FILES & FOLDERS
 
 * Project test code.
 
+| tools/
+
+* Project development utility scripts.
+
 | MANIFEST.in
 
 * Build system configuration file listing the files to be included in the
@@ -64,11 +68,6 @@ TOP-LEVEL PROJECT FILES & FOLDERS
 | TODO.txt
 
 * Internal project documentation.
-
-| run_all_tests.cmd
-
-* Basic development script for running the full project test suite using
-  multiple Python interpreter versions on a Windows development machine.
 
 | setup.cfg
 
@@ -334,6 +333,12 @@ options. Some interesting ones:
   --tb=short  shorter traceback information for each failure
   -x          stop on first failure
   --pdb       enter Python debugger on failure
+
+``tools/run_all_tests.cmd`` script is a basic *poor man's tox* development
+script that can be used for running the full project test suite using multiple
+Python interpreter versions on a Windows development machine. It is intended to
+be replaced by a more portable ``tox`` based or similar automated testing
+solution some time in the future.
 
 Setting up multiple parallel Python interpreter versions on Windows
 -------------------------------------------------------------------
