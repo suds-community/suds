@@ -54,7 +54,8 @@ TOP-LEVEL PROJECT FILES & FOLDERS
 
 | tools/
 
-* Project development utility scripts.
+* Project development utility scripts. Any internal Python modules are located
+  under its ``suds_devel/`` package folder.
 
 | MANIFEST.in
 
@@ -277,11 +278,16 @@ In all command-line examples below pyX, pyXY & pyXYZ represent a Python
 interpreter executable for a specific Python version X, X.Y & X.Y.Z
 respectively.
 
-Notes in this section should hold for all Python releases except some older ones
-explicitly listed at the end of this section.
+Setting up the development & testing environment
+------------------------------------------------
 
-Testing
--------
+``tools/setup_base_environments.py`` script should be used for setting up your
+basic Python environments so they support testing our project. The script can
+be configured configured from the main project Python configuration file
+``setup.cfg``. It implements all the backward compatibility tweaks that would
+otherwise need to be done manually in order to be able to test our project in
+those environments. These tweaks are no longer documented elsewhere so anyone
+interested in the details should consult the script's sources.
 
 Project's test suite requires the ``pytest`` testing framework to run. The test
 code base is compatible with pytest 2.4.0+ (prior versions do not support
@@ -294,6 +300,30 @@ The testing environment is generally set up as follows:
    distribution).
 #. Install ``pip`` using ``setuptools`` (optional).
 #. Install ``pytest`` using ``pip`` or ``setuptools``.
+
+Some older Python environments may have slight issues caused by varying support
+levels in different used Python packages, but the basic testing functionality
+has been tested to make sure it works on as wide array of supported platforms as
+possible.
+
+Examples of such issues:
+
+* Colors not getting displayed on a Windows console terminal, and possibly
+  ANSI color code escape sequences getting displayed instead.
+* ``pip`` utility not being runnable from the command-line using the ``py -m
+  pip`` syntax for some older versions.
+* Some specific older Python versions having no SSL support and so must reuse
+  installations downloaded by other Python versions.
+
+
+Running the project tests
+-------------------------
+
+``tools/run_all_tests.cmd`` script is a basic *poor man's tox* development
+script that can be used for running the full project test suite using multiple
+Python interpreter versions on a Windows development machine. It is intended to
+be replaced by a more portable ``tox`` based or similar automated testing
+solution some time in the future.
 
 To run all of the project unit tests with a specific interpreter without
 additional configuration options run the project's ``setup.py`` script with the
@@ -334,12 +364,6 @@ options. Some interesting ones:
   -x          stop on first failure
   --pdb       enter Python debugger on failure
 
-``tools/run_all_tests.cmd`` script is a basic *poor man's tox* development
-script that can be used for running the full project test suite using multiple
-Python interpreter versions on a Windows development machine. It is intended to
-be replaced by a more portable ``tox`` based or similar automated testing
-solution some time in the future.
-
 Setting up multiple parallel Python interpreter versions on Windows
 -------------------------------------------------------------------
 
@@ -368,112 +392,6 @@ some external Python package installation tool requiring those entries in order
 to determine where to install its package data. In that case you can set those
 entries manually, e.g. by using a script similar to the one found at
 `<http://nedbatchelder.com/blog/201007/installing_python_packages_from_windows_installers_into.html>`_.
-
-Setting up specific Python versions
------------------------------------
-
-Installing setuptools on Python 2.4.x & 2.5.x
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* ``setuptools``
-
-  * 1.4.2 - last version supporting Python 2.4 & 2.5.
-
-  * Install using the ``ez_setup.py`` script from the ``setuptools`` 1.4.2
-    release::
-
-      py24 ez_setup_1.4.2.py
-
-Python 2.4.x
-~~~~~~~~~~~~
-
-* ``pip``
-
-  * 1.1 - last version supporting Python 2.4.
-
-    * Install using::
-
-        py244 -m easy_install pip==1.1
-
-  * Can not be run using ``python.exe -m pip``.
-
-    * Workaround is to use one of the ``pip`` startup scripts found in the
-      Python installation's ``Scripts`` folder or the following invocation::
-
-        py244 -c "import pip;pip.main()" <regular-pip-options>
-
-* ``pytest``
-
-  * 2.4.1 - last version supporting Python 2.4.
-
-    * Install::
-
-        py244 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15
-
-      * ``pytest`` marked as depending on ``py`` package version >= 1.4.16 which
-        is not Python 2.4 compatible (tested up to and including 1.4.18), so
-        ``py`` package version 1.4.15 is used instead.
-
-    * With the described configuration ``pytest``'s startup scripts will not
-      work (as they explicitly check ``pytest``'s package dependencies), but
-      ``pytest`` can still be run using::
-
-        py244 -m pytest <regular-pytest-options>
-
-  * When running project tests on Windows using this Python version, the output
-    will contain lots of terminal escape sequences instead of being colored, but
-    otherwise the tests should run without a glitch.
-
-Python 2.4.3
-~~~~~~~~~~~~
-
-* First see more general Python 2.4.x related notes above - list of compatible
-  required package versions, general caveats, etc.
-* Does not work with HTTPS links so you can not use the Python package index
-  directly, since it, at some point, switched to using HTTPS links only.
-
-  * You could potentially work around this problem by somehow mapping its https:
-    links to http: ones or download its link page manually, locally modify it to
-    contain http: links and then use that download link page instead of the
-    default downloaded one.
-  * An alternative and tested solution is to download the required installation
-    packages locally using Python 2.4.4 and then install them locally into the
-    Python 2.4.3 environment.
-
-    * In the example code below, we name the local installation package storage
-      folder ``target_folder`` for illustration purposes only, with
-      ``full_target_folder_path`` representing its full path.
-
-    * First install ``setuptools`` as described under `Installing setuptools on
-      Python 2.4.x & 2.5.x`_.
-    * Then use Python 2.4.4 to download pip & pytest related installation
-      packages::
-
-        py244 -m easy_install --zip-ok --multi-version --always-copy --exclude-scripts --install-dir "target_folder" pip==1.1
-        py244 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15 -d "target_folder" --exists-action=i
-
-    * Install ``pip`` from its local installation package (``target_folder``
-      name used in this command must not contain any whitespace characters or
-      may be given as a local ``file:///`` URL consisting of an absolute path,
-      ending with a trailing ``/`` character and with any embedded spaces
-      encoded as ``%20``)::
-
-        py243 -m easy_install -f "target_folder" --allow-hosts=None pip==1.1
-
-    * Install ``pytest`` from its local installation packages (``target_folder``
-      name used in this command must be specified as a local ``file:///`` URL
-      consisting of an absolute path, but without a trailing ``/`` character or
-      any embedded character encoding)::
-
-        py243 -c "import pip;pip.main()" install pytest==2.4.1 py==1.4.15 -f "file:///full_target_folder_path" --no-index
-
-Python 3.1.x
-~~~~~~~~~~~~
-
-* Unfortunately pytest prior to release 2.6 does not support Python versions
-  3.1.x out of the box, but can be patched to do so. See pytest pull request
-  #168 ('https://bitbucket.org/hpk42/pytest/pull-request/168') which has been
-  successfully applied to a pytest 2.5.2 release.
 
 
 EXTERNAL DOCUMENTATION

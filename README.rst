@@ -285,6 +285,9 @@ version 0.7 (development)
   taking at least one input parameter no longer causes suds to report an invalid
   extra argument error.
 * Improved internal project ``HACKING.rst`` documentation.
+* Added a script for automatically setting up required development Python
+  environments for this project, hopefully supporting the full range of
+  supported Python versions out of the box.
 * ``setup.py`` improvements.
 
   * Python 3.0.x releases explicitly marked as not supported.
