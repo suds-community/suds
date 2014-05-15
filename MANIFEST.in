@@ -16,5 +16,8 @@ include notes/*.rst
 include notes/*.txt
 
 # Tools.
+prune tools/__*  # local cache folders
 include tools/*.cmd
+include tools/*.py
 include tools/*.txt
+recursive-include tools/suds_devel *.py
