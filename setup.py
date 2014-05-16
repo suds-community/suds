@@ -43,7 +43,7 @@ import sys
 if sys.version_info < (2, 4):
     print("ERROR: Python 2.4+ required")
     sys.exit(-2)
-if (3, 0) <= sys.version_info < (3, 1):
+if (3,) <= sys.version_info < (3, 1):
     print("ERROR: Python 3.0 not supported - please use Python 3.1+ instead")
     sys.exit(-2)
 
@@ -475,7 +475,7 @@ def test_requirements():
     else:
         result.append("pytest>=2.4.0")
 
-    if using_setuptools and ((3,) <= sys.version_info < (3, 2, 3)):
+    if ((3,) <= sys.version_info < (3, 2, 3)):
         # Python 3.x versions prior to Python 3.2.3 have a bug in their inspect
         # module causing inspect.getmodule() calls to fail if some module lazy
         # loads other modules when some of its attributes are accessed. For
@@ -533,7 +533,7 @@ else:
         # The test build can not be done in-place with Python 3+ as it requires
         # py2to3 conversion which we do not want modifying our original project
         # sources.
-        if sys.version_info < (3, 0):
+        if sys.version_info < (3,):
             description = "run pytest based unit tests after an in-place build"
         else:
             description = "run pytest based unit tests after a build"
@@ -570,7 +570,7 @@ if sys.version_info >= (2, 5):
 # Integrate py2to3 into our build operation.
 # -----------------------------------------------------------------------------
 
-if sys.version_info >= (3, 0):
+if sys.version_info >= (3,):
     # Integrate the py2to3 step into our build.
     if using_setuptools:
         extra_setup_params["use_2to3"] = True
