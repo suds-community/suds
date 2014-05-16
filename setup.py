@@ -251,7 +251,9 @@ def acquire_setuptools_setup():
         #    displaying its help information or running a non-install related
         #    setup command)
         ez_setup.use_setuptools()
-    except (Exception, SystemExit):
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception:
         return
     return import_setuptools_setup()
 
@@ -453,6 +455,8 @@ def test_requirements():
                 # runtime when running our test suite. Versions 2.4.2 and later
                 # can not be installed at all.
                 have_pytest = "2.4.0" <= pytest.__version__ < "2.4.2"
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except Exception:
                 have_pytest = False
         if not have_pytest:
@@ -468,6 +472,8 @@ def test_requirements():
                 # Version 1.4.16 may be installed but will cause pytest to fail
                 # when running our test suite.
                 have_py = py.__version__ < "1.4.16"
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except Exception:
                 have_py = False
         if not have_py:
