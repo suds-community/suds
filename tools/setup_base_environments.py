@@ -635,7 +635,7 @@ def calculate_pip_requirements(env_version_info):
     #   * The problem is caused by a bug in pip's backward compatibility
     #     support implementation, but can be worked around by installing the
     #     backports.ssl_match_hostname package from PyPI.
-    if (3, 0) <= env_version_info < (3, 2):
+    if (3,) <= env_version_info < (3, 2):
         requirements.append(requirement_spec("backports.ssl_match_hostname"))
     return requirements
 
@@ -811,8 +811,7 @@ def add_pytest_requirements(env, requirements):
             else:
                 # colorama 0.3.1 release accidentally uses the 'with' keyword
                 # without a corresponding __future__ import in its setup.py
-                # script (fixed in the original project before the next
-                # release).
+                # script.
                 version_spec = ("!=", "0.3.1"),
             requirements.append(requirement_spec("colorama", *version_spec))
     # Python 3.0 & 3.1 stdlib does not include the argparse module but pytest
@@ -822,7 +821,7 @@ def add_pytest_requirements(env, requirements):
     # releases. Tested that pytest 2.5.2 requires py 1.4.20 which in turn
     # requires the argparse module but does not specify this dependency
     # explicitly.
-    elif (3, 0) <= env.sys_version_info < (3, 2):
+    elif (3,) <= env.sys_version_info < (3, 2):
         requirements.append(requirement_spec("argparse"))
     requirements.append(requirement_spec("pytest", pytest_version))
 
