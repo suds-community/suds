@@ -745,6 +745,7 @@ def process_pip(env, actions):
 # Processing pip based installations
 # ----------------------------------
 
+v1_4_16 = _lowest_version_string_with_prefix("1.4_16")
 v1_8 = _lowest_version_string_with_prefix("1.8")
 v1_10 = _lowest_version_string_with_prefix("1.10")
 
@@ -781,7 +782,7 @@ def add_pytest_requirements(env, requirements):
     pytest_version = None
     if env.sys_version_info < (2, 5):
         pytest_version = "2.4.1"
-        requirements.append(requirement_spec("py", "1.4.15"))
+        requirements.append(requirement_spec("py", ("<", v1_4_16)))
         #IDEA: In this case we could run the pytest installation separately
         # from all the other pip based installations and have it not install
         # pytest scripts. Since in general there is no 'setup.py install' or
