@@ -472,6 +472,31 @@ def test_requirements():
                 have_py = False
         if not have_py:
             return "compatible preinstalled py needed prior to Python 2.5"
+    elif sys.version_info < (2, 6):
+        if sys.platform == "win32":
+            # colorama releases [0.1.11 - 0.3.2> do not work unless the ctypes
+            # module is available, but that module is not included in 64-bit
+            # CPython distributions (tested using Python 2.5.4). Some of those
+            # versions fail to install, while others only fail at run-time.
+            # Pull request https://github.com/tartley/colorama/pull/4 resolves
+            # this issue for colorama release 0.3.2.
+            ctypes_version = None
+            try:
+                from ctypes import __version__ as ctypes_version
+            except ImportError:
+                pass
+            if ctypes_version is None:
+                # We could try to install an external 'ctypes' package from
+                # PyPI here, but that would require an old C++ compiler and so
+                # would not be highly likely to work in any concurrent
+                # development environment.
+                result.append("colorama<0.1.11,>=0.3.2")
+            else:
+                # colorama 0.3.1 release accidentally uses the 'with' keyword
+                # without a corresponding __future__ import in its setup.py
+                # script.
+                result.append("colorama!=0.3.1")
+        result.append("pytest>=2.4.0")
     else:
         result.append("pytest>=2.4.0")
 
