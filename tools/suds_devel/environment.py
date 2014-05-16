@@ -398,7 +398,7 @@ def package_version(package_name):
             try:
                 raise BadEnvironment("%s: %s" % (e_type.__name__, e))
             finally:
-                del e  # break Python3 e->frame->..->frame->e reference cycle
+                del e  # explicitly break circular reference chain in Python 3
         if self.__exit_code != 0:
             raise BadEnvironment("Scan failed (exit code %d)" %
                 (self.__exit_code,))
