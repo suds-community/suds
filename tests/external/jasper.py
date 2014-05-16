@@ -16,32 +16,34 @@
 import sys
 sys.path.append('../../')
 
-import traceback as tb
-from tests import *
 from suds import WebFault
 from suds.client import Client
+
+import traceback as tb
 
 
 errors = 0
 
 
 def start(url):
-    print '\n________________________________________________________________\n'
-    print 'Test @ ( %s )' % url
+    print('\n______________________________________________________________\n')
+    print('Test @ ( %s )' % (url,))
 
 try:
     url = 'http://localhost:9090/jasperserver-pro/services/repository?wsdl'
     start(url)
     client = Client(url, username='jeff', password='ortel')
-    print client
-    print client.service.list('')
+    print(client)
+    print(client.service.list(''))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
-print '\nFinished: errors = %d' % errors
+print('\nFinished: errors = %d' % (errors,))

@@ -14,19 +14,19 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 #
-# This test requires installation or visibility to my local axis(1) server.
+# This test requires installation or visibility of my local axis(1) server.
 #
 
 import sys
 sys.path.append('../../')
 
-import traceback as tb
-from tests import *
 from suds import WebFault
 from suds.client import Client
 from suds.sudsobject import Object
 from suds.transport.https import HttpAuthenticated
 from suds.plugin import *
+
+import traceback as tb
 
 
 errors = 0
@@ -36,34 +36,34 @@ credentials = dict(username='jortel', password='abc123')
 class MyInitPlugin(InitPlugin):
 
     def initialized(self, context):
-        print 'PLUGIN (init): initialized: ctx=%s' % context.__dict__
+        print('PLUGIN (init): initialized: ctx=%s' % (context.__dict__,))
 
 
 class MyDocumentPlugin(DocumentPlugin):
 
     def loaded(self, context):
-        print 'PLUGIN (document): loaded: ctx=%s' % context.__dict__
+        print('PLUGIN (document): loaded: ctx=%s' % (context.__dict__,))
 
     def parsed(self, context):
-        print 'PLUGIN (document): parsed: ctx=%s' % context.__dict__
+        print('PLUGIN (document): parsed: ctx=%s' % (context.__dict__,))
 
 
 class MyMessagePlugin(MessagePlugin):
 
     def marshalled(self, context):
-        print 'PLUGIN (message): marshalled: ctx=%s' % context.__dict__
+        print('PLUGIN (message): marshalled: ctx=%s' % (context.__dict__,))
 
     def sending(self, context):
-        print 'PLUGIN (message): sending: ctx=%s' % context.__dict__
+        print('PLUGIN (message): sending: ctx=%s' % (context.__dict__,))
 
     def received(self, context):
-        print 'PLUGIN (message): received: ctx=%s' % context.__dict__
+        print('PLUGIN (message): received: ctx=%s' % (context.__dict__,))
 
     def parsed(self, context):
-        print 'PLUGIN (message): parsed: ctx=%s' % context.__dict__
+        print('PLUGIN (message): parsed: ctx=%s' % (context.__dict__,))
 
     def unmarshalled(self, context):
-        print 'PLUGIN: (massage): unmarshalled: ctx=%s' % context.__dict__
+        print('PLUGIN: (massage): unmarshalled: ctx=%s' % (context.__dict__,))
 
 
 myplugins = (
@@ -75,27 +75,27 @@ myplugins = (
 
 def start(url):
     global errors
-    print '\n________________________________________________________________\n'
-    print 'Test @ ( %s )\nerrors = %d\n' % (url, errors)
+    print('\n______________________________________________________________\n')
+    print('Test @ ( %s )\nerrors = %d\n' % (url, errors))
 
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
     t = HttpAuthenticated(**credentials)
     client = Client(url, transport=t, cache=None, plugins=myplugins)
-    print client
+    print(client)
     #
     # create a name object using the wsdl
     #
-    print 'create name'
+    print('create name')
     name = client.factory.create('ns0:Name')
     name.first = u'jeff'+unichr(1234)
     name.last = 'ortel'
-    print name
+    print(name)
     #
     # create a phone object using the wsdl
     #
-    print 'create phone'
+    print('create phone')
     phoneA = client.factory.create('ns0:Phone')
     phoneA.npa = 410
     phoneA.nxx = 555
@@ -119,18 +119,18 @@ try:
     # create a person object using the wsdl
     #
     person = client.factory.create('ns0:Person')
-    print '{empty} person=\n%s' % person
+    print('{empty} person=\n%s' % (person,))
     person.name = name
     person.age = 43
     person.phone = [phoneA,phoneB,phoneC]
     person.pets = [dog]
-    print 'person=\n%s' % person
+    print('person=\n%s' % (person,))
     #
     # add the person (using the webservice)
     #
-    print 'addPersion()'
+    print('addPersion()')
     result = client.service.addPerson(person)
-    print '\nreply(\n%s\n)\n' % str(result)
+    print('\nreply(\n%s\n)\n' % (str(result),))
 
     #
     # Async
@@ -159,22 +159,24 @@ try:
     ap.age = person.age
     ap.phone = person.phone
     ap.pets = person.pets
-    print 'AnotherPerson\n%s' % ap
+    print('AnotherPerson\n%s' % (ap,))
     #
     # update the person's name (using the webservice)
     #
-    print 'updatePersion()'
+    print('updatePersion()')
     result = client.service.updatePerson(ap, newname)
-    print '\nreply(\n%s\n)\n' % str(result)
+    print('\nreply(\n%s\n)\n' % (str(result),))
     result = client.service.updatePerson(ap, None)
-    print '\nreply(\n%s\n)\n' % str(result)
+    print('\nreply(\n%s\n)\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
@@ -182,19 +184,19 @@ try:
     start(url)
     t = HttpAuthenticated(**credentials)
     client = Client(url, transport=t, cache=None)
-    print client
+    print(client)
     #
     # create a name object as dict
     #
-    print 'create name'
+    print('create name')
     name = {}
     name['first'] = 'Elmer'
     name['last'] = 'Fudd'
-    print name
+    print(name)
     #
     # create a phone as dict
     #
-    print 'create phone'
+    print('create phone')
     phoneA = {}
     phoneA['npa'] = 410
     phoneA['nxx'] = 555
@@ -219,133 +221,149 @@ try:
     # create a person as dict
     #
     person = {}
-    print '{empty} person=\n%s' % person
+    print('{empty} person=\n%s' % (person,))
     person['name'] = name
     person['age'] = 43
-    person['phone'] = [phoneA,phoneB, phoneC]
+    person['phone'] = [phoneA, phoneB, phoneC]
     person['pets'] = [dog]
-    print 'person=\n%s' % person
+    print('person=\n%s' % (person,))
     #
     # add the person (using the webservice)
     #
-    print 'addPersion()'
+    print('addPersion()')
     result = client.service.addPerson(person)
-    print '\nreply(\n%s\n)\n' % str(result)
+    print('\nreply(\n%s\n)\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
-    print "echo(' this is cool ')"
+    print("echo(' this is cool ')")
     result = client.service.echo('this is cool')
-    print '\nreply( "%s" )\n' % str(result)
-    print 'echo(None)'
+    print('\nreply( "%s" )\n' % (str(result),))
+    print('echo(None)')
     result = client.service.echo(None)
-    print '\nreply( "%s" )\n' % str(result)
+    print('\nreply( "%s" )\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
-    print 'hello()'
+    print('hello()')
     result = client.service.hello()
-    print '\nreply( %s )\n' % str(result)
+    print('\nreply( %s )\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
-    print 'testVoid()'
+    print('testVoid()')
     result = client.service.getVoid()
-    print '\nreply( %s )\n' % str(result)
+    print('\nreply( %s )\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
-    print '** new style arrays **'
+    print('** new style arrays **')
     words = ['my', 'dog', 'likes', 'steak']
     result = client.service.printList(words)
-    print '\nreply( %s )\n' % str(result)
+    print('\nreply( %s )\n' % (str(result),))
 
-    print '** old style arrays **'
+    print('** old style arrays **')
     array = client.factory.create('ArrayOf_xsd_string')
-    print 'ArrayOf_xsd_string=\n%s' % array
+    print('ArrayOf_xsd_string=\n%s' % (array,))
     array.item = ['my', 'dog', 'likes', 'steak']
     result = client.service.printList(array)
-    print '\nreply( %s )\n' % str(result)
+    print('\nreply( %s )\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
     s = 'hello'
     for n in range(0, 3):
-        print 'getList(%s, %d)' % (s, n)
+        print('getList(%s, %d)' % (s, n))
         result = client.service.getList(s, n)
-        print '\nreply( %s )\n' % str(result)
+        print('\nreply( %s )\n' % (str(result),))
         assert ( isinstance(result, list) and len(result) == n )
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
-    print 'testExceptions()'
+    print('testExceptions()')
     result = client.service.throwException()
-    print '\nreply( %s )\n' % tostr(result)
+    print('\nreply( %s )\n' % (tostr(result),))
     raise Exception('Fault expected and not raised')
 except WebFault, f:
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
 try:
     url = 'http://localhost:8081/axis/services/basic-rpc-encoded?wsdl'
     start(url)
     client = Client(url, faults=False, **credentials)
-    print 'testExceptions()'
+    print('testExceptions()')
     result = client.service.throwException()
-    print '\nreply( %s )\n' % str(result)
+    print('\nreply( %s )\n' % (str(result),))
 except WebFault, f:
     errors += 1
-    print f
-    print f.fault
-except Exception, e:
+    print(f)
+    print(f.fault)
+except (KeyboardInterrupt, SystemExit):
+    raise
+except Exception:
     errors += 1
-    print e
+    print(sys.exc_info()[1])
     tb.print_exc()
 
-print '\nFinished: errors=%d' % errors
+print('\nFinished: errors=%d' % (errors,))
