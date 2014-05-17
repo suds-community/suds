@@ -22,5 +22,5 @@ See the setup.py script for more detailed information.
 
 """
 
-__version__ = "0.7 (development)"
+__version__ = "0.7.dev0"
 __build__ = ""
