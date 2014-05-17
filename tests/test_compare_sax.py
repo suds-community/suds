@@ -20,6 +20,10 @@ CompareSAX testing utility unit tests.
 
 """
 
+if __name__ == "__main__":
+    import testutils
+    testutils.run_using_pytest(globals())
+
 import suds
 import suds.sax.document
 import suds.sax.parser
