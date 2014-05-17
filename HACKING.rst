@@ -248,7 +248,31 @@ RELEASE PROCEDURE
 
 3. Version identification.
 
-  * Remove the ``(development)`` suffix for official release builds.
+  * Official releases marked with no extra suffix after the basic version
+    number.
+  * Alfa releases marked with the suffix ``.a#``.
+  * Beta releases marked with the suffix ``.b#``.
+  * Release candidate releases marked with the suffix ``.rc#``.
+  * Development releases marked with the suffix ``.dev#``.
+  * Version ordering (as recognized by pip & setuptools)::
+
+      0.5.dev0 < 0.5.dev1 < 0.5.dev5
+        < 0.5.a0.dev0 < 0.5.a0.dev5 < 0.5.a0
+        < 0.5.a3.dev0 < 0.5.a3.dev5 < 0.5.a3
+        < 0.5.b0.dev0 < 0.5.b0.dev5 < 0.5.b0
+        < 0.5.b3.dev0 < 0.5.b3.dev5 < 0.5.b3
+        < 0.5.rc0.dev0 < 0.5.rc0.dev5 < 0.5.rc0
+        < 0.5.rc3.dev0 < 0.5.rc3.dev5 < 0.5.rc3
+        < 0.5
+      < 0.5.1.dev0 < ...
+        ...
+        < 0.5.1
+      < 0.6.dev0 < ...
+        ...
+        < 0.6
+      < 1.0.dev0 < ...
+        ...
+        < 1.0
 
 4. Tag in Hg.
 
@@ -274,8 +298,16 @@ RELEASE PROCEDURE
 
 6. Next development version identification.
 
-  * Bump up the forked project version counter.
-  * Add back the ``(development)`` suffix, e.g. as in ``0.5 (development)``.
+  * If this was a development release.
+
+    * Bump up the existing ``.dev#`` suffix, e.g. change ``0.8.dev2`` to
+      ``0.8.dev3``.
+
+  * If this was a non-development release.
+
+    * Bump up the forked project version counter (may add/remove/bump
+      alfa/beta/release-candidate mark suffixes as needed).
+    * Add the ``.dev0`` suffix, e.g. as in ``0.8.dev0``.
 
 7. Notify whomever the new release might concern.
 
