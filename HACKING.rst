@@ -259,12 +259,12 @@ RELEASE PROCEDURE
   * Official releases should always be prepared based on tagged revisions with
     no local changes in the used sandbox.
   * Prepare source distribution packages (both .zip & .tar.bz2 formats) and
-    upload the prepared source packages.
+    upload the prepared source packages to PyPI.
 
     * Run ``setup.py sdist upload``.
 
   * Prepare wheel packages for Python 2 & 3 using the latest Python 2 & 3
-    environments with the ``wheel`` package installed.
+    environments with the ``wheel`` package installed and upload them to PyPI.
 
     * Run ``setup.py bdist_wheel upload`` using both Python 2 & 3.
 
