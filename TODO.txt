@@ -1277,8 +1277,65 @@ PRIORITIZED:
 (+)     * Document.
 (+)         * Setting up the necessary development environment.
 (+)         * Release notes.
+(+) * (Jurko) Find a cleaner way to install suds tests. Currently they get
+(+)   installed into a top-level 'tests' folder and so may cause conflicts with
+(+)   some other 'tests' package that might exist in the target Python
+(+)   environment.
+(+)     * Ideas to consider.
+(+)         * We want all suds users to have easy access to the suds test suite.
+(+)             * Suds users are programmers themselves, and so we want to make
+(+)               it easy for them to reproduce their issues as easily,
+(+)               concisely and directly as possible, and using existing suds
+(+)               tests seems like a perfect starting point for doing just that.
+(+)         * Placing the 'tests' folder under the 'suds' folder.
+(+)         * Placing the top level suds folder outside the egg folder (similar
+(+)           to how this is done for the pytest package), not having the egg
+(+)           folder added to the Python path and leaving the tests folder
+(+)           inside the egg folder.
+(+)         * Have setup.py install suds tests as a setuptools 'extra' - only if
+(+)           explicitly requested.
+(+)             * At first glance, this does not seem like something we would
+(+)               like done, as we want all suds users to have easy access to
+(+)               the suds test suite and not just those installing suds from
+(+)               its source distribution and providing some magic
+(+)               '--install-tests'-like command-line option.
+(+)         * Keep the tests in the source distribution and do not install them.
+(+)             This seems like the simplest way, so lets go with this for now.
 
 (16.05.2014.)
+
+(+) * (Jurko) Find a cleaner way to install suds tests. Currently they get
+(+)   installed into a top-level 'tests' folder and so may cause conflicts with
+(+)   some other 'tests' package that might exist in the target Python
+(+)   environment.
+(+)     * Update the tests so we no longer need to transform them using py2to3
+(+)       in order to run them using Python 3.
+(+)         * Try using the six compatibility package.
+(+)             * Manual install.
+(+)             * Update setup.py.
+(+)             * Update tools/setup_base_environments.py.
+(+)         * Update tests.
+(+)     * Make the tests run using the 'currently installed' suds version. In
+(+)       order to test the current development version, user should install the
+(+)       project in development/editable mode using 'pip install -e' or
+(+)       'setup.py develop'.
+(+)     * Running 'setup.py test' should still work using both Python 2 & 3.
+(+)     * Make project tests run from the root project folder use the correct
+(+)       installed Python 3 sources if run under Python 3 instead of using the
+(+)       ones from the current folder.
+(+)         * No easy way to do this for now. Should look into it again at some
+(+)           later time.
+(+)     * Update project release docs.
+(+)     * Update project HACKING.rst docs.
+(+)         * Using the 'six' Python 2/3 compatibility package.
+(+)         * Running project tests using Python 3 - current working folder.
+
+(17.05.2014.)
+
+    * (Jurko) Remove code duplication between setup.py &
+      tools/setup_base_environments.py, e.g. with regards to setting up
+      package requirements required for testing (argparse, colorama, py,
+      pytest).
 
     * (Jurko) Try out virtualenv to make it easier to run tests using multiple
       Python versions and to allow us to automate suds installation testing in
@@ -1608,29 +1665,6 @@ PRIORITIZED:
             * Check other len() usage in suds.sudsobject.
         * Check all 'except:' blocks to see if they actually need to be such
           catch-all blocks.
-
-    * (Jurko) Find a cleaner way to install suds tests. Currently they get
-      installed into a top-level 'tests' folder and so may cause conflicts with
-      some other 'tests' package that might exist in the target Python
-      environment.
-        * Ideas to consider.
-            * We want all suds users to have easy access to the suds test suite.
-                * Suds users are programmers themselves, and so we want to make
-                  it easy for them to reproduce their issues as easily,
-                  concisely and directly as possible, and using existing suds
-                  tests seems like a perfect starting point for doing just that.
-            * Placing the 'tests' folder under the 'suds' folder.
-            * Placing the top level suds folder outside the egg folder (similar
-              to how this is done for the pytest package), not having the egg
-              folder added to the Python path and leaving the tests folder
-              inside the egg folder.
-            * Have setup.py install suds tests as a setuptools 'extra' - only if
-              explicitly requested.
-                * At first glance, this does not seem like something we would
-                  like done, as we want all suds users to have easy access to
-                  the suds test suite and not just those installing suds from
-                  its source distribution and providing some magic
-                  '--install-tests'-like command-line option.
 
     * (Jurko) Look into issues #7 & #13 on BitBucket - problems loading a WSDL
       containing a recursively defined XML schema.
