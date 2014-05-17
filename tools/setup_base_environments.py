@@ -824,6 +824,10 @@ def add_pytest_requirements(env, requirements):
     # explicitly.
     elif (3,) <= env.sys_version_info < (3, 2):
         requirements.append(requirement_spec("argparse"))
+    if not pytest_version:
+        # pytest versions prior to 2.4.0 do not support non-string ``skipif``
+        # expressions.
+        pytest_version = (">=", "2.4.0")
     requirements.append(requirement_spec("pytest", pytest_version))
 
 
