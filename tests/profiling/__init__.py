@@ -53,6 +53,8 @@ class ProfilerBase(object):
                     times.append(time)
                     if self.show_each_timing:
                         print("%d. %s" % (time,))
+            except (KeyboardInterrupt, SystemExit):
+                raise
             except Exception:
                 timer.print_exc()
             else:
