@@ -23,6 +23,7 @@ Package containing different utilities used for suds project testing.
 import suds.client
 import suds.store
 
+import os
 import subprocess
 import sys
 
@@ -71,6 +72,10 @@ def run_test_process(script):
     popen = subprocess.Popen([sys.executable], stdin=subprocess.PIPE,
         stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=script.dirname,
         universal_newlines=True)
+    sys_path = sys.path
+    for i in range(len(sys_path)):
+        if not sys_path[i]:
+            sys_path[i] = os.getcwd()
     out, err = popen.communicate("""\
 import sys
 sys.path = %(sys.path)s
@@ -88,7 +93,7 @@ else:
 exec_file(%(script)r)
 """ % {"suds.__version__": suds.__version__,
     "script": script.basename,
-    "sys.path": sys.path})
+    "sys.path": sys_path})
     if popen.returncode != 0 or err or out:
         if popen.returncode != 0:
             print("Test process exit code: %d" % (popen.returncode,))
