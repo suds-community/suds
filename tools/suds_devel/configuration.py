@@ -23,6 +23,10 @@ Basic configuration support shared in different development utility scripts.
 import os.path
 import sys
 
+# Must not use the six Python 2/3 compatibility package from here as this
+# module gets used from the script for setting up basic development
+# environments, and that script needs to be runnable even before the six
+# package has been installed.
 if sys.version_info < (3,):
     import ConfigParser as configparser
 else:

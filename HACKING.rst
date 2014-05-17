@@ -102,7 +102,7 @@ TOP-LEVEL PROJECT FILES & FOLDERS
     module search path) the same as if installed using ``easy_install -e`` or
     ``pip install -e``
   ``setup.py test``
-    run the project's test suite (requires ``pytest``)
+    run the project test suite (requires ``pytest``)
 
 
 PYTHON COMPATIBILITY
@@ -113,6 +113,10 @@ states aiming for Python 2.4 compatibility we should do so as well.
 
 The Python 3.0 minor release is not supported. See `Python 3.0 support`_
 subsection below for more detailed information.
+
+Test & setup code needs to be implemented using Python 2 & 3 compatible source
+code. Setup & setup related scripts need to be implemented so they do not rely
+on other pre-installed libraries.
 
 These backward compatibility requirements do not affect internal development
 operations such as ``setup.py`` support for uploading a new project distribution
@@ -286,25 +290,23 @@ respectively.
 Setting up the development & testing environment
 ------------------------------------------------
 
-``tools/setup_base_environments.py`` script should be used for setting up your
-basic Python environments so they support testing our project. The script can
-be configured configured from the main project Python configuration file
-``setup.cfg``. It implements all the backward compatibility tweaks that would
-otherwise need to be done manually in order to be able to test our project in
-those environments. These tweaks are no longer documented elsewhere so anyone
-interested in the details should consult the script's sources.
+``tools/setup_base_environments.py`` script should be used for setting up the
+basic Python environments so they support testing our project. The script can be
+configured from the main project Python configuration file ``setup.cfg``. It
+implements all the backward compatibility tweaks and performs additional
+required package installation that would otherwise need to be done manually in
+order to be able to test our project in those environments.
 
-Project's test suite requires the ``pytest`` testing framework to run. The test
-code base is compatible with pytest 2.4.0+ (prior versions do not support
-non-string ``skipif`` expressions).
+These exact requirements and their related version specific tweaks are not
+documented elsewhere so anyone interested in the details should consult the
+script's sources.
 
 The testing environment is generally set up as follows:
 
-1. Install Python.
-#. Install ``setuptools`` (using ``setup_ez.py`` or from its source
-   distribution).
-#. Install ``pip`` using ``setuptools`` (optional).
-#. Install ``pytest`` using ``pip`` or ``setuptools``.
+1. Install clean target Python environments.
+#. Update the project's ``setup.py`` configuration with information on your
+   installed Python environments.
+#. Run the ``tools/setup_base_environments.py`` script.
 
 Some older Python environments may have slight issues caused by varying support
 levels in different used Python packages, but the basic testing functionality
@@ -313,53 +315,151 @@ possible.
 
 Examples of such issues:
 
-* Colors not getting displayed on a Windows console terminal, and possibly
-  ANSI color code escape sequences getting displayed instead.
-* ``pip`` utility not being runnable from the command-line using the ``py -m
-  pip`` syntax for some older versions.
-* Some specific older Python versions having no SSL support and so must reuse
-  installations downloaded by other Python versions.
+* Colors not getting displayed on a Windows console terminal, with possibly ANSI
+  color code escape sequences getting displayed instead.
+* ``pip`` utility can not be run from the command-line using the ``py -m pip``
+  syntax for some older versions. In such cases use the more portable ``py -c
+  "import pip;pip.main()"`` syntax instead.
+* Some specific older Python versions (e.g. 2.4.3) have no SSL support and so
+  have to reuse installations downloaded by other Python versions.
 
-
-Running the project tests
--------------------------
+Running the project tests - ``tools/run_all_tests.cmd`` script
+--------------------------------------------------------------
 
 ``tools/run_all_tests.cmd`` script is a basic *poor man's tox* development
 script that can be used for running the full project test suite using multiple
-Python interpreter versions on a Windows development machine. It is intended to
-be replaced by a more portable ``tox`` based or similar automated testing
-solution some time in the future.
+Python interpreter versions on a Windows development machine.
 
-To run all of the project unit tests with a specific interpreter without
-additional configuration options run the project's ``setup.py`` script with the
-'test' parameter and an appropriate Python interpreter. E.g. run any of the
-following from the top level project folder::
+Intended to be replaced by a more portable ``tox`` based or similar automated
+testing solution some time in the future.
+
+Can be configured by tweaking the script's sources directly:
+
+* List of target Python environments.
+* Each target Python environment's invocation command.
+
+Requires the target Python environment already be set up, and all the packages
+required for running the project test suite installed. See the `Setting up the
+development & testing environment`_ section for more detailed information.
+
+Automatically installs the project in editable mode in all tested Python
+environments.
+
+Caveats:
+
+* This method does not allow you to provide any extra ``pytest`` options when
+  running the project test suite.
+
+Running the project tests - ``setup.py test`` command
+-----------------------------------------------------
+
+Project tests can also be run for a specific Python environment by running the
+project's ``setup.py`` script in that environment and invoking its ``test``
+command. E.g. run a command like one of the following ones from the top level
+project folder::
 
   py243 setup.py test
   py27 setup.py test
   py3 setup.py test
 
-To have more control over the test suite and be able to specify additional
-``pytest`` options on the command-line, run it from the top level project folder
-using ``pytest``, e.g.
+Note that the ``setup.py`` script always needs to be called from the top level
+project folder.
 
-* Using a Python 2.x interpreter::
+For most Python versions, the target Python environment needs not be set up
+prior to running this command. Where possible (e.g. not for Python 2.4.x or
+3.1.x versions), any missing testing requirements will be installed
+automatically, but not directly into the target environment but in the current
+folder instead. This functionality should be considered a band-aid though, and
+setting up the target environment can be better done as described in the
+`Setting up the development & testing environment`_ section.
 
-    py2 -m pytest
+The ``setup.py test`` command will build the project if needed and run its
+complete test suite in the target Python environment. The project does not need
+to be preinstalled into the target Python environment for this operation to
+work, and neither will the operation leave it installed.
 
-* Using a Python 3.x interpreter::
+Caveats:
 
-    py3 setup.py build & py3 -m pytest build
+* This method does not allow you to provide any extra ``pytest`` options when
+  running the project test suite.
 
-In both cases, tests run using Python interpreter version 3.x will be run in the
-build folder constructed by the ``setup.py`` script running the ``py2to3`` tool
-on the project's sources.
+Running the project tests - using ``pytest`` directly
+-----------------------------------------------------
 
-You might need to manually remove the build folder in order to have its contents
-regenerated when wanting to run the test suite using a different Python 3.x
-interpreter version, as those sources are regenerated based solely on the
-original & processed source file timestamp information and not the Python
-version used to process them.
+To have greater control over the test suite and be able to specify additional
+``pytest`` options on the command-line, or be able to run the tests on a
+different project installation (e.g. official release installed directly from
+PyPI), do the following:
+
+1. Install the project into the target Python environment.
+
+  * Installing the project can be done by either installing it directly into the
+    target Python environment using one of the following commands (paths used
+    assume the commands are being run from the top level project folder)::
+
+      setup.py install
+      easy_install .
+      pip install .
+
+    Or the project can be installed in editable mode using one of the following
+    commands (so it does not need to be reinstalled after every source code
+    change)::
+
+      setup.py develop
+      easy_install -e .
+      pip install -e .
+
+  * The installation step can be skipped if running Python 2 based project
+    tests, and doing so from the top level project folder.
+
+2. Run tests using ``pytest``.
+
+  * If using Python 2.x:
+
+    * Run ``pytest`` from the project's top level or ``tests`` folder::
+
+        py2 -m pytest
+
+  * If using Python 3.x:
+
+    * Since the project uses py2to3 source conversion, you need to build the
+      project in order to generate the project's Python 3 sources before they
+      can be tested. If the project has been installed in editable mode, then
+      simply run the following from the top level project folder::
+
+        setup.py build
+
+      and if it has not then rebuild and reinstall it using one of the following
+      commands::
+
+        setup.py develop
+        setup.py install
+
+      Note that you might need to manually remove the build folder in order to
+      have its contents regenerated when wanting to run the test suite using a
+      different Python 3.x interpreter version, as those sources are regenerated
+      based solely on the original & processed source file timestamp information
+      and not the Python version used to process them.
+
+    * Run ``pytest`` from the the project's ``tests`` folder::
+
+        py3 -m pytest
+
+Each specific test module can also be run directly as a script.
+
+Notes on the folder from which to run the tests:
+
+* When running tests from a folder other than the top level project folder, the
+  tested project version needs to first be installed in the used Python
+  environment.
+* Python 2 tests can be run from the top level project folder, in which case
+  they will work even if the project has not been explicitly installed in the
+  used Python environment. And even if another project version has been
+  installed into the used Python environment, that one will be ignored and the
+  one in the current folder used instead.
+* Python 3 tests can not be run from the top level project folder or they would
+  attempt and fail to use Python 2 based project sources found in the current
+  folder.
 
 See the ``pytest`` documentation for a detailed list of available command-line
 options. Some interesting ones:

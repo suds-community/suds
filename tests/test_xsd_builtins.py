@@ -22,17 +22,15 @@ Implemented using the 'pytest' testing framework.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds.client
 import suds.sax.date
 from suds.xsd.sxbuiltin import (Factory, XAny, XBoolean, XBuiltin, XDate,
     XDateTime, XDecimal, XFloat, XInteger, XLong, XString, XTime)
-import tests
-from tests.compare_sax import CompareSAX
+from testutils.compare_sax import CompareSAX
 
 import pytest
 
@@ -43,6 +41,8 @@ import sys
 
 if sys.version_info >= (2, 6):
     import fractions
+if sys.version_info >= (3,):
+    long = int
 
 
 class _Dummy:
@@ -164,9 +164,9 @@ class TestXBoolean:
 
     @pytest.mark.parametrize("source", (
         None,
-        pytest.mark.skipif(sys.version_info >= (3, 0),
+        pytest.mark.skipif(sys.version_info >= (3,),
             reason="int == long since Python 3.0")(long(0)),
-        pytest.mark.skipif(sys.version_info >= (3, 0),
+        pytest.mark.skipif(sys.version_info >= (3,),
             reason="int == long since Python 3.0")(long(1)),
         "x",
         "True",
@@ -447,13 +447,16 @@ class TestXFloat:
         """
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(ValueError, MockXFloat().translate, source).value
-        # Using different Python interpreter versions and different source
-        # strings results in different exception messages here.
         try:
-            float(source)
-            pytest.fail("Bad test data.")
-        except ValueError, expected_e:
-            assert str(e) == str(expected_e)
+            # Using different Python interpreter versions and different source
+            # strings results in different exception messages here.
+            try:
+                float(source)
+                pytest.fail("Bad test data.")
+            except ValueError:
+                assert str(e) == str(sys.exc_info()[1])
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestXInteger:
@@ -470,10 +473,10 @@ class TestXInteger:
         1,
         50,
         # long
-        pytest.mark.skipif(sys.version_info >= (3, 0),
-            reason="int == long since Python 3.0")(long(0)),
-        pytest.mark.skipif(sys.version_info >= (3, 0),
-            reason="int == long since Python 3.0")(long(1)),
+        long(-50),
+        long(0),
+        long(1),
+        long(50),
         # str
         "x",
         # other
@@ -504,13 +507,16 @@ class TestXInteger:
         """
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(ValueError, MockXInteger().translate, source).value
-        # Using different Python interpreter versions and different source
-        # strings results in different exception messages here.
         try:
-            int(source)
-            pytest.fail("Bad test data.")
-        except ValueError, expected_e:
-            assert str(e) == str(expected_e)
+            # Using different Python interpreter versions and different source
+            # strings results in different exception messages here.
+            try:
+                int(source)
+                pytest.fail("Bad test data.")
+            except ValueError:
+                assert str(e) == str(sys.exc_info()[1])
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestXLong:
@@ -567,13 +573,16 @@ class TestXLong:
         """
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(ValueError, MockXLong().translate, source).value
-        # Using different Python interpreter versions and different source
-        # strings results in different exception messages here.
         try:
-            long(source)
-            pytest.fail("Bad test data.")
-        except ValueError, expected_e:
-            assert str(e) == str(expected_e)
+            # Using different Python interpreter versions and different source
+            # strings results in different exception messages here.
+            try:
+                long(source)
+                pytest.fail("Bad test data.")
+            except ValueError:
+                assert str(e) == str(sys.exc_info()[1])
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestXTime:
@@ -678,8 +687,9 @@ def test_resolving_builtin_types(monkeypatch):
         pass
     Factory.maptag("osama", MockXInteger)
 
-    wsdl = tests.wsdl('<xsd:element name="wu" type="xsd:osama"/>', input="wu")
-    client = tests.client_from_wsdl(wsdl)
+    wsdl = testutils.wsdl('<xsd:element name="wu" type="xsd:osama"/>',
+        input="wu")
+    client = testutils.client_from_wsdl(wsdl)
 
     element, schema_object = client.sd[0].params[0]
     assert element.name == "wu"
@@ -705,11 +715,11 @@ def test_translation(monkeypatch):
     Factory.maptag("woof", MockType)
 
     namespace = "I'm a little tea pot, short and stout..."
-    wsdl = tests.wsdl("""\
+    wsdl = testutils.wsdl("""\
       <xsd:element name="wi" type="xsd:woof"/>
       <xsd:element name="wo" type="xsd:woof"/>""", input="wi", output="wo",
         xsd_target_namespace=namespace, operation_name="f")
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     # Check suds library's XSD schema input parameter information.
     schema = client.wsdl.schema
@@ -757,8 +767,8 @@ def _create_dummy_schema():
     #TODO: Find out how to construct this XSD schema object directly without
     # first having to construct a suds.client.Client from a complete WSDL
     # schema.
-    wsdl = tests.wsdl('<xsd:element name="dummy"/>', input="dummy")
-    client = tests.client_from_wsdl(wsdl)
+    wsdl = testutils.wsdl('<xsd:element name="dummy"/>', input="dummy")
+    client = testutils.client_from_wsdl(wsdl)
     return client.wsdl.schema
 
 

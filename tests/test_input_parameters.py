@@ -35,13 +35,11 @@ operation's input parameters correctly.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
-import tests
 
 import pytest
 
@@ -246,7 +244,7 @@ class TestUnsupportedParameterDefinitions:
             else:
                 assert str(e) == expected_error_text
         finally:
-            del e
+            del e  # explicitly break circular reference chain in Python 3
 
     def init_function_params(self, params, **kwargs):
         """
@@ -265,8 +263,8 @@ class TestUnsupportedParameterDefinitions:
         """
         input = '<xsd:element name="Wrapper">%s</xsd:element>' % (params,)
         assert not hasattr(self, "service")
-        wsdl = tests.wsdl(input, input="Wrapper", **kwargs)
-        client = tests.client_from_wsdl(wsdl, nosend=True)
+        wsdl = testutils.wsdl(input, input="Wrapper", **kwargs)
+        client = testutils.client_from_wsdl(wsdl, nosend=True)
         self.service = client.service
 
     @pytest.mark.parametrize("test_args_required", (
@@ -383,7 +381,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>""" % (part_name,))
-    client = tests.client_from_wsdl(wsdl, nosend=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True)
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
@@ -405,7 +403,7 @@ def test_explicitly_wrapped_parameter(part_name):
     """
     input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
     wsdl = _unwrappable_wsdl(part_name, input_schema)
-    client = tests.client_from_wsdl(wsdl, nosend=True, unwrap=False)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, unwrap=False)
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
@@ -473,7 +471,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:service>
 </wsdl:definitions>""")
     wsdl = suds.byte_str("".join(wsdl))
-    client = tests.client_from_wsdl(wsdl, nosend=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True)
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
@@ -505,7 +503,7 @@ def test_unwrapped_parameter(xsd_type):
     """Test recognizing unwrapped web service operation input structures."""
     input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
     wsdl = _unwrappable_wsdl("part_name", input_schema)
-    client = tests.client_from_wsdl(wsdl, nosend=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True)
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]
@@ -530,7 +528,7 @@ def test_unwrapped_parameter_part_name(part_name):
     """
     input_schema = sequence_choice_with_element_and_two_element_sequence.xsd
     wsdl = _unwrappable_wsdl(part_name, input_schema)
-    client = tests.client_from_wsdl(wsdl, nosend=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True)
 
     # Collect references to required WSDL model content.
     method = client.wsdl.services[0].ports[0].methods["f"]

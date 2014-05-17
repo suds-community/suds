@@ -20,4 +20,4 @@ CompareSAX test utility class.
 
 """
 
-from compare_sax__pytest_assert_rewrite_needed import *
+from testutils.compare_sax__pytest_assert_rewrite_needed import *

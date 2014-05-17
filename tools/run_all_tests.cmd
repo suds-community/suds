@@ -14,9 +14,8 @@
 @for %%i in ("%~f0\..\..") do @set PROJECT_FOLDER=%%~fi
 @cd /d "%PROJECT_FOLDER%"
 
-:: Python command-line options used for running specific scripts.
+:: Used pytest command-line options.
 @set PYTEST_OPTIONS=-m pytest -q -x --tb=short
-@set SETUP_OPTIONS=setup.py -q develop
 
 @call :test "3.4.0 x64" "py340"     || goto :fail
 @call :test "2.4.3 x86" "py243"     || goto :fail
@@ -50,16 +49,18 @@
     @setlocal
     @set TITLE=%~1
     @set PYTHON="%~2"
-    @set LOCATION=tests
     @if "%TITLE:~0,1%" == "2" goto :test__skip_build
         @echo ---------------------------------------------------------------
         @echo --- Building suds for Python %TITLE%
         @echo ---------------------------------------------------------------
-        @set LOCATION=build/lib/%LOCATION%
         @if exist "build\" (rd /s /q build || exit /b -2)
-        @call %PYTHON% %SETUP_OPTIONS% || exit /b -2
-        @echo.
     :test__skip_build
+    :: Install the project into the target Python environment in editable mode.
+    :: This will actually build Python 3 sources in case we are using a Python 3
+    :: environment.
+    @call %PYTHON% setup.py -q develop || exit /b -2
+    @cd tests
+    @echo.
     @echo ---------------------------------------------------------------
     @echo --- Testing suds with Python %TITLE%
     @echo ---------------------------------------------------------------

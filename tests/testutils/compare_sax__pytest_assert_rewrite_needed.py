@@ -31,6 +31,8 @@ import suds.sax.document
 import suds.sax.element
 import suds.sax.parser
 
+from six import text_type, u
+
 import sys
 
 
@@ -90,7 +92,7 @@ class CompareSAX:
         """Compares two SAX XML documents."""
         self = cls()
         try:
-            self.__document2document(lhs, rhs, context=u"document2document")
+            self.__document2document(lhs, rhs, context="document2document")
         except Exception:
             self.__report_context()
             raise
@@ -105,7 +107,7 @@ class CompareSAX:
 
         """
         self = cls()
-        self.__push_context(u"document2element")
+        self.__push_context("document2element")
         try:
             assert document.__class__ is suds.sax.document.Document
             assert element.__class__ is suds.sax.element.Element
@@ -119,7 +121,7 @@ class CompareSAX:
     def element2element(cls, lhs, rhs):
         """Compares two SAX XML elements."""
         self = cls()
-        self.__push_context(u"element2element")
+        self.__push_context("element2element")
         try:
             self.__element2element(lhs, rhs)
         except Exception:
@@ -133,7 +135,7 @@ class CompareSAX:
         try:
             lhs_doc = self.__parse_data(lhs)
             rhs_doc = self.__parse_data(rhs)
-            self.__document2document(lhs_doc, rhs_doc, context=u"data2data")
+            self.__document2document(lhs_doc, rhs_doc, context="data2data")
         except Exception:
             self.__report_context()
             raise
@@ -148,7 +150,7 @@ class CompareSAX:
         self = cls()
         try:
             rhs_doc = self.__parse_data(rhs)
-            self.__document2document(lhs, rhs_doc, context=u"document2data")
+            self.__document2document(lhs, rhs_doc, context="document2data")
         except Exception:
             self.__report_context()
             raise
@@ -174,7 +176,7 @@ class CompareSAX:
         """
         #TODO: Make suds SAX element model consistently represent empty/missing
         # namespaces and then update both this method and its docstring.
-        self.__push_context(u"namespace")
+        self.__push_context("namespace")
         lhs_namespace = lhs.namespace()[1]
         rhs_namespace = rhs.namespace()[1]
         if not lhs_namespace:
@@ -198,7 +200,7 @@ class CompareSAX:
         """
         #TODO: Make suds SAX element model consistently represent empty/missing
         # text content and then update both this method and its docstring.
-        self.__push_context(u"text")
+        self.__push_context("text")
         lhs_text = lhs.text
         rhs_text = rhs.text
         if not lhs_text:
@@ -225,9 +227,11 @@ class CompareSAX:
     def __element_name(element):
         """Returns a given SAX element's name as unicode or '???' on error."""
         try:
-            return unicode(element.name)
+            return text_type(element.name)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:
-            return u"???"
+            return u("???")
 
     def __element2element(self, lhs, rhs, context_info=(0, 1)):
         """
@@ -266,10 +270,10 @@ class CompareSAX:
         if context_lhs_name == context_rhs_name:
             context_name = context_lhs_name
         else:
-            context_name = u"%s/%s" % (context_lhs_name, context_rhs_name)
+            context_name = "%s/%s" % (context_lhs_name, context_rhs_name)
         if count == 1:
-            return u"<%s>" % (context_name,)
-        return u"<%s(%d/%d)>" % (context_name, n + 1, count)
+            return "<%s>" % (context_name,)
+        return "<%s(%d/%d)>" % (context_name, n + 1, count)
 
     @staticmethod
     def __parse_data(data):
@@ -278,7 +282,7 @@ class CompareSAX:
         bytes object.
 
         """
-        if isinstance(data, unicode):
+        if isinstance(data, text_type):
             data = data.encode("utf-8")
         return suds.sax.parser.Parser().parse(string=data)
 
@@ -291,4 +295,4 @@ class CompareSAX:
     def __report_context(self):
         if self.__context:
             sys.stderr.write("Failed SAX XML comparison context:\n")
-            sys.stderr.write(u"  %s\n" % (u".".join(self.__context)))
+            sys.stderr.write("  %s\n" % (".".join(self.__context)))

@@ -22,28 +22,31 @@ Implemented using the 'pytest' testing framework.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
 import suds.transport
 import suds.transport.http
-import tests
 
 import pytest
+from six import u
+from six.moves import http_client
+from six.moves.urllib.error import HTTPError
+from six.moves.urllib.request import ProxyHandler
 
 import base64
-import httplib
 import re
 import sys
-import urllib2
 
-if sys.version_info >= (3, 0):
-    urllib_request = urllib.request
+# We can not use six.moves modules for this since we want to monkey-patch the
+# exact underlying urllib2/urllib.request module in our tests and not just
+# their six.moves proxy module.
+if sys.version_info < (3,):
+    import urllib2 as urllib_request
 else:
-    urllib_request = urllib2
+    import urllib.request as urllib_request
 
 
 class MustNotBeCalled(Exception):
@@ -103,11 +106,11 @@ class CountedMock(object):
 
 class MockFP:
     """
-    Mock FP 'File object' as stored inside a urllib2.HTTPError exception.
+    Mock FP 'File object' as stored inside Python's HTTPError exception.
 
-    Must have several 'File object' methods defined on it as Python's
-    urllib2.HTTPError implementation expects them and stores references to them
-    internally, at least with Python 2.4.
+    Must have several 'File object' methods defined on it as Python's HTTPError
+    implementation expects them and stores references to them internally, at
+    least with Python 2.4.
 
     """
 
@@ -171,7 +174,7 @@ def assert_default_transport(transport):
     assert transport.urlopener is None
 
 
-def create_request(url="protocol://default-url", data=u"Rumpelstiltskin"):
+def create_request(url="protocol://default-url", data=u("Rumpelstiltskin")):
     """Test utility constructing a suds.transport.Request instance."""
     return suds.transport.Request(url, data)
 
@@ -304,7 +307,7 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
     url_relative = "svc"
     url = "http://%s/%s" % (host_port, url_relative)
     partial_ascii_byte_data = suds.byte_str("Muka-laka-hiki")
-    non_ascii_byte_data = u"Дмитровский район".encode("utf-8")
+    non_ascii_byte_data = u("\u0414\u043C\u0438 \u0442\u0440").encode("utf-8")
     non_ascii_byte_data += partial_ascii_byte_data
     mocker = Mocker(host, port)
     monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
@@ -359,7 +362,7 @@ class TestSendingToURLWithAMissingProtocolIdentifier:
         "my no-protocol URL",
         ":my no-protocol URL"))
 
-    @pytest.mark.skipif(sys.version_info >= (3, 0), reason="Python 2 specific")
+    @pytest.mark.skipif(sys.version_info >= (3,), reason="Python 2 specific")
     @invalid_URL_parametrization
     def test_python2(self, url, send_method):
         transport = suds.transport.http.HttpTransport()
@@ -367,7 +370,7 @@ class TestSendingToURLWithAMissingProtocolIdentifier:
         request = create_request(url)
         pytest.raises(MyException, send_method, transport, request)
 
-    @pytest.mark.skipif(sys.version_info < (3, 0), reason="Python 3+ specific")
+    @pytest.mark.skipif(sys.version_info < (3,), reason="Python 3+ specific")
     @invalid_URL_parametrization
     def test_python3(self, url, send_method, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)
@@ -375,7 +378,10 @@ class TestSendingToURLWithAMissingProtocolIdentifier:
         transport.urlopener = MockURLOpenerSaboteur()
         request = create_request(url)
         e = pytest.raises(ValueError, send_method, transport, request)
-        assert "unknown url type" in str(e)
+        try:
+            assert "unknown url type" in str(e)
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestURLOpenerUsage:
@@ -406,20 +412,20 @@ class TestURLOpenerUsage:
             msg = object()
         if hdrs is Undefined:
             hdrs = object()
-        return urllib2.HTTPError(url=url, code=code, msg=msg, hdrs=hdrs, fp=fp)
+        return HTTPError(url=url, code=code, msg=msg, hdrs=hdrs, fp=fp)
 
     @pytest.mark.parametrize("status_code", (
-        httplib.ACCEPTED,
-        httplib.NO_CONTENT,
-        httplib.RESET_CONTENT,
-        httplib.MOVED_PERMANENTLY,
-        httplib.BAD_REQUEST,
-        httplib.PAYMENT_REQUIRED,
-        httplib.FORBIDDEN,
-        httplib.NOT_FOUND,
-        httplib.INTERNAL_SERVER_ERROR,
-        httplib.NOT_IMPLEMENTED,
-        httplib.HTTP_VERSION_NOT_SUPPORTED))
+        http_client.ACCEPTED,
+        http_client.NO_CONTENT,
+        http_client.RESET_CONTENT,
+        http_client.MOVED_PERMANENTLY,
+        http_client.BAD_REQUEST,
+        http_client.PAYMENT_REQUIRED,
+        http_client.FORBIDDEN,
+        http_client.NOT_FOUND,
+        http_client.INTERNAL_SERVER_ERROR,
+        http_client.NOT_IMPLEMENTED,
+        http_client.HTTP_VERSION_NOT_SUPPORTED))
     def test_open_propagating_HTTPError_exceptions(self, status_code,
             monkeypatch):
         """
@@ -437,16 +443,18 @@ class TestURLOpenerUsage:
 
         # Execute.
         e = pytest.raises(suds.transport.TransportError, t.open, request).value
-
-        # Verify.
-        assert e.args == (str(e_original),)
-        assert e.httpcode is status_code
-        assert e.fp is fp
+        try:
+            # Verify.
+            assert e.args == (str(e_original),)
+            assert e.httpcode is status_code
+            assert e.fp is fp
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
     @pytest.mark.xfail(reason="original suds library bug")
     @pytest.mark.parametrize("status_code", (
-        httplib.ACCEPTED,
-        httplib.NO_CONTENT))
+        http_client.ACCEPTED,
+        http_client.NO_CONTENT))
     def test_operation_invoke_with_urlopen_accept_no_content__data(self,
             status_code):
         """
@@ -459,15 +467,15 @@ class TestURLOpenerUsage:
         e = self.create_HTTPError(code=status_code)
         transport = suds.transport.http.HttpTransport()
         transport.urlopener = MockURLOpenerSaboteur(open_exception=e)
-        wsdl = tests.wsdl('<xsd:element name="o" type="xsd:string"/>',
+        wsdl = testutils.wsdl('<xsd:element name="o" type="xsd:string"/>',
             output="o", operation_name="f")
-        client = tests.client_from_wsdl(wsdl, transport=transport)
+        client = testutils.client_from_wsdl(wsdl, transport=transport)
         pytest.raises(suds.transport.TransportError, client.service.f)
 
     @pytest.mark.xfail(reason="original suds library bug")
     @pytest.mark.parametrize("status_code", (
-        httplib.ACCEPTED,
-        httplib.NO_CONTENT))
+        http_client.ACCEPTED,
+        http_client.NO_CONTENT))
     def test_operation_invoke_with_urlopen_accept_no_content__no_data(self,
             status_code):
         """
@@ -487,9 +495,9 @@ class TestURLOpenerUsage:
         e = self.create_HTTPError(code=status_code)
         transport = suds.transport.http.HttpTransport()
         transport.urlopener = MockURLOpenerSaboteur(open_exception=e)
-        wsdl = tests.wsdl('<xsd:element name="o" type="xsd:string"/>',
+        wsdl = testutils.wsdl('<xsd:element name="o" type="xsd:string"/>',
             output="o", operation_name="f")
-        client = tests.client_from_wsdl(wsdl, transport=transport)
+        client = testutils.client_from_wsdl(wsdl, transport=transport)
         assert client.service.f() is None
 
     def test_propagating_non_HTTPError_exceptions(self, send_method):
@@ -504,15 +512,15 @@ class TestURLOpenerUsage:
         assert pytest.raises(e.__class__, t.open, create_request()).value is e
 
     @pytest.mark.parametrize("status_code", (
-        httplib.RESET_CONTENT,
-        httplib.MOVED_PERMANENTLY,
-        httplib.BAD_REQUEST,
-        httplib.PAYMENT_REQUIRED,
-        httplib.FORBIDDEN,
-        httplib.NOT_FOUND,
-        httplib.INTERNAL_SERVER_ERROR,
-        httplib.NOT_IMPLEMENTED,
-        httplib.HTTP_VERSION_NOT_SUPPORTED))
+        http_client.RESET_CONTENT,
+        http_client.MOVED_PERMANENTLY,
+        http_client.BAD_REQUEST,
+        http_client.PAYMENT_REQUIRED,
+        http_client.FORBIDDEN,
+        http_client.NOT_FOUND,
+        http_client.INTERNAL_SERVER_ERROR,
+        http_client.NOT_IMPLEMENTED,
+        http_client.HTTP_VERSION_NOT_SUPPORTED))
     def test_send_transforming_HTTPError_exceptions(self, status_code,
             monkeypatch):
         """
@@ -532,16 +540,18 @@ class TestURLOpenerUsage:
 
         # Execute.
         e = pytest.raises(suds.transport.TransportError, t.send, request).value
-
-        # Verify.
-        assert len(e.args) == 1
-        assert e.args[0] is e_original.msg
-        assert e.httpcode is status_code
-        assert e.fp is fp
+        try:
+            # Verify.
+            assert len(e.args) == 1
+            assert e.args[0] is e_original.msg
+            assert e.httpcode is status_code
+            assert e.fp is fp
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
     @pytest.mark.parametrize("status_code", (
-        httplib.ACCEPTED,
-        httplib.NO_CONTENT))
+        http_client.ACCEPTED,
+        http_client.NO_CONTENT))
     def test_send_transforming_HTTPError_exceptions__accepted_no_content(self,
             status_code):
         """
@@ -563,7 +573,7 @@ class TestURLOpenerUsage:
         """
         def my_build_urlopener(*handlers):
             assert len(handlers) == 1
-            assert handlers[0].__class__ is urllib2.ProxyHandler
+            assert handlers[0].__class__ is ProxyHandler
             raise MyException
         monkeypatch.setattr(urllib_request, "build_opener", my_build_urlopener)
         transport = suds.transport.http.HttpTransport()
@@ -581,9 +591,9 @@ class TestURLOpenerUsage:
 
         """
         class MockURLOpener:
-            def open(self, urllib_request, timeout=None):
-                assert urllib_request.__class__ is urllib2.Request
-                assert urllib_request.get_full_url() == url
+            def open(self, request, timeout=None):
+                assert request.__class__ is urllib_request.Request
+                assert request.get_full_url() == url
                 raise MyException
         transport = suds.transport.http.HttpTransport()
         transport.urlopener = MockURLOpener()

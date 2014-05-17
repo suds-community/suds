@@ -533,6 +533,13 @@ def test_requirements():
             import argparse
         except ImportError:
             result.append("argparse")
+
+    # 'six' release 1.5 broke compatibility with Python 2.4.x.
+    if sys.version_info < (2, 5):
+        result.append("six<1.5")
+    else:
+        result.append("six")
+
     return result
 
 test_error = None
@@ -575,15 +582,8 @@ else:
             self.test_suite = True
 
         def run_tests(self):
-            # Make sure the tests are run on the correct test sources. E.g.
-            # when using Python 3, the tests need to be run in the build folder
-            # where they have been previously processed using py2to3. Running
-            # them directly on the original source tree would fail due to
-            # Python 2/3 source code incompatibility.
-            ei_cmd = self.get_finalized_command("egg_info")
-            build_path = _normalize_path(ei_cmd.egg_base)
             import pytest
-            sys.exit(pytest.main(["--pyargs", build_path]))
+            sys.exit(pytest.main(["--pyargs", "tests"]))
 
 distutils_cmdclass["test"] = TestCommand
 
@@ -685,7 +685,7 @@ setup(
     keywords=["SOAP", "web", "service", "client"],
     url=project_url,
     download_url=download_url,
-    packages=recursive_package_list("suds", "tests"),
+    packages=recursive_package_list("suds"),
 
     author="Jeff Ortel",
     author_email="jortel@redhat.com",

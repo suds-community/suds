@@ -23,9 +23,8 @@ Implemented using the 'pytest' testing framework.
 """
 
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    import testutils
+    testutils.run_using_pytest(globals())
 
 import suds.sax.enc
 

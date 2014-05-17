@@ -22,21 +22,19 @@ Implemented using the 'pytest' testing framework.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
 import suds.cache
 import suds.store
 import suds.transport
 import suds.transport.https
-import tests
 
 import pytest
-
-import httplib
+from six import iteritems, itervalues, next
+from six.moves import http_client
 
 
 class MyException(Exception):
@@ -147,7 +145,7 @@ class MockTransport(suds.transport.Transport):
         self.mock_log.append(("send", [request.url, request.message]))
         if not self.mock_send_data:
             pytest.fail("Unexpected MockTransport.send() operation call.")
-        status = httplib.OK
+        status = http_client.OK
         headers = {}
         data = self.__next_operation_result(self.mock_send_data)
         return suds.transport.Reply(status, headers, data)
@@ -169,7 +167,7 @@ class MockTransport(suds.transport.Transport):
 #TODO: Once a WSDL import bug illustrated by test_WSDL_import() is fixed, this
 # test data may be simplified to just:
 #   > wsdl_target_namespace = "bingo-bongo"
-#   > wsdl = tests.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
+#   > wsdl = testutils.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
 #   > wsdl_wrapper = suds.byte_str("""\
 #   > <?xml version='1.0' encoding='UTF-8'?>
 #   > <definitions targetNamespace="%(tns)s"
@@ -256,7 +254,7 @@ class TestCacheStoreTransportUsage:
                 cache=cache, documentStore=store1, transport=MockTransport())
             assert store1.mock_log == ["suds://wsdl", "suds://wsdl_imported"]
             assert len(cache.mock_data) == 1
-            wsdl_object_id, wsdl_object = cache.mock_data.items()[0]
+            wsdl_object_id, wsdl_object = next(iteritems(cache.mock_data))
             assert wsdl_object.__class__ is suds.wsdl.Definitions
 
             # Reuse from cache.
@@ -270,7 +268,7 @@ class TestCacheStoreTransportUsage:
         def test_avoid_external_XSD_fetching(self):
             # Prepare document content.
             xsd_target_namespace = "balancana"
-            wsdl = tests.wsdl("""\
+            wsdl = testutils.wsdl("""\
               <xsd:import schemaLocation="suds://imported_xsd"/>
               <xsd:include schemaLocation="suds://included_xsd"/>""",
                 xsd_target_namespace=xsd_target_namespace)
@@ -291,7 +289,7 @@ class TestCacheStoreTransportUsage:
             assert store1.mock_log == ["suds://wsdl", "suds://imported_xsd",
                 "suds://included_xsd"]
             assert len(cache.mock_data) == 1
-            wsdl_object_id, wsdl_object = cache.mock_data.items()[0]
+            wsdl_object_id, wsdl_object = next(iteritems(cache.mock_data))
             assert wsdl_object.__class__ is suds.wsdl.Definitions
 
             # Reuse from cache.
@@ -393,7 +391,7 @@ class TestCacheStoreTransportUsage:
         # Add to cache, making sure the WSDL schema is read from the document
         # store and not fetched using the client's registered transport.
         cache = MockCache()
-        store1 = MockDocumentStore(umpala=tests.wsdl(""))
+        store1 = MockDocumentStore(umpala=testutils.wsdl(""))
         c1 = suds.client.Client("suds://umpala", cachingpolicy=caching_policy,
             cache=cache, documentStore=store1, transport=MockTransport())
         assert [x for x, y in cache.mock_log] == ["get", "put"]
@@ -402,12 +400,12 @@ class TestCacheStoreTransportUsage:
         assert len(cache.mock_data) == 1
         if caching_policy == 0:
             # Cache contains SAX XML documents.
-            wsdl_document = cache.mock_data.values()[0]
+            wsdl_document = next(itervalues(cache.mock_data))
             assert wsdl_document.__class__ is suds.sax.document.Document
             wsdl_cached_root = wsdl_document.root()
         else:
             # Cache contains complete suds WSDL objects.
-            wsdl = cache.mock_data.values()[0]
+            wsdl = next(itervalues(cache.mock_data))
             assert wsdl.__class__ is suds.wsdl.Definitions
             wsdl_cached_root = wsdl.root
         assert c1.wsdl.root is wsdl_cached_root
@@ -442,7 +440,7 @@ class TestCacheStoreTransportUsage:
         """
         # Prepare document content.
         xsd_target_namespace = "my xsd namespace"
-        wsdl = tests.wsdl('<xsd:%s schemaLocation="suds://external"/>' % (
+        wsdl = testutils.wsdl('<xsd:%s schemaLocation="suds://external"/>' % (
             external_reference_tag,),
             xsd_target_namespace=xsd_target_namespace)
         external_schema = suds.byte_str("""\
@@ -554,8 +552,11 @@ class TestCacheUsage:
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(AttributeError, suds.client.Client,
             "suds://some_URL", cache=cache).value
-        expected_error = '"cache" must be: (%r,)'
-        assert str(e) == expected_error % (suds.cache.Cache,)
+        try:
+            expected_error = '"cache" must be: (%r,)'
+            assert str(e) == expected_error % (suds.cache.Cache,)
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestStoreUsage:
@@ -566,15 +567,18 @@ class TestStoreUsage:
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(AttributeError, suds.client.Client,
             "suds://some_URL", documentStore=store, cache=None).value
-        expected_error = '"documentStore" must be: (%r,)'
-        assert str(e) == expected_error % (suds.store.DocumentStore,)
+        try:
+            expected_error = '"documentStore" must be: (%r,)'
+            assert str(e) == expected_error % (suds.store.DocumentStore,)
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestTransportUsage:
     """suds.client.Client transport component usage tests."""
 
     def test_default_transport(self):
-        client = tests.client_from_wsdl(tests.wsdl(""))
+        client = testutils.client_from_wsdl(testutils.wsdl(""))
         expected = suds.transport.https.HttpAuthenticated
         assert client.options.transport.__class__ is expected
 
@@ -586,12 +590,15 @@ class TestTransportUsage:
         transport = MockTransport(open_data=exception)
         e_info = pytest.raises(exception.__class__, suds.client.Client, "url",
             cache=None, transport=transport)
-        assert e_info.value is exception
+        try:
+            assert e_info.value is exception
+        finally:
+            del e_info  # explicitly break circular reference chain in Python 3
 
     def test_error_on_send__non_transport(self):
         e = MyException()
         t = MockTransport(send_data=e)
-        store = MockDocumentStore(wsdl=tests.wsdl("", operation_name="g"))
+        store = MockDocumentStore(wsdl=testutils.wsdl("", operation_name="g"))
         client = suds.client.Client("suds://wsdl", documentStore=store,
             cache=None, transport=t)
         assert pytest.raises(MyException, client.service.g).value is e
@@ -610,24 +617,27 @@ class TestTransportUsage:
     def test_error_on_send__transport(self, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)
         t = MockTransport(send_data=suds.transport.TransportError("huku", 666))
-        store = MockDocumentStore(wsdl=tests.wsdl("", operation_name="g"))
+        store = MockDocumentStore(wsdl=testutils.wsdl("", operation_name="g"))
         client = suds.client.Client("suds://wsdl", documentStore=store,
             cache=None, transport=t)
         e = pytest.raises(Exception, client.service.g).value
-        assert e.__class__ is Exception
-        assert e.args == ((666, "huku"),)
+        try:
+            assert e.__class__ is Exception
+            assert e.args == ((666, "huku"),)
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
     def test_nosend_should_avoid_transport_sends(self):
-        wsdl = tests.wsdl("")
+        wsdl = testutils.wsdl("")
         t = MockTransport()
-        client = tests.client_from_wsdl(wsdl, nosend=True, transport=t)
+        client = testutils.client_from_wsdl(wsdl, nosend=True, transport=t)
         client.service.f()
 
     def test_operation_request_and_reply(self):
         xsd_content = '<xsd:element name="Data" type="xsd:string"/>'
         web_service_URL = "Great minds think alike"
         xsd_target_namespace = "omicron psi"
-        wsdl = tests.wsdl(suds.byte_str(xsd_content), operation_name="pi",
+        wsdl = testutils.wsdl(suds.byte_str(xsd_content), operation_name="pi",
             xsd_target_namespace=xsd_target_namespace, input="Data",
             output="Data", web_service_URL=web_service_URL)
         test_input_data = "Riff-raff"
@@ -657,13 +667,16 @@ class TestTransportUsage:
         monkeypatch.delitem(locals(), "e", False)
         e = pytest.raises(AttributeError, suds.client.Client,
             "suds://some_URL", transport=transport, cache=None).value
-        expected_error = '"transport" must be: (%r,)'
-        assert str(e) == expected_error % (suds.transport.Transport,)
+        try:
+            expected_error = '"transport" must be: (%r,)'
+            assert str(e) == expected_error % (suds.transport.Transport,)
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_WSDL_transport(self, url):
         store = MockDocumentStore()
-        t = MockTransport(open_data=tests.wsdl(""))
+        t = MockTransport(open_data=testutils.wsdl(""))
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert t.mock_log == [("open", [url])]
 
@@ -682,7 +695,7 @@ class TestTransportUsage:
     def test_external_XSD_transport(self, url, external_reference_tag):
         xsd_content = '<xsd:%(tag)s schemaLocation="%(url)s"/>' % dict(
             tag=external_reference_tag, url=url)
-        store = MockDocumentStore(wsdl=tests.wsdl(xsd_content))
+        store = MockDocumentStore(wsdl=testutils.wsdl(xsd_content))
         t = MockTransport(open_data=suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema"/>
@@ -695,7 +708,7 @@ class TestTransportUsage:
 @pytest.mark.xfail(reason="WSDL import buggy")
 def test_WSDL_import():
     wsdl_target_namespace = "bingo-bongo"
-    wsdl = tests.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
+    wsdl = testutils.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
     wsdl_wrapper = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <definitions targetNamespace="%(tns)s"

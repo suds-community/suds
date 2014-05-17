@@ -22,17 +22,16 @@ Implemented using the 'pytest' testing framework.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
 import suds.cache
 import suds.sax.parser
-import tests
 
 import pytest
+from six import b, next, u
 
 import datetime
 import os
@@ -164,16 +163,18 @@ class MockPickleLoad:
 
 
 # Hardcoded values used in different caching test cases.
-value_empty = suds.byte_str("")
-value_f2 = suds.byte_str("fifi2")
-value_f22 = suds.byte_str("fifi22")
-value_f3 = suds.byte_str("fifi3")
-value_p1 = suds.byte_str("pero1")
-value_p11 = suds.byte_str("pero11")
-value_p111 = suds.byte_str("pero111")
-value_p2 = suds.byte_str("pero2")
-value_p22 = suds.byte_str("pero22")
-value_unicode = suds.byte_str(u"€ 的 čćžšđČĆŽŠĐ")
+value_empty = b("")
+value_f2 = b("fifi2")
+value_f22 = b("fifi22")
+value_f3 = b("fifi3")
+value_p1 = b("pero1")
+value_p11 = b("pero11")
+value_p111 = b("pero111")
+value_p2 = b("pero2")
+value_p22 = b("pero22")
+value_unicode = u("\u20AC \u7684 "
+    "\u010D\u0107\u017E\u0161\u0111"
+    "\u010C\u0106\u017D\u0160\u0110").encode("utf-8")
 
 
 # FileCache item expiration test data - duration, current_time, expect_remove.
@@ -214,8 +215,11 @@ def test_Cache_methods_abstract(monkeypatch, method_name, params):
     cache = suds.cache.Cache()
     f = getattr(cache, method_name)
     e = pytest.raises(Exception, f, *params).value
-    assert e.__class__ is Exception
-    assert str(e) == "not-implemented"
+    try:
+        assert e.__class__ is Exception
+        assert str(e) == "not-implemented"
+    finally:
+        del e  # explicitly break circular reference chain in Python 3
 
 
 class TestDefaultFileCacheLocation:
@@ -313,7 +317,7 @@ check_cache_folder(True, 1, "final caches with default location")
     "fake_cache_folder": fake_cache_folder})
 
         assert not os.path.exists(cache_folder)
-        tests.run_test_process(test_file)
+        testutils.run_test_process(test_file)
 
     @pytest.mark.parametrize("removal_enabled", (True, False))
     def test_remove_on_exit(self, tmpdir, removal_enabled):
@@ -363,14 +367,14 @@ if not os.path.isdir(cache_folder):
 """ % {"cache_folder": cache_folder, "removal_enabled": removal_enabled})
 
         assert not os.path.exists(cache_folder)
-        tests.run_test_process(test_file)
+        testutils.run_test_process(test_file)
         if removal_enabled:
             assert not os.path.exists(cache_folder)
         else:
             assert os.path.isdir(cache_folder)
 
 
-# TODO: DocumentCache class interface seems silly. Its get() operation returns
+#TODO: DocumentCache class interface seems silly. Its get() operation returns
 # an XML document while its put() operation takes an XML element. The put()
 # operation also silently ignores passed data of incorrect type.
 class TestDocumentCache:
@@ -392,7 +396,7 @@ class TestDocumentCache:
         Constructed content may be parametrized with the given element name.
 
         """
-        # TODO: Update the tests in this group to no longer depend on the exact
+        #TODO: Update the tests in this group to no longer depend on the exact
         # input XML data formatting. They currently expect it to be formatted
         # exactly as what gets read back from their DocumentCache.
         content = suds.byte_str("""\
@@ -885,13 +889,19 @@ def test_NoCache(monkeypatch):
     cache.put("id", "something")
     assert cache.get("id") == None
 
-    # TODO: It should not be an error to call clear() or purge() on a NoCache
+    #TODO: It should not be an error to call clear() or purge() on a NoCache
     # instance.
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(Exception, cache.purge, "id").value
-    assert str(e) == "not-implemented"
+    try:
+        assert str(e) == "not-implemented"
+    finally:
+        del e  # explicitly break circular reference chain in Python 3
     e = pytest.raises(Exception, cache.clear).value
-    assert str(e) == "not-implemented"
+    try:
+        assert str(e) == "not-implemented"
+    finally:
+        del e  # explicitly break circular reference chain in Python 3
 
 
 class TestObjectCache:
@@ -1015,7 +1025,7 @@ def _assert_empty_cache_folder(folder, expected=True):
     assert os.path.isdir(folder)
     def walk_error(error):
         pytest.fail("Error walking through cache folder content.")
-    root, folders, files = os.walk(folder, onerror=walk_error).next()
+    root, folders, files = next(os.walk(folder, onerror=walk_error))
     assert root == folder
     empty = len(folders) == 0 and len(files) == 1 and files[0] == 'version'
     if expected:

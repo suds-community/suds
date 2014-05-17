@@ -27,14 +27,12 @@ specific to a particular web service operation binding.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
 import suds.argparser
-import tests
 
 import pytest
 
@@ -148,7 +146,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:service>
 </wsdl:definitions>
 """ % (binding_style,))
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     pytest.raises(MyException, client.service.f)
     pytest.raises(MyException, client.service.f, "x")
     pytest.raises(MyException, client.service.f, "x", "y")
@@ -198,7 +196,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:service>
 </wsdl:definitions>
 """ % (binding_style,))
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     pytest.raises(MyException, client.service.f)
     pytest.raises(MyException, client.service.f, "x")
     pytest.raises(MyException, client.service.f, "x", "y")
@@ -607,4 +605,4 @@ def _expect_error(expected_exception, expected_error_text, test_function,
         else:
             assert str(e) == expected_error_text
     finally:
-        del e
+        del e  # explicitly break circular reference chain in Python 3

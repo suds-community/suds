@@ -15,6 +15,11 @@
 # 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
 
+"""
+Package containing different utilities used for suds project testing.
+
+"""
+
 import suds.client
 import suds.store
 

@@ -22,15 +22,13 @@ Implemented using the 'pytest' testing framework.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
 import suds.options
 import suds.reader
-import tests
 
 
 class TestCacheItemNameMangling:
@@ -70,7 +68,7 @@ assert mangled == '%(expected)s'
 """ % {"expected": expected,
     "test_item_name": test_item_name,
     "test_item_suffix": test_item_suffix})
-        tests.run_test_process(test_file)
+        testutils.run_test_process(test_file)
 
     def test_repeatable__different_readers(self):
         test_item_name = "R2D2"
