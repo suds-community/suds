@@ -23,10 +23,11 @@ CompareSAX testing utility unit tests.
 import suds
 import suds.sax.document
 import suds.sax.parser
-from tests.assertion import assert_no_output
-from tests.compare_sax import CompareSAX
+from testutils.assertion import assert_no_output
+from testutils.compare_sax import CompareSAX
 
 import pytest
+from six import text_type, u
 
 import xml.sax
 
@@ -74,14 +75,14 @@ class TestMatched:
         ('<a xmlns="one"/>', '<ns:a xmlns:ns="one"/>'),
         ('<ns1:b xmlns:ns1="two"/>', '<ns2:b xmlns:ns2="two"/>'),
         # Numeric unicode character references.
-        (u"<a>☆</a>", "<a>&#9734;</a>")))
+        (u("<a>\u2606</a>"), "<a>&#%d;</a>" % (0x2606,))))
     def test_data2data(self, data1, data2, capsys):
         CompareSAX.data2data(data1, data2)
         assert_no_output(capsys)
 
     @skip_test_if_CompareSAX_assertions_disabled
-    @pytest.mark.parametrize("type1", (suds.byte_str, unicode))
-    @pytest.mark.parametrize("type2", (suds.byte_str, unicode))
+    @pytest.mark.parametrize("type1", (suds.byte_str, text_type))
+    @pytest.mark.parametrize("type2", (suds.byte_str, text_type))
     def test_string_input_types(self, type1, type2, capsys):
         xml = "<a/>"
         CompareSAX.data2data(type1(xml), type2(xml))
@@ -90,7 +91,7 @@ class TestMatched:
     @skip_test_if_CompareSAX_assertions_disabled
     def test_xml_encoding(self, capsys):
         """Test that the encoding listed in the XML declaration is honored."""
-        xml_format = u'<?xml version="1.0" encoding="%s"?><a>Ø</a>'
+        xml_format = u('<?xml version="1.0" encoding="%s"?><a>\u00D8</a>')
         data1 = (xml_format % ("UTF-8",)).encode('utf-8')
         data2 = (xml_format % ("latin1",)).encode('latin1')
         CompareSAX.data2data(data1, data2)
@@ -103,50 +104,50 @@ class TestMismatched:
     @skip_test_if_CompareSAX_assertions_disabled
     @pytest.mark.parametrize(("data1", "data2", "expected_context"), (
         # Different element namespaces.
-        ("<a/>", '<a xmlns="x"/>', u"data2data.<a>.namespace"),
-        ('<a xmlns="1"/>', '<a xmlns="2"/>', u"data2data.<a>.namespace"),
+        ("<a/>", '<a xmlns="x"/>', "data2data.<a>.namespace"),
+        ('<a xmlns="1"/>', '<a xmlns="2"/>', "data2data.<a>.namespace"),
         ('<r><a xmlns="1"/></r>', '<r><a xmlns="2"/></r>',
-            u"data2data.<r>.<a>.namespace"),
+            "data2data.<r>.<a>.namespace"),
         ('<r><tag><a xmlns="1"/></tag><y/></r>',
             '<r><tag><a xmlns="2"/></tag><y/></r>',
-            u"data2data.<r>.<tag(1/2)>.<a>.namespace"),
+            "data2data.<r>.<tag(1/2)>.<a>.namespace"),
         # Different textual content in text only nodes.
-        ("<a>one</a>", "<a>two</a>", u"data2data.<a>.text"),
-        ("<a>x</a>", "<a>x </a>", u"data2data.<a>.text"),
-        ("<a>x</a>", "<a>x  </a>", u"data2data.<a>.text"),
-        ("<a>x </a>", "<a>x  </a>", u"data2data.<a>.text"),
-        ("<a> x</a>", "<a>x</a>", u"data2data.<a>.text"),
-        ("<a>  x</a>", "<a>x</a>", u"data2data.<a>.text"),
-        ("<a>  x</a>", "<a> x</a>", u"data2data.<a>.text"),
+        ("<a>one</a>", "<a>two</a>", "data2data.<a>.text"),
+        ("<a>x</a>", "<a>x </a>", "data2data.<a>.text"),
+        ("<a>x</a>", "<a>x  </a>", "data2data.<a>.text"),
+        ("<a>x </a>", "<a>x  </a>", "data2data.<a>.text"),
+        ("<a> x</a>", "<a>x</a>", "data2data.<a>.text"),
+        ("<a>  x</a>", "<a>x</a>", "data2data.<a>.text"),
+        ("<a>  x</a>", "<a> x</a>", "data2data.<a>.text"),
         ("<a><b><c>x</c><c2/></b></a>", "<a><b><c>X</c><c2/></b></a>",
-            u"data2data.<a>.<b>.<c(1/2)>.text"),
+            "data2data.<a>.<b>.<c(1/2)>.text"),
         ("<a><b><c>x</c><d>y</d></b></a>", "<a><b><c>x</c><d>Y</d></b></a>",
-            u"data2data.<a>.<b>.<d(2/2)>.text"),
+            "data2data.<a>.<b>.<d(2/2)>.text"),
         # Different textual content in mixed content nodes with children.
-        ("<a>42<b/><b/>42</a>", "<a>42<b/> <b/>42</a>", u"data2data.<a>.text"),
+        ("<a>42<b/><b/>42</a>", "<a>42<b/> <b/>42</a>", "data2data.<a>.text"),
         # Differently named elements.
-        ("<a/>", "<b/>", u"data2data.<a/b>"),
-        ("<a><b/></a>", "<a><c/></a>", u"data2data.<a>.<b/c>"),
-        ("<a><b/><x/></a>", "<a><c/><x/></a>", u"data2data.<a>.<b/c(1/2)>"),
-        ("<a><x/><b/></a>", "<a><x/><c/></a>", u"data2data.<a>.<b/c(2/2)>"),
+        ("<a/>", "<b/>", "data2data.<a/b>"),
+        ("<a><b/></a>", "<a><c/></a>", "data2data.<a>.<b/c>"),
+        ("<a><b/><x/></a>", "<a><c/><x/></a>", "data2data.<a>.<b/c(1/2)>"),
+        ("<a><x/><b/></a>", "<a><x/><c/></a>", "data2data.<a>.<b/c(2/2)>"),
         ("<a><b><c/></b></a>", "<a><b><d/></b></a>",
-            u"data2data.<a>.<b>.<c/d>"),
+            "data2data.<a>.<b>.<c/d>"),
         ("<a><b><y1/><y2/><c/></b><x/></a>",
             "<a><b><y1/><y2/><d/></b><x/></a>",
-            u"data2data.<a>.<b(1/2)>.<c/d(3/3)>"),
+            "data2data.<a>.<b(1/2)>.<c/d(3/3)>"),
         # Extra/missing non-root element.
-        ("<a><b/></a>", "<a/>", u"data2data.<a>"),
-        ("<a/>", "<a><b/></a>", u"data2data.<a>"),
-        ("<a><x/><b/></a>", "<a><b/></a>", u"data2data.<a>"),
-        ("<a><b/><x/></a>", "<a><b/></a>", u"data2data.<a>"),
-        ("<a><b/></a>", "<a><x/><b/></a>", u"data2data.<a>"),
-        ("<a><b/></a>", "<a><b/><x/></a>", u"data2data.<a>"),
+        ("<a><b/></a>", "<a/>", "data2data.<a>"),
+        ("<a/>", "<a><b/></a>", "data2data.<a>"),
+        ("<a><x/><b/></a>", "<a><b/></a>", "data2data.<a>"),
+        ("<a><b/><x/></a>", "<a><b/></a>", "data2data.<a>"),
+        ("<a><b/></a>", "<a><x/><b/></a>", "data2data.<a>"),
+        ("<a><b/></a>", "<a><b/><x/></a>", "data2data.<a>"),
         # Multiple differences.
-        ("<a><b/></a>", "<c><d/></c>", u"data2data.<a/c>"),
-        ("<a><b/></a>", '<a xmlns="o"><c/></a>', u"data2data.<a>.namespace"),
-        ("<r><a><b/></a></r>", "<r><c><d/></c></r>", u"data2data.<r>.<a/c>"),
+        ("<a><b/></a>", "<c><d/></c>", "data2data.<a/c>"),
+        ("<a><b/></a>", '<a xmlns="o"><c/></a>', "data2data.<a>.namespace"),
+        ("<r><a><b/></a></r>", "<r><c><d/></c></r>", "data2data.<r>.<a/c>"),
         ("<r><a><b/></a></r>", '<r><a xmlns="o"><c/></a></r>',
-            u"data2data.<r>.<a>.namespace")))
+            "data2data.<r>.<a>.namespace")))
     def test_data2data(self, data1, data2, expected_context, capsys):
         pytest.raises(AssertionError, CompareSAX.data2data, data1, data2)
         _assert_context_output(capsys, expected_context)
@@ -237,4 +238,4 @@ def _assert_context_output(capsys, context):
     """
     out, err = capsys.readouterr()
     assert not out
-    assert err == u"Failed SAX XML comparison context:\n  %s\n" % (context,)
+    assert err == "Failed SAX XML comparison context:\n  %s\n" % (context,)

@@ -54,6 +54,9 @@ Here are the basic instructions for 3 different installation methods:
 Installation troubleshooting:
 -----------------------------
 
+* Released prior to ``0.7`` have many known installation issues requiring the
+  target Python environment to be manually prepared when using some ancient
+  Python versions, e.g. 2.4, 2.5 or 3.1.
 * Releases ``0.4.1. jurko 5 < x <= 0.6`` may not be installed using ``pip`` into
   a Python environment with an already installed ``setuptools`` package older
   than the version expected by our project. Displayed error message includes
@@ -323,6 +326,9 @@ version 0.7 (development)
       effectively just leaving the installed ``setuptools`` package with one
       defective test module, but fully operational at run-time.
 
+  * When installing the project into a Window Python 2.5 environment, you no
+    longer need to manually install a compatible ``colorama`` package versions
+    in order to be able to run the project tests.
   * Package meta-data may now contain non-ASCII characters on platforms where
     that is allowed, namely with all Python versions except Python 3.x prior to
     3.2.2.
@@ -335,12 +341,21 @@ version 0.7 (development)
 
 * Test suite improvements.
 
+  * Test suite no longer installed together with the project, thus no longer
+    causing confusion by existing in the target Python environment as a global
+    ``tests`` package.
+
+    * The tests may now be run from the source archive, and will always run on
+      the suds version found installed in the used Python environment.
+
   * Refactored the quick & dirty batch script used to run all the project tests
     in multiple Python environments to remove much code duplication.
   * Automated project testing in several additional Python environment versions.
   * Added more detailed XSD modeling tests.
   * Added tests demonstrating how additional or replacement built-in XSD types
     can be registered with suds.
+  * All project tests now using Python 2 & 3 compatible source code and so no
+    longer need to be built separately for Python 3.
   * Added new and updated existing ``suds.cache`` module related tests.
   * Documented that all ``pytest`` test parametrizations should be prepared so
     they get ordered the same on all test runs. See ``Project implementation

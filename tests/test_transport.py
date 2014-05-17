@@ -23,15 +23,15 @@ Implemented using the 'pytest' testing framework.
 """
 
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    import testutils
+    testutils.run_using_pytest(globals())
 
 import suds
 from suds.transport import Reply, Request, Transport
 import suds.transport.options
 
 import pytest
+from six import b, text_type, u, unichr
 
 import sys
 
@@ -48,45 +48,49 @@ class TestBaseTransportClass:
         transport = Transport()
         f = getattr(transport, method_name)
         e = pytest.raises(Exception, f, "whatever").value
-        assert e.__class__ is Exception
-        assert str(e) == "not-implemented"
+        try:
+            assert e.__class__ is Exception
+            assert str(e) == "not-implemented"
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
 
 
 class TestReply:
 
     @pytest.mark.parametrize(("code", "headers", "message"), (
         (1, {}, None),
-        (1, {}, "ola"),
-        (1, {}, suds.byte_str("ola")),
+        (1, {}, u("ola")),
+        (1, {}, b("ola")),
         (1, {}, object()),
-        (1, {}, u"šuć-muć 中原千军逐蒋\n城楼万众检阅".encode("utf-8")),
-        (2, {"semper": "fi"}, u"中原千军逐蒋\n城楼万众检阅")))
+        (1, {}, u("\u0161u\u0107-mu\u0107 \u4E2D\u539F\u5343\n\u57CE")),
+        (2, {"semper": "fi"}, u("\u4E2D\u539F\u5343\n\u57CE"))))
     def test_construction(self, code, headers, message):
         reply = Reply(code, headers, message)
         assert reply.code is code
         assert reply.headers is headers
         assert reply.message is message
 
-    @pytest.mark.parametrize("message", [x.encode("utf-8") for x in (
-        u"",
-        u"for a bitch it's haaaard...",
-        u"""\
+    @pytest.mark.parametrize("message", [u(x).encode("utf-8") for x in (
+        "",
+        "for a bitch it's haaaard...",
+        """\
 I'm here to kick ass,
 and chew bubble gum...
 and I'm all out of gum.""",
-        u"šuć-muć pa ožeži.. za 100 €\n\nwith multiple\nlines...",
-        u"\n\n\n\n\n\n",
-        u"中原千军逐蒋")])
+        "\u0161u\u0107-mu\u0107 pa o\u017Ee\u017Ei.. za 100 \u20AC\n\n"
+            "with multiple\nlines...",
+        "\n\n\n\n\n\n",
+        "\u4E2D\u539F\u5343\u519B\u9010\u848B")])
     def test_string_representation(self, message):
         code = 17
         reply = Reply(code, {"aaa": 1}, message)
-        expected = u"""\
+        expected = u("""\
 CODE: %s
 HEADERS: %s
 MESSAGE:
-%s""" % (code, reply.headers, message.decode("raw_unicode_escape"))
-        assert unicode(reply) == expected
-        if sys.version_info < (3, 0):
+%s""") % (code, reply.headers, message.decode("raw_unicode_escape"))
+        assert text_type(reply) == expected
+        if sys.version_info < (3,):
             assert str(reply) == expected.encode("utf-8")
 
 
@@ -95,7 +99,7 @@ class TestRequest:
     @pytest.mark.parametrize("message", (
         None,
         "it's hard out here...",
-        u"城楼万众检阅"))
+        u("\u57CE\u697C\u4E07\u4F17\u68C0\u9605")))
     def test_construct(self, message):
         # Always use the same URL as different ways to specify a Request's URL
         # are tested separately.
@@ -111,10 +115,10 @@ class TestRequest:
         assert request.message is None
 
     test_non_ASCII_URLs = [
-        u"中原千军逐蒋",
-        u"城楼万众检阅"] + [
+        u("\u4E2D\u539F\u5343\u519B\u9010\u848B"),
+        u("\u57CE\u697C\u4E07\u4F17\u68C0\u9605")] + [
         url_prefix + url_suffix
-            for url_prefix in (u"", u"Jurko")
+            for url_prefix in (u(""), u("Jurko"))
             for url_suffix in (unichr(128), unichr(200), unichr(1000))]
     @pytest.mark.parametrize("url",
         test_non_ASCII_URLs +  # unicode strings
@@ -131,29 +135,30 @@ class TestRequest:
 I'm here to kick ass,
 and chew bubble gum...
 and I'm all out of gum."""),
-        ("", {}, u"šuć-muć pa ožeži.. za 100 €\n\nwith multiple\nlines..."),
+        ("", {}, u("\u0161u\u0107-mu\u0107 pa o\u017Ee\u017Ei.. za 100 "
+            "\u20AC\n\nwith multiple\nlines...")),
         ("", {}, "\n\n\n\n\n\n"),
-        ("", {}, u"中原千军逐蒋")))
+        ("", {}, u("\u4E2D\u539F\u5343\u519B\u9010\u848B"))))
     def test_string_representation_with_message(self, url, headers, message):
         for key, value in headers.items():
             old_key = key
-            if isinstance(key, unicode):
+            if isinstance(key, text_type):
                 key = key.encode("utf-8")
                 del headers[old_key]
-            if isinstance(value, unicode):
+            if isinstance(value, text_type):
                 value = value.encode("utf-8")
             headers[key] = value
-        if isinstance(message, unicode):
+        if isinstance(message, text_type):
             message = message.encode("utf-8")
         request = Request(url, message)
         request.headers = headers
-        expected = u"""\
+        expected = u("""\
 URL: %s
 HEADERS: %s
 MESSAGE:
-%s""" % (url, request.headers, message.decode("raw_unicode_escape"))
-        assert unicode(request) == expected
-        if sys.version_info < (3, 0):
+%s""") % (url, request.headers, message.decode("raw_unicode_escape"))
+        assert text_type(request) == expected
+        if sys.version_info < (3,):
             assert str(request) == expected.encode("utf-8")
 
     def test_string_representation_with_no_message(self):
@@ -161,23 +166,23 @@ MESSAGE:
         headers = {suds.byte_str("yuck"): suds.byte_str("ptooiii...")}
         request = Request(url)
         request.headers = headers
-        expected = u"""\
+        expected = u("""\
 URL: %s
-HEADERS: %s""" % (url, request.headers)
-        assert unicode(request) == expected
-        if sys.version_info < (3, 0):
+HEADERS: %s""") % (url, request.headers)
+        assert text_type(request) == expected
+        if sys.version_info < (3,):
             assert str(request) == expected.encode("utf-8")
 
     test_URLs = [
-        u"",
-        u"http://host/path/name",
-        u"cogito://ergo/sum",
-        u"haleluya",
-        u"look  at  me flyyyyyyyy",
+        u(""),
+        u("http://host/path/name"),
+        u("cogito://ergo/sum"),
+        u("haleluya"),
+        u("look  at  me flyyyyyyyy"),
         unichr(0),
         unichr(127),
-        u"Jurko" + unichr(0),
-        u"Jurko" + unichr(127)]
+        u("Jurko") + unichr(0),
+        u("Jurko") + unichr(127)]
     @pytest.mark.parametrize("url", test_URLs + [
         url.encode("ascii") for url in test_URLs])
     def test_URL(self, url):
@@ -191,7 +196,7 @@ HEADERS: %s""" % (url, request.headers)
         assert isinstance(request.url, str)
         if url.__class__ is str:
             assert request.url is url
-        elif url.__class__ is unicode:
+        elif url.__class__ is u:
             assert request.url == url.encode("ascii")  # Python 2.
         else:
             assert request.url == url.decode("ascii")  # Python 3.

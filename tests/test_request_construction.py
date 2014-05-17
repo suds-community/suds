@@ -28,25 +28,24 @@ then passing that wrapper object instead.
 
 """
 
+import testutils
 if __name__ == "__main__":
-    import __init__
-    __init__.run_using_pytest(globals())
-
+    testutils.run_using_pytest(globals())
 
 import suds
 import suds.store
-import tests
-from tests.compare_sax import CompareSAX
+from testutils.compare_sax import CompareSAX
 
 import pytest
+from six import iterkeys, itervalues, next, u
 
 
-# TODO: Update the current restriction type output parameter handling so such
+#TODO: Update the current restriction type output parameter handling so such
 # parameters get converted to the correct Python data type based on the
 # restriction's underlying data type.
 @pytest.mark.xfail
 def test_bare_input_restriction_types():
-    client_unnamed = tests.client_from_wsdl(tests.wsdl("""\
+    client_unnamed = testutils.client_from_wsdl(testutils.wsdl("""\
       <xsd:element name="Elemento">
         <xsd:simpleType>
           <xsd:restriction base="xsd:string">
@@ -57,7 +56,7 @@ def test_bare_input_restriction_types():
         </xsd:simpleType>
       </xsd:element>""", input="Elemento", operation_name="f"))
 
-    client_named = tests.client_from_wsdl(tests.wsdl("""\
+    client_named = testutils.client_from_wsdl(testutils.wsdl("""\
       <xsd:simpleType name="MyType">
         <xsd:restriction base="xsd:string">
           <xsd:enumeration value="alfa"/>
@@ -380,9 +379,9 @@ def parametrize_single_element_input_test(param_names, param_values):
     ))
 def test_document_literal_request_for_single_element_input(xsd,
         external_element_name, args, request_body):
-    wsdl = tests.wsdl(xsd, input=external_element_name,
+    wsdl = testutils.wsdl(xsd, input=external_element_name,
         xsd_target_namespace="dr. Doolittle", operation_name="f")
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     _assert_request_content(client.service.f(*args), """\
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
@@ -393,7 +392,7 @@ def test_document_literal_request_for_single_element_input(xsd,
 
 def test_disabling_automated_simple_interface_unwrapping():
     xsd_target_namespace = "woof"
-    wsdl = tests.wsdl("""\
+    wsdl = testutils.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -402,7 +401,7 @@ def test_disabling_automated_simple_interface_unwrapping():
         </xsd:complexType>
       </xsd:element>""", input="Wrapper", operation_name="f",
         xsd_target_namespace=xsd_target_namespace)
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True,
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True,
         unwrap=False)
     assert not _is_input_wrapped(client, "f")
     element_data = "Wonderwall"
@@ -510,7 +509,7 @@ def test_invalid_input_parameter_type_handling():
 
     """
     xsd_target_namespace = "1234567890"
-    wsdl = tests.wsdl("""\
+    wsdl = testutils.wsdl("""\
       <xsd:complexType name="Freakazoid">
         <xsd:sequence>
           <xsd:element name="freak1" type="xsd:string"/>
@@ -528,7 +527,7 @@ def test_invalid_input_parameter_type_handling():
         </xsd:complexType>
       </xsd:element>""", input="Wrapper", operation_name="f",
         xsd_target_namespace=xsd_target_namespace)
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     # Passing an unrelated Python type value.
     class SomeType:
@@ -573,7 +572,7 @@ def test_invalid_input_parameter_type_handling():
 def test_missing_parameters():
     """Missing non-optional parameters should get passed as empty values."""
     xsd_target_namespace = "plonker"
-    service = _service_from_wsdl(tests.wsdl("""\
+    service = _service_from_wsdl(testutils.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -596,17 +595,17 @@ def test_missing_parameters():
   </Body>
 </Envelope>""" % (xsd_target_namespace,))
 
-    _assert_request_content(service.f(u"Pero Ždero"), """\
+    _assert_request_content(service.f((u("Pero \u017Ddero"))), u("""\
 <?xml version="1.0" encoding="UTF-8"?>
 <Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
   <Header/>
   <Body>
     <Wrapper xmlns="%s">
-      <aString>Pero Ždero</aString>
+      <aString>Pero \u017Ddero</aString>
       <anInteger/>
     </Wrapper>
   </Body>
-</Envelope>""" % (xsd_target_namespace,))
+</Envelope>""") % (xsd_target_namespace,))
 
     _assert_request_content(service.f(anInteger=666), """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -657,7 +656,7 @@ def test_named_parameter():
 
     # Test different ways to make the same web service operation call.
     xsd_target_namespace = "qwerty"
-    service = _service_from_wsdl(tests.wsdl("""\
+    service = _service_from_wsdl(testutils.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -686,7 +685,7 @@ def test_named_parameter():
     # The order of parameters in the constructed SOAP request should depend
     # only on the initial WSDL schema.
     xsd_target_namespace = "abracadabra"
-    service = _service_from_wsdl(tests.wsdl("""\
+    service = _service_from_wsdl(testutils.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -716,7 +715,7 @@ def test_named_parameter():
 def test_optional_parameter_handling():
     """Missing optional parameters should not get passed at all."""
     xsd_target_namespace = "RoOfIe"
-    service = _service_from_wsdl(tests.wsdl("""\
+    service = _service_from_wsdl(testutils.wsdl("""\
       <xsd:element name="Wrapper">
         <xsd:complexType>
           <xsd:sequence>
@@ -843,7 +842,7 @@ def test_SOAP_headers():
 </wsdl:definitions>
 """)
     header_data = "fools rush in where angels fear to tread"
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     client.options.soapheaders = header_data
     _assert_request_content(client.service.my_operation(), """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -862,7 +861,7 @@ def test_twice_wrapped_parameter():
 
     """
     xsd_target_namespace = "spank me"
-    wsdl = tests.wsdl("""\
+    wsdl = testutils.wsdl("""\
       <xsd:element name="Wrapper1">
         <xsd:complexType>
           <xsd:sequence>
@@ -877,7 +876,7 @@ def test_twice_wrapped_parameter():
         </xsd:complexType>
       </xsd:element>""", input="Wrapper1", operation_name="f",
         xsd_target_namespace=xsd_target_namespace)
-    client = tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
     assert _is_input_wrapped(client, "f")
 
@@ -905,13 +904,13 @@ def test_twice_wrapped_parameter():
     # Web service operation calls made with 'invalid' parameters.
     def test_invalid_parameter(**kwargs):
         assert len(kwargs) == 1
-        element = kwargs.keys()[0]
-        expected = "f() got an unexpected keyword argument '%s'" % (element,)
+        keyword = next(iterkeys(kwargs))
+        expected = "f() got an unexpected keyword argument '%s'" % (keyword,)
         e = pytest.raises(TypeError, client.service.f, **kwargs).value
         try:
             assert str(e) == expected
         finally:
-            del e
+            del e  # explicitly break circular reference chain in Python 3
     test_invalid_parameter(Elemento=value)
     test_invalid_parameter(Wrapper1=value)
 
@@ -921,9 +920,9 @@ def test_wrapped_parameter(monkeypatch):
 
     # Prepare web service proxies.
     def client(xsd, *input):
-        wsdl = tests.wsdl(xsd, input=input, xsd_target_namespace="toolyan",
+        wsdl = testutils.wsdl(xsd, input=input, xsd_target_namespace="toolyan",
             operation_name="f")
-        return tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+        return testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
     client_bare_single = client("""\
       <xsd:element name="Elemento" type="xsd:string"/>""", "Elemento")
     client_bare_multiple_simple = client("""\
@@ -995,7 +994,11 @@ def test_wrapped_parameter(monkeypatch):
     # Suds library's automatic structure unwrapping prevents us from specifying
     # the external wrapper structure directly.
     e = pytest.raises(TypeError, client_wrapped_unnamed.service.f, Wrapper="A")
-    assert str(e.value) == "f() got an unexpected keyword argument 'Wrapper'"
+    try:
+        expected = "f() got an unexpected keyword argument 'Wrapper'"
+        assert str(e.value) == expected
+    finally:
+        del e  # explicitly break circular reference chain in Python 3
 
     # Multiple parameter web service operations are never automatically
     # unwrapped.
@@ -1030,7 +1033,8 @@ def _assert_request_content(request, expected_xml):
 
 def _is_input_wrapped(client, method_name):
     assert len(client.wsdl.bindings) == 1
-    operation = client.wsdl.bindings.values()[0].operations[method_name]
+    binding = next(itervalues(client.wsdl.bindings))
+    operation = binding.operations[method_name]
     return operation.soap.input.body.wrapped
 
 
@@ -1042,4 +1046,4 @@ def _service_from_wsdl(wsdl):
     invocation requests and does not attempt to actually send them.
 
     """
-    return tests.client_from_wsdl(wsdl, nosend=True, prettyxml=True).service
+    return testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True).service

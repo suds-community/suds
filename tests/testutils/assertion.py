@@ -20,4 +20,4 @@ Assertion test utility functions shared between multiple test modules.
 
 """
 
-from assertion__pytest_assert_rewrite_needed import *
+from testutils.assertion__pytest_assert_rewrite_needed import *

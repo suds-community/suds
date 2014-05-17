@@ -25,6 +25,7 @@ The environments should have the following Python packages installed:
   * setuptools (for installing pip)
   * pip (for installing everything except itself)
   * pytest (for running the project's test suite)
+  * six (Python 2/3 compatibility layer used in the project's test suite)
   * virtualenv (for creating virtual Python environments)
 plus certain specific Python versions may require additional backward
 compatibility support packages.
@@ -746,6 +747,7 @@ def process_pip(env, actions):
 # ----------------------------------
 
 v1_4_16 = _lowest_version_string_with_prefix("1.4_16")
+v1_5 = _lowest_version_string_with_prefix("1.5")
 v1_8 = _lowest_version_string_with_prefix("1.8")
 v1_10 = _lowest_version_string_with_prefix("1.10")
 
@@ -831,6 +833,15 @@ def add_pytest_requirements(env, requirements):
     requirements.append(requirement_spec("pytest", pytest_version))
 
 
+def add_six_requirements(env_version_info, requirements):
+    # six release 1.5 broke compatibility with Python 2.4.x.
+    if env_version_info < (2, 5):
+        version_spec = "<", v1_5
+    else:
+        version_spec = None
+    requirements.append(requirement_spec("six", version_spec))
+
+
 def add_virtualenv_requirements(env_version_info, requirements):
     # virtualenv releases supported on older Python versions:
     #   * Python 2.4 - virtualenv 1.7.2 (not supported in 1.8.x).
@@ -887,6 +898,7 @@ def prepare_pip_requirements_file_if_needed(requirements):
 def prepare_pip_requirements(env):
     requirements = []
     add_pytest_requirements(env, requirements)
+    add_six_requirements(env.sys_version_info, requirements)
     add_virtualenv_requirements(env.sys_version_info, requirements)
     janitor = prepare_pip_requirements_file_if_needed(requirements)
     return requirements, janitor

@@ -28,4 +28,4 @@ pytest configuration file for the suds test suite.
 # folder constructed by 'setup.py build' using 'py.test build --markers'. The
 # plugin will still get loaded correctly when actually running the tests. This
 # has already been reported as a pytest issue.
-pytest_plugins = "tests.indirect_parametrize"
+pytest_plugins = "testutils.indirect_parametrize"

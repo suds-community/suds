@@ -15,6 +15,9 @@ include TODO.txt
 include notes/*.rst
 include notes/*.txt
 
+# Tests.
+recursive-include tests *.py
+
 # Tools.
 prune tools/__*  # local cache folders
 include tools/*.cmd
