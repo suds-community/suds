@@ -98,6 +98,7 @@ exec_file(%(script)r)
         if err:
             print("Test process stderr:")
             print(err)
+        import pytest
         pytest.fail("Test subprocess failed.")
 
 
