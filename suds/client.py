@@ -595,8 +595,8 @@ class RequestContext:
 
     def __init__(self, process_reply, envelope):
         """
-        @param client: A callback for processing a user defined reply.
-        @type client: I{callable}
+        @param process_reply: A callback for processing a user defined reply.
+        @type process_reply: I{callable}
         @param envelope: The SOAP request envelope.
         @type envelope: I{bytes}
 
