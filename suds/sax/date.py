@@ -359,7 +359,7 @@ def _bump_up_time_by_microsecond(time):
     cycling around silently to 00:00:00.0 in case of an overflow.
 
     @param time: Time object.
-    @type value: B{datetime}.I{time}
+    @type time: B{datetime}.I{time}
     @return: Time object.
     @rtype: B{datetime}.I{time}
 
@@ -378,7 +378,7 @@ def _date_from_match(match_object):
     _RE_DATETIME.
 
     @param match_object: The regular expression match.
-    @type value: B{re}.I{MatchObject}
+    @type match_object: B{re}.I{MatchObject}
     @return: A date object.
     @rtype: B{datetime}.I{date}
 
@@ -403,7 +403,7 @@ def _time_from_match(match_object):
     _RE_TIME.
 
     @param match_object: The regular expression match.
-    @type value: B{re}.I{MatchObject}
+    @type match_object: B{re}.I{MatchObject}
     @return: Time object + rounding flag.
     @rtype: tuple of B{datetime}.I{time} and bool
 
@@ -430,7 +430,7 @@ def _tzinfo_from_match(match_object):
     or _RE_TIME.
 
     @param match_object: The regular expression match.
-    @type value: B{re}.I{MatchObject}
+    @type match_object: B{re}.I{MatchObject}
     @return: A timezone information object.
     @rtype: B{datetime}.I{tzinfo}
 
