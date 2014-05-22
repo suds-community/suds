@@ -16,6 +16,7 @@ Separate sections below:
 * `PYTHON COMPATIBILITY`_
 * `RELEASE PROCEDURE`_
 * `DEVELOPMENT & TESTING ENVIRONMENT`_
+* `PYTHON 2/3 SOURCE CODE COMPATIBILITY`_
 * `EXTERNAL DOCUMENTATION`_
 * `STANDARDS CONFORMANCE`_
 * `PROJECT IMPLEMENTATION NOTES`_
@@ -529,6 +530,25 @@ some external Python package installation tool requiring those entries in order
 to determine where to install its package data. In that case you can set those
 entries manually, e.g. by using a script similar to the one found at
 `<http://nedbatchelder.com/blog/201007/installing_python_packages_from_windows_installers_into.html>`_.
+
+
+PYTHON 2/3 SOURCE CODE COMPATIBILITY
+=================================================
+
+These are notes related to maintaining Python 2/3 source code compatibility in
+parts of this project that require it.
+
+Use the ``six <http://pythonhosted.org/six>`` Python 2/3 compatibility support
+package to make the compatibility patches simpler. Where a solution provided by
+``six`` can not be used, explicitly explain the reason why in a related code
+comment.
+
+Do not use ``u"..."`` Python unicode literals since we wish to support Python
+3.1 & 3.2 versions which do not support them. Useful site for easily converting
+unicode strings to their ``unicode-escape`` encoded representation which can
+then be used with the ``six.u()`` helper function:
+
+  http://www.rapidmonkey.com/unicodeconverter
 
 
 EXTERNAL DOCUMENTATION
