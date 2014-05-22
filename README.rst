@@ -118,6 +118,8 @@ version 0.7 (development)
     * Python 3.3.5/x64 on Windows 7/SP1/x64.
     * Python 3.4.0/x86 on Windows 7/SP1/x64.
     * Python 3.4.0/x64 on Windows 7/SP1/x64.
+    * Python 3.4.1/x86 on Windows 7/SP1/x64.
+    * Python 3.4.1/x64 on Windows 7/SP1/x64.
 
 * Improved support for ``decimal`` XSD types.
 

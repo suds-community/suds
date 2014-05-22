@@ -17,10 +17,10 @@
 :: Used pytest command-line options.
 @set PYTEST_OPTIONS=-m pytest -q -x --tb=short
 
-@call :test "3.4.0 x64" "py340"     || goto :fail
+@call :test "3.4.1 x64" "py341"     || goto :fail
 @call :test "2.4.3 x86" "py243"     || goto :fail
 @call :test "2.7.6 x64" "py276"     || goto :fail
-@call :test "3.4.0 x86" "py340_x86" || goto :fail
+@call :test "3.4.1 x86" "py341_x86" || goto :fail
 @call :test "2.4.4 x86" "py244"     || goto :fail
 @call :test "3.3.3 x86" "py333_x86" || goto :fail
 @call :test "3.2.5 x64" "py325"     || goto :fail
@@ -34,6 +34,8 @@
 @call :test "3.1.3 x64" "py313"     || goto :fail
 @call :test "3.2.5 x86" "py325_x86" || goto :fail
 @call :test "3.3.5 x86" "py335_x86" || goto :fail
+@call :test "3.4.0 x64" "py340"     || goto :fail
+@call :test "3.4.0 x86" "py340_x86" || goto :fail
 
 @echo All tests passed.
 @exit /b 0
