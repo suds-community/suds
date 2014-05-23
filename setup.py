@@ -356,7 +356,7 @@ current_folder = os.path.realpath(os.getcwd())
 if script_folder != current_folder:
     print("ERROR: Suds library setup script needs to be run from the folder "
         "containing it.")
-    print()
+    print("")
     print("Current folder: %s" % current_folder)
     print("Script folder: %s" % script_folder)
     sys.exit(-2)
