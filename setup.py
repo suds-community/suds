@@ -92,7 +92,7 @@ attempt_to_install_setuptools = True
 # docstring) but if it causes problems for our users or even only
 # inconveniences them, they tend to complain about why we are using setuptools
 # at all. Therefore we try to use setuptools as silently as possible, with a
-# clear error messages displayed to the user, but only in cases when we
+# clear error message displayed to the user, but only in cases when we
 # absolutely need setuptools.
 #
 # Setuptools usage logic:
@@ -394,7 +394,7 @@ exec(read_python_code(os.path.join(script_folder, "suds", "version.py")))
 #   - setup must be using setuptools
 #   - if running Python version prior to 2.5, a suitable pytest version must
 #     already be installed and will not be installed on demand (see the related
-#     comment embedded int the code below for more detailed information)
+#     embedded code comment below for more detailed information)
 #
 # If the requirements are not met, the command simply reports an end-user error
 # message explaining why the test functionality is unavailable.
@@ -514,9 +514,9 @@ def test_requirements():
         # (http://bugs.python.org/issue13487).
         #
         # This occurs when using setuptools to install our project into a
-        # Python 3.1 environment. There py.error module seems to do such lazy
-        # loading which we force done here before the setuptools installation
-        # procedure to avoid the issue.
+        # Python 3.1 environment. There the py.error module seems to do such
+        # lazy loading. Forcing that module to be loaded here, before the
+        # setuptools installation procedure, avoids the issue.
         try:
             import py.error
             py.error.__attribute_access_to_force_this_module_to_lazy_load__
