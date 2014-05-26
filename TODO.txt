@@ -1330,12 +1330,17 @@ PRIORITIZED:
 (+)         * Using the 'six' Python 2/3 compatibility package.
 (+)         * Running project tests using Python 3 - current working folder.
 
-(17.05.2014.)
+(22.05.2014.)
 
-    * (Jurko) Remove code duplication between setup.py &
-      tools/setup_base_environments.py, e.g. with regards to setting up
-      package requirements required for testing (argparse, colorama, py,
-      pytest).
+(+) * (Jurko) Test using Python 3.4.1.
+
+(26.05.2014.)
+
+(+) * (Jurko) Remove code duplication between setup.py &
+(+)   tools/setup_base_environments.py, e.g. with regards to setting up the
+(+)   project's testing requirement packages (argparse, colorama, py, pytest).
+
+(27.05.2014.)
 
     * (Jurko) Try out virtualenv to make it easier to run tests using multiple
       Python versions and to allow us to automate suds installation testing in
