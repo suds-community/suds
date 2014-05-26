@@ -1342,6 +1342,34 @@ PRIORITIZED:
 
 (27.05.2014.)
 
+    * (Jurko) Internal project development cleanup.
+        * Re-implement the existing run_all_tests.cmd Windows batch script for
+          running a full suds test suite on multiple Python versions in Python.
+            * Read the list of target Python environments from the project's
+              setup.cfg configuration file.
+            * Make sure the prepared Python script runs using any of the suds
+              project supported Python versions.
+            * Add support for disabling testing a specific Python platform.
+            * Update HACKING.rst documentation.
+
+    * (Jurko) Look at the Spyne project and its suds usage.
+        * Try running Spyne's test suite using the suds-jurko fork.
+            * Related links.
+                * 'https://spyne.ci.cloudbees.com/job/spyne/PYFLAV=2.7/
+                  lastCompletedBuild/testReport/spyne.test.interop.test_suds/
+                  TestSuds/'.
+                * 'https://github.com/arskom/spyne/blob/master/spyne/test/
+                  interop/test_suds.py'.
+            * Notes from the Spyne maintainer Burak Arslan.
+                * You can run Spyne tests against your suds locally. Just clone
+                  the Spyne repo and edit setup.py to use suds-jurko instead of
+                  suds here:
+                  'https://github.com/arskom/spyne/blob/master/setup.py#L344'.
+            * Send feedback back to the Spyne maintainer (burak.arslan at
+              arskom.com.tr).
+        * Try updating Spyne project test system so it can be easily configured
+          to use suds-jurko instead of the official suds release.
+
     * (Jurko) Try out virtualenv to make it easier to run tests using multiple
       Python versions and to allow us to automate suds installation testing in
       the future.
@@ -1354,10 +1382,6 @@ PRIORITIZED:
           development - select only a few platforms to test suds on regularly
           and run the full test suite only 'when needed', e.g. before pushing
           changes onto BitBucket or at the end of a single development session.
-        * Running a full suds test suite on multiple Python versions.
-            * Re-implement the existing Windows batch script in Python.
-                * Make sure the prepared Python script runs using any of the
-                  suds project supported Python versions.
 
     * (Jurko) Add an XML comparison test utility supporting raw XML data
       comparison with the following features.
