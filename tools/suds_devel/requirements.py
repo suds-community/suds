@@ -182,9 +182,17 @@ def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
     # requires, even though it does not list it explicitly among its
     # requirements. Python 3.x series introduced the argparse module in its 3.2
     # release so it needs to be installed manually in 3.0.x & 3.1.x releases.
-    # Tested that pytest 2.5.2 requires py 1.4.20 which in turn requires the
+    # Tested that pytest 2.5.2+ requires py 1.4.20+ which in turn requires the
     # argparse module but does not specify this dependency explicitly.
     elif (3,) <= version_info < (3, 2):
+        # pytest versions prior to 2.6.0 are not compatible with Python 3.1,
+        # mostly due to accidental incompatibilities introduced because that is
+        # not one of the officially supported platforms for pytest and so does
+        # not get regular testing. Development version 2.6.0 has been tested
+        # with this project and found to work correctly.
+        #TODO: Once pytest 2.6.0 has been officially released change the pytest
+        # requirement to ("==", "2.6.0").
+        pytest_version = (">=", lowest_version_string_with_prefix("2.6.0")),
         missing_argparse = True
         if current_environment:
             try:
