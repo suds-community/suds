@@ -168,6 +168,19 @@ def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
                 # PyPI here, but that would require an old C++ compiler and so
                 # would not be highly likely to work in any concurrent
                 # development environment.
+                #
+                #TODO: When using colorama releases older than 0.1.11, you
+                # might get atexit() errors on process shutdown after running
+                # the project's 'setup.py test' command and having it
+                # automatically install the colorama package in the process.
+                # The error itself is benign and there are no other effects to
+                # it other than the error message getting displayed. The whole
+                # issue is caused by colorama's atexit handler getting called
+                # multiple times due to some internal setuptools module loading
+                # and unloading. We found no easy workaround to this so update
+                # this code to use the colorama package version 0.3.2+ as soon
+                # as it gets released. When this is done, also remove a related
+                # setup.py comment.
                 v_bad_low = lowest_version_string_with_prefix("0.1.11")
                 v_bad_high = "0.3.2"
                 version_spec = ("<", v_bad_low), (">=", v_bad_high)
