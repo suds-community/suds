@@ -110,7 +110,7 @@ PYTHON COMPATIBILITY
 =================================================
 
 Base sources should remain Python 2.x compatible. Since the original project
-states aiming for Python 2.4 compatibility we should do so as well.
+states aiming for Python 2.4 compatibility we do so as well.
 
 The Python 3.0 minor release is not supported. See `Python 3.0 support`_
 subsection below for more detailed information.
