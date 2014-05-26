@@ -105,6 +105,7 @@ def check_Python24_pytest_requirements():
     pv_unsupported = parse_version(_first_unsupported_py_version_on_Python_24)
     if parse_version(py_version) >= pv_unsupported:
         return True, False  # incompatible py library package version
+    return True, True
 
 
 def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
