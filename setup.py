@@ -461,6 +461,14 @@ def test_requirements():
         except (AttributeError, ImportError):
             pass
 
+    # When using Python 2.5 on Windows, if setuptools chooses to install the
+    # colorama package (pytest requirement on Windows) older than version
+    # 0.1.11, running our 'setup.py test' command may show benign error
+    # messages caused by some colorama atexit handlers getting triggered
+    # multiple times. There are no adverse effects to this and the issue only
+    # occurs if the package is not already installed and it is the 'setup.py
+    # test' command that is installing it. The issue has been fixed by the next
+    # Python 2.5 compatible colorama 0.3.2 release.
     result = []
     result.extend(pytest_requirements())
     result.extend(six_requirements())
