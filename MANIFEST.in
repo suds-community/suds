@@ -19,8 +19,8 @@ include notes/*.txt
 recursive-include tests *.py
 
 # Project development & setup tools.
-prune tools/__*  # local cache folders
 include tools/*.cmd
 include tools/*.py
 include tools/*.txt
+prune tools/__*  # local cache folders
 recursive-include tools/suds_devel *.py
