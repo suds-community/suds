@@ -52,6 +52,18 @@ class FileJanitor:
             pass
 
 
+def lowest_version_string_with_prefix(prefix):
+    """
+    The lowest possible version string with the given prefix.
+
+    'The lowest' according to the usual version string ordering used by
+    setuptools, e.g. '2.4.3.dev0' is the lowest possible version in the 2.4.3
+    series.
+
+    """
+    return "%s.dev0" % (prefix,)
+
+
 def path_to_URL(path, escape=True):
     """Convert a local file path to a absolute path file protocol URL."""
     # We do not use urllib's builtin pathname2url() function since:

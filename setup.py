@@ -86,6 +86,46 @@ attempt_to_install_setuptools = True
 
 
 # -----------------------------------------------------------------------------
+# Detect the setup.py environment - current & script folder.
+# -----------------------------------------------------------------------------
+
+# Setup documentation incorrectly states that it will search for packages
+# relative to the setup script folder by default when in fact it will search
+# for them relative to the current working folder. It seems avoiding this
+# problem cleanly and making the setup script runnable with any current working
+# folder would require better distutils and/or setuptools support.
+# Attempted alternatives:
+#   * Changing the current working folder internally makes any passed path
+#     parameters be interpreted relative to the setup script folder when they
+#     should be interpreted relative to the initial current working folder.
+#   * Passing the script folder to setup() using the parameter
+#       package_dir={"": script_folder}
+#     makes the setup 'build' command work from any folder but 'egg-info'
+#     (together with any related commands) still fails.
+script_folder = os.path.realpath(os.path.dirname(__file__))
+current_folder = os.path.realpath(os.getcwd())
+if script_folder != current_folder:
+    print("ERROR: Suds library setup script needs to be run from the folder "
+        "containing it.")
+    print("")
+    print("Current folder: %s" % current_folder)
+    print("Script folder: %s" % script_folder)
+    sys.exit(-2)
+
+
+# -----------------------------------------------------------------------------
+# Import suds_devel module shared between setup & development scripts.
+# -----------------------------------------------------------------------------
+
+sys.path.insert(0, os.path.join(script_folder, "tools"))
+import suds_devel
+sys.path.pop(0)
+
+from suds_devel.requirements import (check_Python24_pytest_requirements,
+    pytest_requirements, six_requirements)
+
+
+# -----------------------------------------------------------------------------
 # Attempt to use setuptools for this installation.
 # -----------------------------------------------------------------------------
 # setuptools brings us several useful features (see the main setup script
@@ -234,11 +274,8 @@ def acquire_setuptools_setup():
             "this installation using Python prior to version 3.2")
         print("---")
         return
-    if sys.version_info < (2, 6):
-        # setuptools 1.4.2 - the final release supporting Python 2.4 & 2.5.
-        import ez_setup_1_4_2 as ez_setup
-    else:
-        import ez_setup
+    import suds_devel.ez_setup_versioned
+    ez_setup = suds_devel.ez_setup_versioned.import_module()
     try:
         # Since we know there is no setuptools package in the current
         # environment, this will:
@@ -335,34 +372,6 @@ def unicode2ascii(unicode):
 
 
 # -----------------------------------------------------------------------------
-# Detect the setup.py environment - current & script folder.
-# -----------------------------------------------------------------------------
-
-# Setup documentation incorrectly states that it will search for packages
-# relative to the setup script folder by default when in fact it will search
-# for them relative to the current working folder. It seems avoiding this
-# problem cleanly and making the setup script runnable with any current working
-# folder would require better distutils and/or setuptools support.
-# Attempted alternatives:
-#   * Changing the current working folder internally makes any passed path
-#     parameters be interpreted relative to the setup script folder when they
-#     should be interpreted relative to the initial current working folder.
-#   * Passing the script folder to setup() using the parameter
-#       package_dir={"": script_folder}
-#     makes the setup 'build' command work from any folder but 'egg-info'
-#     (together with any related commands) still fails.
-script_folder = os.path.realpath(os.path.dirname(__file__))
-current_folder = os.path.realpath(os.getcwd())
-if script_folder != current_folder:
-    print("ERROR: Suds library setup script needs to be run from the folder "
-        "containing it.")
-    print("")
-    print("Current folder: %s" % current_folder)
-    print("Script folder: %s" % script_folder)
-    sys.exit(-2)
-
-
-# -----------------------------------------------------------------------------
 # Load the suds library version information.
 # -----------------------------------------------------------------------------
 
@@ -421,90 +430,19 @@ def test_requirements():
     if not using_setuptools:
         return "test command not available without setuptools"
 
-    result = []
-
-    try:
-        import pytest
-        have_pytest = True
-    except ImportError:
-        have_pytest = False
     if sys.version_info < (2, 5):
-        # pytest 2.4.0 release broke compatibility with Python releases prior
-        # to 2.5. The last officially supported pytest version on Python 2.4
-        # platforms is 2.3.5 and that versions can not parse all of the pytest
-        # constructs used in this project, e.g. skipif expressions not given as
-        # strings.
-        #
-        # However, our tests can still be run using Python 2.4 if that
-        # environment contains suitable pytest & py package versions - pytest
-        # must not be older than 2.4.0 nor equal to or newer than 2.4.2, and
-        # the py release must be prior to 1.4.16. Those pytest versions specify
-        # py version 1.4.16+ as their requirement but will still work well
-        # enough for us with this older py release. They can be installed
-        # together using a pip command like 'install pytest<2.4.2 py<1.4.16'.
-        # See the project's Python compatibility related hacking docs for more
-        # detailed information.
-        #
-        # Note though that this combination can not be installed automatically
-        # by this setup script as we found no way to make setuptools' test
-        # command succeed even though its installed packages do not have all
-        # their formal requirements satisfied.
-        if have_pytest:
-            try:
-                # Versions prior to 2.4.0 may be installed but will fail at
-                # runtime when running our test suite. Versions 2.4.2 and later
-                # can not be installed at all.
-                have_pytest = "2.4.0" <= pytest.__version__ < "2.4.2"
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except Exception:
-                have_pytest = False
+        # pytest requirements can not be installed automatically by this setup
+        # script under Python 2.4.x environment. Specific pytest & py library
+        # package version combination that we found working in Python 2.4.x
+        # environments does not formally satisfy pytest requirements, and we
+        # found no way to make setuptools' test command succeed when this
+        # script installs packages that do not have all their formal
+        # requirements satisfied.
+        have_pytest, have_py = check_Python24_pytest_requirements()
         if not have_pytest:
             return "compatible preinstalled pytest needed prior to Python 2.5"
-
-        try:
-            import py
-            have_py = True
-        except ImportError:
-            have_py = False
-        if have_py:
-            try:
-                # Version 1.4.16 may be installed but will cause pytest to fail
-                # when running our test suite.
-                have_py = py.__version__ < "1.4.16"
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except Exception:
-                have_py = False
         if not have_py:
             return "compatible preinstalled py needed prior to Python 2.5"
-    elif sys.version_info < (2, 6):
-        if sys.platform == "win32":
-            # colorama releases [0.1.11 - 0.3.2> do not work unless the ctypes
-            # module is available, but that module is not included in 64-bit
-            # CPython distributions (tested using Python 2.5.4). Some of those
-            # versions fail to install, while others only fail at run-time.
-            # Pull request https://github.com/tartley/colorama/pull/4 resolves
-            # this issue for colorama release 0.3.2.
-            ctypes_version = None
-            try:
-                from ctypes import __version__ as ctypes_version
-            except ImportError:
-                pass
-            if ctypes_version is None:
-                # We could try to install an external 'ctypes' package from
-                # PyPI here, but that would require an old C++ compiler and so
-                # would not be highly likely to work in any concurrent
-                # development environment.
-                result.append("colorama<0.1.11,>=0.3.2")
-            else:
-                # colorama 0.3.1 release accidentally uses the 'with' keyword
-                # without a corresponding __future__ import in its setup.py
-                # script.
-                result.append("colorama!=0.3.1")
-        result.append("pytest>=2.4.0")
-    else:
-        result.append("pytest>=2.4.0")
 
     if ((3,) <= sys.version_info < (3, 2, 3)):
         # Python 3.x versions prior to Python 3.2.3 have a bug in their inspect
@@ -523,23 +461,9 @@ def test_requirements():
         except (AttributeError, ImportError):
             pass
 
-    if (3,) <= sys.version_info < (3, 2):
-        # 'pytest' requires 'argparse' but does not explicitly list it as a
-        # requirement when packaged for Python 3+ environments. That is why we
-        # need to explicitly list 'argparse' as an extra test requirement when
-        # run using Python versions that do not include that module in their
-        # standard library.
-        try:
-            import argparse
-        except ImportError:
-            result.append("argparse")
-
-    # 'six' release 1.5 broke compatibility with Python 2.4.x.
-    if sys.version_info < (2, 5):
-        result.append("six<1.5")
-    else:
-        result.append("six")
-
+    result = []
+    result.extend(pytest_requirements())
+    result.extend(six_requirements())
     return result
 
 test_error = None

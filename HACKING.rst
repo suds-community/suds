@@ -55,8 +55,8 @@ TOP-LEVEL PROJECT FILES & FOLDERS
 
 | tools/
 
-* Project development utility scripts. Any internal Python modules are located
-  under its ``suds_devel/`` package folder.
+* Project development & setup utility scripts. Related internal Python modules
+  are located under its ``suds_devel/`` package folder.
 
 | MANIFEST.in
 
@@ -415,6 +415,13 @@ Caveats:
 
 * This method does not allow you to provide any extra ``pytest`` options when
   running the project test suite.
+* When running the ``setup.py test`` command in a Windows Python 2.5
+  environment without an included ctypes module (e.g. 64-bit CPython 2.5
+  distribution does not include ctypes) and having it automatically install the
+  colorama package version older than 0.1.11, you will get benign error messages
+  reporting colorama's atexit handlers failing. Running the same command again
+  avoids the issue since the colorama package will then already be installed.
+  Suggested workaround is to use a colorama package version 0.3.2 or newer.
 
 Running the project tests - using ``pytest`` directly
 -----------------------------------------------------

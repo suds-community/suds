@@ -112,6 +112,7 @@ compatibility support packages.
 # detected. Some might not set a non-0 exit code on error and so their output
 # must be used as a success/failure indicator.
 
+import itertools
 import os
 import os.path
 import re
@@ -123,8 +124,11 @@ from suds_devel.egg import zip_eggs_in_folder
 from suds_devel.environment import BadEnvironment, Environment
 from suds_devel.exception import EnvironmentSetupError
 from suds_devel.parse_version import parse_version
-from suds_devel.utility import (any_contains_any, FileJanitor, path_to_URL,
-    report_error, requirement_spec)
+from suds_devel.requirements import (pytest_requirements, six_requirements,
+    virtualenv_requirements)
+from suds_devel.utility import (any_contains_any, FileJanitor,
+    lowest_version_string_with_prefix, path_to_URL, report_error,
+    requirement_spec)
 
 
 # -------------
@@ -380,18 +384,6 @@ def _exc_str():
     return ": ".join(x for x in desc if x)
 
 
-def _lowest_version_string_with_prefix(prefix):
-    """
-    The lowest possible version string with the given prefix.
-
-    'The lowest' according to the usual version string ordering used by
-    setuptools, e.g. '2.4.3.dev0' is the lowest possible version in the 2.4.3
-    series.
-
-    """
-    return "%s.dev0" % (prefix,)
-
-
 def _script_folder():
     """
     Return this script's folder or None if it can not be determined.
@@ -511,11 +503,8 @@ class _ez_setup_script:
             msg,))
 
     def __script_path(self):
-        # setuptools 1.4.2 - last supported release on Python 2.4 & 2.5.
-        if self.__env.sys_version_info < (2, 6):
-            script_name = "ez_setup_1_4_2.py"
-        else:
-            script_name = "ez_setup.py"
+        import suds_devel.ez_setup_versioned as ez
+        script_name = ez.script_name(self.__env.sys_version_info)
         return os.path.join(self.__ez_setup_folder, script_name)
 
     def __setuptools_version(self):
@@ -572,7 +561,7 @@ def _avoid_setuptools_zipped_egg_upgrade_issue(env, ez_setup):
     pv_new = parse_version(ez_setup.setuptools_version())
     if pv_new != parse_version(env.setuptools_version):
         return  # issue avoided since zipped egg archive names will not match
-    if pv_new >= parse_version(_lowest_version_string_with_prefix("3.5.2")):
+    if pv_new >= parse_version(lowest_version_string_with_prefix("3.5.2")):
         return  # issue fixed in setuptools
     # We could check for pip and use it for a cleaner setuptools uninstall if
     # available, but YAGNI since only Python 2.5.x environments are affected by
@@ -746,12 +735,6 @@ def process_pip(env, actions):
 # Processing pip based installations
 # ----------------------------------
 
-v1_4_16 = _lowest_version_string_with_prefix("1.4_16")
-v1_5 = _lowest_version_string_with_prefix("1.5")
-v1_8 = _lowest_version_string_with_prefix("1.8")
-v1_10 = _lowest_version_string_with_prefix("1.10")
-
-
 def pip_invocation_arguments(env_version_info):
     """
     Returns Python arguments for invoking pip with a specific Python version.
@@ -772,87 +755,6 @@ def pip_invocation_arguments(env_version_info):
     if (env_version_info < (2, 5)) or ((2, 6) <= env_version_info < (2, 7)):
         return ["-c", "import pip;pip.main()"]
     return ["-m", "pip"]
-
-
-def add_pytest_requirements(env, requirements):
-    # The last pytest release supported on Python 2.4.x releases is 2.4.1 but
-    # that version can not be used with its documented py>=1.4.16 requirement
-    # and has to be used with the py library 1.4.15 version instead. Note that
-    # this will prevent pytest's py.test starter scripts from working (as they
-    # explicitly check that all the formally specified pytest requirements are
-    # satisfied), but pytest can still be started using 'py24 -m pytest'.
-    pytest_version = None
-    if env.sys_version_info < (2, 5):
-        pytest_version = "2.4.1"
-        requirements.append(requirement_spec("py", ("<", v1_4_16)))
-        #IDEA: In this case we could run the pytest installation separately
-        # from all the other pip based installations and have it not install
-        # pytest scripts. Since in general there is no 'setup.py install' or
-        # 'pip' command-line argument that can say 'do not install scripts',
-        # this will most likely need to use a pip command-line option like
-        # '--install-option="--install-scripts=..."' to make the scripts be
-        # installed into a temporary folder and then remove that folder after
-        # the installation. An alternative would be to use easy_install which
-        # does support the --exclude-scripts command-line option.
-    # pytest on Windows depends on the colorama package, and that package has
-    # several accidentally backward compatibility issues we have to work around
-    # when using Python 2.5.
-    elif env.sys_version_info < (2, 6):
-        if sys.platform == "win32":
-            # colorama releases [0.1.11 - 0.3.2> do not work unless the ctypes
-            # module is available, but that module is not included in 64-bit
-            # CPython distributions (tested using Python 2.5.4). Some of those
-            # versions fail to install, while others only fail at run-time.
-            # Pull request https://github.com/tartley/colorama/pull/4 resolves
-            # this issue for colorama release 0.3.2.
-            if env.ctypes_version is None:
-                # We could try to install an external 'ctypes' package from
-                # PyPI here, but that would require an old C++ compiler and so
-                # would not be highly likely to work in any concurrent
-                # development environment.
-                version_spec = ("<", "0.1.11"), (">=", "0.3.2")
-            else:
-                # colorama 0.3.1 release accidentally uses the 'with' keyword
-                # without a corresponding __future__ import in its setup.py
-                # script.
-                version_spec = ("!=", "0.3.1"),
-            requirements.append(requirement_spec("colorama", *version_spec))
-    # Python 3.0 & 3.1 stdlib does not include the argparse module but pytest
-    # seems to require it, even though it does not list it explicitly among its
-    # requirements. Python 3.x series introduced the argparse module in its 3.2
-    # release so it needs to be installed manually in releases 3.0.x & 3.1.x
-    # releases. Tested that pytest 2.5.2 requires py 1.4.20 which in turn
-    # requires the argparse module but does not specify this dependency
-    # explicitly.
-    elif (3,) <= env.sys_version_info < (3, 2):
-        requirements.append(requirement_spec("argparse"))
-    if not pytest_version:
-        # pytest versions prior to 2.4.0 do not support non-string ``skipif``
-        # expressions.
-        pytest_version = (">=", "2.4.0")
-    requirements.append(requirement_spec("pytest", pytest_version))
-
-
-def add_six_requirements(env_version_info, requirements):
-    # six release 1.5 broke compatibility with Python 2.4.x.
-    if env_version_info < (2, 5):
-        version_spec = "<", v1_5
-    else:
-        version_spec = None
-    requirements.append(requirement_spec("six", version_spec))
-
-
-def add_virtualenv_requirements(env_version_info, requirements):
-    # virtualenv releases supported on older Python versions:
-    #   * Python 2.4 - virtualenv 1.7.2 (not supported in 1.8.x).
-    #   * Python 2.5 - virtualenv 1.9.1 (not supported in 1.10.x).
-    if env_version_info < (2, 5):
-        virtualenv_spec = requirement_spec("virtualenv", ("<", v1_8))
-    elif env_version_info < (2, 6):
-        virtualenv_spec = requirement_spec("virtualenv", ("<", v1_10))
-    else:
-        virtualenv_spec = requirement_spec("virtualenv")
-    requirements.append(virtualenv_spec)
 
 
 def pip_requirements_file(requirements):
@@ -896,10 +798,10 @@ def prepare_pip_requirements_file_if_needed(requirements):
 
 
 def prepare_pip_requirements(env):
-    requirements = []
-    add_pytest_requirements(env, requirements)
-    add_six_requirements(env.sys_version_info, requirements)
-    add_virtualenv_requirements(env.sys_version_info, requirements)
+    requirements = list(itertools.chain(
+        pytest_requirements(env.sys_version_info, env.ctypes_version),
+        six_requirements(env.sys_version_info),
+        virtualenv_requirements(env.sys_version_info)))
     janitor = prepare_pip_requirements_file_if_needed(requirements)
     return requirements, janitor
 
