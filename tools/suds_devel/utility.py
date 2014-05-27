@@ -145,7 +145,7 @@ def script_folder(script_path):
 
 
 def path_iter(path):
-    """Returns an iterator over all the file & folder names in the path."""
+    """Returns an iterator over all the file & folder names in a path."""
     parts = []
     while path:
         path, item = os.path.split(path)
