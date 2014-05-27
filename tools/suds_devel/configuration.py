@@ -32,6 +32,8 @@ if sys.version_info < (3,):
 else:
     import configparser
 
+import suds_devel.utility as utility
+
 
 class BadConfiguration(Exception):
     def __init__(self, message):
@@ -53,8 +55,21 @@ class Config(object):
         IfNeeded = object()
         No = object()
 
-    def __init__(self, ini_file):
-        self.__init_reader(ini_file)
+    def __init__(self, script, project_folder, ini_file):
+        """
+        Initialize new script configuration.
+
+        External configuration parameters may be specified relative to the
+        following folders:
+          * script - relative to the current working folder
+          * project_folder - relative to the script folder
+          * ini_file - relative to the project folder
+
+        """
+        self.__init_script_folder(script)
+        self.__init_project_folder(project_folder)
+        self.__init_ini_file(ini_file)
+        self.__init_reader()
 
     def _get_bool(self, section, option):
         x = self._reader.get(section, option).lower()
@@ -87,20 +102,35 @@ class Config(object):
                         option))
                 self.python_environments.append(command)
 
-    def __init_reader(self, ini_file):
-        if not os.path.isfile(ini_file):
+    def __init_ini_file(self, ini_file):
+        self.ini_file = os.path.join(self.project_folder, ini_file)
+        self.ini_file = os.path.normpath(self.ini_file)
+        if not os.path.isfile(self.ini_file):
             raise BadConfiguration("Missing configuration file '%s'." % (
-                ini_file))
+                self.ini_file,))
+
+    def __init_project_folder(self, project_folder):
+        p = os.path.normpath(os.path.join(self.script_folder, project_folder))
+        if not os.path.isdir(p):
+            raise BadConfiguration("Could not find project folder '%s'." % p)
+        self.project_folder = p
+
+    def __init_reader(self):
         try:
-            f = open(ini_file, "r")
+            f = open(self.ini_file, "r")
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
             raise BadConfiguration("Can not access configuration file '%s' - "
-                "%s." % (ini_file, sys.exc_info()[1]))
+                "%s." % (self.ini_file, sys.exc_info()[1]))
         try:
-            print("Reading configuration file '%s'..." % (ini_file,))
+            print("Reading configuration file '%s'..." % (self.ini_file,))
             self._reader = configparser.ConfigParser()
             self._reader.readfp(f)
         finally:
             f.close()
+
+    def __init_script_folder(self, script):
+        self.script_folder = utility.script_folder(script)
+        if not self.script_folder:
+            raise BadConfiguration("Could not determine script folder.")

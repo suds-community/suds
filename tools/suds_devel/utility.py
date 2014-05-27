@@ -106,6 +106,44 @@ def requirement_spec(package_name, *args):
     return "%s%s" % (package_name, ",".join(version_specs))
 
 
+if sys.version_info < (2, 6):
+    def _rel_path(path):
+        # Older Python versions do not support os.path.relpath(), ergo no
+        # pretty path formatting for them.
+        return os.path.normpath(path)
+else:
+    def _rel_path(path):
+        try:
+            return os.path.relpath(path)
+        except ValueError:
+            # Current and given path on different file systems, e.g. C: & D:
+            # drives on Windows.
+            return os.path.normpath(path)
+
+
+def script_folder(script_path):
+    """
+    Return the given script's folder or None if it can not be determined.
+
+    Script is identified by its __file__ attribute. If the given __file__
+    attribute value contains no path information, it is expected to identify an
+    existing file in the current working folder.
+
+    Returned folder may be specified relative to the current working folder
+    and, if determined, will never be an empty string.
+
+    Typical use case for calling this function is from a regular stand-alone
+    script and not a frozen module or a module imported from the disk, a
+    zip-file, an external database or any other such source. Such callers can
+    safely assume they have a valid __file__ attribute available.
+
+    """
+    # There exist modules whose __file__ attribute does not correspond directly
+    # to a disk file, e.g. modules imported from inside zip archives.
+    if os.path.isfile(script_path):
+        return _rel_path(os.path.dirname(script_path)) or "."
+
+
 def path_iter(path):
     """Returns an iterator over all the file & folder names in the path."""
     parts = []

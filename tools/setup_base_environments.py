@@ -141,11 +141,18 @@ class MyConfig(Config):
     SECTION__REUSE_PREINSTALLED_SETUPTOOLS =  \
         "setup base environments - reuse pre-installed setuptools"
 
-    def __init__(self, project_folder, script_folder, ini_file):
-        super(MyConfig, self).__init__(ini_file)
-        self.__project_folder = project_folder
-        self.__script_folder = script_folder
-        self.__ini_folder = os.path.dirname(ini_file)
+    def __init__(self, script, project_folder, ini_file):
+        """
+        Initialize new script configuration.
+
+        External configuration parameters may be specified relative to the
+        following folders:
+          * script - relative to the current working folder
+          * project_folder - relative to the script folder
+          * ini_file - relative to the project folder
+
+        """
+        super(MyConfig, self).__init__(script, project_folder, ini_file)
         self.__cached_paths = {}
         try:
             self.__read_configuration()
@@ -178,9 +185,9 @@ class MyConfig(Config):
                 "'%s.%s' - %s" % (self.SECTION__FOLDERS, option,
                 sys.exc_info()[1]))
         base_paths = {
-            "project-folder": self.__project_folder,
-            "script-folder": self.__script_folder,
-            "ini-folder": self.__ini_folder}
+            "project-folder": self.project_folder,
+            "script-folder": self.script_folder,
+            "ini-folder": os.path.dirname(self.ini_file)}
         folder_parts = re.split("[\\/]{2}", folder, maxsplit=1)
         base_path = None
         if len(folder_parts) == 2:
@@ -217,13 +224,12 @@ class MyConfig(Config):
 
 
 def _prepare_configuration():
-    script_folder = _script_folder()
-    if not script_folder:
-        raise BadConfiguration("Could not determine script folder.")
-    project_folder = os.path.normpath(os.path.join(script_folder, ".."))
-    ini_file = os.path.join(project_folder, "setup.cfg")
+    # We know we are a regular stand-alone script file and not an imported
+    # module (either frozen, imported from disk, zip-file, external database or
+    # any other source). That means we can safely assume we have the __file__
+    # attribute available.
     global config
-    config = MyConfig(project_folder, script_folder, ini_file)
+    config = MyConfig(__file__, "..", "setup.cfg")
 
 
 # --------------------
@@ -380,50 +386,6 @@ def _exc_str():
     type_desc.append(exc_type.__name__)
     desc = ".".join(type_desc), str(exc)
     return ": ".join(x for x in desc if x)
-
-
-def _script_folder():
-    """
-    Return this script's folder or None if it can not be determined.
-
-    Returned folder may be specified relative to the current working folder
-    and, if determined, will never be an empty string.
-
-    The script folder may not be determinable in case this module has not been
-    imported from a file or has been imported using some custom module importer
-    that left behind no valid file path information, e.g. if frozen into an
-    executable or loaded from a zip archive or database.
-
-    """
-    try:
-        file = __file__
-    except NameError:
-        # Module __file__ attribute is optional. It may not be set, e.g. for
-        # frozen modules or those loaded from some database.
-        return
-    if not os.path.isfile(file):
-        # There exist modules whose __file__ attribute does not correspond
-        # directly to a disk file, e.g. modules imported from inside zip
-        # archives.
-        return
-    # __file__ may contain no path information, but in that case we already
-    # checked that it references a file in the current folder.
-    return _rel_path(os.path.dirname(file)) or "."
-
-
-if sys.version_info < (2, 6):
-    def _rel_path(path):
-        # Older Python versions do not support os.path.relpath(), ergo no
-        # pretty path formatting for them.
-        return os.path.normpath(path)
-else:
-    def _rel_path(path):
-        try:
-            return os.path.relpath(path)
-        except ValueError:
-            # Current and given path on different file systems, e.g. C: & D:
-            # drives on Windows.
-            return os.path.normpath(path)
 
 
 def _report_startup_information():
