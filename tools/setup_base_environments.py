@@ -126,9 +126,7 @@ from suds_devel.exception import EnvironmentSetupError
 from suds_devel.parse_version import parse_version
 from suds_devel.requirements import (pytest_requirements, six_requirements,
     virtualenv_requirements)
-from suds_devel.utility import (any_contains_any, FileJanitor,
-    lowest_version_string_with_prefix, path_to_URL, report_error,
-    requirement_spec)
+import suds_devel.utility as utility
 
 
 # -------------
@@ -561,7 +559,8 @@ def _avoid_setuptools_zipped_egg_upgrade_issue(env, ez_setup):
     pv_new = parse_version(ez_setup.setuptools_version())
     if pv_new != parse_version(env.setuptools_version):
         return  # issue avoided since zipped egg archive names will not match
-    if pv_new >= parse_version(lowest_version_string_with_prefix("3.5.2")):
+    fixed_version = utility.lowest_version_string_with_prefix("3.5.2")
+    if pv_new >= parse_version(fixed_version):
         return  # issue fixed in setuptools
     # We could check for pip and use it for a cleaner setuptools uninstall if
     # available, but YAGNI since only Python 2.5.x environments are affected by
@@ -615,6 +614,7 @@ def calculate_pip_requirements(env_version_info):
         pip_version = "1.1"
     elif env_version_info < (2, 6):
         pip_version = "1.3.1"
+    requirement_spec = utility.requirement_spec
     requirements = [requirement_spec("pip", pip_version)]
     # Although pip claims to be compatible with Python 3.0 & 3.1 it does not
     # seem to work correctly from within such clean Python environments.
@@ -697,7 +697,7 @@ def setuptools_install_options(local_storage_folder):
     # contains HTML links to all top-level local storage folder items, as
     # described for method 1 above.
     if " " in local_storage_folder:
-        find_links_param = path_to_URL(local_storage_folder)
+        find_links_param = utility.path_to_URL(local_storage_folder)
         if find_links_param[-1] != "/":
             find_links_param += "/"
     else:
@@ -764,7 +764,7 @@ def pip_requirements_file(requirements):
             text=True)
         requirements_file = os.fdopen(os_handle, "w")
         try:
-            janitor = FileJanitor(file_path)
+            janitor = utility.FileJanitor(file_path)
             for line in requirements:
                 requirements_file.write(line)
                 requirements_file.write("\n")
@@ -791,7 +791,7 @@ def prepare_pip_requirements_file_if_needed(requirements):
     2.4.4 & 2.5.4.
 
     """
-    if any_contains_any(requirements, "<>|()&^"):
+    if utility.any_contains_any(requirements, "<>|()&^"):
         file_path, janitor = pip_requirements_file(requirements)
         requirements[:] = ["-r", file_path]
         return janitor
@@ -882,7 +882,7 @@ def run_pip_based_installations(env, pip_invocation, requirements,
             # URL-quoted and it does not even seem to recognize URLs containing
             # %xx escaped characters. Tested using an installation cache folder
             # path containing spaces with Python 3.4.0 & pip 1.5.4.
-            installation_cache_folder_URL = path_to_URL(
+            installation_cache_folder_URL = utility.path_to_URL(
                 config.installation_cache_folder(), escape=False)
             pip_options.extend(["-f", installation_cache_folder_URL,
                 "--no-index"])
@@ -998,7 +998,7 @@ def process_python_environments(python_environments):
         try:
             process_Python_environment(env)
         except EnvironmentSetupError:
-            report_error(sys.exc_info()[1])
+            utility.report_error(sys.exc_info()[1])
 
 
 def main():
@@ -1007,7 +1007,7 @@ def main():
         _report_startup_information()
         python_environments = scan_python_environments()
     except BadConfiguration:
-        report_error(sys.exc_info()[1])
+        utility.report_error(sys.exc_info()[1])
         return -2
     process_python_environments(python_environments)
     return 0
