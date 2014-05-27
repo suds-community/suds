@@ -373,7 +373,7 @@ def _create_installation_cache_folder_if_needed():
 
 
 def _exc_str():
-    exc_type, exc = sys.exc_info()[:1]
+    exc_type, exc = sys.exc_info()[:2]
     type_desc = []
     if exc_type.__module__ and exc_type.__module__ != "__main__":
         type_desc.append(exc_type.__module__)
