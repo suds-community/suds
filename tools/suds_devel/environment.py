@@ -25,7 +25,8 @@ Includes support for:
 """
 
 import sys
-if sys.version_info < (3, 3):
+have_subprocess_devnull = sys.version_info >= (3, 3)
+if not have_subprocess_devnull:
     import os
 import subprocess
 
@@ -97,7 +98,7 @@ class Environment:
         stdin = subprocess.PIPE
         close_stdin = False
         if input is None:
-            if sys.version_info >= (3, 3):
+            if have_subprocess_devnull:
                 stdin = subprocess.DEVNULL
             else:
                 stdin = open(os.devnull, "r")
