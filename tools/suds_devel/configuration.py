@@ -93,16 +93,18 @@ class Config(object):
             (section, option))
 
     def _read_environment_configuration(self):
+        section_prefix = "env:"
         command_option = "command"
         self.python_environments = []
         for section in self._reader.sections():
-            if section.lower().startswith("env:"):
+            if section.lower().startswith(section_prefix):
+                name = section[len(section_prefix):]
                 command = self._reader.get(section, command_option)
                 if not command:
                     raise BadConfiguration("'%s.%s' environment command "
                         "configuration option must not be empty." % (section,
                         command_option))
-                self.python_environments.append(Environment(command))
+                self.python_environments.append(Environment(name, command))
 
     def __init_ini_file(self, ini_file):
         self.ini_file = os.path.join(self.project_folder, ini_file)
