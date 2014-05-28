@@ -388,14 +388,17 @@ def _exc_str():
     return ": ".join(x for x in desc if x)
 
 
-def _report_startup_information():
-    print("Running in folder: '%s'" % (os.getcwd(),))
+def _report_configuration():
     folder = config.installation_cache_folder()
     if folder is not None:
         print("Installation cache folder: '%s'" % (folder,))
     folder = config.pip_download_cache_folder()
     if folder is not None:
         print("PIP download cache folder: '%s'" % (folder,))
+
+
+def _report_startup_information():
+    print("Running in folder: '%s'" % (os.getcwd(),))
 
 
 # ----------------------------------
@@ -965,8 +968,9 @@ def process_python_environments(python_environments):
 
 def main():
     try:
-        _prepare_configuration()
         _report_startup_information()
+        _prepare_configuration()
+        _report_configuration()
         python_environments = scan_python_environments()
     except BadConfiguration:
         utility.report_error(sys.exc_info()[1])
