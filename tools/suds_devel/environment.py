@@ -82,9 +82,9 @@ class Environment:
 
     """
 
-    def __init__(self, name):
+    def __init__(self, name, command):
         self.__name = name
-        self.__command = name
+        self.__command = command
         self.initial_scan_completed = False
 
     def command(self):
