@@ -237,7 +237,7 @@ def _prepare_configuration():
 # --------------------
 
 def report_environment_configuration(env):
-    if not env:
+    if not (env and env.initial_scan_completed):
         return
     print("  ctypes version: %s" % (env.ctypes_version,))
     print("  pip version: %s" % (env.pip_version,))
@@ -339,15 +339,15 @@ def scan_python_environment(name, progress_reporter, environment_tracker):
     try:
         try:
             env = Environment(name)
+            out, err, exit_code = env.run_initial_scan()
         except:
             progress_reporter.report_finish("----- %s" % (_exc_str(),))
             raise
     except BadEnvironment:
-        out, err, exit_code = sys.exc_info()[1].raw_initial_scan_results()
+        out, err, exit_code = sys.exc_info()[1].raw_scan_results()
     else:
         progress_reporter.report_finish(env.description())
         environment_tracker.track_environment(env)
-        out, err, exit_code = env.raw_initial_scan_results()
     if config.report_raw_environment_scan_results:
         report_raw_environment_scan_results(out, err, exit_code)
     if config.report_environment_configuration:
