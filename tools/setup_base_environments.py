@@ -280,9 +280,9 @@ class ScanProgressReporter:
 
     """
 
-    def __init__(self, environment_names):
-        self.__max_name_length = max(len(x) for x in environment_names)
-        self.__count = len(environment_names)
+    def __init__(self, environments):
+        self.__max_name_length = max(len(x.name()) for x in environments)
+        self.__count = len(environments)
         self.__count_width = len(str(self.__count))
         self.__current = 0
         self.__reporting = False
@@ -329,16 +329,14 @@ class ScannedEnvironmentTracker:
         self.__last_name = name
 
 
-def scan_python_environment(name, progress_reporter, environment_tracker):
-    environment_tracker.track_name(name)
-    env = None
+def scan_python_environment(env, progress_reporter, environment_tracker):
+    environment_tracker.track_name(env.name())
     # N.B. No custom output allowed between calls to our progress_reporter's
     # report_start() & report_finish() methods or we risk messing up its output
     # formatting.
-    progress_reporter.report_start(name)
+    progress_reporter.report_start(env.name())
     try:
         try:
-            env = Environment(name)
             out, err, exit_code = env.run_initial_scan()
         except:
             progress_reporter.report_finish("----- %s" % (_exc_str(),))
@@ -355,13 +353,13 @@ def scan_python_environment(name, progress_reporter, environment_tracker):
 
 
 def scan_python_environments():
-    environment_names = config.python_environments
-    if not environment_names:
+    environments = config.python_environments
+    if not environments:
         raise BadConfiguration("No Python environments configured.")
-    progress_reporter = ScanProgressReporter(environment_names)
+    progress_reporter = ScanProgressReporter(environments)
     environment_tracker = ScannedEnvironmentTracker()
-    for name in environment_names:
-        scan_python_environment(name, progress_reporter, environment_tracker)
+    for env in environments:
+        scan_python_environment(env, progress_reporter, environment_tracker)
     return environment_tracker.environments()
 
 

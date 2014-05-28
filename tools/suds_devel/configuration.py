@@ -32,6 +32,7 @@ if sys.version_info < (3,):
 else:
     import configparser
 
+from suds_devel.environment import Environment
 import suds_devel.utility as utility
 
 
@@ -101,7 +102,7 @@ class Config(object):
                     raise BadConfiguration("'%s.%s' environment command "
                         "configuration option must not be empty." % (section,
                         command_option))
-                self.python_environments.append(command)
+                self.python_environments.append(Environment(command))
 
     def __init_ini_file(self, ini_file):
         self.ini_file = os.path.join(self.project_folder, ini_file)
