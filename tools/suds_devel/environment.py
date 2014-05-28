@@ -39,8 +39,8 @@ class BadEnvironment(Exception):
     in question, e.g. it might be using an incompatible Python version.
 
     Specifying the environment scan result information when constructing this
-    exception is optional. This information may be added to an exception later
-    on using the set() method.
+    exception is optional and may be added to an exception later on using the
+    set_raw_scan_results() method.
 
     """
 
@@ -51,10 +51,10 @@ class BadEnvironment(Exception):
         self.err = err
         self.exit_code = exit_code
 
-    def raw_initial_scan_results(self):
+    def raw_scan_results(self):
         return self.out, self.err, self.exit_code
 
-    def set(self, out, err, exit_code):
+    def set_raw_scan_results(self, out, err, exit_code):
         assert self.out is None
         assert self.err is None
         assert self.exit_code is None
@@ -72,17 +72,19 @@ class Environment:
     """
     Represents a single Python environment.
 
-    Automatically scans the given Python environment and provides information
+    Allows running commands using the environment's Python interpreter.
+    Allows running an initial Python environment scan to collect information
     about it.
 
-    Allows running commands using the environment's Python interpreter.
+    Note that most of the information about the environment will not be
+    available until the initial environment scan is run.
 
     """
 
     def __init__(self, name):
         self.__name = name
         self.__command = "%s.cmd" % (name,)
-        self.__raw_initial_scan_results = self.__initial_scan()
+        self.initial_scan_completed = False
 
     def command(self):
         return self.__command
@@ -119,8 +121,19 @@ class Environment:
     def name(self):
         return self.__name
 
-    def raw_initial_scan_results(self):
-        return self.__raw_initial_scan_results
+    def run_initial_scan(self):
+        self.initial_scan_completed = False
+        scanner = self.__initial_scanner()
+        try:
+            scan_results = scanner.scan(self)
+            self.__collect_scanned_values(scan_results)
+            self.__parse_scanned_version_info()
+            self.initial_scan_completed = True
+            self.__check_python_version()
+        except BadEnvironment:
+            sys.exc_info()[1].set_raw_scan_results(*scanner.raw_scan_results())
+            raise
+        return scanner.raw_scan_results()
 
     def __check_python_version(self):
         if self.sys_version_info < (2, 4):
@@ -162,18 +175,6 @@ class Environment:
             parts.append(release_level[0])
             parts.append(str(serial))
         self.python_version = "".join(parts)
-
-    def __initial_scan(self):
-        scanner = self.__initial_scanner()
-        try:
-            scan_results = scanner.scan(self)
-            self.__collect_scanned_values(scan_results)
-            self.__parse_scanned_version_info()
-            self.__check_python_version()
-        except BadEnvironment:
-            sys.exc_info()[1].set(*scanner.raw_scan_results())
-            raise
-        return scanner.raw_scan_results()
 
     @staticmethod
     def __initial_scanner():
