@@ -84,7 +84,7 @@ class Environment:
 
     def __init__(self, name):
         self.__name = name
-        self.__command = "%s.cmd" % (name,)
+        self.__command = name
         self.initial_scan_completed = False
 
     def command(self):
