@@ -356,17 +356,18 @@ Examples of such issues:
 * Some specific older Python versions (e.g. 2.4.3) have no SSL support and so
   have to reuse installations downloaded by other Python versions.
 
-Running the project tests - ``tools/run_all_tests.cmd`` script
---------------------------------------------------------------
+Running the project tests - ``tools/run_all_tests.py`` script
+-------------------------------------------------------------
 
-``tools/run_all_tests.cmd`` script is a basic *poor man's tox* development
-script that can be used for running the full project test suite using multiple
-Python interpreter versions on a Windows development machine.
+``tools/run_all_tests.py`` script is a basic *poor man's tox* development script
+that can be used for running the full project test suite using multiple Python
+interpreter versions on a development machine.
 
 Intended to be replaced by a more portable ``tox`` based or similar automated
 testing solution some time in the future.
 
-Can be configured by tweaking the script's sources directly:
+Can be configured by tweaking the main project Python configuration file
+``setup.cfg``:
 
 * List of target Python environments.
 * Each target Python environment's invocation command.
