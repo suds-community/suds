@@ -1340,17 +1340,23 @@ PRIORITIZED:
 (+)   tools/setup_base_environments.py, e.g. with regards to setting up the
 (+)   project's testing requirement packages (argparse, colorama, py, pytest).
 
-(27.05.2014.)
+(29.05.2014.)
 
-    * (Jurko) Internal project development cleanup.
-        * Re-implement the existing run_all_tests.cmd Windows batch script for
-          running a full suds test suite on multiple Python versions in Python.
-            * Read the list of target Python environments from the project's
-              setup.cfg configuration file.
-            * Make sure the prepared Python script runs using any of the suds
-              project supported Python versions.
-            * Add support for disabling testing a specific Python platform.
-            * Update HACKING.rst documentation.
+(+) * (Jurko) Internal project development cleanup.
+(+)     * Re-implement the existing run_all_tests.cmd Windows batch script for
+(+)       running a full suds test suite on multiple Python versions in Python.
+(+)         * Read the list of target Python environments from the project's
+(+)           setup.cfg configuration file.
+(+)         * Make sure the prepared Python script runs using any of the suds
+(+)           project supported Python versions.
+(+)         * Add support for disabling testing a specific Python platform.
+(+)             * YAGNI for now. Can be done by commenting out appropriate
+(+)               environment definition sections in the main project 'setup.py'
+(+)               configuration file and will be affected later on by porting
+(+)               our testing system over to use the tox project.
+(+)         * Update HACKING.rst documentation.
+
+(30.05.2014.)
 
     * (Jurko) Look at the Spyne project and its suds usage.
         * Try running Spyne's test suite using the suds-jurko fork.
