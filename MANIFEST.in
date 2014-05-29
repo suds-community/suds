@@ -22,5 +22,20 @@ recursive-include tests *.py
 include tools/*.cmd
 include tools/*.py
 include tools/*.txt
-prune tools/__*  # local cache folders
 recursive-include tools/suds_devel *.py
+
+# Python 2 versions prior to some early 2.7.x release and Python 3 versions
+# prior to some 3.2.x release had buggy disutils implementations that can
+# result in our project's source distribution containing some extra unwanted
+# files picked up from some of our local cache folders. This is a 3-layer fix
+# to work around the problem:
+#   1. We prune those folders just in case some of their content got added by
+#      mistake.
+#   2. An extra include is here to silence distutils warnings in case the used
+#      distutils implementation is not buggy and therefore no extra files have
+#      been added and distutils can not find anything to prune.
+#   3. To make the include actually include an existing file, setup.py
+#      constructs at least one such file to be included with a buggy distutils
+#      implementation.
+include tools/__*/*
+prune tools/__*
