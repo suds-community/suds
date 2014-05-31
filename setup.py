@@ -522,14 +522,20 @@ else:
         else:
             description = "run pytest based unit tests after a build"
 
-        # Disable base class's command-line options.
-        user_options = []
+        # Override base class's command-line options.
+        #TODO: pytest argument passing support could be improved if we could
+        # get distutils/setuptools to pass all unrecognized command-line
+        # parameters to us instead of complaining about them.
+        user_options = [("pytest-args=", "a", "arguments to pass to pytest "
+            "(whitespace separated, whitespaces in arguments not supported)")]
 
         def initialize_options(self):
-            pass
+            self.pytest_args = None
 
         def finalize_options(self):
-            pass
+            self.test_args = []
+            if self.pytest_args is not None:
+                self.test_args = self.pytest_args.split()
 
         def run(self):
             # shamelessly lifted from setuptools.command.test.test.run()
@@ -539,7 +545,7 @@ else:
             if dist.tests_require:
                 dist.fetch_build_eggs(dist.tests_require)
 
-            cmd = "pytest"
+            cmd = self._test_cmd_string()
             if self.dry_run:
                 self.announce("skipping '%s' (dry run)" % (cmd,))
             else:
@@ -548,7 +554,13 @@ else:
 
         def run_tests(self):
             import pytest
-            sys.exit(pytest.main([]))
+            sys.exit(pytest.main(self.test_args))
+
+        def _test_cmd_string(self):
+            parts = ["pytest"]
+            if self.pytest_args:
+                parts.append(self.pytest_args)
+            return " ".join(parts)
 
 distutils_cmdclass["test"] = TestCommand
 

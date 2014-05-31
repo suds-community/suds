@@ -407,22 +407,36 @@ folder instead. This functionality should be considered a band-aid though, and
 setting up the target environment can be better done as described in the
 `Setting up the development & testing environment`_ section.
 
-The ``setup.py test`` command will build the project if needed and run its
-complete test suite in the target Python environment. The project does not need
-to be preinstalled into the target Python environment for this operation to
-work, and neither will the operation leave it installed.
+The ``setup.py test`` command will build the project if needed and run its test
+suite in the target Python environment. The project does not need to be
+preinstalled into the target Python environment for this operation to work, and
+neither will the operation leave it installed.
+
+Unless a more restricted test set is selected using ``pytest`` specific
+command-line options, ``setup.py test`` command runs the complete project test
+suite.
+
+Specific ``pytest`` command-line options may be provided by passing them all as
+a single whitespace separated string tunnelled via the ``setup.py test``
+command's ``--pytest-args``/``-a`` command-line option.
+
+For example, the following command will run only tests containing ``binding`` in
+their name, will stop on first failure and will automatically drop into Python's
+post-mortem debugger on failure::
+
+  setup.py test -a "-k binding -x --pdb"
 
 Caveats:
 
-* This method does not allow you to provide any extra ``pytest`` options when
-  running the project test suite.
-* When running the ``setup.py test`` command in a Windows Python 2.5
-  environment without an included ctypes module (e.g. 64-bit CPython 2.5
-  distribution does not include ctypes) and having it automatically install the
-  colorama package version older than 0.1.11, you will get benign error messages
-  reporting colorama's atexit handlers failing. Running the same command again
-  avoids the issue since the colorama package will then already be installed.
-  Suggested workaround is to use a colorama package version 0.3.2 or newer.
+* This method does not currently allow passing ``pytest`` specific command-line
+  options containing embedded whitespace.
+* When running the ``setup.py test`` command in a Windows Python 2.5 environment
+  without an included ctypes module (e.g. 64-bit CPython 2.5 distribution does
+  not include ctypes) and having it automatically install the colorama package
+  version older than 0.1.11, you will get benign error messages reporting
+  colorama's atexit handlers failing. Running the same command again avoids the
+  issue since the colorama package will then already be installed. Suggested
+  workaround is to use a colorama package version 0.3.2 or newer.
 
 Running the project tests - using ``pytest`` directly
 -----------------------------------------------------
