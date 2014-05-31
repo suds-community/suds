@@ -511,6 +511,8 @@ else:
         test as _test)
 
     class TestCommand(_test):
+        # Derived from setuptools.command.test.test for its
+        # with_project_on_sys_path() method.
 
         # The test build can not be done in-place with Python 3+ as it requires
         # py2to3 conversion which we do not want modifying our original project
@@ -520,10 +522,29 @@ else:
         else:
             description = "run pytest based unit tests after a build"
 
+        # Disable base class's command-line options.
+        user_options = []
+
+        def initialize_options(self):
+            pass
+
         def finalize_options(self):
-            _test.finalize_options(self)
-            self.test_args = []
-            self.test_suite = True
+            pass
+
+        def run(self):
+            # shamelessly lifted from setuptools.command.test.test.run()
+            dist = self.distribution
+            if dist.install_requires:
+                dist.fetch_build_eggs(dist.install_requires)
+            if dist.tests_require:
+                dist.fetch_build_eggs(dist.tests_require)
+
+            cmd = "pytest"
+            if self.dry_run:
+                self.announce("skipping '%s' (dry run)" % (cmd,))
+            else:
+                self.announce("running '%s'" % (cmd,))
+                self.with_project_on_sys_path(self.run_tests)
 
         def run_tests(self):
             import pytest
