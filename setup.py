@@ -580,7 +580,7 @@ if sys.version_info >= (3,):
     for x in lib2to3.fixes.fix_urllib.MAPPING["urllib2"]:
         if x[0] == "urllib.request":
             x[1].append("__version__")
-            break;
+            break
 
 
 # -----------------------------------------------------------------------------
