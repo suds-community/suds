@@ -527,7 +527,7 @@ else:
 
         def run_tests(self):
             import pytest
-            sys.exit(pytest.main(["--pyargs", "tests"]))
+            sys.exit(pytest.main([]))
 
 distutils_cmdclass["test"] = TestCommand
 
