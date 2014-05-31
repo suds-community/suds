@@ -430,6 +430,8 @@ def test_requirements():
     if not using_setuptools:
         return "test command not available without setuptools"
 
+    include_pytest_requirements = True
+
     if sys.version_info < (2, 5):
         # pytest requirements can not be installed automatically by this setup
         # script under Python 2.4.x environment. Specific pytest & py library
@@ -443,6 +445,14 @@ def test_requirements():
             return "compatible preinstalled pytest needed prior to Python 2.5"
         if not have_py:
             return "compatible preinstalled py needed prior to Python 2.5"
+
+        # We must not explicitly specify pytest requirements when running the
+        # tests using a Python 2.4.x environment as the only way we found we
+        # can run our tests there is to use formally incompatible pytest & py
+        # packages. Explicitly specifying pytest requirements here would then
+        # cause setuptols to verify those requirements prior to running our
+        # test suite.
+        include_pytest_requirements = False
 
     if ((3,) <= sys.version_info < (3, 2, 3)):
         # Python 3.x versions prior to Python 3.2.3 have a bug in their inspect
@@ -470,7 +480,8 @@ def test_requirements():
     # test' command that is installing it. The issue has been fixed by the next
     # Python 2.5 compatible colorama 0.3.2 release.
     result = []
-    result.extend(pytest_requirements())
+    if include_pytest_requirements:
+        result.extend(pytest_requirements())
     result.extend(six_requirements())
     return result
 
