@@ -306,8 +306,8 @@ version 0.7 (development)
   * Python 3.0.x releases explicitly marked as not supported.
   * Attempting to run ``setup.py`` in an unsupported Python environment now
     reports a clean error message.
-  * Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools`` 3.6
-    with all more recent Python releases.
+  * Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools``
+    4.0.1 with all more recent Python releases.
   * Project may now be installed without even in environments when you can not
     install ``setuptools``.
 
