@@ -94,7 +94,7 @@ class Token(Object):
 
     @classmethod
     def sysdate(cls):
-        utc = DateTime(self.utc())
+        utc = DateTime(cls.utc())
         return str(utc)
 
     def __init__(self):
