@@ -472,7 +472,7 @@ class Element(UnicodeMixin):
         result = None
         node = self
         for name in path.split("/"):
-            if not p:
+            if not name:
                 continue
             ns = None
             prefix, name = splitPrefix(name)
