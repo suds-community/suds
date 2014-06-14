@@ -1356,7 +1356,11 @@ PRIORITIZED:
 (+)               our testing system over to use the tox project.
 (+)         * Update HACKING.rst documentation.
 
-(30.05.2014.)
+(14.06.2014.)
+
+(+) * (Jurko) Add basic suds.sax.Element unit tests.
+
+(15.06.2014.)
 
     * (Jurko) Look at the Spyne project and its suds usage.
         * Try running Spyne's test suite using the suds-jurko fork.
@@ -1707,6 +1711,39 @@ PRIORITIZED:
 NON PRIORITIZED:
 =================================================
 
+    * Add suds.sax.element related tests.
+        * append().
+            * Add child element.
+            * Add child attribute.
+        * childAtPath().
+            * With namespaces.
+            * With prefixes.
+            * Empty child name - as initial child - requested.
+            * Empty child name - as initial child - pass through.
+            * Empty child name - as indirect child - requested.
+            * Empty child name - as indirect child - pass through.
+            * Handling multiple children with matching names - is there to
+              specify an index.
+        * Add child by constructing it with a parent argument - should
+          automatically add the element to the parent's children list, while the
+          current implementation only makes the child know about the parent and
+          does not let the parent know about the child.
+        * Constructing an element with '/' in its name should not be allowed
+          since that character is used as a part separator.
+            * See if a way to escape such character usage is needed and if so -
+              how to do it.
+        * Handling multiple children with matching names.
+        * childrenAtPath().
+        * Initializing a new element with a specific namespace.
+
+    * Add suds.sax.document unit tests similar to those already added for
+      suds.sax.element.
+        * Some ideas on what to not forget.
+            * See suds.sax.element related tests & todo notes.
+            * childAtPath().
+            * childrenAtPath().
+            * No root element.
+
     * Look into CDATA related encoding issues reported at BitBucket (issue #14 +
       pull requests #25 & #26).
         * Current status: waiting for further feedback or progress on BitBucket.
@@ -1812,17 +1849,11 @@ NON PRIORITIZED:
                 * This method will automatically download & install pytest from
                   PyPI if needed, but will leave their installations behind in
                   the project's root folder.
-            * May be run from the root project folder by first building the
-              project to a temporary location: 'setup.py build & pytest build'.
-                * This method allows specifying additional pytest command-line
-                  arguments.
+            * May be run by first building the project by installing the
+              project, e.g. by running 'setup.py develop' and then running
+              'pytest' from the project's 'tests' folder.
         * Do some more thinking on this and, when done, update related HACKING
           notes.
-            * Some ideas from reading through the setuptools documentation.
-                * 'setup.py test' command could be implemented better to support
-                  pytest arguments - look at the setuptools project's
-                  test_loader setup keyword (https://pythonhosted.org/setuptools
-                  /setuptools.html#test-loader).
 
     * Generate suds Python library documentation (epydoc).
         * Research.
