@@ -307,7 +307,7 @@ version 0.7 (development)
   * Attempting to run ``setup.py`` in an unsupported Python environment now
     reports a clean error message.
   * Now uses ``setuptools`` 1.4.2 with Python 2.4 & 2.5, and ``setuptools``
-    4.0.1 with all more recent Python releases.
+    5.1 with all more recent Python releases.
   * Project may now be installed without even in environments when you can not
     install ``setuptools``.
 
