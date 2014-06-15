@@ -1358,9 +1358,18 @@ PRIORITIZED:
 
 (14.06.2014.)
 
-(+) * (Jurko) Add basic suds.sax.Element unit tests.
+(+) * (Jurko) Add basic suds.sax.element unit tests.
 
 (15.06.2014.)
+
+(+) * (Jurko) Add tests for suds.sax.element.Element string conversion.
+(+) * (Jurko) Add tests for suds.sax.document.Document string conversion.
+(+) * (Jurko) Fix suds.sax.document.Document str conversion bug.
+(+) * (Jurko) Fix original suds project bug with suds.cache.DocumentCache not
+(+)   caching suds.sax.document.Document instances correctly, even though such
+(+)   instances get passed to it by the suds.reader.DocumentReader.
+
+(16.06.2014.)
 
     * (Jurko) Look at the Spyne project and its suds usage.
         * Try running Spyne's test suite using the suds-jurko fork.
@@ -2051,6 +2060,14 @@ NON PRIORITIZED:
                   be parsed so that <a> element's textual data is: '42   42'
                   where the whitespace outside the '42' markers is trimmed but
                   the whitespace between them is preserved.
+
+    * The original suds project's DocumentCache.put() implementation accepted
+      suds.sax.element.Element instances as input so we kept this behaviour for
+      now but that might have actually been a result of a bug. We should review
+      this and update related tests & implementation if we no longer wish to
+      support this.
+        * See the TestDocumentCache.test_cache_element() test in
+          'test_sax_element.py'.
 
     * Improve the XML comparison test utilities.
         * Add test utility tests.
