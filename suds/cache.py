@@ -295,7 +295,8 @@ class DocumentCache(FileCache):
             self.purge(id)
 
     def put(self, id, object):
-        if isinstance(object, suds.sax.element.Element):
+        if isinstance(object,
+                (suds.sax.document.Document, suds.sax.element.Element)):
             super(DocumentCache, self).put(id, suds.byte_str(str(object)))
         return object
 
