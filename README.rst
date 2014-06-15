@@ -187,6 +187,18 @@ version 0.7 (development)
       * https://bugzilla.novell.com/show_bug.cgi?id=827568
       * http://www.openwall.com/lists/oss-security/2013/06/27/8
 
+  * Fixed a bug causing ``DocumentCache`` to never actually cache any documents
+    since one of the last commits made to the original suds project.
+
+      * That commit refactored ``suds.sax.document.Document`` so it is no longer
+        derived from ``suds.sax.element.Element`` while the
+        ``suds.cache.DocumentCache.put()`` implementation simply did nothing
+        when passed something other than a ``suds.sax.element.Element``
+        instance. ``suds.reader.DocumentReader`` on the other hand always
+        passes ``suds.sax.document.Document`` instances to its cache's ``put()``
+        method.
+      * Many thanks to bgr\_ at BitBucket for reporting the issue.
+
   * Fixed a bug causing ``DocumentCache`` & ``ObjectCache`` to not remove their
     cached files when failing to read data from them or process the data read
     from them.
@@ -223,6 +235,15 @@ version 0.7 (development)
       specify such multiple arguments, but that would only make the
       ``FileCache`` silently use duration ``0``, i.e. its cache entries would
       never expire.
+
+* Fixed ``suds.sax.document.Document`` str conversion broken around the end of
+  2011. by some accidental interaction between our Python 3 compatibility fixes
+  and one of the final official suds project commits making
+  ``suds.sax.document.Document`` no longer be derived from
+  ``suds.sax.element.Element``.
+
+  * Many thanks to Ezequiel Ruiz (emruiz81 at BitBucket) for detecting &
+    reporting the issue, as well as providing the initial patch.
 
 * Cleaned up ``suds.transport`` ASCII/unicode URL/data handling.
 
