@@ -26,9 +26,15 @@ if __name__ == "__main__":
     import testutils
     testutils.run_using_pytest(globals())
 
+import suds
 from suds.sax.element import Element
+import suds.sax.parser
 
 import pytest
+import six
+
+import re
+import sys
 
 
 class TestChildAtPath:
@@ -117,6 +123,51 @@ class TestChildAtPath:
                 parent.append(e)
             parent = e
         return result
+
+
+class TestStringRepresentation:
+
+    # Must be consistent with how Element.str() formats this data.
+    str_formatted_xml = """\
+<xsd:element name="ZuZu">
+   <xsd:simpleType>
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="alfa"/>
+         <xsd:enumeration value="beta"/>
+         <xsd:enumeration value="gamma"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+</xsd:element>"""
+
+    @staticmethod
+    def create_test_element(content=str_formatted_xml):
+        input_data = suds.byte_str(content)
+        xml = suds.sax.parser.Parser().parse(suds.BytesIO(input_data))
+        element = xml.root()
+        assert element.__class__ is Element
+        return element
+
+    @pytest.mark.skipif(sys.version_info >= (3,), reason="Python 2 specific")
+    def test_convert_to_byte_str(self):
+        element = self.create_test_element()
+        expected = suds.byte_str(element.str())
+        assert str(element) == expected
+
+    def test_convert_to_unicode(self):
+        element = self.create_test_element()
+        expected = element.str()
+        assert six.text_type(element) == expected
+
+    def test_plain_method(self):
+        element = self.create_test_element(self.str_formatted_xml)
+        expected = re.sub("\s*[\r\n]\s*", "", self.str_formatted_xml)
+        result = element.plain()
+        assert result == expected
+
+    def test_str_method(self):
+        element = self.create_test_element(self.str_formatted_xml)
+        result = element.str()
+        assert result == self.str_formatted_xml
 
 
 @pytest.mark.parametrize("name, expected_prefix, expected_name", (
