@@ -157,6 +157,9 @@ version 0.7 (development)
   * Many thanks to Eugene Yakubovich for reporting the issue as well as
     providing the initial fix.
 
+* Made ``suds`` no longer eat up, log & ignore exceptions raised from registered
+  user plugins (detected & reported by Ezequiel Ruiz & Bouke Haarsma, patch &
+  test case contributed by Bouke Haarsma).
 * Fixed places in code where ``suds`` could eat up & silently ignore internal
   Python exceptions like ``KeyboardInterrupt`` or ``SystemExit``.
 * Fixed the exception message used when attempting to construct a
