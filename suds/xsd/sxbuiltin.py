@@ -150,7 +150,7 @@ class XDecimal(XBuiltin):
         #    in its 'exponent' value and not included explicitly in its
         #    'digits' tuple)
         assert digits
-        assert digits[0] != 0 or (len(digits) == 1 and exponent == 0)
+        assert digits[0] != 0 or len(digits) == 1
 
         result = []
         if negative:
