@@ -23,7 +23,7 @@ from suds.sax import *
 from suds.sax.element import Element
 
 
-class Document:
+class Document(UnicodeMixin):
     """ An XML Document """
 
     DECL = '<?xml version="1.0" encoding="UTF-8"?>'
