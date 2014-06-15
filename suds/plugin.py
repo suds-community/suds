@@ -270,10 +270,7 @@ class Method:
         ctx = self.domain.ctx()
         ctx.__dict__.update(kwargs)
         for plugin in self.domain.plugins:
-            try:
-                method = getattr(plugin, self.name, None)
-                if method and callable(method):
-                    method(ctx)
-            except Exception, pe:
-                log.exception(pe)
+            method = getattr(plugin, self.name, None)
+            if method and callable(method):
+                method(ctx)
         return ctx
