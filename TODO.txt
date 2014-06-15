@@ -1375,6 +1375,12 @@ PRIORITIZED:
 (+)     * Fix the PluginContained exception passing issue.
 (+)     * Close issue #42 at BitBucket.
 (+)     * Close pull request #33 at BitBucket.
+(+) * (Jurko) Fix problem with decimal zero representations having a negative
+(+)   exponent, e.g. as it "0.0000".
+(+)     * Add tests.
+(+)     * Fix failing assert.
+(+)     * Close pull request #37.
+(+)     * Close issue #31.
 
 (16.06.2014.)
 
