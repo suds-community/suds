@@ -1368,13 +1368,13 @@ PRIORITIZED:
 (+) * (Jurko) Fix original suds project bug with suds.cache.DocumentCache not
 (+)   caching suds.sax.document.Document instances correctly, even though such
 (+)   instances get passed to it by the suds.reader.DocumentReader.
-
-    * (Jurko) Fix problems with suds silently hiding plugin exceptions.
-        * Add plugin unit testing module
-        * Test that calling a plugin using PluginContainer passes any
-          exceptions raised by the plugin.
-        * Close issue #42 at BitBucket.
-        * Close pull request #33 at BitBucket.
+(+) * (Jurko) Fix problems with suds silently hiding plugin exceptions.
+(+)     * Add plugin unit testing module
+(+)     * Test that calling a plugin using PluginContainer passes any
+(+)       exceptions raised by the plugin.
+(+)     * Fix the PluginContained exception passing issue.
+(+)     * Close issue #42 at BitBucket.
+(+)     * Close pull request #33 at BitBucket.
 
 (16.06.2014.)
 
@@ -2068,8 +2068,9 @@ NON PRIORITIZED:
                   where the whitespace outside the '42' markers is trimmed but
                   the whitespace between them is preserved.
 
-    * Add a test making sure any plugin exceptions get logged correctly (see
-      suds.plugin.Method.__call__()).
+    * See if we should make sure any plugin exceptions get logged correctly (as
+      was the case when suds.plugin.Method.__call__() was eating up all such
+      exception in the original suds project).
 
     * The original suds project's DocumentCache.put() implementation accepted
       suds.sax.element.Element instances as input so we kept this behaviour for
