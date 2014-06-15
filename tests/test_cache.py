@@ -374,9 +374,6 @@ if not os.path.isdir(cache_folder):
             assert os.path.isdir(cache_folder)
 
 
-#TODO: DocumentCache class interface seems silly. Its get() operation returns
-# an XML document while its put() operation takes an XML element. The put()
-# operation also silently ignores passed data of incorrect type.
 class TestDocumentCache:
 
     def compare_document_to_content(self, document, content):
@@ -391,9 +388,10 @@ class TestDocumentCache:
     @staticmethod
     def construct_XML(element_name="Elemento"):
         """
-        Construct XML content and an Element wrapping it.
+        Construct XML content and a Document wrapping it.
 
-        Constructed content may be parametrized with the given element name.
+        The XML contains a single Element (may be parametrized with the given
+        element name) and possibly additional sub-elements under it.
 
         """
         #TODO: Update the tests in this group to no longer depend on the exact
@@ -410,18 +408,26 @@ class TestDocumentCache:
    </xsd:simpleType>
 </xsd:element>""" % (element_name,))
         xml = suds.sax.parser.Parser().parse(suds.BytesIO(content))
-        children = xml.getChildren()
-        assert len(children) == 1
-        assert children[0].__class__ is suds.sax.element.Element
-        return content, children[0]
+        assert xml.__class__ is suds.sax.document.Document
+        return content, xml
 
-    def test_basic(self, tmpdir):
+    def test_cache_document(self, tmpdir):
+        cache_item_id = "unga1"
         cache = suds.cache.DocumentCache(tmpdir.strpath)
         assert isinstance(cache, suds.cache.FileCache)
-        assert cache.get("unga1") is None
-        content, element = self.construct_XML()
-        cache.put("unga1", element)
-        self.compare_document_to_content(cache.get("unga1"), content)
+        assert cache.get(cache_item_id) is None
+        content, document = self.construct_XML()
+        cache.put(cache_item_id, document)
+        self.compare_document_to_content(cache.get(cache_item_id), content)
+
+    def test_cache_element(self, tmpdir):
+        cache_item_id = "unga1"
+        cache = suds.cache.DocumentCache(tmpdir.strpath)
+        assert isinstance(cache, suds.cache.FileCache)
+        assert cache.get(cache_item_id) is None
+        content, document = self.construct_XML()
+        cache.put(cache_item_id, document.root())
+        self.compare_document_to_content(cache.get(cache_item_id), content)
 
     def test_file_open_failure(self, tmpdir, monkeypatch):
         """
@@ -433,10 +439,10 @@ class TestDocumentCache:
 
         cache_folder = tmpdir.strpath
         cache = suds.cache.DocumentCache(cache_folder)
-        content1, element1 = self.construct_XML("One")
-        content2, element2 = self.construct_XML("Two")
+        content1, document1 = self.construct_XML("One")
+        content2, document2 = self.construct_XML("Two")
         assert content1 != content2
-        cache.put("unga1", element1)
+        cache.put("unga1", document1)
 
         mock_open.apply(monkeypatch)
         assert cache.get("unga1") is None
@@ -453,7 +459,7 @@ class TestDocumentCache:
         self.compare_document_to_content(cache.get("unga1"), content1)
         assert cache.get("unga2") is None
 
-        cache.put("unga2", element2)
+        cache.put("unga2", document2)
         assert mock_open.counter == 2
 
         mock_open.apply(monkeypatch)
@@ -483,9 +489,9 @@ class TestDocumentCache:
         """
         cache_folder = tmpdir.strpath
         cache = suds.cache.DocumentCache(cache_folder)
-        content1, element1 = self.construct_XML("Eins")
-        content2, element2 = self.construct_XML("Zwei")
-        cache.put("unga1", element1)
+        content1, document1 = self.construct_XML("Eins")
+        content2, document2 = self.construct_XML("Zwei")
+        cache.put("unga1", document1)
 
         mock.apply(monkeypatch)
         assert cache.get("unga1") is None
@@ -496,8 +502,8 @@ class TestDocumentCache:
 
         mock.reset()
         assert cache.get("unga1") is None
-        cache.put("unga1", element1)
-        cache.put("unga2", element2)
+        cache.put("unga1", document1)
+        cache.put("unga2", document2)
         assert mock.counter == 0
         assert extra_checks[1](mock)
 
@@ -521,15 +527,15 @@ class TestDocumentCache:
             expect_remove):
         """See TestFileCache.item_expiration_test_worker() for more info."""
         cache = suds.cache.DocumentCache(tmpdir.strpath, **duration)
-        content, element = self.construct_XML()
-        cache.put("willy", element)
+        content, document = self.construct_XML()
+        cache.put("willy", document)
         TestFileCache.item_expiration_test_worker(cache, "willy", monkeypatch,
             current_time, expect_remove)
 
     def test_repeated_reads(self, tmpdir):
         cache = suds.cache.DocumentCache(tmpdir.strpath)
-        content, element = self.construct_XML()
-        cache.put("unga1", element)
+        content, document = self.construct_XML()
+        cache.put("unga1", document)
         read_XML = cache.get("unga1").str()
         assert read_XML == cache.get("unga1").str()
         assert cache.get(None) is None
