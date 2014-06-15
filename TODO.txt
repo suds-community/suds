@@ -1369,6 +1369,13 @@ PRIORITIZED:
 (+)   caching suds.sax.document.Document instances correctly, even though such
 (+)   instances get passed to it by the suds.reader.DocumentReader.
 
+    * (Jurko) Fix problems with suds silently hiding plugin exceptions.
+        * Add plugin unit testing module
+        * Test that calling a plugin using PluginContainer passes any
+          exceptions raised by the plugin.
+        * Close issue #42 at BitBucket.
+        * Close pull request #33 at BitBucket.
+
 (16.06.2014.)
 
     * (Jurko) Look at the Spyne project and its suds usage.
@@ -2060,6 +2067,9 @@ NON PRIORITIZED:
                   be parsed so that <a> element's textual data is: '42   42'
                   where the whitespace outside the '42' markers is trimmed but
                   the whitespace between them is preserved.
+
+    * Add a test making sure any plugin exceptions get logged correctly (see
+      suds.plugin.Method.__call__()).
 
     * The original suds project's DocumentCache.put() implementation accepted
       suds.sax.element.Element instances as input so we kept this behaviour for
