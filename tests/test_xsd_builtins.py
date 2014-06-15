@@ -286,6 +286,9 @@ class TestXDecimal:
         (decimal.Decimal("-0.1"), "-0.1"),
         (decimal.Decimal("0." + "0123456789" * 9), "0." + "0123456789" * 9),
         (decimal.Decimal("-0." + "0123456789" * 9), "-0." + "0123456789" * 9),
+        # Zero with extra fractional digits.
+        (decimal.Decimal("0.0000"), "0"),
+        (decimal.Decimal("-0.0000"), "-0"),
         # Only 0s as fractional digits.
         (decimal.Decimal("5.000000000000000000"), "5"),
         (decimal.Decimal("-5.000000000000000000"), "-5"),
