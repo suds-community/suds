@@ -1733,6 +1733,12 @@ PRIORITIZED:
 NON PRIORITIZED:
 =================================================
 
+    * suds.sudsobject.footprint() does some fancy recursive counting while all
+      it is actually used for is for detecting objects with footprint 0. This
+      could be optimized by replacing it with a function returning simply
+      whether a given object has a non-empty footprint and returning as soon as
+      it find something of value in it.
+
     * Add suds.sax.element related tests.
         * append().
             * Add child element.
@@ -1744,7 +1750,7 @@ NON PRIORITIZED:
             * Empty child name - as initial child - pass through.
             * Empty child name - as indirect child - requested.
             * Empty child name - as indirect child - pass through.
-            * Handling multiple children with matching names - is there to
+            * Handling multiple children with matching names - is there a way to
               specify an index.
         * Add child by constructing it with a parent argument - should
           automatically add the element to the parent's children list, while the
