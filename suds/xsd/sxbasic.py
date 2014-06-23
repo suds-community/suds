@@ -71,13 +71,11 @@ class TypedContent(Content):
         @return: The resolved (true) type.
         @rtype: L{SchemaObject}
 
-        Implementation note:
-          Note that there is no need for a recursive implementation here since
-        a node can reference an external type node but there is no way using
-        WSDL to then make that type node actually be a reference to a different
-        type node.
-
         """
+        # There is no need for a recursive implementation here since a node can
+        # reference an external type node but XSD specification explicitly
+        # states that that external node must not be a reference to yet another
+        # node.
         qref = self.qref()
         if qref is None:
             return self
