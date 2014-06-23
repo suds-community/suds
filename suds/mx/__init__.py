@@ -45,7 +45,7 @@ class Content(Object):
         Object.__init__(self)
         self.tag = tag
         self.value = value
-        for k, v in kwargs.items():
+        for k, v in kwargs.iteritems():
             setattr(self, k, v)
 
     def __getattr__(self, name):
