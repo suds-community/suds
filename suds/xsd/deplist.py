@@ -31,15 +31,6 @@ class DepList:
 
     Items are tuples: (object, (deps,))
 
-    @ivar __unsorted: The raw (unsorted) items.
-    @type __unsorted: list
-    @ivar __index: The index of (unsorted) items.
-    @type __index: dict
-    @ivar __stack: The sorting stack.
-    @type __stack: list
-    @ivar __pushed: The I{pushed} set tracks items that have been processed.
-    @type __pushed: set
-
     """
 
     def __init__(self):
