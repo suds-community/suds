@@ -469,7 +469,8 @@ class SchemaObject(UnicodeMixin):
         if self in filter:
             collection.append(self)
         for c in self.rawchildren:
-            c.content(collection, filter, history[:])
+            c.content(collection, filter, history)
+        history.pop()
         return collection
 
     def str(self, indent=0, history=None):
