@@ -1382,7 +1382,105 @@ PRIORITIZED:
 (+)     * Close pull request #37.
 (+)     * Close issue #31.
 
-(16.06.2014.)
+(23.06.2014.)
+
+(+) * (Jurko) Look at issue #49 at BitBucket - generated SOAP request containing
+(+)   a tag with a missing namespaces identifier.
+(+)     * Research.
+(+)         * Caused by incorrect XSD schema element form attribute handling
+(+)           when the element is actually just a reference to another top-level
+(+)           element. In such cases the the referenced and not the referencing
+(+)           element's form attribute value should be used.
+(+)     * Prepare a quick-fix plugin.
+(+)     * Report back to the BitBucket issue tracker.
+
+(24.06.2014.)
+
+(+) * (Jurko) SchemaObject.form_qualified cleanup.
+(+)     * Add tests for the schema element's form attribute handling.
+(+)         * Element with form attribute set to 'qualified'.
+(+)             * Schema with elementFormDefault set to 'qualified'.
+(+)             * Schema with elementFormDefault set to other than 'qualified'.
+(+)             * Schema with elementFormDefault unset.
+(+)         * Element with form attribute set to other than 'qualified'.
+(+)             * Schema with elementFormDefault set to 'qualified'.
+(+)             * Schema with elementFormDefault set to other than 'qualified'.
+(+)             * Schema with elementFormDefault unset.
+(+)         * Element with unset form attribute.
+(+)             * Schema with elementFormDefault set to 'qualified'.
+(+)             * Schema with elementFormDefault set to other than 'qualified'.
+(+)             * Schema with elementFormDefault unset.
+
+(26.06.2014.)
+
+(+) * (Jurko) Remove unnecessary 'history' list copying in
+(+)   suds.xsd.sxbase.SchemaObject.content().
+(+) * (Jurko) suds.xsd.deplist module cleanup.
+(+)     * Stylistic code & comment cleanup.
+(+)         * PEP8-ify.
+(+)         * Make pop() not ignore exceptions.
+(+)         * Make add() no longer return self.
+(+)         * Remove sorted member.
+(+)         * Order methods alphabetically.
+(+)         * Mark private operations & data as private.
+(+)     * Review the topological sort implementation.
+(+)         * `popped` list seems to be filled only for its elements to later
+(+)           be moved over to the `sorted` list.
+(+)     * Add topological sorting tests by extracting the existing embedded test
+(+)       into a stand-alone unit test module.
+(+) * (Jurko) Look at BitBucket issue #50 - SOAP 1.2 compatibility.
+(+) * (Jurko) Look at BitBucket issue #51 - complexType 'mixed' attribute.
+
+(27.06.2014.)
+
+    * (Jurko) suds.xsd.deplist module cleanup.
+        * Reference cycle handling.
+            * Research.
+            * Document.
+            * Test.
+        * Review the topological sort implementation.
+            * See if there is anything obvious to be made more efficient in it.
+        * Refactor the DepList class into a single function dependency_sort()
+          function taking a single dictionary as input.
+        * Update release notes.
+            * Internal operations & data marked as private.
+            * add() no longer returns self.
+            * DepList class replaced with a simple dependency_sort() function
+              taking a single dependency dictionary as input.
+                * The original implementation's interface was too heavy-weight
+                  with no added value.
+                * Anything tried with the original interface outside the basic
+                  use-case covered by dependency_sort() was actually or could
+                  be easily broken.
+
+    * (Jurko) SchemaObject.form_qualified cleanup.
+        * Add tests for the schema element's form attribute handling.
+            * Reference elements.
+                * Unqualified referencing qualified.
+                    * Referencing & references elements should have different
+                      namespaces.
+                * Qualified referencing unqualified.
+        * Fix detected issues.
+        * Update project release notes.
+        * Report back to issue #49 on BitBucket.
+        * Follow up.
+            * Document breaking changes between this fork and the original suds
+              project.
+                * DocumentStore interface changes.
+                * Choice support.
+                * Fixed ref element target namespace resolution.
+                    * See if this changed the schema Element namespace attribute
+                      to a method.
+                * Fixed ref element form attribute value resolution.
+                    * SchemaObject.form_qualified renamed to
+                      SchemaObject._form_qualified and introduced a new
+                      SchemaObject.form_qualified() method.
+            * SchemaObject.form_qualified should not have 'form_qualified'.
+              That seems like something related only to elements & attributes.
+            * Look at issue #46 at BitBucket - form attribute on schema
+              attributes does not seem to be handled correctly.
+                * Schema 'attributeFormDefault' attribute handling.
+                * Schema attribute 'form' attribute handling.
 
     * (Jurko) Look at the Spyne project and its suds usage.
         * Try running Spyne's test suite using the suds-jurko fork.
@@ -2122,3 +2220,16 @@ NON PRIORITIZED:
                      * Surrounding top level XML nodes.
                 * Each feature importance might be enabled/disabled globally or
                   for a specific XML part only.
+
+    * Add SOAP 1.2 support.
+        * Related links.
+            * Project's issue #50 on the BitBucket issue tracker:
+              https://bitbucket.org/jurko/suds/issue/50#comment-10940316
+            * http://stackoverflow.com/questions/2370573/soap-1-2-python-client
+
+    * Add support for the `mixed` attribute on `complexType` XSD schema
+      elements.
+        * They should allow the use of textual data, possibly in addition to
+          other child elements & attributes.
+        * Related link:
+          https://bitbucket.org/jurko/suds/issue/51#comment-10941116
