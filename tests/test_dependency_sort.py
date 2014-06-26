@@ -33,6 +33,19 @@ import pytest
 from six import iteritems
 
 
+# some of the tests in this module make sense only with assertions enabled
+# (note though that pytest's assertion rewriting technique, as used by default
+# in recent pytest releases, will keep assertions enabled inside the used test
+# modules even when the underlying Python interpreter has been run using the -O
+# command-line option)
+try:
+    assert False
+except AssertionError:
+    assertions_enabled = True
+else:
+    assertions_enabled = False
+
+
 def test_dependency_sort():
     # f --+-----+-----+
     # |   |     |     |
@@ -41,13 +54,13 @@ def test_dependency_sort():
     # |   |           |     |
     # +---+-----------+-----+--> a --> x
     dependency_list = [
-        ("c", ["a", "b"]),
-        ("e", ["d", "a"]),
-        ("d", ["c"]),
-        ("b", ["a"]),
-        ("f", ["e", "c", "d", "a"]),
-        ("a", ["x"]),
-        ("x", [])]
+        ("c", ("a", "b")),
+        ("e", ("d", "a")),
+        ("d", ("c",)),
+        ("b", ("a",)),
+        ("f", ("e", "c", "d", "a")),
+        ("a", ("x",)),
+        ("x", ())]
     input = [x[0] for x in dependency_list]
     deplist = DepList()
     deplist.add(*dependency_list)
@@ -56,6 +69,7 @@ def test_dependency_sort():
     _assert_dependency_order((x[0] for x in result), dict(dependency_list))
 
 
+@pytest.mark.skipif(not assertions_enabled, reason="assertions disabled")
 @pytest.mark.parametrize("sequence, dependencies", (
     (["x", "y"], {"x": ("y",), "y": ()}),
     (["x", "y"], {"x": ("z",), "z": ("y",), "y": ()}),
@@ -92,6 +106,23 @@ def test_assert_dependency_order__valid(sequence, dependencies):
     _assert_dependency_order(sequence, dependencies)
 
 
+def _assert_dependency_order(sequence, dependencies):
+    """
+    Assert that a sequence is ordered dependencies first.
+
+    The only way an earlier entry is allowed to have a later entry as its
+    dependency is if they are both part of the same dependency cycle.
+
+    """
+    sequence = list(sequence)
+    dependency_closure = _transitive_dependency_closure(dependencies)
+    for i, a in enumerate(sequence):
+        for b in sequence[i + 1:]:
+            a_dependent_on_b = b in dependency_closure[a]
+            b_dependent_on_a = a in dependency_closure[b]
+            assert b_dependent_on_a or not a_dependent_on_b
+
+
 def _transitive_dependency_closure(dependencies):
     """
     Returns a transitive dependency closure.
@@ -112,20 +143,3 @@ def _transitive_dependency_closure(dependencies):
             for dep in deps:
                 new[k] |= closure[dep]
     return closure
-
-
-def _assert_dependency_order(sequence, dependencies):
-    """
-    Assert that a sequence is ordered dependencies first.
-
-    The only way an earlier entry is allowed to have a later entry as its
-    dependency is if they are both part of the same dependency cycle.
-
-    """
-    sequence = list(sequence)
-    dependency_closure = _transitive_dependency_closure(dependencies)
-    for i, a in enumerate(sequence):
-        for b in sequence[i + 1:]:
-            a_dependent_on_b = b in dependency_closure[a]
-            b_dependent_on_a = a in dependency_closure[b]
-            assert b_dependent_on_a or not a_dependent_on_b
