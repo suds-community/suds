@@ -166,6 +166,15 @@ version 0.7 (development)
   ``suds.sax.element.Element`` with a non-``Element`` parent.
 * ``suds.xsd.sxbase.SchemaObject.content()`` now runs in linear instead of
   quadratic time.
+* ``DepList`` class replaced with a simple ``dependency_sort()`` function taking
+  a single dependency dictionary as input.
+
+  * The original implementation's interface was too heavy-weight with no added
+    value.
+  * Anything tried with the original interface outside the basic use-case
+    covered by ``dependency_sort()`` was actually or could be easily broken.
+  * ``suds.xsd.deplist`` module renamed to ``suds.xsd.depsort``.
+
 * ``suds.cache`` module cleanup.
 
   * Fixed ``FileCache`` default cache location related security issue. Many
