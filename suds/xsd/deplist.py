@@ -26,31 +26,22 @@ log = getLogger(__name__)
 
 
 class DepList:
-    """
-    Dependency solving list.
-
-    Items are tuples: (object, (deps,))
-
-    """
+    """Dependency solving list."""
 
     def __init__(self):
-        self.__unsorted = []
         self.__index = {}
-        self.__stack = []
-        self.__pushed = set()
 
     def add(self, *items):
         """
         Add items to be sorted.
 
+        Items are tuples: (object, (deps,))
+
         @param items: One or more items to be added.
         @type items: I{item}
 
         """
-        for item in items:
-            self.__unsorted.append(item)
-            key = item[0]
-            self.__index[key] = item
+        self.__index.update(items)
 
     def sort(self):
         """
@@ -64,63 +55,29 @@ class DepList:
         both directly or indirectly dependent on each other, then it does not
         matter which comes first.
 
+        Result contains the same data objects (object + dependency collection)
+        as given on input, but packaged in different items/tuples, i.e. the
+        returned items will 'equal' but not 'the same'.
+
         @return: The sorted items.
         @rtype: list
 
         """
         sorted = []
-        self.__pushed = set()
-        for item in self.__unsorted:
-            self.__push(item)
-            while self.__stack:
-                try:
-                    top = self.__top()
-                    ref = top[1].next()
-                    refd = self.__index.get(ref)
-                    if refd is None:
-                        log.debug('"%s" not found, skipped', Repr(ref))
-                        continue
-                    self.__push(refd)
-                except StopIteration:
-                    sorted.append(self.__pop())
-                    continue
-        self.__unsorted = sorted
+        processed = set()
+        for key, deps in self.__index.iteritems():
+            self.__sort_r(sorted, processed, key, deps)
         return sorted
 
-    def __pop(self):
-        """
-        Pop & return the top item off the sorting stack.
-
-        @return: The popped item.
-        @rtype: I{item}
-
-        """
-        return self.__stack.pop()[0]
-
-    def __push(self, item):
-        """
-        Push an item onto the sorting stack.
-
-        Each item is pushed as a stack frame 2-tuple containing:
-          - the item itself,
-          - an iterator over all of the item's dependencies
-
-        @param item: An item to push.
-        @type item: I{item}
-
-        """
-        if item in self.__pushed:
+    def __sort_r(self, sorted, processed, key, deps):
+        """Recursive topological sort implementation."""
+        if key in processed:
             return
-        frame = (item, iter(item[1]))
-        self.__stack.append(frame)
-        self.__pushed.add(item)
-
-    def __top(self):
-        """
-        Get the top sorting stack frame.
-
-        @return: The top sorting stack frame.
-        @rtype: (I{item}, iter)
-
-        """
-        return self.__stack[-1]
+        processed.add(key)
+        for dep_key in deps:
+            dep_deps = self.__index.get(dep_key)
+            if dep_deps is None:
+                log.debug('"%s" not found, skipped', Repr(dep_key))
+                continue
+            self.__sort_r(sorted, processed, dep_key, dep_deps)
+        sorted.append((key, deps))
