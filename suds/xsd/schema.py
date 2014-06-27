@@ -24,7 +24,7 @@ and targeted denormalization.
 
 from suds import *
 from suds.xsd import *
-from suds.xsd.deplist import DepList
+from suds.xsd.depsort import dependency_sort
 from suds.xsd.sxbuiltin import *
 from suds.xsd.sxbase import SchemaObject
 from suds.xsd.sxbasic import Factory as BasicFactory
@@ -330,14 +330,13 @@ class Schema(UnicodeMixin):
         indexes = {}
         for child in self.children:
             child.content(all)
-        deplist = DepList()
+        dependencies = {}
         for x in all:
             x.qualify()
             midx, deps = x.dependencies()
-            item = (x, tuple(deps))
-            deplist.add(item)
+            dependencies[x] = deps
             indexes[x] = midx
-        for x, deps in deplist.sort():
+        for x, deps in dependency_sort(dependencies):
             midx = indexes.get(x)
             if midx is None:
                 continue
