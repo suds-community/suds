@@ -1433,31 +1433,35 @@ PRIORITIZED:
 
 (27.06.2014.)
 
-    * (Jurko) suds.xsd.deplist module cleanup.
-        * Reference cycle handling.
-            * Research.
-            * Document.
-            * Test.
-        * Review the topological sort implementation.
-            * See if there is anything obvious to be made more efficient in it.
-        * Refactor the DepList class into a single function dependency_sort()
-          function taking a single dictionary as input.
-        * Update release notes.
-            * Internal operations & data marked as private.
-            * add() no longer returns self.
-            * DepList class replaced with a simple dependency_sort() function
-              taking a single dependency dictionary as input.
-                * The original implementation's interface was too heavy-weight
-                  with no added value.
-                * Anything tried with the original interface outside the basic
-                  use-case covered by dependency_sort() was actually or could
-                  be easily broken.
+(+) * (Jurko) suds.xsd.deplist module cleanup.
+(+)     * Reference cycle handling.
+(+)         * Research.
+(+)         * Document.
+(+)         * Test.
+(+)     * Review the topological sort implementation.
+(+)         * See if there is anything obvious to be made more efficient in it.
+(+)         * Simplify code by using a recursive implementation.
+(+)     * Refactor the DepList class into a single function dependency_sort()
+(+)       function taking a single dependency dictionary as input.
+(+)         * Refactor code.
+(+)         * Rename module to suds.xsd.depsort.
+(+)     * Update release notes.
+(+)         * DepList class replaced with a simple dependency_sort() function
+(+)           taking a single dependency dictionary as input.
+(+)             * The original implementation's interface was too heavy-weight
+(+)               with no added value.
+(+)             * Anything tried with the original interface outside the basic
+(+)               use-case covered by dependency_sort() was actually or could be
+(+)               easily broken.
+(+)         * suds.xsd.deplist module renamed to suds.xsd.depsort.
+
+(28.06.2014.)
 
     * (Jurko) SchemaObject.form_qualified cleanup.
         * Add tests for the schema element's form attribute handling.
             * Reference elements.
                 * Unqualified referencing qualified.
-                    * Referencing & references elements should have different
+                    * Referencing & referenced elements should have different
                       namespaces.
                 * Qualified referencing unqualified.
         * Fix detected issues.
