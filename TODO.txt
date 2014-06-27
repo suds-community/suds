@@ -1424,8 +1424,8 @@ PRIORITIZED:
 (+)         * Order methods alphabetically.
 (+)         * Mark private operations & data as private.
 (+)     * Review the topological sort implementation.
-(+)         * `popped` list seems to be filled only for its elements to later
-(+)           be moved over to the `sorted` list.
+(+)         * `popped` list seems to be filled only for its elements to later be
+(+)           moved over to the `sorted` list.
 (+)     * Add topological sorting tests by extracting the existing embedded test
 (+)       into a stand-alone unit test module.
 (+) * (Jurko) Look at BitBucket issue #50 - SOAP 1.2 compatibility.
@@ -1454,17 +1454,20 @@ PRIORITIZED:
 (+)               use-case covered by dependency_sort() was actually or could be
 (+)               easily broken.
 (+)         * suds.xsd.deplist module renamed to suds.xsd.depsort.
+(+) * (Jurko) SchemaObject.form_qualified cleanup.
+(+)     * Add tests for the schema element's form attribute handling.
+(+)         * Reference elements.
+(+)             * Unqualified referencing qualified.
+(+)                 * Referencing & referenced elements should have different
+(+)                   namespaces.
+(+)             * Qualified referencing unqualified.
 
 (28.06.2014.)
 
     * (Jurko) SchemaObject.form_qualified cleanup.
-        * Add tests for the schema element's form attribute handling.
-            * Reference elements.
-                * Unqualified referencing qualified.
-                    * Referencing & referenced elements should have different
-                      namespaces.
-                * Qualified referencing unqualified.
         * Fix detected issues.
+            * Fix failing tests.
+            * Mark tests as no longer expected to fail.
         * Update project release notes.
         * Report back to issue #49 on BitBucket.
         * Follow up.
