@@ -56,6 +56,14 @@ class DepList:
         """
         Sort the list based on dependencies.
 
+        If B is directly or indirectly dependent on A and they are not both a
+        part of the same dependency cycle (i.e. then A is neither directly nor
+        indirectly dependent on B) then A needs to come before B.
+
+        If A and B are a part of the same dependency cycle, i.e. if they are
+        both directly or indirectly dependent on each other, then it does not
+        matter which comes first.
+
         @return: The sorted items.
         @rtype: list
 
