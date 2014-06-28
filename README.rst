@@ -177,9 +177,7 @@ version 0.7 (development)
 
 * ``suds.cache`` module cleanup.
 
-  * Fixed ``FileCache`` default cache location related security issue. Many
-    thanks to Rolf Krahl for the initial report, providing links to related
-    external resources as well as helping brainstorm the whole issue.
+  * Fixed ``FileCache`` default cache location related security issue.
 
     * Each process now uses a separate temporary folder as its default cache
       location.
@@ -201,17 +199,19 @@ version 0.7 (development)
       * https://bugzilla.novell.com/show_bug.cgi?id=827568
       * http://www.openwall.com/lists/oss-security/2013/06/27/8
 
+    * Many thanks to Rolf Krahl for the initial report, providing links to
+      related external resources as well as helping brainstorm the whole issue.
+
   * Fixed a bug causing ``DocumentCache`` to never actually cache any documents
     since one of the last commits made to the original suds project.
 
-      * That commit refactored ``suds.sax.document.Document`` so it is no longer
-        derived from ``suds.sax.element.Element`` while the
-        ``suds.cache.DocumentCache.put()`` implementation simply did nothing
-        when passed something other than a ``suds.sax.element.Element``
-        instance. ``suds.reader.DocumentReader`` on the other hand always
-        passes ``suds.sax.document.Document`` instances to its cache's ``put()``
-        method.
-      * Many thanks to bgr\_ at BitBucket for reporting the issue.
+    * That commit refactored ``suds.sax.document.Document`` so it is no longer
+      derived from ``suds.sax.element.Element`` while the
+      ``suds.cache.DocumentCache.put()`` implementation simply did nothing when
+      passed something other than a ``suds.sax.element.Element`` instance.
+      ``suds.reader.DocumentReader`` on the other hand always passes
+      ``suds.sax.document.Document`` instances to its cache's ``put()`` method.
+    * Many thanks to bgr\_ at BitBucket for reporting the issue.
 
   * Fixed a bug causing ``DocumentCache`` & ``ObjectCache`` to not remove their
     cached files when failing to read data from them or process the data read
@@ -223,8 +223,8 @@ version 0.7 (development)
     specific folder but without making sure that the data already stored in it
     has been prepared for the correct ``suds`` version, as done when passing a
     location parameter to the ``FileCache`` constructor.
-  * Private and protected ``FileCache`` interface methods renamed to use
-    leading underscores.
+  * Private and protected ``FileCache`` interface methods renamed to use leading
+    underscores.
 
     * ``FileCache.getf()`` --> ``FileCache._getf()``.
     * ``FileCache.__fn()`` --> ``FileCache.__filename()``.
@@ -687,9 +687,9 @@ version 0.4.1 jurko 5 (2013-11-11)
 
 * Added ``unwrap`` option, allowing the user to disable ``suds`` library's
   automated simple document interface unwrapping (contributed by Juraj Ivančić).
-* Fixed a problem with ``suds`` constructing parameter XML elements in its SOAP
-  requests in incorrect namespaces in case they have been defined by XSD schema
-  elements referencing XSD schema elements with a different target namespace.
+* SOAP request parameter XML elements no longer constructed in incorrect
+  namespaces in case they have been defined by XSD schema elements referencing
+  XSD schema elements with a different target namespace.
 * ``DocumentStore`` instance updated.
 
   * Separate ``DocumentStore`` instances now hold separate data with every
