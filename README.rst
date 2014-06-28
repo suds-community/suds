@@ -256,7 +256,7 @@ version 0.7 (development)
       never expire.
 
 * Fixed ``suds.sax.document.Document`` str conversion broken around the end of
-  2011. by some accidental interaction between our Python 3 compatibility fixes
+  2011 by some accidental interaction between our Python 3 compatibility fixes
   and one of the final official suds project commits making
   ``suds.sax.document.Document`` no longer be derived from
   ``suds.sax.element.Element``.
