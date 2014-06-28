@@ -1468,8 +1468,10 @@ PRIORITIZED:
 (+)     * Fix detected issues.
 (+)         * Fix failing tests.
 (+)         * Mark tests as no longer expected to fail.
-        * Update project release notes.
-        * Report back to issue #49 on BitBucket.
+(+)     * Update project release notes.
+(+)     * Report back to issue #49 on BitBucket.
+
+(29.06.2014.)
 
     * (Jurko) SchemaObject.form_qualified cleanup followup.
         * Document breaking changes between this fork and the original suds
