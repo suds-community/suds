@@ -475,7 +475,9 @@ def test_element_references_to_different_namespaces():
 
     external_schema = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<schema targetNamespace="second-namespace"
+<schema
+    targetNamespace="second-namespace"
+    elementFormDefault="qualified"
     xmlns="http://www.w3.org/2001/XMLSchema">
   <element name="external" type="string"/>
 </schema>""")

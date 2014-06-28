@@ -423,6 +423,7 @@ class Element(TypedContent):
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
+        self.form_qualified = other.form_qualified
 
     def description(self):
         return "name", "ref", "type"
