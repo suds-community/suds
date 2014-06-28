@@ -414,7 +414,7 @@ class SchemaObject(UnicodeMixin):
         """
         Convert reference attribute values into a I{qref}.
 
-        Constructed I{qref} used the default document namespace. Since many
+        Constructed I{qref} uses the default document namespace. Since many
         WSDL schemas are written improperly: when the document does not define
         its default namespace, the schema target namespace is used to qualify
         references.

@@ -177,7 +177,6 @@ class Group(SchemaObject):
 
 class AttributeGroup(SchemaObject):
     """
-
     Represents an XSD schema <xsd:attributeGroup/> node.
 
     @cvar childtags: A list of valid child node names.
