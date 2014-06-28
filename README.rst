@@ -175,6 +175,11 @@ version 0.7 (development)
     covered by ``dependency_sort()`` was actually or could be easily broken.
   * ``suds.xsd.deplist`` module renamed to ``suds.xsd.depsort``.
 
+* A referencing XSD element's ``form`` value now read correctly from the
+  referenced element.
+
+  * Many thanks to Andrew Yager from BitBucket for reporting the issue.
+
 * ``suds.cache`` module cleanup.
 
   * Fixed ``FileCache`` default cache location related security issue.

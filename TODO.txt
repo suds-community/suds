@@ -1464,30 +1464,46 @@ PRIORITIZED:
 
 (28.06.2014.)
 
-    * (Jurko) SchemaObject.form_qualified cleanup.
-        * Fix detected issues.
-            * Fix failing tests.
-            * Mark tests as no longer expected to fail.
+(+) * (Jurko) SchemaObject.form_qualified cleanup.
+(+)     * Fix detected issues.
+(+)         * Fix failing tests.
+(+)         * Mark tests as no longer expected to fail.
         * Update project release notes.
         * Report back to issue #49 on BitBucket.
-        * Follow up.
-            * Document breaking changes between this fork and the original suds
-              project.
-                * DocumentStore interface changes.
-                * Choice support.
-                * Fixed ref element target namespace resolution.
-                    * See if this changed the schema Element namespace attribute
-                      to a method.
-                * Fixed ref element form attribute value resolution.
-                    * SchemaObject.form_qualified renamed to
-                      SchemaObject._form_qualified and introduced a new
-                      SchemaObject.form_qualified() method.
-            * SchemaObject.form_qualified should not have 'form_qualified'.
-              That seems like something related only to elements & attributes.
-            * Look at issue #46 at BitBucket - form attribute on schema
-              attributes does not seem to be handled correctly.
-                * Schema 'attributeFormDefault' attribute handling.
-                * Schema attribute 'form' attribute handling.
+
+    * (Jurko) SchemaObject.form_qualified cleanup followup.
+        * Document breaking changes between this fork and the original suds
+          project.
+            * DocumentStore interface changes.
+            * Choice support.
+            * Fixed ref element target namespace resolution.
+                * See if this changed the schema Element namespace attribute to
+                  a method.
+            * Fixed ref element form attribute value resolution.
+                * SchemaObject.form_qualified renamed to
+                  SchemaObject._form_qualified and introduced a new
+                  SchemaObject.form_qualified() method.
+        * SchemaObject.form_qualified should not have 'form_qualified'. That
+          seems like something related only to elements & attributes.
+            * Also, the SchemaObject.merge() function had a bug with never
+              actually collecting the form_qualified value from the referenced
+              object since all SchemaObjects had it specified.
+        * SchemaObject.dependency() method seems too complicated - its interface
+          allows returning a list of dependencies, with a specific one amongst
+          them singled out as a dependency to be merged, when in fact it always
+          returns no dependencies or only a single dependency with that single
+          dependency to be merged.
+            * Rename to dereference() and have it return the referenced
+              SchemaObject - since that is in fact what this function does
+              already.
+        * SchemaObject.merge() is misnamed - it should be named
+          collect_referenced_data() since it is a completely different operation
+          from Schema.merge() and it actually only collects data from a
+          referenced object, if such an object exists.
+        * Look at issue #46 at BitBucket - form attribute on schema attributes
+          does not seem to be handled correctly.
+            * Schema 'attributeFormDefault' attribute handling.
+            * Schema attribute 'form' attribute handling.
 
     * (Jurko) Look at the Spyne project and its suds usage.
         * Try running Spyne's test suite using the suds-jurko fork.

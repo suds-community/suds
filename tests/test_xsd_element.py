@@ -39,19 +39,6 @@ from six import b
 import types
 
 
-def _xfail__buggy_ref_form(*args):
-    """
-    Mark test or test parametrization as expected to fail due to suds library's
-    buggy XSD schema ref element form attribute handling.
-
-    """
-    reason = "buggy XSD schema ref element form attribute handling"
-    xfail = pytest.mark.xfail(args, reason=reason)
-    if len(args) == 1 and isinstance(args[0], types.FunctionType):
-        return xfail(*args)
-    return xfail
-
-
 @pytest.mark.parametrize("form_default, form, expected", (
     # default - not explicitly specified anywhere
     (None, None, False),
@@ -109,31 +96,31 @@ def test_element_form__non_ref(form_default, form, expected):
     (None, None, False),
 
     # specified on the referencing only
-    _xfail__buggy_ref_form(None, "qualified", False),
+    (None, "qualified", False),
     (None, "unqualified", False),
     (None, "invalid", False),
     (None, "", False),
 
     # specified on the referenced only
-    _xfail__buggy_ref_form("qualified", None, True),
+    ("qualified", None, True),
     ("unqualified", None, False),
     ("invalid", None, False),
     ("", None, False),
 
     # specified on the referencing, overruled on the element
     ("qualified", "qualified", True),
-    _xfail__buggy_ref_form("qualified", "unqualified", True),
-    _xfail__buggy_ref_form("qualified", "invalid", True),
-    _xfail__buggy_ref_form("qualified", "", True),
-    _xfail__buggy_ref_form("unqualified", "qualified", False),
+    ("qualified", "unqualified", True),
+    ("qualified", "invalid", True),
+    ("qualified", "", True),
+    ("unqualified", "qualified", False),
     ("unqualified", "unqualified", False),
     ("unqualified", "invalid", False),
     ("unqualified", "", False),
-    _xfail__buggy_ref_form("invalid", "qualified", False),
+    ("invalid", "qualified", False),
     ("invalid", "unqualified", False),
     ("invalid", "invalid", False),
     ("invalid", "", False),
-    _xfail__buggy_ref_form("", "qualified", False),
+    ("", "qualified", False),
     ("", "unqualified", False),
     ("", "invalid", False),
     ("", "", False)))
@@ -171,7 +158,6 @@ def test_element_form__ref(form_referenced, form_referencing, expected):
     assert bool(referencing_element.form_qualified) == expected
 
 
-@_xfail__buggy_ref_form
 def test_element_form__ref_from_different_schema__to_qualified():
     """Referencing a qualified element in a separate schema."""
     schema_xml_here = """\
@@ -202,7 +188,6 @@ def test_element_form__ref_from_different_schema__to_qualified():
     assert referencing_element.form_qualified
 
 
-@_xfail__buggy_ref_form
 def test_element_form__ref_from_different_schema__to_unqualified():
     """Referencing an unqualified element in a separate schema."""
     schema_xml_here = """\
