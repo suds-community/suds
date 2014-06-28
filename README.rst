@@ -526,6 +526,8 @@ version 0.6 (2014-01-24)
     error-information with a web service operation taking at least one input
     parameter.
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 version 0.5 (2013-11-25)
 ------------------------
@@ -588,6 +590,8 @@ version 0.5 (2013-11-25)
 * Known defects.
 
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 version 0.4.1 jurko 5 (2013-11-11)
 ----------------------------------
@@ -739,6 +743,8 @@ version 0.4.1 jurko 5 (2013-11-11)
 * Known defects.
 
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 version 0.4.1 jurko 4 (2012-04-17)
 ----------------------------------
@@ -772,7 +778,12 @@ version 0.4.1 jurko 4 (2012-04-17)
 
 * Known defects.
 
+  * SOAP request parameter XML elements constructed in incorrect namespaces in
+    case they have been defined by XSD schema elements referencing XSD schema
+    elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 version 0.4.1 jurko 3 (2011-12-26)
 ----------------------------------
@@ -807,7 +818,12 @@ version 0.4.1 jurko 3 (2011-12-26)
 
 * Known defects.
 
+  * SOAP request parameter XML elements constructed in incorrect namespaces in
+    case they have been defined by XSD schema elements referencing XSD schema
+    elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 version 0.4.1 jurko 2 (2011-12-24)
 ----------------------------------
@@ -841,7 +857,12 @@ version 0.4.1 jurko 2 (2011-12-24)
 
 * Known defects.
 
+  * SOAP request parameter XML elements constructed in incorrect namespaces in
+    case they have been defined by XSD schema elements referencing XSD schema
+    elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 version 0.4.1 jurko 1 (2011-12-24)
 ----------------------------------
@@ -919,7 +940,12 @@ version 0.4.1 jurko 1 (2011-12-24)
 
   * Converting a ``suds.client.Client`` object to a string fails & raises an
     ``IndexError`` exception.
+  * SOAP request parameter XML elements constructed in incorrect namespaces in
+    case they have been defined by XSD schema elements referencing XSD schema
+    elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling - read
+    directly instead of from the references XSD element.
 
 
 Original suds library release notes
