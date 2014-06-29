@@ -1,28 +1,28 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the (LGPL) GNU Lesser General Public License as
-# published by the Free Software Foundation; either version 3 of the
-# License, or (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the (LGPL) GNU Lesser General Public License as published by the
+# Free Software Foundation; either version 3 of the License, or (at your
+# option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Library Lesser General Public License for more details at
-# ( http://www.gnu.org/licenses/lgpl.html ).
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Library Lesser General Public License
+# for more details at ( http://www.gnu.org/licenses/lgpl.html ).
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 """
 Provides literal I{marshaller} classes.
+
 """
 
 from suds import *
 from suds.mx import *
 from suds.mx.core import Core
 from suds.mx.typer import Typer
-from suds.resolver import GraphResolver, Frame
+from suds.resolver import Frame, GraphResolver
 from suds.sax.element import Element
 from suds.sudsobject import Factory
 
@@ -30,26 +30,24 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-#
-# Add typed extensions
-# type = The expected xsd type
-# real = The 'true' XSD type
-# ancestry = The 'type' ancestry
-#
-Content.extensions.append('type')
-Content.extensions.append('real')
-Content.extensions.append('ancestry')
+# add typed extensions
+Content.extensions.append("type")  # The expected xsd type
+Content.extensions.append("real")  # The 'true' XSD type
+Content.extensions.append("ancestry")  # The 'type' ancestry
 
 
 class Typed(Core):
     """
     A I{typed} marshaller.
+
     This marshaller is semi-typed as needed to support both I{document/literal}
-    and I{rpc/literal} soap message styles.
-    @ivar schema: An xsd schema.
+    and I{rpc/literal} SOAP message styles.
+
+    @ivar schema: An XSD schema.
     @type schema: L{xsd.schema.Schema}
     @ivar resolver: A schema type resolver.
     @type resolver: L{GraphResolver}
+
     """
 
     def __init__(self, schema, xstq=True):
@@ -60,6 +58,7 @@ class Typed(Core):
             that the I{xsi:type} attribute values should be qualified by
             namespace.
         @type xstq: bool
+
         """
         Core.__init__(self)
         self.schema = schema
@@ -70,17 +69,18 @@ class Typed(Core):
         self.resolver.reset()
 
     def start(self, content):
-        #
-        # Start marshalling the 'content' by ensuring that both the 'content'
-        # _and_ the resolver are primed with the XSD type information. The
-        # 'content' value is both translated and sorted based on the XSD type.
-        # Only values that are objects have their attributes sorted.
-        #
-        log.debug('starting content:\n%s', content)
+        """
+        Start marshalling the 'content' by ensuring that both the 'content'
+        _and_ the resolver are primed with the XSD type information. The
+        'content' value is both translated and sorted based on the XSD type.
+        Only values that are objects have their attributes sorted.
+
+        """
+        log.debug("starting content:\n%s", content)
         if content.type is None:
             name = content.tag
-            if name.startswith('_'):
-                name = '@' + name[1:]
+            if name.startswith("_"):
+                name = "@" + name[1:]
             content.type = self.resolver.find(name, content.value)
             if content.type is None:
                 raise TypeNotFound(content.tag)
@@ -89,7 +89,7 @@ class Typed(Core):
             if isinstance(content.value, Object):
                 known = self.resolver.known(content.value)
                 if known is None:
-                    log.debug('object %s has no type information',
+                    log.debug("object %s has no type information",
                         content.value)
                     known = content.type
             frame = Frame(content.type, resolved=known)
@@ -100,46 +100,54 @@ class Typed(Core):
         self.translate(content)
         self.sort(content)
         if self.skip(content):
-            log.debug('skipping (optional) content:\n%s', content)
+            log.debug("skipping (optional) content:\n%s", content)
             self.resolver.pop()
             return False
         return True
 
     def suspend(self, content):
-        #
-        # Suspend to process a list content. Primarily, this involves popping
-        # the 'list' content off the resolver's stack its list items can be
-        # marshalled.
-        #
+        """
+        Suspend to process list content.
+
+        Primarily, this involves popping the 'list' content off the resolver's
+        stack so its list items can be marshalled.
+
+        """
         self.resolver.pop()
 
     def resume(self, content):
-        #
-        # Resume processing a list content. To do this, we really need to
-        # simply push the 'list' content back onto the resolver stack.
-        #
+        """
+        Resume processing list content.
+
+        To do this, we really need to simply push the 'list' content back onto
+        the resolver stack.
+
+        """
         self.resolver.push(Frame(content.type))
 
     def end(self, parent, content):
-        #
-        # End processing the content. Make sure the content ending matches the
-        # top of the resolver stack since for list processing we play games
-        # with the resolver stack.
-        #
-        log.debug('ending content:\n%s', content)
+        """
+        End processing the content.
+
+        Make sure the content ending matches the top of the resolver stack
+        since for list processing we play games with the resolver stack.
+
+        """
+        log.debug("ending content:\n%s", content)
         current = self.resolver.top().type
-        if current == content.type:
-            self.resolver.pop()
-        else:
-            raise Exception, \
-                'content (end) mismatch: top=(%s) cont=(%s)' % \
-                (current, content)
+        if current != content.type:
+            raise Exception("content (end) mismatch: top=(%s) cont=(%s)" % (
+                current, content))
+        self.resolver.pop()
 
     def node(self, content):
-        #
-        # Create an XML node and namespace qualify as defined by the schema
-        # (elementFormDefault).
-        #
+        """
+        Create an XML node.
+
+        The XML node is namespace qualified as defined by the corresponding
+        schema element.
+
+        """
         ns = content.type.namespace()
         if content.type.form_qualified:
             node = Element(content.tag, ns=ns)
@@ -148,21 +156,19 @@ class Typed(Core):
         else:
             node = Element(content.tag)
         self.encode(node, content)
-        log.debug('created - node:\n%s', node)
+        log.debug("created - node:\n%s", node)
         return node
 
     def setnil(self, node, content):
-        #
-        # Set the 'node' nil only if the XSD type specifies that it is
-        # permitted.
-        #
+        """
+        Set the 'node' nil only if the XSD type specifies that it is permitted.
+
+        """
         if content.type.nillable:
             node.setnil()
 
     def setdefault(self, node, content):
-        #
-        # Set the node to the default value specified by the XSD type.
-        #
+        """Set the node to the default value specified by the XSD type."""
         default = content.type.default
         if default is not None:
             node.setText(default)
@@ -177,10 +183,15 @@ class Typed(Core):
         return False
 
     def encode(self, node, content):
-        # Add (soap) encoding information only if the resolved type is derived
-        # by extension. Further, the xsi:type values is qualified by namespace
-        # only if the content (tag) and referenced type are in different
-        # namespaces.
+        """
+        Add (SOAP) encoding information if needed.
+
+        The encoding information is added only if the resolved type is derived
+        by extension. Furthermore, the xsi:type value is qualified by namespace
+        only if the content (tag) and referenced type are in different
+        namespaces.
+
+        """
         if content.type.any():
             return
         if not content.real.extension():
@@ -190,24 +201,27 @@ class Typed(Core):
         ns = None
         name = content.real.name
         if self.xstq:
-            ns = content.real.namespace('ns1')
+            ns = content.real.namespace("ns1")
         Typer.manual(node, name, ns)
 
     def skip(self, content):
         """
         Get whether to skip this I{content}.
-        Should be skipped when the content is optional and either value=None or
-        the value is an empty list.
-        @param content: The content to skip.
+
+        Should be skipped when the content is optional and value is either None
+        or an empty list.
+
+        @param content: Content to skip.
         @type content: L{Object}
         @return: True if content is to be skipped.
         @rtype: bool
+
         """
         if self.optional(content):
             v = content.value
             if v is None:
                 return True
-            if isinstance(v, (list, tuple)) and len(v) == 0:
+            if isinstance(v, (list, tuple)) and not v:
                 return True
         return False
 
@@ -222,13 +236,16 @@ class Typed(Core):
     def translate(self, content):
         """
         Translate using the XSD type information.
+
         Python I{dict} is translated to a suds object. Most importantly,
-        primitive values are translated from python types to XML types using
-        the XSD type.
-        @param content: The content to translate.
+        primitive values are translated from python to XML types using the XSD
+        type.
+
+        @param content: Content to translate.
         @type content: L{Object}
         @return: self
         @rtype: L{Typed}
+
         """
         v = content.value
         if v is None:
@@ -245,12 +262,16 @@ class Typed(Core):
 
     def sort(self, content):
         """
-        Sort suds object attributes based on ordering defined in the XSD type
+        Sort suds object attributes.
+
+        The attributes are sorted based on the ordering defined in the XSD type
         information.
-        @param content: The content to sort.
+
+        @param content: Content to sort.
         @type content: L{Object}
         @return: self
         @rtype: L{Typed}
+
         """
         v = content.value
         if isinstance(v, Object):
@@ -260,12 +281,13 @@ class Typed(Core):
 
     def ordering(self, type):
         """
-        Get the attribute ordering defined in the specified XSD type
-        information.
-        @param type: An XSD type object.
-        @type type: SchemaObject
+        Attribute ordering defined in the specified XSD type information.
+
+        @param type: XSD type object.
+        @type type: L{SchemaObject}
         @return: An ordered list of attribute names.
         @rtype: list
+
         """
         result = []
         for child, ancestry in type.resolve():
@@ -273,7 +295,7 @@ class Typed(Core):
             if child.name is None:
                 continue
             if child.isattr():
-                name = '_%s' % child.name
+                name = "_%s" % (child.name,)
             result.append(name)
         return result
 
@@ -281,7 +303,9 @@ class Typed(Core):
 class Literal(Typed):
     """
     A I{literal} marshaller.
+
     This marshaller is semi-typed as needed to support both I{document/literal}
     and I{rpc/literal} soap message styles.
+
     """
     pass
