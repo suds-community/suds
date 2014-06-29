@@ -436,8 +436,8 @@ class SchemaObject(UnicodeMixin):
     def merge(self, other):
         """Merge another object as needed."""
         other.qualify()
-        for n in ("default", "form_qualified", "max", "min", "name",
-                "nillable", "qname", "type"):
+        for n in ("default", "max", "min", "name", "nillable", "qname",
+                "type"):
             if getattr(self, n) is not None:
                 continue
             v = getattr(other, n)
