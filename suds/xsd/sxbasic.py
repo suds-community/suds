@@ -373,9 +373,12 @@ class Element(TypedContent):
 
     def __init__(self, schema, root):
         TypedContent.__init__(self, schema, root)
-        form = root.get("form")
-        if form is not None:
-            self.form_qualified = (form == "qualified")
+        if self.ref is not None:
+            self.form_qualified = True
+        else:
+            form = root.get("form")
+            if form is not None:
+                self.form_qualified = (form == "qualified")
         nillable = self.root.get("nillable")
         if nillable is not None:
             self.nillable = (nillable in ("1", "true"))
@@ -423,7 +426,6 @@ class Element(TypedContent):
     def merge(self, other):
         SchemaObject.merge(self, other)
         self.rawchildren = other.rawchildren
-        self.form_qualified = other.form_qualified
 
     def description(self):
         return "name", "ref", "type"
