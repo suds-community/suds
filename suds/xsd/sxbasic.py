@@ -373,7 +373,9 @@ class Element(TypedContent):
 
     def __init__(self, schema, root):
         TypedContent.__init__(self, schema, root)
-        if self.ref is not None:
+        is_reference = self.ref is not None
+        is_top_level = root.parent is schema.root
+        if is_reference or is_top_level:
             self.form_qualified = True
         else:
             form = root.get("form")
