@@ -1,6 +1,6 @@
-===========================
-Modeling XSD types in suds.
-===========================
+==========================
+Modeling XSD types in suds
+==========================
 :Authors: Jurko Gospodnetiæ
 :Date: 2014-01-29
 
