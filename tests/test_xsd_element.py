@@ -36,8 +36,6 @@ import suds.xsd.schema
 import pytest
 from six import b
 
-import types
-
 
 @pytest.mark.parametrize("form_default, form, expected", (
     # default - not explicitly specified anywhere
