@@ -1473,31 +1473,42 @@ PRIORITIZED:
 
 (29.06.2014.)
 
+(+) * (Jurko) SchemaObject.form_qualified cleanup followup.
+(+)     * Research the XSD specification on the element form attribute.
+(+)     * Correct suds's XSD element form attribute handling.
+(+)         * Reference elements are always qualified.
+(+)         * Top-level elements are always qualified.
+(+)         * Non-top-level non-reference elements are qualified based on their
+(+)           form attribute, and if they have no form attribute, their schema's
+(+)           elementFormDefault attribute is used instead, and if that one is
+(+)           not given either - they are considered unqualified.
+
+(30.06.2014.)
+
     * (Jurko) SchemaObject.form_qualified cleanup followup.
+        * Correct suds's XSD element form attribute handling.
+            * Qualified XSD elements are connected to a namespace.
+            * Unqualified XSD elements are not connected to any namespace.
+            * XML elements matching an unqualified XSD schema element do not
+              necessarily need to have no namespace specified. If their parent
+              element's default namespace is specified, then they still need to
+              explicitly specify their default namespace as an empty string.
+            * Test SOAP XML construction for qualified/unqualified elements with
+              and without the `prefix` suds option enabled.
         * Document breaking changes between this fork and the original suds
           project.
             * DocumentStore interface changes.
             * Choice support.
-            * Fixed ref element target namespace resolution.
-                * See if this changed the schema Element namespace attribute to
-                  a method.
-            * Fixed ref element form attribute value resolution.
-                * SchemaObject.form_qualified renamed to
-                  SchemaObject._form_qualified and introduced a new
-                  SchemaObject.form_qualified() method.
         * SchemaObject.form_qualified should not have 'form_qualified'. That
           seems like something related only to elements & attributes.
-            * Also, the SchemaObject.merge() function had a bug with never
-              actually collecting the form_qualified value from the referenced
-              object since all SchemaObjects had it specified.
         * SchemaObject.dependency() method seems too complicated - its interface
           allows returning a list of dependencies, with a specific one amongst
           them singled out as a dependency to be merged, when in fact it always
           returns no dependencies or only a single dependency with that single
           dependency to be merged.
             * Rename to dereference() and have it return the referenced
-              SchemaObject - since that is in fact what this function does
-              already.
+              SchemaObject - since that is in fact what this function already
+              does.
         * SchemaObject.merge() is misnamed - it should be named
           collect_referenced_data() since it is a completely different operation
           from Schema.merge() and it actually only collects data from a
