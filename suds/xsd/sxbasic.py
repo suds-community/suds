@@ -399,7 +399,6 @@ class Element(TypedContent):
         """
         if self.type is None and self.ref is None and self.root.isempty():
             self.type = self.anytype()
-        return self
 
     def childtags(self):
         return "any", "attribute", "complexType", "simpleType"
