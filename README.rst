@@ -214,7 +214,7 @@ version 0.7 (development)
       related external resources as well as helping brainstorm the whole issue.
 
   * Fixed a bug causing ``DocumentCache`` to never actually cache any documents
-    since one of the last commits made to the original suds project.
+    since one of the last commits made to the original ``suds`` project.
 
     * That commit refactored ``suds.sax.document.Document`` so it is no longer
       derived from ``suds.sax.element.Element`` while the
@@ -263,7 +263,7 @@ version 0.7 (development)
 
 * Fixed ``suds.sax.document.Document`` str conversion broken around the end of
   2011 by some accidental interaction between our Python 3 compatibility fixes
-  and one of the final official suds project commits making
+  and one of the final official ``suds`` project commits making
   ``suds.sax.document.Document`` no longer be derived from
   ``suds.sax.element.Element``.
 
@@ -335,8 +335,8 @@ version 0.7 (development)
 * Extra input arguments now reported when invoking web service operations taking
   no input parameters.
 * Using injected requests/replies/error-information with a web service operation
-  taking at least one input parameter no longer causes suds to report an invalid
-  extra argument error.
+  taking at least one input parameter no longer causes ``suds`` to report an
+  invalid extra argument error.
 
 * Internal project development improvements.
 
@@ -396,14 +396,14 @@ version 0.7 (development)
     ``tests`` package.
 
     * The tests may now be run from the source archive, and will always run on
-      the suds version found installed in the used Python environment.
+      the ``suds`` version found installed in the used Python environment.
 
   * Refactored the quick & dirty batch script used to run all the project tests
     in multiple Python environments to remove much code duplication.
   * Automated project testing in several additional Python environment versions.
   * Added more detailed XSD modeling tests.
   * Added tests demonstrating how additional or replacement built-in XSD types
-    can be registered with suds.
+    can be registered with ``suds``.
   * All project tests now using Python 2 & 3 compatible source code and so no
     longer need to be built separately for Python 3.
   * Added new and updated existing ``suds.cache`` module related tests.
@@ -723,9 +723,9 @@ version 0.4.1 jurko 5 (2013-11-11)
     using the 'documentStore' option. Not specifying the option uses a shared
     singleton instance. Specifying the option as ``None`` avoids using any
     document store whatsoever.
-  * Suds tests no longer have to modify the global shared ``DocumentStore`` data
-    in order to avoid loading its known data from external files and so may no
-    longer affect each other by leaving behind data in that global shared
+  * ``suds`` tests no longer have to modify the global shared ``DocumentStore``
+    data in order to avoid loading its known data from external files and so may
+    no longer affect each other by leaving behind data in that global shared
     ``DocumentStore``.
   * Documents may now be fetched from a ``DocumentStore`` using a transport
     protocol other than ``suds``. When using the ``suds`` protocol an exception
@@ -1233,7 +1233,7 @@ Original suds library release notes
 * Fix ENUMs broken during ``xsd`` package overhaul.
 * Fix type as defined in ticket #24.
 * Fix duplicate param names in method signatures as reported in ticket #30.
-* Suds licensed as LGPL.
+* ``suds`` licensed as LGPL.
 * Remove logging setup in ``suds.__init__()`` as suggested by patch in ticket
   #31. Users will now need to configure the logger.
 * Add support for ``Client.Factory.create()`` alt: syntax for fully qualifying
