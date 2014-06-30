@@ -784,7 +784,7 @@ class Element(UnicodeMixin):
         if ns is None:
             return
         if not isinstance(ns, (tuple, list)):
-            raise Exception("namespace must be tuple")
+            raise Exception("namespace must be a list or a tuple")
         if ns[0] is None:
             self.expns = ns[1]
         else:
