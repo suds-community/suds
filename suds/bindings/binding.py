@@ -497,7 +497,7 @@ class PartElement(SchemaElement):
         self.form_qualified = False
 
     def implany(self):
-        return self
+        pass
 
     def optional(self):
         return True
