@@ -332,8 +332,8 @@ class Element(UnicodeMixin):
         Append the specified child based on whether it is an element or an
         attribute.
 
-        @param objects: A (single|collection) of attribute(s) or element(s)
-            to be added as children.
+        @param objects: A (single|collection) of attribute(s) or element(s) to
+            be added as children.
         @type objects: (L{Element}|L{Attribute})
         @return: self
         @rtype: L{Element}
