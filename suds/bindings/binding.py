@@ -474,8 +474,7 @@ class Binding(object):
 
 class PartElement(SchemaElement):
     """
-    A part used to represent a message part when the part references a schema
-    type and thus assumes to be an element.
+    Message part referencing an XSD type and thus acting like an XSD element.
 
     @ivar resolved: The part type.
     @type resolved: L{suds.xsd.sxbase.SchemaObject}
