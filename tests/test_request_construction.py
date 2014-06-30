@@ -440,7 +440,7 @@ def test_element_references_to_different_namespaces():
         <xsd:complexType>
           <xsd:sequence>
             <xsd:element name="local" type="xsd:string"/>
-            <xsd:element ref="local_referenced"/>
+            <xsd:element ref="tns:local_referenced"/>
             <xsd:element ref="second:external"/>
           </xsd:sequence>
         </xsd:complexType>
