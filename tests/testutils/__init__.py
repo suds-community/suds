@@ -159,15 +159,14 @@ def wsdl(schema_content, input=None, output=None, operation_name="f",
     wsdl = ["""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(wsdl_target_namespace)s"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:my_wsdl="%(wsdl_target_namespace)s"
-xmlns:my_xsd="%(xsd_target_namespace)s"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:my_wsdl="%(wsdl_target_namespace)s"
+    xmlns:my_xsd="%(xsd_target_namespace)s"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="%(xsd_target_namespace)s"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 %(schema_content)s
     </xsd:schema>
   </wsdl:types>""" % dict(schema_content=schema_content,
@@ -212,7 +211,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="my_wsdl:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http" />
+        transport="http://schemas.xmlsoap.org/soap/http" />
     <wsdl:operation name="%s">
       <soap:operation soapAction="my-soap-action" style="document" />""" %
         (operation_name,))
