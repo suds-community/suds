@@ -98,6 +98,7 @@ def parametrize_single_element_input_test(param_names, param_values):
             expanded_param_values.append(param)
     return (param_names, expanded_param_values), {}
 
+
 @pytest.mark.indirect_parametrize(parametrize_single_element_input_test,
     ("xsd", "external_element_name", "args", "request_body"), (
     # Bare non-optional element.
@@ -1028,6 +1029,12 @@ def test_wrapped_parameter(monkeypatch):
   </Body>
 </Envelope>""" % data)
 
+
+###############################################################################
+#
+# Test utilities.
+#
+###############################################################################
 
 def _assert_request_content(request, expected_xml):
     CompareSAX.data2data(request.envelope, expected_xml)
