@@ -57,4 +57,4 @@ class Content(Object):
             value = None
             setattr(self, name, value)
             return value
-        raise AttributeError, "Content has no attribute %s" % (name,)
+        raise AttributeError("Content has no attribute %s" % (name,))
