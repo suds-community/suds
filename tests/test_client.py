@@ -638,7 +638,7 @@ class TestTransportUsage:
         xsd_content = '<xsd:element name="Data" type="xsd:string"/>'
         web_service_URL = "Great minds think alike"
         xsd_target_namespace = "omicron psi"
-        wsdl = testutils.wsdl(b(xsd_content), operation_name="pi",
+        wsdl = testutils.wsdl(xsd_content, operation_name="pi",
             xsd_target_namespace=xsd_target_namespace, input="Data",
             output="Data", web_service_URL=web_service_URL)
         test_input_data = "Riff-raff"

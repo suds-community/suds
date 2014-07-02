@@ -23,6 +23,8 @@ Package containing different utilities used for suds project testing.
 import suds.client
 import suds.store
 
+import six
+
 import os
 import subprocess
 import sys
@@ -153,6 +155,8 @@ def wsdl(schema_content, input=None, output=None, operation_name="f",
         name.
 
     """
+    assert isinstance(schema_content, six.string_types)
+
     has_input = input is not None
     has_output = output is not None
 
