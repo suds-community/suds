@@ -67,6 +67,9 @@ class Document(Binding):
 
             Called by our argument parser for every input parameter, in order.
 
+            A parameter's type is identified by its corresponding XSD schema
+            element.
+
             """
             # Do not construct request data for undefined input parameters
             # defined inside a choice order indicator. An empty choice
