@@ -191,6 +191,9 @@ Features missing prior to Python 2.6
 * ``fractions`` module.
 * ``numbers`` module.
 * String ``format()`` method.
+* Using the ``with`` statement from Python 2.5.x requires the ``from __future__
+  import with_statement``.
+
 
 Features missing prior to Python 2.7
 ------------------------------------
