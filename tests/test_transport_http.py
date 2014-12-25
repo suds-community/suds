@@ -280,6 +280,8 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
         def __init__(self, mocker):
             self.__mocker = mocker
             self.mock_reset()
+        def close(self):
+            pass
         def connect(self, address):
             assert address is self.__mocker.host_address
         def makefile(self, *args, **kwargs):
@@ -330,6 +332,10 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
     # Socket's sendall() method twice - once for sending the HTTP request
     # headers and once for its body.
     assert mocker.mock_socket.mock_call_count("sendall") in (1, 2)
+    # Python versions prior to 3.4.2 do not explicitly close their HTTP server
+    # connection socket in case of our custom exceptions, e.g. version 3.4.1.
+    # closes it only on OSError exceptions.
+    assert mocker.mock_socket.mock_call_count("close") in (0, 1)
     # With older Python versions, e.g. Python 2.4, Socket class does not
     # implement the settimeout() method.
     assert mocker.mock_socket.mock_call_count("settimeout") in (0, 1)
