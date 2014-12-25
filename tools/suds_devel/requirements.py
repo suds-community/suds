@@ -53,6 +53,15 @@ using 'py24 -m pytest'.
 See the project's Python compatibility related hacking docs for more detailed
 information.
 
+Python 2.5 pytest compatibility notes:
+--------------------------------------
+
+pytest 2.6.1 release started using the 'with' statement and so broke
+compatibility with Python 2.5.
+
+py 1.4.24 release started using the 'with' statement and so broke compatibility
+with Python 2.5.
+
 """
 
 import sys
@@ -68,9 +77,19 @@ class _Unspecified:
 
 _first_unsupported_py_version_on_Python_24 = (
     lowest_version_string_with_prefix("1.4.16"))
-_first_supported_pytest_version_on_Python_24 = "2.4.0"
+_first_unsupported_py_version_on_Python_25 = (
+    lowest_version_string_with_prefix("1.4.24"))
+
+# pytest versions prior to 2.4.0 do not support non-string 'skipif'
+# expressions.
+_first_supported_pytest_version = "2.4.0"
 _first_unsupported_pytest_version_on_Python_24 = (
     lowest_version_string_with_prefix("2.4.2"))
+# pytest version 2.6.0 actually supports Python 2.5 but has some internal
+# issues causing it to break our our tests, while version 2.6.1 fails to
+# install on Python 2.5 all together.
+_first_unsupported_pytest_version_on_Python_25 = (
+    lowest_version_string_with_prefix("2.6.0"))
 
 
 def check_Python24_pytest_requirements():
@@ -94,7 +113,7 @@ def check_Python24_pytest_requirements():
         from pytest import __version__ as pytest_version
     except ImportError:
         return False, None  # no pytest
-    pv_from = parse_version(_first_supported_pytest_version_on_Python_24)
+    pv_from = parse_version(_first_supported_pytest_version)
     pv_to = parse_version(_first_unsupported_pytest_version_on_Python_24)
     if not (pv_from <= parse_version(pytest_version) < pv_to):
         return False, None  # incompatible pytest version
@@ -130,7 +149,7 @@ def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
     pytest_version = None
     if version_info < (2, 5):
         pytest_version = (
-            (">=", _first_supported_pytest_version_on_Python_24),
+            (">=", _first_supported_pytest_version),
             ("<", _first_unsupported_pytest_version_on_Python_24))
         yield requirement_spec("py",
             ("<", _first_unsupported_py_version_on_Python_24))
@@ -192,6 +211,13 @@ def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
                 version_spec = ("!=", "0.3.1"),
             yield requirement_spec("colorama", *version_spec)
 
+        yield requirement_spec("py",
+            ("<", _first_unsupported_py_version_on_Python_25))
+
+        pytest_version = (
+            (">=", _first_supported_pytest_version),
+            ("<", _first_unsupported_pytest_version_on_Python_25))
+
     # Python 3.0 & 3.1 stdlib does not include the argparse module which pytest
     # requires, even though it does not list it explicitly among its
     # requirements. Python 3.x series introduced the argparse module in its 3.2
@@ -218,9 +244,7 @@ def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
             yield requirement_spec("argparse")
 
     if not pytest_version:
-        # pytest versions prior to 2.4.0 do not support non-string 'skipif'
-        # expressions.
-        pytest_version = (">=", "2.4.0"),
+        pytest_version = (">=", _first_supported_pytest_version),
     yield requirement_spec("pytest", *pytest_version)
 
 
