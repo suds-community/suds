@@ -101,27 +101,32 @@ version 0.7 (development)
     during the setup procedure.
   * Tested in the following environments:
 
-    * Python 2.4.3/x86 on Windows 7/SP1/x64.
-    * Python 2.4.4/x86 on Windows 7/SP1/x64.
-    * Python 2.5.4/x86 on Windows 7/SP1/x64.
-    * Python 2.5.4/x64 on Windows 7/SP1/x64.
-    * Python 2.6.6/x86 on Windows 7/SP1/x64.
-    * Python 2.6.6/x64 on Windows 7/SP1/x64.
-    * Python 2.7.6/x86 on Windows 7/SP1/x64.
-    * Python 2.7.6/x64 on Windows 7/SP1/x64.
-    * Python 2.7.7/x86 on Windows 7/SP1/x64.
-    * Python 2.7.7/x64 on Windows 7/SP1/x64.
-    * Python 3.1.3/x64 on Windows 7/SP1/x64.
-    * Python 3.2.5/x86 on Windows 7/SP1/x64.
-    * Python 3.2.5/x64 on Windows 7/SP1/x64.
-    * Python 3.3.3/x86 on Windows 7/SP1/x64.
-    * Python 3.3.3/x64 on Windows 7/SP1/x64.
-    * Python 3.3.5/x86 on Windows 7/SP1/x64.
-    * Python 3.3.5/x64 on Windows 7/SP1/x64.
-    * Python 3.4.0/x86 on Windows 7/SP1/x64.
-    * Python 3.4.0/x64 on Windows 7/SP1/x64.
-    * Python 3.4.1/x86 on Windows 7/SP1/x64.
-    * Python 3.4.1/x64 on Windows 7/SP1/x64.
+    * Python 2.4.3/x86 on Windows 8.1/x64.
+    * Python 2.4.4/x86 on Windows 8.1/x64.
+    * Python 2.5.4/x86 on Windows 8.1/x64.
+    * Python 2.5.4/x64 on Windows 8.1/x64.
+    * Python 2.6.6/x86 on Windows 8.1/x64.
+    * Python 2.6.6/x64 on Windows 8.1/x64.
+    * Python 2.7.6/x86 on Windows 8.1/x64.
+    * Python 2.7.6/x64 on Windows 8.1/x64.
+    * Python 2.7.7/x86 on Windows 8.1/x64.
+    * Python 2.7.7/x64 on Windows 8.1/x64.
+    * Python 2.7.8/x86 on Windows 8.1/x64.
+    * Python 2.7.8/x64 on Windows 8.1/x64.
+    * Python 3.1.3/x86 on Windows 8.1/x64.
+    * Python 3.1.3/x64 on Windows 8.1/x64.
+    * Python 3.2.5/x86 on Windows 8.1/x64.
+    * Python 3.2.5/x64 on Windows 8.1/x64.
+    * Python 3.3.3/x86 on Windows 8.1/x64.
+    * Python 3.3.3/x64 on Windows 8.1/x64.
+    * Python 3.3.5/x86 on Windows 8.1/x64.
+    * Python 3.3.5/x64 on Windows 8.1/x64.
+    * Python 3.4.0/x86 on Windows 8.1/x64.
+    * Python 3.4.0/x64 on Windows 8.1/x64.
+    * Python 3.4.1/x86 on Windows 8.1/x64.
+    * Python 3.4.1/x64 on Windows 8.1/x64.
+    * Python 3.4.2/x86 on Windows 8.1/x64.
+    * Python 3.4.2/x64 on Windows 8.1/x64.
 
 * Improved support for ``decimal`` XSD types.
 
