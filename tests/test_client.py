@@ -163,19 +163,19 @@ class MockTransport(suds.transport.Transport):
 
 # Test data used in different tests in this module testing suds WSDL schema
 # import implementation.
-wsdl_importing_wsdl_namespace = "hello"
 wsdl_imported_wsdl_namespace = "goodbye"
-wsdl_imported_xsd_namespace = "ice-scream"
 
-def wsdl_imported_format(schema_content=""):
+def wsdl_imported_format(schema_content="",
+        target_namespace=wsdl_imported_wsdl_namespace,
+        target_xsd_namespace="ice-scream"):
     return suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:tns="%(tns)s"
-    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
   <wsdl:types>
-    <xsd:schema targetNamespace="%(target_namespace)s"
+    <xsd:schema targetNamespace="%(tns_xsd)s"
         elementFormDefault="qualified"
         attributeFormDefault="unqualified"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -193,11 +193,11 @@ def wsdl_imported_format(schema_content=""):
     </wsdl:operation>
   </wsdl:binding>
 </wsdl:definitions>""" % dict(schema_content=schema_content,
-        target_namespace=wsdl_imported_xsd_namespace,
-        tns=wsdl_imported_wsdl_namespace))
+        tns_xsd=target_xsd_namespace, tns=target_namespace))
 
 def wsdl_import_wrapper_format(url_imported,
-        imported_reference_ns=wsdl_imported_wsdl_namespace):
+        imported_reference_ns=wsdl_imported_wsdl_namespace,
+        target_namespace="hello"):
     return suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
@@ -212,7 +212,7 @@ def wsdl_import_wrapper_format(url_imported,
   </wsdl:service>
 </wsdl:definitions>""" % dict(imported_ns=wsdl_imported_wsdl_namespace,
         imported_reference_ns=imported_reference_ns,
-        tns=wsdl_importing_wsdl_namespace,
+        tns=target_namespace,
         url_imported=url_imported))
 
 
@@ -319,10 +319,12 @@ class TestCacheStoreTransportUsage:
         """
         # Prepare test data.
         url_imported = "suds://wsdl_imported"
+        imported_xsd_namespace = "imported WSDL's XSD namespace"
         wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported)
         wsdl_imported = wsdl_imported_format(
-            '<xsd:element name="Pistachio" type="xsd:string"/>')
-        wsdl_imported_element_id = ("Pistachio", wsdl_imported_xsd_namespace)
+            '<xsd:element name="Pistachio" type="xsd:string"/>',
+            target_xsd_namespace=imported_xsd_namespace)
+        wsdl_imported_element_id = ("Pistachio", imported_xsd_namespace)
 
         # Add to cache, making sure the imported WSDL schema is read from the
         # document store and not fetched using the client's registered
@@ -715,10 +717,13 @@ class TestWSDLImportWithDifferentTargetNamespace:
         Imported WSDL entity references using base namespace should not work.
 
         """
+        tns_import_wrapper = "my wrapper WSDL schema"
+        tns_imported = "my imported WSDL schema"
         url_imported = "suds://wsdl_imported"
         wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported,
-            imported_reference_ns=wsdl_importing_wsdl_namespace);
-        wsdl_imported = wsdl_imported_format()
+            imported_reference_ns=tns_import_wrapper,
+            target_namespace=tns_import_wrapper);
+        wsdl_imported = wsdl_imported_format(target_namespace=tns_imported)
         store = MockDocumentStore(wsdl=wsdl_import_wrapper,
             wsdl_imported=wsdl_imported)
         e = pytest.raises(Exception, suds.client.Client, "suds://wsdl",
@@ -734,10 +739,13 @@ class TestWSDLImportWithDifferentTargetNamespace:
         Imported WSDL entity references using imported namespace should work.
 
         """
+        tns_import_wrapper = "my wrapper WSDL schema"
+        tns_imported = "my imported WSDL schema"
         url_imported = "suds://wsdl_imported"
         wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported,
-            imported_reference_ns=wsdl_imported_wsdl_namespace);
-        wsdl_imported = wsdl_imported_format()
+            imported_reference_ns=tns_imported,
+            target_namespace=tns_import_wrapper);
+        wsdl_imported = wsdl_imported_format(target_namespace=tns_imported)
         store = MockDocumentStore(wsdl=wsdl_import_wrapper,
             wsdl_imported=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store)
