@@ -1483,7 +1483,13 @@ PRIORITIZED:
 (+)           elementFormDefault attribute is used instead, and if that one is
 (+)           not given either - they are considered unqualified.
 
-(30.06.2014.)
+(28.06.2015.)
+
+(+) * (Jurko) Clean up WSDL imports.
+(+)     * Remove invalid test_WSDL_import() test & related comment in
+(+)       `test_client.py`.
+
+(29.06.2015.)
 
     * (Jurko) SchemaObject.form_qualified cleanup followup.
         * Correct suds's XSD element form attribute handling.
