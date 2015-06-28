@@ -1488,13 +1488,11 @@ PRIORITIZED:
 (+) * (Jurko) Clean up WSDL imports.
 (+)     * Remove invalid test_WSDL_import() test & related comment in
 (+)       `test_client.py`.
+(+)     * Add WSDL import tests.
+(+)         * Import WSDL with same target namespace.
+(+)         * Import WSDL with different target namespace.
 
 (29.06.2015.)
-
-    * (Jurko) Clean up WSDL imports.
-        * Add WSDL import tests.
-            * Import WSDL with same target namespace.
-            * Import WSDL with different target namespace.
 
     * (Jurko) Fix recursive WSDL import issue.
         * Add tests.
