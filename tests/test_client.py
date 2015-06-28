@@ -760,6 +760,65 @@ class TestWSDLImportWithDifferentTargetNamespace:
             wsdl_imported=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store)
 
+    #TODO: extract WSDL processing tests to a separate test module
+    def test_resolving_references_to_later_entities_in_XML(self):
+        """
+        Referencing later entities in XML should be supported.
+
+        When we reference another entity in our WSDL, there should be no
+        difference whether that entity has been defined before or after the
+        referencing entity in the underlying XML structure.
+
+        """
+        wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="tns-ns"
+    xmlns:ns="xsd-ns"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="tns-ns"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:service name="my-service">
+    <wsdl:port name="my-port" binding="tns:my-binding">
+      <soap:address location="somewhere-under-a-rainbow"/>
+    </wsdl:port>
+  </wsdl:service>
+  <wsdl:binding name="my-binding" type="tns:my-port-type">
+    <soap:binding style="document"
+        transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="document"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:portType name="my-port-type">
+    <wsdl:operation name="f">
+      <wsdl:input message="tns:fRequestMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="ns:Lollypop"/>
+  </wsdl:message>
+  <wsdl:types>
+    <xsd:schema targetNamespace="xsd-ns"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Lollypop" type="xsd:string"/>
+    </xsd:schema>
+  </wsdl:types>
+</wsdl:definitions>""")
+        store = MockDocumentStore(wsdl=wsdl)
+        c = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
+        service = c.wsdl.services[0]
+        port = service.ports[0]
+        binding = port.binding
+        port_type = binding.type
+        operation = port_type.operations['f']
+        input_data = operation.input
+        input_part = input_data.parts[0]
+        input_element = input_part.element
+        assert input_element == ('Lollypop', 'xsd-ns')
+
     @pytest.mark.xfail
     def test_recursive_WSDL_import(self):
         """
