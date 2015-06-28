@@ -2110,7 +2110,7 @@ NON PRIORITIZED:
             * Path not containing spaces.
             * Path containing spaces.
         * Invalid element reference.
-        * Handing schema imports.
+        * Handling schema imports.
             * With the same target namespace.
             * With a different target namespace.
         * Prepared SOAP operation invocation requests.
