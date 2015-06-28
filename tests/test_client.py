@@ -702,3 +702,42 @@ class TestTransportUsage:
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
         assert t.mock_log == [("open", [url])]
+
+
+class TestWSDLImportWithDifferentTargetNamespace:
+    """
+    Import WSDL with different target namespace than its base.
+
+    """
+
+    def test_imported_entity_reference_using_base_namespace(self):
+        """
+        Imported WSDL entity references using base namespace should not work.
+
+        """
+        url_imported = "suds://wsdl_imported"
+        wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported,
+            imported_reference_ns=wsdl_importing_wsdl_namespace);
+        wsdl_imported = wsdl_imported_format()
+        store = MockDocumentStore(wsdl=wsdl_import_wrapper,
+            wsdl_imported=wsdl_imported)
+        e = pytest.raises(Exception, suds.client.Client, "suds://wsdl",
+            cache=None, documentStore=store).value
+        try:
+            assert e.__class__ is Exception
+            assert str(e) == "binding 'imported_reference_ns:dummy', not-found"
+        finally:
+            del e  # explicitly break circular reference chain in Python 3
+
+    def test_imported_entity_reference_using_correct_namespace(self):
+        """
+        Imported WSDL entity references using imported namespace should work.
+
+        """
+        url_imported = "suds://wsdl_imported"
+        wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported,
+            imported_reference_ns=wsdl_imported_wsdl_namespace);
+        wsdl_imported = wsdl_imported_format()
+        store = MockDocumentStore(wsdl=wsdl_import_wrapper,
+            wsdl_imported=wsdl_imported)
+        suds.client.Client("suds://wsdl", cache=None, documentStore=store)
