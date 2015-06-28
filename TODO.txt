@@ -1491,6 +1491,48 @@ PRIORITIZED:
 
 (29.06.2015.)
 
+    * (Jurko) Clean up WSDL imports.
+        * Add WSDL import tests.
+            * Import WSDL with same target namespace.
+            * Import WSDL with different target namespace.
+
+    * (Jurko) Fix recursive WSDL import issue.
+        * Add tests.
+        * Fix issue.
+
+    * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
+
+    * (Jurko) Clean up WSDL imports.
+        * Add tests for the compatibility kludge with existing WSDL schemas in
+          the wild that use WSDL imports to import XSD schemas.
+        * `Definitions` object is also used to load XSD schema content
+          referenced using a WSDL import element. This should be reviewed as it
+          seems like a quick-hack. According to the `Definitions` class comment,
+          its instances are intended to model data loaded from WSDL documents
+          only. If we want to load XSD documents and WSDL documents the same, we
+          should load them as generic XML documents (or at least check their
+          root XML element) and proceed from there with a different loading
+          system.
+        * An importing WSDL should not be allowed to reference XSD entities from
+          an imported WSDL. If such data needs to be referenced, it should be
+          imported from an external XSD schema (either using XSD import or using
+          the questionably standard and not widely supported WSDL import
+          variation importing an XSD instead of a WSDL schema).
+            * We could possibly retain this XSD importing feature as an optional
+              kludge for compatibility with broken web services.
+        * Makes no sense to collect all types, messages, port_types & bindings
+          data from imported WSDLs.
+            * We currently collect types, messages, port_types & bindings
+              entities but do not collect services or integrate schema elements.
+            * All this seems quite messy.
+            * See why this data is actually collected.
+            * Random thoughts.
+                * Possibly collect only the actually used ones, i.e. those
+                  referenced from the importing WSDL's entities.
+                * If the collected data is just some internal implementation
+                  detail, mark its member variables as private (name with a `__`
+                  prefix) and comment on what it is they actually contain.
+
     * (Jurko) SchemaObject.form_qualified cleanup followup.
         * Correct suds's XSD element form attribute handling.
             * Qualified XSD elements are connected to a namespace.
