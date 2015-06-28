@@ -712,6 +712,16 @@ class TestWSDLImportWithDifferentTargetNamespace:
 
     """
 
+    def test_imported_entity_reference_with_same_imported_and_base_ns(self):
+        tns = "my shared WSDL schema namespace"
+        url_imported = "suds://wsdl_imported"
+        wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported,
+            imported_reference_ns=tns, target_namespace=tns);
+        wsdl_imported = wsdl_imported_format(target_namespace=tns)
+        store = MockDocumentStore(wsdl=wsdl_import_wrapper,
+            wsdl_imported=wsdl_imported)
+        suds.client.Client("suds://wsdl", cache=None, documentStore=store)
+
     def test_imported_entity_reference_using_base_namespace(self):
         """
         Imported WSDL entity references using base namespace should not work.
