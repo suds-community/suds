@@ -759,3 +759,57 @@ class TestWSDLImportWithDifferentTargetNamespace:
         store = MockDocumentStore(wsdl=wsdl_import_wrapper,
             wsdl_imported=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store)
+
+    @pytest.mark.xfail
+    def test_recursive_WSDL_import(self):
+        """
+        Recursive WSDL imports should be supported.
+
+        As WSDL imports are nothing but forward declarations, and not component
+        inclusions, recursive WSDL imports are well defined and should be
+        supported.
+
+        """
+        url_main = "suds://wsdl_main"
+        tns_main = "main-wsdl"
+        url_binding = "suds://wsdl_binding"
+        tns_binding = "binding-wsdl"
+
+        wsdl_binding = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="%(tns)s"
+    xmlns:main_ns="%(tns_imported)s"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="%(tns_imported)s" location="%(url_imported)s"/>
+  <wsdl:binding name="my-binding" type="main_ns:my-port-type">
+    <soap:binding style="document"
+        transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="document"/>
+    </wsdl:operation>
+  </wsdl:binding>
+</wsdl:definitions>""" % dict(tns=tns_binding, tns_imported=tns_main,
+            url_imported=url_main))
+
+        wsdl_main = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="%(tns)s"
+    xmlns:binding_ns="%(tns_imported)s"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="%(tns_imported)s" location="%(url_imported)s"/>
+  <wsdl:portType name="my-port-type">
+    <wsdl:operation name="f"/>
+  </wsdl:portType>
+  <wsdl:service name="my-service">
+    <wsdl:port name="my-port" binding="binding_ns:my-binding">
+      <soap:address location="somewhere-under-a-rainbow"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""" % dict(tns=tns_main, tns_imported=tns_binding,
+            url_imported=url_binding))
+
+        store = MockDocumentStore(wsdl_main=wsdl_main,
+            wsdl_binding=wsdl_binding)
+        suds.client.Client("suds://wsdl_main", cache=None, documentStore=store)
