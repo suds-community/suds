@@ -33,7 +33,7 @@ import suds.transport
 import suds.transport.https
 
 import pytest
-from six import iteritems, itervalues, next
+from six import b, binary_type, iteritems, itervalues, next
 from six.moves import http_client
 
 
@@ -157,7 +157,7 @@ class MockTransport(suds.transport.Transport):
             raise value
         if value.__class__ is type and issubclass(value, Exception):
             raise value()
-        assert value.__class__ is suds.byte_str_class, "bad test data"
+        assert value.__class__ is binary_type, "bad test data"
         return value
 
 
@@ -168,7 +168,7 @@ wsdl_imported_wsdl_namespace = "goodbye"
 def wsdl_imported_format(schema_content="",
         target_namespace=wsdl_imported_wsdl_namespace,
         target_xsd_namespace="ice-scream"):
-    return suds.byte_str("""\
+    return b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
@@ -198,7 +198,7 @@ def wsdl_imported_format(schema_content="",
 def wsdl_import_wrapper_format(url_imported,
         imported_reference_ns=wsdl_imported_wsdl_namespace,
         target_namespace="hello"):
-    return suds.byte_str("""\
+    return b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
     xmlns:imported_reference_ns="%(imported_reference_ns)s"
@@ -277,8 +277,8 @@ class TestCacheStoreTransportUsage:
 <schema xmlns="http://www.w3.org/2001/XMLSchema">
     <element name="external%d" type="string"/>
 </schema>"""
-            external_xsd1 = suds.byte_str(external_xsd_format % (1,))
-            external_xsd2 = suds.byte_str(external_xsd_format % (2,))
+            external_xsd1 = b(external_xsd_format % (1,))
+            external_xsd2 = b(external_xsd_format % (2,))
 
             # Add to cache.
             cache = MockCache()
@@ -444,7 +444,7 @@ class TestCacheStoreTransportUsage:
         wsdl = testutils.wsdl('<xsd:%s schemaLocation="suds://external"/>' % (
             external_reference_tag,),
             xsd_target_namespace=xsd_target_namespace)
-        external_schema = suds.byte_str("""\
+        external_schema = b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema">
   <element name="external" type="string"/>
@@ -638,13 +638,13 @@ class TestTransportUsage:
         xsd_content = '<xsd:element name="Data" type="xsd:string"/>'
         web_service_URL = "Great minds think alike"
         xsd_target_namespace = "omicron psi"
-        wsdl = testutils.wsdl(suds.byte_str(xsd_content), operation_name="pi",
+        wsdl = testutils.wsdl(b(xsd_content), operation_name="pi",
             xsd_target_namespace=xsd_target_namespace, input="Data",
             output="Data", web_service_URL=web_service_URL)
         test_input_data = "Riff-raff"
         test_output_data = "La-di-da-da-da"
         store = MockDocumentStore(wsdl=wsdl)
-        transport = MockTransport(send_data=suds.byte_str("""\
+        transport = MockTransport(send_data=b("""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
@@ -659,8 +659,8 @@ class TestTransportUsage:
         assert transport.mock_log[0][0] == "send"
         assert transport.mock_log[0][1][0] == web_service_URL
         request_message = transport.mock_log[0][1][1]
-        assert suds.byte_str(xsd_target_namespace) in request_message
-        assert suds.byte_str(test_input_data) in request_message
+        assert b(xsd_target_namespace) in request_message
+        assert b(test_input_data) in request_message
         assert reply == test_output_data
 
     @pytest.mark.parametrize("transport", (object(), suds.cache.NoCache()))
@@ -697,7 +697,7 @@ class TestTransportUsage:
         xsd_content = '<xsd:%(tag)s schemaLocation="%(url)s"/>' % dict(
             tag=external_reference_tag, url=url)
         store = MockDocumentStore(wsdl=testutils.wsdl(xsd_content))
-        t = MockTransport(open_data=suds.byte_str("""\
+        t = MockTransport(open_data=b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema"/>
 """))
