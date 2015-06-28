@@ -1491,11 +1491,12 @@ PRIORITIZED:
 (+)     * Add WSDL import tests.
 (+)         * Import WSDL with same target namespace.
 (+)         * Import WSDL with different target namespace.
+(+) * (Jurko) Fix recursive WSDL import issue.
+(+)     * Add tests.
 
 (29.06.2015.)
 
     * (Jurko) Fix recursive WSDL import issue.
-        * Add tests.
         * Fix issue.
 
     * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
