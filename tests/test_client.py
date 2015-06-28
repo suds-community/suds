@@ -163,19 +163,6 @@ class MockTransport(suds.transport.Transport):
 
 # Test data used in different tests in this module testing suds WSDL schema
 # import implementation.
-#
-#TODO: Once a WSDL import bug illustrated by test_WSDL_import() is fixed, this
-# test data may be simplified to just:
-#   > wsdl_target_namespace = "bingo-bongo"
-#   > wsdl = testutils.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
-#   > wsdl_wrapper = suds.byte_str("""\
-#   > <?xml version='1.0' encoding='UTF-8'?>
-#   > <definitions targetNamespace="%(tns)s"
-#   >     xmlns="http://schemas.xmlsoap.org/wsdl/">
-#   >   <import namespace="%(tns)s" location="suds://wsdl"/>
-#   > </definitions>""" % {"tns": wsdl_target_namespace})
-# This would also make caching the imported WSDL schema simpler as this makes
-# the imported WSDL schema usable without the extra importing wrapper as well.
 wsdl_imported_format = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="bye-bye"
@@ -703,24 +690,3 @@ class TestTransportUsage:
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
         assert t.mock_log == [("open", [url])]
-
-
-@pytest.mark.xfail(reason="WSDL import buggy")
-def test_WSDL_import():
-    wsdl_target_namespace = "bingo-bongo"
-    wsdl = testutils.wsdl("", wsdl_target_namespace=wsdl_target_namespace)
-    wsdl_wrapper = suds.byte_str("""\
-<?xml version='1.0' encoding='UTF-8'?>
-<definitions targetNamespace="%(tns)s"
-    xmlns="http://schemas.xmlsoap.org/wsdl/">
-  <import namespace="%(tns)s" location="suds://wsdl"/>
-</definitions>""" % {"tns": wsdl_target_namespace})
-    store = suds.store.DocumentStore(wsdl=wsdl, wsdl_wrapper=wsdl_wrapper)
-    client = suds.client.Client("suds://wsdl_wrapper", documentStore=store,
-        cache=None, nosend=True)
-    client.service.f()
-    #TODO: client.service is empty but other parts of client's imported WSDL
-    # data, e.g. port_type, are there so my guess is that this is something
-    # that was intended to work. (19.02.2014.) (Jurko)
-    #TODO: Look into the exact client.wsdl.schema content. Its string
-    # representation does not seem to be valid.
