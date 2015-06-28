@@ -163,43 +163,57 @@ class MockTransport(suds.transport.Transport):
 
 # Test data used in different tests in this module testing suds WSDL schema
 # import implementation.
-wsdl_imported_format = """\
+wsdl_importing_wsdl_namespace = "hello"
+wsdl_imported_wsdl_namespace = "goodbye"
+wsdl_imported_xsd_namespace = "ice-scream"
+
+def wsdl_imported_format(schema_content=""):
+    return suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="bye-bye"
-    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+<wsdl:definitions targetNamespace="%(tns)s"
+    xmlns:tns="%(tns)s"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
-    <xsd:schema targetNamespace="ice-scream"
+    <xsd:schema targetNamespace="%(target_namespace)s"
         elementFormDefault="qualified"
         attributeFormDefault="unqualified"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%s
+%(schema_content)s
     </xsd:schema>
   </wsdl:types>
-</wsdl:definitions>"""
-wsdl_import_wrapper_format = """\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="bye-bye"
-    xmlns:my_wsdl="bye-bye"
-    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="bye-bye" location="%s"/>
   <wsdl:portType name="dummyPortType">
     <wsdl:operation name="f"/>
   </wsdl:portType>
-  <wsdl:binding name="dummy" type="my_wsdl:dummyPortType">
+  <wsdl:binding name="dummy" type="tns:dummyPortType">
     <soap:binding style="document"
         transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="my-soap-action" style="document"/>
     </wsdl:operation>
   </wsdl:binding>
+</wsdl:definitions>""" % dict(schema_content=schema_content,
+        target_namespace=wsdl_imported_xsd_namespace,
+        tns=wsdl_imported_wsdl_namespace))
+
+def wsdl_import_wrapper_format(url_imported,
+        imported_reference_ns=wsdl_imported_wsdl_namespace):
+    return suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="%(tns)s"
+    xmlns:imported_reference_ns="%(imported_reference_ns)s"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="%(imported_ns)s" location="%(url_imported)s"/>
   <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="my_wsdl:dummy">
+    <wsdl:port name="dummy" binding="imported_reference_ns:dummy">
       <soap:address location="unga-bunga-location"/>
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>"""
-wsdl_imported_xsd_namespace = "ice-scream"
+</wsdl:definitions>""" % dict(imported_ns=wsdl_imported_wsdl_namespace,
+        imported_reference_ns=imported_reference_ns,
+        tns=wsdl_importing_wsdl_namespace,
+        url_imported=url_imported))
 
 
 # Test URL data used by several tests in this test module.
@@ -229,9 +243,8 @@ class TestCacheStoreTransportUsage:
         def test_avoid_imported_WSDL_fetching(self):
             # Prepare data.
             url_imported = "suds://wsdl_imported"
-            wsdl_import_wrapper = wsdl_import_wrapper_format % (url_imported,)
-            wsdl_import_wrapper = suds.byte_str(wsdl_import_wrapper)
-            wsdl_imported = suds.byte_str(wsdl_imported_format % ("",))
+            wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported)
+            wsdl_imported = wsdl_imported_format()
 
             # Add to cache.
             cache = MockCache()
@@ -306,10 +319,9 @@ class TestCacheStoreTransportUsage:
         """
         # Prepare test data.
         url_imported = "suds://wsdl_imported"
-        wsdl_import_wrapper = wsdl_import_wrapper_format % (url_imported,)
-        wsdl_import_wrapper = suds.byte_str(wsdl_import_wrapper)
-        wsdl_imported = suds.byte_str(wsdl_imported_format % (
-            '<xsd:element name="Pistachio" type="xsd:string"/>',))
+        wsdl_import_wrapper = wsdl_import_wrapper_format(url_imported)
+        wsdl_imported = wsdl_imported_format(
+            '<xsd:element name="Pistachio" type="xsd:string"/>')
         wsdl_imported_element_id = ("Pistachio", wsdl_imported_xsd_namespace)
 
         # Add to cache, making sure the imported WSDL schema is read from the
@@ -669,9 +681,9 @@ class TestTransportUsage:
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_imported_WSDL_transport(self, url):
-        wsdl_import_wrapper = wsdl_import_wrapper_format % (url,)
-        wsdl_imported = suds.byte_str(wsdl_imported_format % ("",))
-        store = MockDocumentStore(wsdl=suds.byte_str(wsdl_import_wrapper))
+        wsdl_import_wrapper = wsdl_import_wrapper_format(url)
+        wsdl_imported = wsdl_imported_format("")
+        store = MockDocumentStore(wsdl=wsdl_import_wrapper)
         t = MockTransport(open_data=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
