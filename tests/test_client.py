@@ -819,7 +819,6 @@ class TestWSDLImportWithDifferentTargetNamespace:
         input_element = input_part.element
         assert input_element == ('Lollypop', 'xsd-ns')
 
-    @pytest.mark.xfail
     def test_recursive_WSDL_import(self):
         """
         Recursive WSDL imports should be supported.
