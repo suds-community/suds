@@ -699,13 +699,13 @@ class Binding(NamedObject):
         @type definitions: L{Definitions}
 
         """
-        self.resolveport(definitions)
+        self.__resolveport(definitions)
         for op in self.operations.values():
-            self.resolvesoapbody(definitions, op)
-            self.resolveheaders(definitions, op)
-            self.resolvefaults(definitions, op)
+            self.__resolvesoapbody(definitions, op)
+            self.__resolveheaders(definitions, op)
+            self.__resolvefaults(definitions, op)
 
-    def resolveport(self, definitions):
+    def __resolveport(self, definitions):
         """
         Resolve port_type reference.
 
@@ -727,7 +727,7 @@ class Binding(NamedObject):
         port_type.resolve(definitions)
         self.type = port_type
 
-    def resolvesoapbody(self, definitions, op):
+    def __resolvesoapbody(self, definitions, op):
         """
         Resolve SOAP body I{message} parts by cross-referencing with operation
         defined in port type.
@@ -762,7 +762,7 @@ class Binding(NamedObject):
         else:
             soap.output.body.parts = ptop.output.parts
 
-    def resolveheaders(self, definitions, op):
+    def __resolveheaders(self, definitions, op):
         """
         Resolve SOAP header I{message} references.
 
@@ -789,7 +789,7 @@ class Binding(NamedObject):
                 raise Exception("message '%s' has not part named '%s'" % (
                     ref, pn))
 
-    def resolvefaults(self, definitions, op):
+    def __resolvefaults(self, definitions, op):
         """
         Resolve SOAP fault I{message} references by cross-referencing with
         operations defined in the port type.
