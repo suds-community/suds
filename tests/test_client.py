@@ -609,7 +609,7 @@ class TestTransportUsage:
     # more complex way then is demonstrated here, for example:
     #  - some HTTP status codes result in an exception being raised and some in
     #    different handling
-    #  - an exception may be raised or returned depending no the
+    #  - an exception may be raised or returned depending on the
     #    suds.options.faults suds option
     # Also, the whole concept of re-raising a TransportError exception as a
     # simple Exception instance seems like bad design. For now this rough test
