@@ -720,7 +720,7 @@ class Binding(NamedObject):
         # Later on we will require access to the message data referenced by
         # this port_type instance, and in order for those data references to be
         # available, port_type first needs to dereference its message
-        # identification string. The only scenario where the port_type could
+        # identification string. The only scenario where the port_type might
         # possibly not have already resolved its references, and where this
         # explicit resolve() call is required, is if we are dealing with a
         # recursive WSDL import chain.
@@ -951,6 +951,13 @@ class Service(NamedObject):
                 log.debug("binding '%s' - not a SOAP binding, discarded",
                     binding.name)
                 continue
+            # After we have been resolved, our caller will expect that the
+            # binding we are referencing has been fully constructed, i.e.
+            # resolved, as well. The only scenario where the operations binding
+            # might possibly not have already resolved its references, and
+            # where this explicit resolve() call is required, is if we are
+            # dealing with a recursive WSDL import chain.
+            binding.resolve(definitions)
             p.binding = binding
             filtered.append(p)
         self.ports = filtered
