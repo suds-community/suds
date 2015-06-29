@@ -896,3 +896,32 @@ class TestRecursiveWSDLImport:
         store = MockDocumentStore(wsdl_main_1=wsdl_main, wsdl_main_2=wsdl_main,
             wsdl_binding=wsdl_binding)
         suds.client.Client(url_main1, cache=None, documentStore=store)
+
+    def test_WSDL_self_import(self):
+        url = "suds://wsdl"
+        wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import namespace="my-namespace" location="%(url_imported)s"/>
+  <wsdl:portType name="my-port-type">
+    <wsdl:operation name="f"/>
+  </wsdl:portType>
+  <wsdl:binding name="my-binding" type="tns:my-port-type">
+    <soap:binding style="document"
+        transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="my-soap-action" style="document"/>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="my-service">
+    <wsdl:port name="my-port" binding="tns:my-binding">
+      <soap:address location="how I wish... how I wish you were here..."/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""" % dict(url_imported=url))
+
+        store = MockDocumentStore(wsdl=wsdl)
+        suds.client.Client(url, cache=None, documentStore=store)
