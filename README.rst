@@ -415,6 +415,10 @@ version 0.7 (development)
       related ``pytest`` ``xdist`` usage problems, discovering & explaining the
       underlying issue as well as providing an initial project patch for it.
 
+* Known defects.
+
+  * Loading recursive XSD imports/includes is broken.
+
 version 0.6 (2014-01-24)
 -------------------------
 
@@ -538,7 +542,9 @@ version 0.6 (2014-01-24)
     parameter.
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 version 0.5 (2013-11-25)
 ------------------------
@@ -602,7 +608,9 @@ version 0.5 (2013-11-25)
 
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 version 0.4.1 jurko 5 (2013-11-11)
 ----------------------------------
@@ -755,7 +763,9 @@ version 0.4.1 jurko 5 (2013-11-11)
 
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 version 0.4.1 jurko 4 (2012-04-17)
 ----------------------------------
@@ -794,7 +804,9 @@ version 0.4.1 jurko 4 (2012-04-17)
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 version 0.4.1 jurko 3 (2011-12-26)
 ----------------------------------
@@ -834,7 +846,9 @@ version 0.4.1 jurko 3 (2011-12-26)
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 version 0.4.1 jurko 2 (2011-12-24)
 ----------------------------------
@@ -873,7 +887,9 @@ version 0.4.1 jurko 2 (2011-12-24)
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 version 0.4.1 jurko 1 (2011-12-24)
 ----------------------------------
@@ -956,7 +972,9 @@ version 0.4.1 jurko 1 (2011-12-24)
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
   * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the references XSD element.
+    directly instead of from the referenced XSD element.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
 
 
 Original suds library release notes
