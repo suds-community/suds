@@ -969,12 +969,12 @@ class Factory:
     """
 
     tags = {
-        "import" : Import,
-        "types" : Types,
-        "message" : Message,
-        "portType" : PortType,
-        "binding" : Binding,
-        "service" : Service}
+        "import": Import,
+        "types": Types,
+        "message": Message,
+        "portType": PortType,
+        "binding": Binding,
+        "service": Service}
 
     @classmethod
     def create(cls, root, definitions):
