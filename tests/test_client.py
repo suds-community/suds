@@ -821,21 +821,19 @@ def test_resolving_references_to_later_entities_in_XML():
     assert input_element == ('Lollypop', 'xsd-ns')
 
 
-def test_recursive_WSDL_import():
+class TestRecursiveWSDLImport:
     """
-    Recursive WSDL imports should be supported.
+    Test different recursive WSDL import variations.
 
     As WSDL imports are nothing but forward declarations, and not component
     inclusions, recursive WSDL imports are well defined and should be
     supported.
 
     """
-    url_main = "suds://wsdl_main"
-    tns_main = "main-wsdl"
-    url_binding = "suds://wsdl_binding"
-    tns_binding = "binding-wsdl"
 
-    wsdl_binding = b("""\
+    @staticmethod
+    def __wsdl_binding(tns_binding, tns_main, url_main):
+        return b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
     xmlns:main_ns="%(tns_imported)s"
@@ -850,9 +848,11 @@ def test_recursive_WSDL_import():
     </wsdl:operation>
   </wsdl:binding>
 </wsdl:definitions>""" % dict(tns=tns_binding, tns_imported=tns_main,
-        url_imported=url_main))
+            url_imported=url_main))
 
-    wsdl_main = b("""\
+    @staticmethod
+    def __wsdl_main(tns_main, tns_binding, url_binding):
+        return b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
     xmlns:binding_ns="%(tns_imported)s"
@@ -868,8 +868,31 @@ def test_recursive_WSDL_import():
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>""" % dict(tns=tns_main, tns_imported=tns_binding,
-        url_imported=url_binding))
+            url_imported=url_binding))
 
-    store = MockDocumentStore(wsdl_main=wsdl_main,
-        wsdl_binding=wsdl_binding)
-    suds.client.Client("suds://wsdl_main", cache=None, documentStore=store)
+    def test_recursive_WSDL_import_with_single_URL_per_WSDL(self):
+        url_main = "suds://wsdl_main"
+        tns_main = "main-wsdl"
+        url_binding = "suds://wsdl_binding"
+        tns_binding = "binding-wsdl"
+
+        wsdl_binding = self.__wsdl_binding(tns_binding, tns_main, url_main)
+        wsdl_main = self.__wsdl_main(tns_main, tns_binding, url_binding)
+
+        store = MockDocumentStore(wsdl_main=wsdl_main,
+            wsdl_binding=wsdl_binding)
+        suds.client.Client(url_main, cache=None, documentStore=store)
+
+    def test_recursive_WSDL_import_with_multiple_URLs_per_WSDL(self):
+        url_main1 = "suds://wsdl_main_1"
+        url_main2 = "suds://wsdl_main_2"
+        tns_main = "main-wsdl"
+        url_binding = "suds://wsdl_binding"
+        tns_binding = "binding-wsdl"
+
+        wsdl_binding = self.__wsdl_binding(tns_binding, tns_main, url_main2)
+        wsdl_main = self.__wsdl_main(tns_main, tns_binding, url_binding)
+
+        store = MockDocumentStore(wsdl_main_1=wsdl_main, wsdl_main_2=wsdl_main,
+            wsdl_binding=wsdl_binding)
+        suds.client.Client(url_main1, cache=None, documentStore=store)
