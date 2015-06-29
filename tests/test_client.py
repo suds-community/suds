@@ -851,7 +851,7 @@ class TestRecursiveWSDLImport:
             url_imported=url_main))
 
     @staticmethod
-    def __wsdl_main(tns_main, tns_binding, url_binding):
+    def __wsdl_no_binding(tns_main, tns_binding, url_binding):
         return b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
@@ -877,7 +877,7 @@ class TestRecursiveWSDLImport:
         tns_binding = "binding-wsdl"
 
         wsdl_binding = self.__wsdl_binding(tns_binding, tns_main, url_main)
-        wsdl_main = self.__wsdl_main(tns_main, tns_binding, url_binding)
+        wsdl_main = self.__wsdl_no_binding(tns_main, tns_binding, url_binding)
 
         store = MockDocumentStore(wsdl_main=wsdl_main,
             wsdl_binding=wsdl_binding)
@@ -891,7 +891,7 @@ class TestRecursiveWSDLImport:
         tns_binding = "binding-wsdl"
 
         wsdl_binding = self.__wsdl_binding(tns_binding, tns_main, url_main2)
-        wsdl_main = self.__wsdl_main(tns_main, tns_binding, url_binding)
+        wsdl_main = self.__wsdl_no_binding(tns_main, tns_binding, url_binding)
 
         store = MockDocumentStore(wsdl_main_1=wsdl_main, wsdl_main_2=wsdl_main,
             wsdl_binding=wsdl_binding)
