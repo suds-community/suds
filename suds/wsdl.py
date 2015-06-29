@@ -65,10 +65,27 @@ class WObject(Object):
         pmd.excludes = ["root"]
         pmd.wrappers = dict(qname=repr)
         self.__metadata__.__print__ = pmd
+        self.__resolved = False
 
     def resolve(self, definitions):
         """
         Resolve named references to other WSDL objects.
+
+        Can be safely called multiple times.
+
+        @param definitions: A definitions object.
+        @type definitions: L{Definitions}
+
+        """
+        if not self.__resolved:
+            self.do_resolve(definitions)
+            self.__resolved = True
+
+    def do_resolve(self, definitions):
+        """
+        Internal worker resolving named references to other WSDL objects.
+
+        May only be called once per instance.
 
         @param definitions: A definitions object.
         @type definitions: L{Definitions}
@@ -134,7 +151,7 @@ class Definitions(WObject):
 
     Tag = "definitions"
 
-    def __init__(self, url, options):
+    def __init__(self, url, options, imported_definitions=None):
         """
         @param url: A URL to the WSDL.
         @type url: str
@@ -165,7 +182,10 @@ class Definitions(WObject):
         pmd.excludes.append("children")
         pmd.excludes.append("wsdl")
         pmd.wrappers["schema"] = repr
-        self.open_imports()
+        if imported_definitions is None:
+            imported_definitions = {}
+        imported_definitions[url] = self
+        self.open_imports(imported_definitions)
         self.resolve()
         self.build_schema()
         self.set_wrapped()
@@ -207,10 +227,10 @@ class Definitions(WObject):
                 self.services.append(child)
                 continue
 
-    def open_imports(self):
+    def open_imports(self, imported_definitions):
         """Import the I{imported} WSDLs."""
         for imp in self.imports:
-            imp.load(self)
+            imp.load(self, imported_definitions)
 
     def resolve(self):
         """Tell all children to resolve themselves."""
@@ -319,14 +339,15 @@ class Import(WObject):
         pmd = self.__metadata__.__print__
         pmd.wrappers["imported"] = repr
 
-    def load(self, definitions):
+    def load(self, definitions, imported_definitions):
         """Load the object by opening the URL."""
         url = self.location
         log.debug("importing (%s)", url)
         if "://" not in url:
             url = urljoin(definitions.url, url)
-        options = definitions.options
-        d = Definitions(url, options)
+        d = imported_definitions.get(url)
+        if not d:
+            d = Definitions(url, definitions.options, imported_definitions)
         if d.root.match(Definitions.Tag, wsdlns):
             self.import_definitions(definitions, d)
             return
@@ -495,7 +516,7 @@ class PortType(NamedObject):
             op.faults = faults
             self.operations[op.name] = op
 
-    def resolve(self, definitions):
+    def do_resolve(self, definitions):
         """
         Resolve named references to other WSDL objects.
 
@@ -668,7 +689,7 @@ class Binding(NamedObject):
         if part is not None:
             header.part = part
 
-    def resolve(self, definitions):
+    def do_resolve(self, definitions):
         """
         Resolve named references to other WSDL objects. This includes
         cross-linking information (from) the portType (to) the I{SOAP} protocol
@@ -696,6 +717,14 @@ class Binding(NamedObject):
         port_type = definitions.port_types.get(ref)
         if port_type is None:
             raise Exception("portType '%s', not-found" % (self.type,))
+        # Later on we will require access to the message data referenced by
+        # this port_type instance, and in order for those data references to be
+        # available, port_type first needs to dereference its message
+        # identification string. The only scenario where the port_type could
+        # possibly not have already resolved its references, and where this
+        # explicit resolve() call is required, is if we are dealing with a
+        # recursive WSDL import chain.
+        port_type.resolve(definitions)
         self.type = port_type
 
     def resolvesoapbody(self, definitions, op):
@@ -903,7 +932,7 @@ class Service(NamedObject):
                 if names is None or m.name in names:
                     m.location = url
 
-    def resolve(self, definitions):
+    def do_resolve(self, definitions):
         """
         Resolve named references to other WSDL objects. Ports without SOAP
         bindings are discarded.

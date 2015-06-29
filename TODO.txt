@@ -1496,7 +1496,13 @@ PRIORITIZED:
 
 (29.06.2015.)
 
-    * (Jurko) Fix recursive WSDL import issue.
+(+) * (Jurko) Fix recursive WSDL import issue.
+(+)     * Fix issue.
+
+(30.06.2015.)
+
+    * (Jurko) Fix recursive XSD import issue.
+        * Add tests.
         * Fix issue.
 
     * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
