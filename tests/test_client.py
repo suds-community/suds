@@ -706,9 +706,9 @@ class TestTransportUsage:
         assert t.mock_log == [("open", [url])]
 
 
-class TestWSDLImportWithDifferentTargetNamespace:
+class TestWSDLImportWithDifferentTargetNamespaces:
     """
-    Import WSDL with different target namespace than its base.
+    Import WSDL with different target namespace variations.
 
     """
 
@@ -760,17 +760,18 @@ class TestWSDLImportWithDifferentTargetNamespace:
             wsdl_imported=wsdl_imported)
         suds.client.Client("suds://wsdl", cache=None, documentStore=store)
 
-    #TODO: extract WSDL processing tests to a separate test module
-    def test_resolving_references_to_later_entities_in_XML(self):
-        """
-        Referencing later entities in XML should be supported.
 
-        When we reference another entity in our WSDL, there should be no
-        difference whether that entity has been defined before or after the
-        referencing entity in the underlying XML structure.
+#TODO: extract WSDL processing tests to a separate test module
+def test_resolving_references_to_later_entities_in_XML():
+    """
+    Referencing later entities in XML should be supported.
 
-        """
-        wsdl = b("""\
+    When we reference another entity in our WSDL, there should be no
+    difference whether that entity has been defined before or after the
+    referencing entity in the underlying XML structure.
+
+    """
+    wsdl = b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="tns-ns"
     xmlns:ns="xsd-ns"
@@ -807,33 +808,34 @@ class TestWSDLImportWithDifferentTargetNamespace:
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>""")
-        store = MockDocumentStore(wsdl=wsdl)
-        c = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
-        service = c.wsdl.services[0]
-        port = service.ports[0]
-        binding = port.binding
-        port_type = binding.type
-        operation = port_type.operations['f']
-        input_data = operation.input
-        input_part = input_data.parts[0]
-        input_element = input_part.element
-        assert input_element == ('Lollypop', 'xsd-ns')
+    store = MockDocumentStore(wsdl=wsdl)
+    c = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
+    service = c.wsdl.services[0]
+    port = service.ports[0]
+    binding = port.binding
+    port_type = binding.type
+    operation = port_type.operations['f']
+    input_data = operation.input
+    input_part = input_data.parts[0]
+    input_element = input_part.element
+    assert input_element == ('Lollypop', 'xsd-ns')
 
-    def test_recursive_WSDL_import(self):
-        """
-        Recursive WSDL imports should be supported.
 
-        As WSDL imports are nothing but forward declarations, and not component
-        inclusions, recursive WSDL imports are well defined and should be
-        supported.
+def test_recursive_WSDL_import():
+    """
+    Recursive WSDL imports should be supported.
 
-        """
-        url_main = "suds://wsdl_main"
-        tns_main = "main-wsdl"
-        url_binding = "suds://wsdl_binding"
-        tns_binding = "binding-wsdl"
+    As WSDL imports are nothing but forward declarations, and not component
+    inclusions, recursive WSDL imports are well defined and should be
+    supported.
 
-        wsdl_binding = b("""\
+    """
+    url_main = "suds://wsdl_main"
+    tns_main = "main-wsdl"
+    url_binding = "suds://wsdl_binding"
+    tns_binding = "binding-wsdl"
+
+    wsdl_binding = b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
     xmlns:main_ns="%(tns_imported)s"
@@ -848,9 +850,9 @@ class TestWSDLImportWithDifferentTargetNamespace:
     </wsdl:operation>
   </wsdl:binding>
 </wsdl:definitions>""" % dict(tns=tns_binding, tns_imported=tns_main,
-            url_imported=url_main))
+        url_imported=url_main))
 
-        wsdl_main = b("""\
+    wsdl_main = b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="%(tns)s"
     xmlns:binding_ns="%(tns_imported)s"
@@ -866,8 +868,8 @@ class TestWSDLImportWithDifferentTargetNamespace:
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>""" % dict(tns=tns_main, tns_imported=tns_binding,
-            url_imported=url_binding))
+        url_imported=url_binding))
 
-        store = MockDocumentStore(wsdl_main=wsdl_main,
-            wsdl_binding=wsdl_binding)
-        suds.client.Client("suds://wsdl_main", cache=None, documentStore=store)
+    store = MockDocumentStore(wsdl_main=wsdl_main,
+        wsdl_binding=wsdl_binding)
+    suds.client.Client("suds://wsdl_main", cache=None, documentStore=store)
