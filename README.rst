@@ -162,6 +162,7 @@ version 0.7 (development)
   * Many thanks to Eugene Yakubovich for reporting the issue as well as
     providing the initial fix.
 
+* Fixed loading recursive WSDL imports.
 * Made ``suds`` no longer eat up, log & ignore exceptions raised from registered
   user plugins (detected & reported by Ezequiel Ruiz & Bouke Haarsma, patch &
   test case contributed by Bouke Haarsma).
