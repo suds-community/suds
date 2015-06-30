@@ -181,8 +181,8 @@ version 0.7 (development)
     covered by ``dependency_sort()`` was actually or could be easily broken.
   * ``suds.xsd.deplist`` module renamed to ``suds.xsd.depsort``.
 
-* A referencing XSD element's ``form`` value now read correctly from the
-  referenced element.
+* Global XSD elements (i.e. top-level + reference elements) are now correctly
+  always considered qualified and their ``form`` attribute values are ignored.
 
   * Many thanks to Andrew Yager from BitBucket for reporting the issue.
 
@@ -541,8 +541,9 @@ version 0.6 (2014-01-24)
     error-information with a web service operation taking at least one input
     parameter.
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
@@ -607,8 +608,9 @@ version 0.5 (2013-11-25)
 * Known defects.
 
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
@@ -762,8 +764,9 @@ version 0.4.1 jurko 5 (2013-11-11)
 * Known defects.
 
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
@@ -803,8 +806,9 @@ version 0.4.1 jurko 4 (2012-04-17)
     case they have been defined by XSD schema elements referencing XSD schema
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
@@ -845,8 +849,9 @@ version 0.4.1 jurko 3 (2011-12-26)
     case they have been defined by XSD schema elements referencing XSD schema
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
@@ -886,8 +891,9 @@ version 0.4.1 jurko 2 (2011-12-24)
     case they have been defined by XSD schema elements referencing XSD schema
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
@@ -971,8 +977,9 @@ version 0.4.1 jurko 1 (2011-12-24)
     case they have been defined by XSD schema elements referencing XSD schema
     elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
-  * Incorrect referencing XSD element's ``form`` attribute value handling - read
-    directly instead of from the referenced XSD element.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
 
