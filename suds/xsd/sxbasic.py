@@ -564,7 +564,7 @@ class Import(SchemaObject):
         self.opened = True
         log.debug("%s, importing ns='%s', location='%s'", self.id, self.ns[1],
             self.location)
-        result = self.locate()
+        result = self.__locate()
         if result is None:
             if self.location is None:
                 log.debug("imported schema (%s) not-found", self.ns[1])
@@ -573,7 +573,7 @@ class Import(SchemaObject):
         log.debug("imported:\n%s", result)
         return result
 
-    def locate(self):
+    def __locate(self):
         """Find the schema locally."""
         if self.ns[1] != self.schema.tns[1]:
             return self.schema.locate(self.ns)
