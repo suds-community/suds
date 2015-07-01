@@ -240,16 +240,16 @@ class Definitions(WObject):
     def build_schema(self):
         """Process L{Types} objects and create the schema collection."""
         container = SchemaCollection(self)
-        for t in [t for t in self.types if t.local()]:
+        for t in (t for t in self.types if t.local()):
             for root in t.contents():
                 schema = Schema(root, self.url, self.options, container)
                 container.add(schema)
-        if not len(container):
+        if not container:
             root = Element.buildPath(self.root, "types/schema")
             schema = Schema(root, self.url, self.options, container)
             container.add(schema)
         self.schema = container.load(self.options)
-        for s in [t.schema() for t in self.types if t.imported()]:
+        for s in (t.schema() for t in self.types if t.imported()):
             self.schema.merge(s)
         return self.schema
 
@@ -263,7 +263,7 @@ class Definitions(WObject):
             binding = p.binding
             ptype = p.binding.type
             operations = p.binding.type.operations.values()
-            for name in [op.name for op in operations]:
+            for name in (op.name for op in operations):
                 m = Facade("Method")
                 m.name = name
                 m.location = p.location
@@ -274,7 +274,6 @@ class Definitions(WObject):
                 m.binding.input = bindings.get(key)
                 key = "/".join((op.soap.style, op.soap.output.body.use))
                 m.binding.output = bindings.get(key)
-                op = ptype.operation(name)
                 p.methods[name] = m
 
     def set_wrapped(self):
@@ -367,7 +366,7 @@ class Import(WObject):
 
     def import_schema(self, definitions, d):
         """Import schema as <types/> content."""
-        if not len(definitions.types):
+        if not definitions.types:
             root = Element("types", ns=wsdlns)
             definitions.root.insert(root)
             types = Types(root, definitions)
@@ -744,7 +743,7 @@ class Binding(NamedObject):
                 op.name,))
         soap = op.soap
         parts = soap.input.body.parts
-        if len(parts):
+        if parts:
             pts = []
             for p in ptop.input.parts:
                 if p.name in parts:
@@ -753,7 +752,7 @@ class Binding(NamedObject):
         else:
             soap.input.body.parts = ptop.input.parts
         parts = soap.output.body.parts
-        if len(parts):
+        if parts:
             pts = []
             for p in ptop.output.parts:
                 if p.name in parts:
