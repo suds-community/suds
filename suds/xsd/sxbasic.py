@@ -569,7 +569,7 @@ class Import(SchemaObject):
             if self.location is None:
                 log.debug("imported schema (%s) not-found", self.ns[1])
             else:
-                result = self.download(options)
+                result = self.__download(options)
         log.debug("imported:\n%s", result)
         return result
 
@@ -578,7 +578,7 @@ class Import(SchemaObject):
         if self.ns[1] != self.schema.tns[1]:
             return self.schema.locate(self.ns)
 
-    def download(self, options):
+    def __download(self, options):
         """Download the schema."""
         url = self.location
         try:
@@ -632,11 +632,11 @@ class Include(SchemaObject):
             return
         self.opened = True
         log.debug("%s, including location='%s'", self.id, self.location)
-        result = self.download(options)
+        result = self.__download(options)
         log.debug("included:\n%s", result)
         return result
 
-    def download(self, options):
+    def __download(self, options):
         """Download the schema."""
         url = self.location
         try:
