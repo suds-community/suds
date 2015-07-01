@@ -49,6 +49,7 @@ class SchemaCollection(UnicodeMixin):
     @type children: [L{Schema},...]
     @ivar namespaces: A dictionary of contained schemas by namespace.
     @type namespaces: {str: L{Schema}}
+
     """
 
     def __init__(self, wsdl):
