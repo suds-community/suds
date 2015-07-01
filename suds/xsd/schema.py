@@ -356,8 +356,8 @@ class Schema(UnicodeMixin):
     def locate(self, ns):
         """
         Find a schema by namespace. Only the URI portion of the namespace is
-        compared to each schema's I{targetNamespace}. The request is passed to
-        the container.
+        compared to each schema's I{targetNamespace}. The request is passed on
+        to the container.
 
         @param ns: A namespace.
         @type ns: (prefix, URI)
