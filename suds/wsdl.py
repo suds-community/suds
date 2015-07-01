@@ -249,6 +249,10 @@ class Definitions(WObject):
             schema = Schema(root, self.url, self.options, container)
             container.add(schema)
         self.schema = container.load(self.options)
+        #TODO: Recheck this XSD schema merging. XSD schema imports are not
+        # supposed to be transitive. They only allow the importing schema to
+        # reference entities from the imported schema, but do not include them
+        # as their own content.
         for s in (t.schema() for t in self.types if t.imported()):
             self.schema.merge(s)
         return self.schema
