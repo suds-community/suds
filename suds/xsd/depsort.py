@@ -31,7 +31,7 @@ def dependency_sort(dependency_tree):
     A dependency tree is a dictionary mapping an object to a collection its
     dependency objects.
 
-    Result is property sorted list of items, where each item is a 2-tuple
+    Result is a properly sorted list of items, where each item is a 2-tuple
     containing an object and its dependency list, as given in the input
     dependency tree.
 
