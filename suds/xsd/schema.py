@@ -227,6 +227,14 @@ class Schema(UnicodeMixin):
             options.doctor.examine(root)
         form = self.root.get("elementFormDefault")
         self.form_qualified = form == "qualified"
+
+        # If we have a container, that container is going to take care of
+        # finishing our build for us in parallel with building all the other
+        # schemata in that container. That allows the different schema within
+        # the same container to freely reference each other.
+        #TODO: check whether this container content build parallelization is
+        # really necessary or if we can simply build our top-level WSDL
+        # contained schemata one by one as they are loaded
         if container is None:
             self.build()
             self.open_imports(options)
