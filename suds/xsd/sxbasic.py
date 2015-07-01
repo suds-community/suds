@@ -590,7 +590,7 @@ class Import(SchemaObject):
             root.set("url", url)
             return self.schema.instance(root, url, options)
         except TransportError:
-            msg = "imported schema (%s) at (%s), failed" % (self.ns[1], url)
+            msg = "import schema (%s) at (%s), failed" % (self.ns[1], url)
             log.error("%s, %s", self.id, msg, exc_info=True)
             raise Exception(msg)
 
