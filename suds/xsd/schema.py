@@ -237,6 +237,17 @@ class Schema(UnicodeMixin):
         # really necessary or if we can simply build our top-level WSDL
         # contained schemata one by one as they are loaded
         if container is None:
+            #TODO: It seems like this build() step can be done for each schema
+            # on its own instead of letting the container do it. Building our
+            # XSD schema objects should not require any external schema
+            # information and even references between XSD schema objects within
+            # the same schema can not be established until all the XSD schema
+            # objects have been built. The only reason I can see right now why
+            # this step has been placed under container control is so our
+            # container (a SchemaCollection instance) can add some additional
+            # XML elements to our schema before our XSD schema object entities
+            # get built, but there is bound to be a cleaner way to do this,
+            # similar to how we support such XML modifications in suds plugins.
             self.build()
             self.open_imports(options)
             log.debug("built:\n%s", self)
