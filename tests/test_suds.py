@@ -30,6 +30,7 @@ if __name__ == "__main__":
     testutils.run_using_pytest(globals())
 
 import suds
+import suds.store
 from testutils.compare_sax import CompareSAX
 
 import pytest
@@ -2027,6 +2028,25 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     pytest.raises(KeyError, client.wsdl.schema.types.__getitem__,
         ("DoesNotExist", "OMG"))
+
+
+@pytest.mark.xfail
+def test_recursive_XSD_import():
+    url_xsd = "suds://xsd"
+    xsd = b("""\
+<xsd:schema targetNamespace="my-xsd-namespace"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import namespace="my-xsd-namespace" schemaLocation="%(url_imported)s"/>
+</xsd:schema>
+""" % dict(url_imported=url_xsd))
+    wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-wsdl-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import location="%(url_imported)s"/>
+</wsdl:definitions>""" % dict(url_imported=url_xsd))
+    store = suds.store.DocumentStore(xsd=xsd)
+    testutils.client_from_wsdl(wsdl, documentStore=store)
 
 
 def _assert_dynamic_type(anObject, typename):
