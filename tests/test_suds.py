@@ -2030,7 +2030,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
         ("DoesNotExist", "OMG"))
 
 
-@pytest.mark.xfail
 def test_recursive_XSD_import():
     url_xsd = "suds://xsd"
     xsd = b("""\

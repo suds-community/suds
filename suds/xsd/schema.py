@@ -80,7 +80,7 @@ class SchemaCollection(UnicodeMixin):
             existing.root.children += schema.root.children
             existing.root.nsprefixes.update(schema.root.nsprefixes)
 
-    def load(self, options):
+    def load(self, options, loaded_schemata):
         """
         Load schema objects for the root nodes.
             - de-reference schemas
@@ -88,6 +88,8 @@ class SchemaCollection(UnicodeMixin):
 
         @param options: An options dictionary.
         @type options: L{options.Options}
+        @param loaded_schemata: Already loaded schemata cache (URL --> Schema).
+        @type loaded_schemata: dict
         @return: The merged schema.
         @rtype: L{Schema}
 
@@ -97,7 +99,7 @@ class SchemaCollection(UnicodeMixin):
         for child in self.children:
             child.build()
         for child in self.children:
-            child.open_imports(options)
+            child.open_imports(options, loaded_schemata)
         for child in self.children:
             child.dereference()
         log.debug("loaded:\n%s", self)
@@ -199,7 +201,8 @@ class Schema(UnicodeMixin):
 
     Tag = "schema"
 
-    def __init__(self, root, baseurl, options, container=None):
+    def __init__(self, root, baseurl, options, loaded_schemata=None,
+            container=None):
         """
         @param root: The XML root.
         @type root: L{sax.element.Element}
@@ -207,6 +210,9 @@ class Schema(UnicodeMixin):
         @type baseurl: basestring
         @param options: An options dictionary.
         @type options: L{options.Options}
+        @param loaded_schemata: An optional already loaded schemata cache (URL
+            --> Schema).
+        @type loaded_schemata: dict
         @param container: An optional container.
         @type container: L{SchemaCollection}
 
@@ -237,6 +243,9 @@ class Schema(UnicodeMixin):
         # really necessary or if we can simply build our top-level WSDL
         # contained schemata one by one as they are loaded
         if container is None:
+            if loaded_schemata is None:
+                loaded_schemata = {}
+            loaded_schemata[baseurl] = self
             #TODO: It seems like this build() step can be done for each schema
             # on its own instead of letting the container do it. Building our
             # XSD schema objects should not require any external schema
@@ -249,7 +258,7 @@ class Schema(UnicodeMixin):
             # get built, but there is bound to be a cleaner way to do this,
             # similar to how we support such XML modifications in suds plugins.
             self.build()
-            self.open_imports(options)
+            self.open_imports(options, loaded_schemata)
             log.debug("built:\n%s", self)
             self.dereference()
             log.debug("dereferenced:\n%s", self)
@@ -326,7 +335,7 @@ class Schema(UnicodeMixin):
         schema.merged = True
         return self
 
-    def open_imports(self, options):
+    def open_imports(self, options, loaded_schemata):
         """
         Instruct all contained L{sxbasic.Import} children to import all of
         their referenced schemas. The imported schema contents are I{merged}
@@ -334,13 +343,15 @@ class Schema(UnicodeMixin):
 
         @param options: An options dictionary.
         @type options: L{options.Options}
+        @param loaded_schemata: Already loaded schemata cache (URL --> Schema).
+        @type loaded_schemata: dict
 
         """
         for imp in self.imports:
-            imported = imp.open(options)
+            imported = imp.open(options, loaded_schemata)
             if imported is None:
                 continue
-            imported.open_imports(options)
+            imported.open_imports(options, loaded_schemata)
             log.debug("imported:\n%s", imported)
             self.merge(imported)
 
@@ -414,7 +425,7 @@ class Schema(UnicodeMixin):
         except Exception:
             return False
 
-    def instance(self, root, baseurl, options):
+    def instance(self, root, baseurl, loaded_schemata, options):
         """
         Create and return an new schema object using the specified I{root} and
         I{URL}.
@@ -423,6 +434,8 @@ class Schema(UnicodeMixin):
         @type root: L{sax.element.Element}
         @param baseurl: A base URL.
         @type baseurl: str
+        @param loaded_schemata: Already loaded schemata cache (URL --> Schema).
+        @type loaded_schemata: dict
         @param options: An options dictionary.
         @type options: L{options.Options}
         @return: The newly created schema object.
@@ -430,7 +443,7 @@ class Schema(UnicodeMixin):
         @note: This is only used by Import children.
 
         """
-        return Schema(root, baseurl, options)
+        return Schema(root, baseurl, options, loaded_schemata)
 
     def str(self, indent=0):
         tab = "%*s" % (indent * 3, "")
