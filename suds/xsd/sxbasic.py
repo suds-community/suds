@@ -549,12 +549,14 @@ class Import(SchemaObject):
             self.location = self.locations.get(self.ns[1])
         self.opened = False
 
-    def open(self, options):
+    def open(self, options, loaded_schemata):
         """
         Open and import the referenced schema.
 
         @param options: An options dictionary.
         @type options: L{options.Options}
+        @param loaded_schemata: Already loaded schemata cache (URL --> Schema).
+        @type loaded_schemata: dict
         @return: The referenced schema.
         @rtype: L{Schema}
 
@@ -569,7 +571,11 @@ class Import(SchemaObject):
             if self.location is None:
                 log.debug("imported schema (%s) not-found", self.ns[1])
             else:
-                result = self.__download(options)
+                url = self.location
+                if "://" not in url:
+                    url = urljoin(self.schema.baseurl, url)
+                result = (loaded_schemata.get(url) or
+                    self.__download(url, loaded_schemata, options))
         log.debug("imported:\n%s", result)
         return result
 
@@ -578,17 +584,14 @@ class Import(SchemaObject):
         if self.ns[1] != self.schema.tns[1]:
             return self.schema.locate(self.ns)
 
-    def __download(self, options):
+    def __download(self, url, loaded_schemata, options):
         """Download the schema."""
-        url = self.location
         try:
-            if "://" not in url:
-                url = urljoin(self.schema.baseurl, url)
             reader = DocumentReader(options)
             d = reader.open(url)
             root = d.root()
             root.set("url", url)
-            return self.schema.instance(root, url, options)
+            return self.schema.instance(root, url, loaded_schemata, options)
         except TransportError:
             msg = "import schema (%s) at (%s), failed" % (self.ns[1], url)
             log.error("%s, %s", self.id, msg, exc_info=True)
@@ -618,12 +621,14 @@ class Include(SchemaObject):
             self.location = self.locations.get(self.ns[1])
         self.opened = False
 
-    def open(self, options):
+    def open(self, options, loaded_schemata):
         """
         Open and include the referenced schema.
 
         @param options: An options dictionary.
         @type options: L{options.Options}
+        @param loaded_schemata: Already loaded schemata cache (URL --> Schema).
+        @type loaded_schemata: dict
         @return: The referenced schema.
         @rtype: L{Schema}
 
@@ -632,22 +637,23 @@ class Include(SchemaObject):
             return
         self.opened = True
         log.debug("%s, including location='%s'", self.id, self.location)
-        result = self.__download(options)
+        url = self.location
+        if "://" not in url:
+            url = urljoin(self.schema.baseurl, url)
+        result = (loaded_schemata.get(url) or
+            self.__download(url, loaded_schemata, options))
         log.debug("included:\n%s", result)
         return result
 
-    def __download(self, options):
+    def __download(self, url, loaded_schemata, options):
         """Download the schema."""
-        url = self.location
         try:
-            if "://" not in url:
-                url = urljoin(self.schema.baseurl, url)
             reader = DocumentReader(options)
             d = reader.open(url)
             root = d.root()
             root.set("url", url)
             self.__applytns(root)
-            return self.schema.instance(root, url, options)
+            return self.schema.instance(root, url, loaded_schemata, options)
         except TransportError:
             msg = "include schema at (%s), failed" % url
             log.error("%s, %s", self.id, msg, exc_info=True)

@@ -1501,9 +1501,15 @@ PRIORITIZED:
 
 (30.06.2015.)
 
-    * (Jurko) Fix recursive XSD import issue.
-        * Add tests.
-        * Fix issue.
+(+) * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
+
+(01.06.2015.)
+
+(+) * (Jurko) Fix recursive XSD import issue.
+(+)     * Add tests.
+(+)     * Fix issue.
+
+(02.06.2015.)
 
     * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
 

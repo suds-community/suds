@@ -239,16 +239,17 @@ class Definitions(WObject):
 
     def build_schema(self):
         """Process L{Types} objects and create the schema collection."""
+        loaded_schemata = {}
         container = SchemaCollection(self)
         for t in (t for t in self.types if t.local()):
             for root in t.contents():
-                schema = Schema(root, self.url, self.options, container)
+                schema = Schema(root, self.url, self.options, loaded_schemata, container)
                 container.add(schema)
         if not container:
             root = Element.buildPath(self.root, "types/schema")
-            schema = Schema(root, self.url, self.options, container)
+            schema = Schema(root, self.url, self.options, loaded_schemata, container)
             container.add(schema)
-        self.schema = container.load(self.options)
+        self.schema = container.load(self.options, loaded_schemata)
         #TODO: Recheck this XSD schema merging. XSD schema imports are not
         # supposed to be transitive. They only allow the importing schema to
         # reference entities from the imported schema, but do not include them

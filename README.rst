@@ -163,6 +163,7 @@ version 0.7 (development)
     providing the initial fix.
 
 * Fixed loading recursive WSDL imports.
+* Fixed loading recursive XSD imports/includes.
 * Made ``suds`` no longer eat up, log & ignore exceptions raised from registered
   user plugins (detected & reported by Ezequiel Ruiz & Bouke Haarsma, patch &
   test case contributed by Bouke Haarsma).
@@ -414,10 +415,6 @@ version 0.7 (development)
     * Many thanks to Bruno Oliveira (nicoddemus at BitBucket) for researching
       related ``pytest`` ``xdist`` usage problems, discovering & explaining the
       underlying issue as well as providing an initial project patch for it.
-
-* Known defects.
-
-  * Loading recursive XSD imports/includes is broken.
 
 version 0.6 (2014-01-24)
 -------------------------
