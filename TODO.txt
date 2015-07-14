@@ -1503,13 +1503,22 @@ PRIORITIZED:
 
 (+) * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
 
-(01.06.2015.)
+(01.07.2015.)
 
 (+) * (Jurko) Fix recursive XSD import issue.
 (+)     * Add tests.
 (+)     * Fix issue.
 
-(02.06.2015.)
+(14.07.2015.)
+
+(+) * (Jurko) Fix issue https://bitbucket.org/jurko/suds/issues/90 - code in
+(+)   `mx/typer.py` Typer.genprefix() broken by commit
+(+)    103efca86cd07e9d7205ffb2735748f275a4b35f.
+(+)     * Add todo note to improve test coverage that managed to miss this
+(+)       problem.
+(+)     * Fix.
+
+(15.07.2015.)
 
     * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
 
@@ -1922,9 +1931,15 @@ PRIORITIZED:
 
     * (Jurko) Look into issues #7 & #13 on BitBucket - problems loading a WSDL
       containing a recursively defined XML schema.
+        * Possibly already fixed by related work done around 01.07.2015.
 
 NON PRIORITIZED:
 =================================================
+
+    * Add tests for Typer.genprefix().
+        * Got broken in commit 103efca86cd07e9d7205ffb2735748f275a4b35f and
+          fixed as part of issue https://bitbucket.org/jurko/suds/issues/90 but
+          the bug was missed by the existing test suite.
 
     * suds.sudsobject.footprint() does some fancy recursive counting while all
       it is actually used for is for detecting objects with footprint 0. This
