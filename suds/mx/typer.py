@@ -109,8 +109,8 @@ class Typer:
         @rtype: (prefix, URI)
 
         """
-        for node in range(1, 1024):
-            prefix = "ns%d" % (node,)
+        for i in range(1, 1024):
+            prefix = "ns%d" % (i,)
             uri = node.resolvePrefix(prefix, default=None)
             if uri in (None, ns[1]):
                 return prefix, ns[1]
