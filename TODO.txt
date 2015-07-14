@@ -1517,6 +1517,10 @@ PRIORITIZED:
 (+)     * Add todo note to improve test coverage that managed to miss this
 (+)       problem.
 (+)     * Fix.
+(+) * (Jurko) Add basic unit tests for Typer.genprefix().
+(+)     * Got broken in commit 103efca86cd07e9d7205ffb2735748f275a4b35f and
+(+)       fixed as part of issue https://bitbucket.org/jurko/suds/issues/90 but
+(+)       the bug was missed by the existing test suite.
 
 (15.07.2015.)
 
@@ -1936,10 +1940,23 @@ PRIORITIZED:
 NON PRIORITIZED:
 =================================================
 
-    * Add tests for Typer.genprefix().
-        * Got broken in commit 103efca86cd07e9d7205ffb2735748f275a4b35f and
-          fixed as part of issue https://bitbucket.org/jurko/suds/issues/90 but
-          the bug was missed by the existing test suite.
+    * Find and use a good spy/mock framework for our tests instead of rolling
+      our our own every time we need one.
+
+    * Add a functional test parsing a WSDL and running all the way down to the
+      Typer.genprefix() function.
+        * Useful to help see what else got missed in the test suite when the
+          suite missed this function and let through a bug reported as
+          https://bitbucket.org/jurko/suds/issues/90.
+
+    * Improve Typer.genprefix() implementation.
+        * See whether, when we have the same namespace already mapped, we should
+          return its existing prefix here.
+            * Current implementation already does that but only in some cases -
+              if ns1, ns2, ... ns# are # all already mapped to a different
+              namespace and ns#+1 is mapped to the one we want, it returns
+              ns#+1, making it seem like this was tacked on only as an
+              afterthought.
 
     * suds.sudsobject.footprint() does some fancy recursive counting while all
       it is actually used for is for detecting objects with footprint 0. This
