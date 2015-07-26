@@ -16,7 +16,7 @@
 # written by: Jurko Gospodnetić ( jurko.gospodnetic@pke.hr )
 
 """
-Suds library's XSD Element note unit tests.
+Suds library's XSD Element node unit tests.
 
 Implemented using the 'pytest' testing framework.
 
