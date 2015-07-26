@@ -99,14 +99,13 @@ def test_converting_metadata_to_string():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="AAA">
         <xsd:sequence>
           <xsd:element name="u1" type="xsd:string"/>
@@ -120,7 +119,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -163,14 +162,13 @@ def test_enumeration_type_string_should_contain_its_value():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:simpleType name="AAA">
         <xsd:restriction base="xsd:string">
           <xsd:enumeration value="One"/>
@@ -184,7 +182,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -217,14 +215,13 @@ def test_function_parameters_global_sequence_in_a_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="UngaBunga">
         <xsd:sequence>
           <xsd:element name="u1" type="xsd:string"/>
@@ -253,7 +250,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -302,14 +299,13 @@ def test_function_parameters_local_choice():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:choice>
@@ -330,7 +326,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -379,14 +375,13 @@ def test_function_parameters_local_choice_in_a_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
@@ -416,7 +411,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -479,14 +474,13 @@ def test_function_parameters_local_sequence_in_a_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
@@ -516,7 +510,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -583,14 +577,13 @@ def test_function_parameters_sequence_in_a_choice():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Choice">
         <xsd:complexType>
           <xsd:choice>
@@ -620,7 +613,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -672,14 +665,13 @@ def test_function_parameters_sequence_in_a_choice_in_a_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="External">
         <xsd:complexType>
           <xsd:sequence>
@@ -715,7 +707,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -759,14 +751,13 @@ def test_function_parameters_strings():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Elemento">
         <xsd:complexType>
           <xsd:sequence>
@@ -788,7 +779,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -837,14 +828,13 @@ def test_global_enumeration():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:simpleType name="AAA">
         <xsd:restriction base="xsd:string">
           <xsd:enumeration value="One"/>
@@ -858,7 +848,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -900,14 +890,13 @@ def test_global_sequence_in_a_global_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Oklahoma">
         <xsd:sequence>
           <xsd:element name="c1" type="xsd:string"/>
@@ -928,7 +917,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -986,14 +975,13 @@ def test_global_string_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Oklahoma">
         <xsd:sequence>
           <xsd:element name="c1" type="xsd:string"/>
@@ -1007,7 +995,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -1068,14 +1056,13 @@ def test_local_sequence_in_a_global_sequence():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Wackadoodle">
         <xsd:sequence>
           <xsd:element name="x1">
@@ -1102,7 +1089,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -1159,14 +1146,13 @@ def test_no_trailing_comma_in_function_prototype_description_string__0():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="InputData">
         <xsd:complexType>
           <xsd:sequence/>
@@ -1184,7 +1170,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -1206,14 +1192,13 @@ def test_no_trailing_comma_in_function_prototype_description_string__1():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="InputData">
         <xsd:complexType>
           <xsd:sequence>
@@ -1233,7 +1218,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -1255,14 +1240,13 @@ def test_no_trailing_comma_in_function_prototype_description_string__3():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="InputData">
         <xsd:complexType>
           <xsd:sequence>
@@ -1284,7 +1268,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -1306,20 +1290,19 @@ def test_no_types():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
   </wsdl:types>
   <wsdl:portType name="dummyPortType">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -1347,6 +1330,24 @@ def test_parameter_referencing_missing_element(monkeypatch):
         assert str(e.value) == "Type not found: '(missingElement, aaa, )'"
     finally:
         del e  # explicitly break circular reference chain in Python 3
+
+
+def test_recursive_XSD_import():
+    url_xsd = "suds://xsd"
+    xsd = b("""\
+<xsd:schema targetNamespace="my-xsd-namespace"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:import namespace="my-xsd-namespace" schemaLocation="%(url_imported)s"/>
+</xsd:schema>
+""" % dict(url_imported=url_xsd))
+    wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-wsdl-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:import location="%(url_imported)s"/>
+</wsdl:definitions>""" % dict(url_imported=url_xsd))
+    store = suds.store.DocumentStore(xsd=xsd)
+    testutils.client_from_wsdl(wsdl, documentStore=store)
 
 
 #TODO: Update the current restriction type input parameter handling so they get
@@ -1430,14 +1431,13 @@ def test_schema_node_occurrences():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 """
     + _element_node_xml("AnElement1")
     + _element_node_xml("AnElement2", min=1)
@@ -1519,14 +1519,13 @@ def test_schema_node_resolve():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Typo">
         <xsd:sequence>
           <xsd:element name="u1" type="xsd:string"/>
@@ -1600,14 +1599,13 @@ def test_schema_node_resolve__nobuiltin_caching():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Elemento1" type="xsd:string"/>
       <xsd:element name="Elemento2" type="xsd:string"/>
       <xsd:element name="Elemento3" type="xsd:string"/>
@@ -1648,14 +1646,13 @@ def test_schema_node_resolve__invalid_type():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="Elemento1" type="Elemento1"/>
       <xsd:element name="Elemento2" type="Elemento1"/>
       <xsd:element name="Elemento3" type="XXX"/>
@@ -1677,14 +1674,13 @@ def test_schema_node_resolve__references():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Typo">
         <xsd:sequence>
           <xsd:element name="u1" type="xsd:string"/>
@@ -1754,14 +1750,13 @@ def test_schema_object_child_access_by_index():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="Oklahoma">
         <xsd:sequence>
           <xsd:element name="c1" type="xsd:string"/>
@@ -1775,7 +1770,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
   </wsdl:binding>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="ns:dummy">
@@ -1823,14 +1818,13 @@ def test_simple_wsdl():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:element name="f">
         <xsd:complexType>
           <xsd:sequence>
@@ -1862,7 +1856,7 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   </wsdl:portType>
   <wsdl:binding name="dummy" type="ns:dummyPortType">
     <soap:binding style="document"
-    transport="http://schemas.xmlsoap.org/soap/http"/>
+      transport="http://schemas.xmlsoap.org/soap/http"/>
     <wsdl:operation name="f">
       <soap:operation soapAction="f" style="document"/>
       <wsdl:input><soap:body use="literal"/></wsdl:input>
@@ -1970,14 +1964,13 @@ def test_wsdl_schema_content():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
-xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-xmlns:ns="my-namespace"
-xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
-    elementFormDefault="qualified"
-    attributeFormDefault="unqualified"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
       <xsd:complexType name="UngaBunga">
         <xsd:sequence>
           <xsd:element name="u1" type="xsd:string"/>
@@ -2028,24 +2021,6 @@ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
     pytest.raises(KeyError, client.wsdl.schema.types.__getitem__,
         ("DoesNotExist", "OMG"))
-
-
-def test_recursive_XSD_import():
-    url_xsd = "suds://xsd"
-    xsd = b("""\
-<xsd:schema targetNamespace="my-xsd-namespace"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:import namespace="my-xsd-namespace" schemaLocation="%(url_imported)s"/>
-</xsd:schema>
-""" % dict(url_imported=url_xsd))
-    wsdl = b("""\
-<?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="my-wsdl-namespace"
-    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import location="%(url_imported)s"/>
-</wsdl:definitions>""" % dict(url_imported=url_xsd))
-    store = suds.store.DocumentStore(xsd=xsd)
-    testutils.client_from_wsdl(wsdl, documentStore=store)
 
 
 def _assert_dynamic_type(anObject, typename):
