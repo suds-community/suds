@@ -1332,6 +1332,93 @@ def test_parameter_referencing_missing_element(monkeypatch):
         del e  # explicitly break circular reference chain in Python 3
 
 
+class TestFindTypeInXSDSchemaWithRecursiveTypeDefinitions:
+    """Must not cause an infinite loop."""
+
+    def test_with_recursion_in_imported_schema(self):
+        client = testutils.client_from_wsdl(b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types
+        xmlns:imported="my-imported-namespace"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:schema targetNamespace="my-imported-namespace"
+        elementFormDefault="qualified">
+      <xsd:element name="Keys">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="value" type="xsd:string"/>
+            <xsd:element ref="imported:Keys" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+    <xsd:schema targetNamespace="my-namespace"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:import namespace="my-imported-namespace"/>
+      <xsd:complexType name="Wrapper">
+        <xsd:sequence>
+          <xsd:element ref="imported:Keys"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:portType name="dummyPortType"/>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""))
+        assert pytest.raises(
+            suds.TypeNotFound, client.factory.create, 'ns:DoesNotExist')
+
+    def test_with_recursion_in_same_schema(self):
+        client = testutils.client_from_wsdl(b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:ns="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:element name="Keys">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="value" type="xsd:string"/>
+            <xsd:element ref="ns:Keys" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:portType name="dummyPortType"/>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""))
+        assert pytest.raises(
+            suds.TypeNotFound, client.factory.create, 'ns:DoesNotExist')
+
+
 def test_recursive_XSD_import():
     url_xsd = "suds://xsd"
     xsd = b("""\
