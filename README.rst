@@ -164,6 +164,13 @@ version 0.7 (development)
 
 * Fixed loading recursive WSDL imports.
 * Fixed loading recursive XSD imports/includes.
+* Fixed an infinite recursion bug encountered when looking for an XSD type in an
+  XSD schema that does not contain it but itself defines a type referencing a
+  recursively defined type from an imported XSD schema.
+
+  * Kudos to Kevin Pors (`krpors` on BitBucket) for detecting, analysing &
+    reporting the issue, plus preparing a working quick-fix.
+
 * Made ``suds`` no longer eat up, log & ignore exceptions raised from registered
   user plugins (detected & reported by Ezequiel Ruiz & Bouke Haarsma, patch &
   test case contributed by Bouke Haarsma).
@@ -543,6 +550,9 @@ version 0.6 (2014-01-24)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 version 0.5 (2013-11-25)
 ------------------------
@@ -610,6 +620,9 @@ version 0.5 (2013-11-25)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 version 0.4.1 jurko 5 (2013-11-11)
 ----------------------------------
@@ -766,6 +779,9 @@ version 0.4.1 jurko 5 (2013-11-11)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 version 0.4.1 jurko 4 (2012-04-17)
 ----------------------------------
@@ -808,6 +824,9 @@ version 0.4.1 jurko 4 (2012-04-17)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 version 0.4.1 jurko 3 (2011-12-26)
 ----------------------------------
@@ -851,6 +870,9 @@ version 0.4.1 jurko 3 (2011-12-26)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 version 0.4.1 jurko 2 (2011-12-24)
 ----------------------------------
@@ -893,6 +915,9 @@ version 0.4.1 jurko 2 (2011-12-24)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 version 0.4.1 jurko 1 (2011-12-24)
 ----------------------------------
@@ -979,6 +1004,9 @@ version 0.4.1 jurko 1 (2011-12-24)
     considered unqualified.
   * Loading recursive WSDL imports is broken.
   * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 
 Original suds library release notes
@@ -989,7 +1017,18 @@ Original suds library release notes
 * <undocumented>
 * Known defects.
 
+  * SOAP request parameter XML elements constructed in incorrect namespaces in
+    case they have been defined by XSD schema elements referencing XSD schema
+    elements with a different target namespace.
   * Security issue CVE-2013-2217 - using fixed default cache location.
+  * Incorrect referencing XSD element's ``form`` attribute value handling -
+    global XSD elements (i.e. top-level + reference elements) sometimes
+    considered unqualified.
+  * Loading recursive WSDL imports is broken.
+  * Loading recursive XSD imports/includes is broken.
+  * Infinite recursion bug encountered when looking for an XSD type in an XSD
+    schema that does not contain it but itself defines a type referencing a
+    recursively defined type from an imported XSD schema.
 
 **version 0.4 (2010-09-08)**
 
