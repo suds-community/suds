@@ -339,14 +339,21 @@ class SchemaObject(UnicodeMixin):
         """Get whether the object has I{mixed} content."""
         return False
 
-    def find(self, qref, classes=()):
+    def find(self, qref, classes=[], ignore=None):
         """
-        Find a referenced type in self or children.
+        Find a referenced type in self or children. Return None if not found.
+
+        Qualified references for all schema objects checked in this search will
+        be added to the set of ignored qualified references to avoid the find
+        operation going into an infinite loop in case of recursively defined
+        structures.
 
         @param qref: A qualified reference.
         @type qref: qref
-        @param classes: A list of classes used to qualify the match.
-        @type classes: [I{class},...]
+        @param classes: A collection of classes used to qualify the match.
+        @type classes: Collection(I{class},...), e.g. [I(class),...]
+        @param ignore: A set of qualified references to ignore in this search.
+        @type ignore: {qref,...}
         @return: The referenced type.
         @rtype: L{SchemaObject}
         @see: L{qualify()}
@@ -354,10 +361,15 @@ class SchemaObject(UnicodeMixin):
         """
         if not len(classes):
             classes = (self.__class__,)
+        if ignore is None:
+            ignore = set()
+        if self.qname in ignore:
+            return
+        ignore.add(self.qname)
         if self.qname == qref and self.__class__ in classes:
             return self
         for c in self.rawchildren:
-            p = c.find(qref, classes)
+            p = c.find(qref, classes, ignore=ignore)
             if p is not None:
                 return p
 
