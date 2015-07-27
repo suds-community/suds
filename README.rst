@@ -336,6 +336,9 @@ version 0.7 (development)
   * Reformatted.
   * Converted to a unicode string.
 
+* Marked ``suds.mx.core.Core.node()`` as abstract since this base class variant
+  is never actually used (both ``Encoded`` & ``Literal`` derived classes use a
+  different implmentation).
 * ``suds.binding.Binding`` converted to a new-style class.
 * ``suds.tostr()`` utility function may no longer silently eat internal Python
   exceptions like ``KeyboardInterrupt`` or ``SystemExit``.
