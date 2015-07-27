@@ -21,7 +21,6 @@ Provides I{marshaller} core classes.
 from suds import *
 from suds.mx import *
 from suds.mx.appender import ContentAppender
-from suds.sax.element import Element
 from suds.sax.document import Document
 
 from logging import getLogger
@@ -78,12 +77,12 @@ class Core:
     def node(self, content):
         """
         Create and return an XML node.
-        @param content: The content for which processing has been suspended.
-        @type content: L{Object}
+        @param content: Content information for the new node.
+        @type content: L{Content}
         @return: An element.
         @rtype: L{Element}
         """
-        return Element(content.tag)
+        raise NotImplementedError
 
     def start(self, content):
         """
