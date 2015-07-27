@@ -1522,7 +1522,19 @@ PRIORITIZED:
 (+)       fixed as part of issue https://bitbucket.org/jurko/suds/issues/90 but
 (+)       the bug was missed by the existing test suite.
 
-(15.07.2015.)
+(25.07.2015.)
+
+(+) * (Jurko) Clean up some issues from BitBucket.
+
+(26.07.2015.)
+
+(+) * (Jurko) Clean up some issues from BitBucket.
+
+(27.07.2015.)
+
+(+) * (Jurko) Clean up some issues from BitBucket.
+
+(28.07.2015.)
 
     * (Jurko) Review and commit unpublished cleanup work on Jurko's machine.
 
