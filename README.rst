@@ -171,6 +171,12 @@ version 0.7 (development)
   * Kudos to Kevin Pors (`krpors` on BitBucket) for detecting, analysing &
     reporting the issue, plus preparing a working quick-fix.
 
+* Removed never actually used ``suds.mx.appender.DictAppender`` class.
+
+  * All code paths that could potentially lead to this class getting used
+    convert any encountered dictionaries to ``suds.sudsobject.Object`` instances
+    and report an error in case a corresponding XSD type can not be found.
+
 * Made ``suds`` no longer eat up, log & ignore exceptions raised from registered
   user plugins (detected & reported by Ezequiel Ruiz & Bouke Haarsma, patch &
   test case contributed by Bouke Haarsma).
