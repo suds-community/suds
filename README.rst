@@ -177,6 +177,20 @@ version 0.7 (development)
     convert any encountered dictionaries to ``suds.sudsobject.Object`` instances
     and report an error in case a corresponding XSD type can not be found.
 
+* Now marshalling passed empty object optional params as empty SOAP request XML
+  elements.
+
+  * Before, passing an empty suds object as an optional parameter value was
+    treated the same as not passing that parameter's value or passing it
+    ``None`` - the value would not get marshalled into the constructed SOAP
+    request at all.
+  * Now, user can still not have the value marshalled by passing nothing or
+    ``None``, but passing an empty object will get marshalled as an actual SOAP
+    request XML element.
+  * Kudos to Nicholas Chen (nicholaschen at BitBucket) & Mark Saniscalchi
+    (msaniscalchi at BitBucket) for reporting the issue and preparing the
+    initial fix.
+
 * Made ``suds`` no longer eat up, log & ignore exceptions raised from registered
   user plugins (detected & reported by Ezequiel Ruiz & Bouke Haarsma, patch &
   test case contributed by Bouke Haarsma).
