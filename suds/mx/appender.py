@@ -99,7 +99,7 @@ class Appender:
         @param marshaller: A marshaller.
         @type marshaller: L{suds.mx.core.Core}
         """
-        self.marshaller  = marshaller
+        self.marshaller = marshaller
 
     def node(self, content):
         """
