@@ -20,7 +20,6 @@ Provides appender classes for I{marshalling}.
 
 from suds import *
 from suds.mx import *
-from suds.sudsobject import footprint
 from suds.sudsobject import Object, Property
 from suds.sax.element import Element
 from suds.sax.text import Text
@@ -219,8 +218,6 @@ class ObjectAppender(Appender):
 
     def append(self, parent, content):
         object = content.value
-        if self.optional(content) and footprint(object) == 0:
-            return
         child = self.node(content)
         parent.append(child)
         for item in object:
