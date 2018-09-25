@@ -295,12 +295,18 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
             self.__mocker.mock_sent_data += data
         def settimeout(self, *args, **kwargs):
             pass
+        def setsockopt(self, *args, **kwargs):
+            pass
 
     class MockSocketReader(CountedMock):
         def __init__(self):
             super(MockSocketReader, self).__init__()
         def readline(self, *args, **kwargs):
             raise MyException
+        def close(self):
+            pass
+        def flush(self):
+            pass
 
     # Setup.
     host = "an-easily-recognizable-host-name-214894932"
