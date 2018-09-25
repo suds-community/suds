@@ -1,3 +1,8 @@
+|Build Status|
+
+.. |Build Status| image:: https://travis-ci.org/suds-community/suds.svg?branch=master
+   :target: https://travis-ci.org/suds-community/suds
+
 Overview
 =================================================
 
