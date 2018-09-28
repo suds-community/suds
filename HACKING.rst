@@ -1,8 +1,8 @@
 GENERAL DEVELOPMENT NOTES
 =================================================
 
-Project's sources are accessible from a `Mercurial version control repository
-<http://bitbucket.org/jurko/suds>`_ hosted at BitBucket.
+Project's sources are accessible from a `Git version control repository
+<http://github.com/suds-community/suds>`_ hosted at Github.
 
 Project development should be tracked in the ``TODO.txt`` file.
 
@@ -28,12 +28,6 @@ For additional design, research & development project notes see the project's
 
 TOP-LEVEL PROJECT FILES & FOLDERS
 =================================================
-
-| .hg/
-| .hgignore
-| .hgtags
-
-* Mercurial version control related data.
 
 | build/
 | dist/

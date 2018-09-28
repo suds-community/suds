@@ -16,18 +16,13 @@ again.
 
 **Forked project information**
 
-* Project site - http://bitbucket.org/jurko/suds
-* Epydocs documentation - needs to be built from sources
+* Project site - https://github.com/suds-community/suds
 * Official releases can be downloaded from:
 
-  * BitBucket - http://bitbucket.org/jurko/suds/downloads
-  * PyPI - http://pypi.python.org/pypi/suds-jurko
+  * BitBucket - https://github.com/suds-community/suds
+  * PyPI - http://pypi.python.org/pypi/suds-community
 
 **Original suds Python library development project information**
-
-* Project site - http://fedorahosted.org/suds
-* Documentation - http://fedorahosted.org/suds/wiki/Documentation
-* Epydocs - http://jortel.fedorapeople.org/suds/doc
 
 For development notes see the ``HACKING.rst`` document included in the
 distribution.
@@ -104,34 +99,8 @@ version 0.7 (development)
   * Basic sources prepared for Python 2.x.
   * For using Python 3 the sources first processed by the Python ``py2to3`` tool
     during the setup procedure.
-  * Tested in the following environments:
+  * Tested in the environments listed in the `.travis.yml`
 
-    * Python 2.4.3/x86 on Windows 8.1/x64.
-    * Python 2.4.4/x86 on Windows 8.1/x64.
-    * Python 2.5.4/x86 on Windows 8.1/x64.
-    * Python 2.5.4/x64 on Windows 8.1/x64.
-    * Python 2.6.6/x86 on Windows 8.1/x64.
-    * Python 2.6.6/x64 on Windows 8.1/x64.
-    * Python 2.7.6/x86 on Windows 8.1/x64.
-    * Python 2.7.6/x64 on Windows 8.1/x64.
-    * Python 2.7.7/x86 on Windows 8.1/x64.
-    * Python 2.7.7/x64 on Windows 8.1/x64.
-    * Python 2.7.8/x86 on Windows 8.1/x64.
-    * Python 2.7.8/x64 on Windows 8.1/x64.
-    * Python 3.1.3/x86 on Windows 8.1/x64.
-    * Python 3.1.3/x64 on Windows 8.1/x64.
-    * Python 3.2.5/x86 on Windows 8.1/x64.
-    * Python 3.2.5/x64 on Windows 8.1/x64.
-    * Python 3.3.3/x86 on Windows 8.1/x64.
-    * Python 3.3.3/x64 on Windows 8.1/x64.
-    * Python 3.3.5/x86 on Windows 8.1/x64.
-    * Python 3.3.5/x64 on Windows 8.1/x64.
-    * Python 3.4.0/x86 on Windows 8.1/x64.
-    * Python 3.4.0/x64 on Windows 8.1/x64.
-    * Python 3.4.1/x86 on Windows 8.1/x64.
-    * Python 3.4.1/x64 on Windows 8.1/x64.
-    * Python 3.4.2/x86 on Windows 8.1/x64.
-    * Python 3.4.2/x64 on Windows 8.1/x64.
 
 * Improved support for ``decimal`` XSD types.
 
