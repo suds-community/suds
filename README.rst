@@ -82,7 +82,7 @@ Installation troubleshooting:
 Release notes
 =================================================
 
-version 0.7 (development)
+version 0.7.0 (development)
 -------------------------
 
 * Based on revision 712 (1e48fd79a1fc323006826439e469ba7b3d2b5a68) from the
