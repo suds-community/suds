@@ -359,44 +359,34 @@ library. Some are
 `transport options`. Although, the options objects are exposed, the
 preferred and supported way to set/unset options is through:
 
--   The
-    `    Client` constructor
--   The
-    `    Client`.set\_options()
--   The
-    `    Transport` constructor(s).
+-   The `Client` constructor
+-   The `Client`.set\_options()
+-   The `Transport` constructor(s).
 
 They are as follows:
 
-\'\'faults\'\':: Controls web fault behavior. \'\'service\'\':: Controls
-the default service name for multi-service wsdls. \'\'port\'\'::
-Controls the default service port for multi-port services.
-\'\'location\'\':: This overrides the service port address \'\'URL\'\'
-defined in the WSDL. \'\'proxy\'\':: Controls http proxy settings.
-\'\'transport\'\':: Controls the \'\'plugin\'\' web
-`transport`. \'\'cache\'\':: Provides caching of documents and objects
-related to loading the WSDL. Soap envelopes are never cached.
-\'\'cachingpolicy\'\':: The caching policy, determines how data is
-cached. The default is 0. \'\'version 0.4+\'\'
-
--   0 = XML documents such as WSDL & XSD.
--   1 = WSDL object graph. \'\'headers\'\':: Provides for \'\'extra\'\'
-    http headers. \'\'soapheaders\'\':: Provides for soap headers.
-    \'\'wsse\'\':: Provides for WS-Security object. \'\'`__inject`\'\'::
-    Controls message/reply message injection. \'\'doctor\'\':: The
-    schema \'\'doctor\'\' specifies an object used to fix broken
-    schema(s). \'\'xstq\'\':: The \'\'\'X\'\'\'ML \'\'\'s\'\'\'chema
-    \'\'\'t\'\'\'ype \'\'\'q\'\'\'ualified flag indicates that
-    \'\'xsi:type\'\' attribute \_\_values\_\_ should be qualified by
-    namespace. \'\'prefixes\'\':: Elements of the soap message should be
-    qualified (when needed) using XML prefixes as opposed to xmlns=\"\"
-    syntax. \'\'timeout\'\':: The URL connection timeout (seconds)
-    default=90. \'\'retxml\'\':: Flag that causes the I{raw} soap
-    envelope to be returned instead of the python object graph.
-    \'\'autoblend\'\':: Flag that ensures that the schema(s) defined
-    within the WSDL import each other. \'\'nosend\'\':: Flag that causes
-    suds to generate the soap envelope but not send it. Instead, a
-    `    RequestContext` is returned Default: False.
+* faults:: Controls web fault behavior.
+* service:: Controls the default service name for multi-service wsdls.
+* port:: Controls the default service port for multi-port services.
+* location:: This overrides the service port address URL defined in the WSDL.
+* proxy:: Controls http proxy settings.
+* transport:: Controls the plugin web `transport`.
+* cache:: Provides caching of documents and objects related to loading the WSDL. Soap envelopes are never cached.
+* cachingpolicy:: The caching policy, determines how data is cached. The default is 0. version 0.4+
+  - 0 = XML documents such as WSDL & XSD.
+  - 1 = WSDL object graph.
+* headers:: Provides for `extra` http headers.
+* soapheaders:: Provides for soap headers.
+* wsse:: Provides for WS-Security object. \
+* __inject`:: Controls message/reply message injection.
+* doctor:: The schema `doctor` specifies an object used to fix broken schema(s).
+* xstq:: The XML schema type qualified flag indicates that `xsi:type` attribute \_\_values\_\_ should be qualified by namespace.
+* prefixes:: Elements of the soap message should be qualified (when needed) using XML prefixes as opposed to xmlns=\"\" syntax.
+* timeout:: The URL connection timeout (seconds) default=90.
+* retxml:: Flag that causes the I{raw} soap envelope to be returned instead of the python object graph.
+* autoblend:: Flag that ensures that the schema(s) defined
+within the WSDL import each other.
+* nosend:: Flag that causes suds to generate the soap envelope but not send it. Instead, a `RequestContext` is returned Default: False.
 
 ## Enumerations
 
@@ -697,12 +687,10 @@ qualify the \'\'service\'\' via
 `option` or by using the subscripting syntax in order to specify the
 \'\'port\'\' using the subscript syntax.
 
-SOAP Headers
-------------
+## SOAP Headers
 
 SOAP headers may be passed during the service invocation by using the
-\'\'soapheaders\'\'
-`option` as follows:
+\'\'soapheaders\'\' `option` as follows:
 
     #!python
     client = client(url)
@@ -1017,6 +1005,60 @@ Injecting a response for testing:
 
     print client.service.test(__inject={'reply':reply})
 
+## SSL certificate verification & Custom Certificates
+
+With Python 2.7.9, SSL/TLS verification is turned on by default.
+
+This can be a problem when suds is used against an endpoint which has a self-signed certificate, which is quite common in the corporate intranet world.
+
+One approach to turn off certificate validation in suds is to use a custom transport class. For example in Python 3:
+
+```
+import urllib.request
+import ssl
+import suds.transport.http
+
+class UnverifiedHttpsTransport(suds.transport.http.HttpTransport):
+    def __init__(self, *args, **kwargs):
+        super(UnverifiedHttpsTransport, self).__init__(*args, **kwargs)
+
+    def u2handlers(self):
+        handlers = super(UnverifiedHttpsTransport, self).u2handlers()
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        handlers.append(urllib.request.HTTPSHandler(context=context))
+        return handlers
+
+client = Client(url, transport=UnverifiedHttpsTransport())
+
+```
+
+In addition, if a custom set of certificates and/or root CA is needed, this can also be done via a custom transport class. For example, in Python 3:
+
+```
+class ClientHttpsTransport(HttpTransport):
+    def __init__(self, certfile, keyfile, cafile, *args, **kwargs):
+        super(ClientHttpsTransport, self).__init__(*args, **kwargs)
+        self.certfile = certfile
+        self.keyfile = keyfile
+        self.cafile = cafile
+
+    def u2handlers(self):
+        handlers = super(ClientHttpsTransport, self).u2handlers()
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=self.cafile)
+        context.load_cert_chain(self.certfile, self.keyfile)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        handlers.append(urllib.request.HTTPSHandler(context=context))
+        return handlers
+
+custom_https = ClientHttpsTransport('/path/to/certificate_file', '/path/to/key_file', '/path/to/ca_file')
+
+client = Client(url, transport=custom_https),
+```
+
+
 ## Performance
 
 As of 0.3.5 r473, suds provides some URL caching. By default, http
@@ -1025,7 +1067,7 @@ caching applies to URL such as those used to get the referenced WSDLs
 and XSD schemas but does \_\_not\_\_ apply to service method invocation
 as this would not make sense.
 
-In 0.3.9, !FileCache was replaced with !ObjectCache.
+In 0.3.9, `FileCache` was replaced with `ObjectCache`.
 
 The default \'\'cache\'\' is a
 `ObjectCache` with an expiration of (1) day.
@@ -1179,14 +1221,14 @@ invocation.
 
 #### InitPlugin
 
-The \'\'!InitPlugin\'\' currently has (1) hook:
+The `InitPlugin` currently has (1) hook:
 
 \'\'initialized()\'\' :: Called after the client is initialized. The
 context contains the \'\'WSDL\'\' object.
 
 #### DocumentPlugin
 
-The \'\'!DocumentPlugin\'\' currently has (2) hooks::
+The `DocumentPlugin` currently has (2) hooks::
 
 \'\'loaded()\'\' :: Called before parsing a \'\'WSDL\'\' or \'\'XSD\'\'
 document. The context contains the url & document text.
@@ -1196,19 +1238,13 @@ document. The context contains the url & document \'\'root\'\'.
 
 #### MessagePlugin
 
-The \'\'!MessagePlugin\'\' currently has (5) hooks ::
+The `MessagePlugin` currently has (5) hooks ::
 
-\'\'marshalled()\'\':: Provides the plugin with the opportunity to
-inspect/modify the envelope \'\'\'Document\'\'\' \_\_before\_\_ it is
-sent. \'\'sending()\'\' :: Provides the plugin with the opportunity to
-inspect/modify the message \'\'\'text\'\'\' \_\_before\_\_ it is sent.
-\'\'received()\'\' :: Provides the plugin with the opportunity to
-inspect/modify the received XML \'\'\'text\'\'\' \_\_before\_\_ it is
-SAX parsed. \'\'parsed()\'\' :: Provides the plugin with the opportunity
-to inspect/modify the sax parsed DOM tree for the reply \_\_before\_\_
-it is unmarshalled. \'\'unmarshalled()\'\' :: Provides the plugin with
-the opportunity to inspect/modify the unmarshalled reply \_\_before\_\_
-it is returned to the caller.
+*marshalled():: Provides the plugin with the opportunity to inspect/modify the envelope \'\'\'Document\'\'\' \_\_before\_\_ it is sent.
+* sending():: Provides the plugin with the opportunity to inspect/modify the message \'\'\'text\'\'\' \_\_before\_\_ it is sent.
+* received():: Provides the plugin with the opportunity to inspect/modify the received XML \'\'\'text\'\'\' \_\_before\_\_ it is SAX parsed.
+* parsed():: Provides the plugin with the opportunity to inspect/modify the sax parsed DOM tree for the reply \_\_before\_\_ it is unmarshalled.
+* unmarshalled():: Provides the plugin with the opportunity to inspect/modify the unmarshalled reply \_\_before\_\_ it is returned to the caller.
 
 General usage:
 
@@ -1268,12 +1304,12 @@ In the future, the \'\'Binding.replyfilter\'\' and \'\'doctor\'\'
 `ImportDoctor` has been extended to implement the
 `Plugin`.onLoad() API.
 
-In doing this, we can treat the !ImportDoctor as a plugin:
+In doing this, we can treat the `ImportDoctor` as a plugin:
 
     #!python
     imp = Import('http://www.w3.org/2001/XMLSchema')
     imp.filter.add('http://webservices.serviceU.com/')
-    d = !ImportDoctor(imp)
+    d = ImportDoctor(imp)
     client = Client(url, plugins=[d])
 
 We can also replace our Binding.replyfilter() with a plugin as follows:
