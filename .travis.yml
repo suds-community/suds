@@ -5,3 +5,13 @@ python:
   - "3.5"
 script:
   - python setup.py test
+deploy:
+  provider: pypi
+  user: phillbaker
+  password:
+    secure: mVdcld2aKKJQuva8VnHYaBllFOMASZOKRQa81UymwbWcjVy+88lQ0FxEk3ntCcfXkOP8QJogilbh65Y/H4YwNpq3XnG7XQXsfJARL4CU4z3RKUnFq3bLdETk4UosRj7m7lKnKr1OOwYf1NXRki252gPAqM8l0bp3D3GZW3bZnJEFavOc46gQbIbun0tkX40RxAT2luSS1nmRMYk7xZBroFamunJLywt1VKGkFfX48UwPRDm4UFJjGg/6lYDsbC88C2+hSPIStUKHjulZQsWGLGGBLFxoDFo8MSRmfHLY7siWLAnb5H2nej/tLAeN3U1ilVHF8cI1KTKVXOTSsm9fYBhEOl9wxLkgo8h9KWec40FM6L2xbj6axgHU00ZCcdbGlLyH7a64ftnOii9C3CQYs6WhKAYtU9zjl86NhSuhvHqSX2qhom4CE12lOV+NKLLIws9mzVFeh3L+Qz3aOhSmgPraHAc4ug5lFzigMgKnwRhwidWOSUfzwMSirpNiZ8XFVBcl5JsBM3xbQ4NdTnndSbphGocjIYMkeyNWZs+ITDMq3RXaJeG31ZIFYHBa6bQLxOWFSuxehwCHTbx6k5ipTeO1MYTs/RQRZKvR+NFbV0a9CU7/fYeo7suWhb/UIW9c6aMaLOEnB8Xs/paXbY7p7eT/8PCdrdUrU2a8aWbhYuM=
+  skip_cleanup: true
+  distributions: "sdist bdist_wheel"
+  on:
+    branch: master
+    tags: true
