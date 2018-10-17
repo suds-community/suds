@@ -32,10 +32,10 @@ Here are the basic instructions for 3 different installation methods:
 
 1.  Using `pip`
     -   Have the `pip` package installed.
-    -   Run `pip install suds-jurko`.
+    -   Run `pip install suds-community`.
 2.  Using `easy-install`
     -   Have the `setuptools` package installed.
-    -   Run `easy_install suds-jurko`.
+    -   Run `easy_install suds-community`.
 3.  From sources
     -   Unpack the source package somewhere.
     -   Run `python setup.py install` from the source distribution\'s
