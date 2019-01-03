@@ -60,8 +60,9 @@ class HttpTransport(Transport):
     def open(self, request):
         try:
             url = self.__get_request_url_for_urllib(request)
+            headers = request.headers
             log.debug('opening (%s)', url)
-            u2request = urllib2.Request(url)
+            u2request = urllib2.Request(url, headers=headers)
             self.proxy = self.options.proxy
             return self.u2open(u2request)
         except urllib2.HTTPError, e:
