@@ -133,8 +133,10 @@ class MockURLOpenerSaboteur:
 
     def __init__(self, open_exception=None):
         self.__open_exception = open_exception
+        self.args = None
 
     def open(self, *args, **kwargs):
+        self.args = args
         if self.__open_exception:
             raise self.__open_exception
         pytest.fail("urllib urlopener.open() must not be called.")
@@ -236,6 +238,21 @@ def test_construct_authenticated_http(input):
     transport = suds.transport.http.HttpAuthenticated(**input)
     assert transport.credentials() == (expected_username, expected_password)
     assert_default_transport(transport)
+
+
+def test_request_headers_are_passed_to_urllib_when_opening_a_request():
+    class MockRequest(object):
+        url = "http://somewhere.far"
+        headers = {'Key': 'value'}
+
+    mock_request = MockRequest()
+
+    transport = suds.transport.http.HttpTransport()
+    transport.urlopener = MockURLOpenerSaboteur(MyException)
+
+    pytest.raises(MyException, suds.transport.http.HttpTransport.open, transport, mock_request)
+
+    assert transport.urlopener.args[0].headers == mock_request.headers
 
 
 def test_construct_http():
