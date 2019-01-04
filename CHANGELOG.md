@@ -1,6 +1,19 @@
 Release notes
 =============
 
+version 0.7.3 (2019-01-04)
+------------------------
+* Pass header while requesting a WSDL (@guifran001)
+
+version 0.7.2 (2018-10-25)
+------------------------
+* Fix Travis deploy (@btb)
+
+version 0.7.1 (2018-10-15)
+------------------------
+* Documentation updates (@phillbaker)
+* Add travis deploy (@phillbaker)
+
 version 0.7.0 (2018-09-29)
 ------------------------
 
