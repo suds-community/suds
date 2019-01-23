@@ -45,6 +45,9 @@ wsencns = \
     ('wsenc',
      'http://www.w3.org/2001/04/xmlenc#')
 
+wsdigest = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest"
+nonce_encoding_type = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"
+
 
 class Security(Object):
     """
@@ -98,7 +101,7 @@ class Token(Object):
         return str(utc)
 
     def __init__(self):
-            Object.__init__(self)
+        Object.__init__(self)
 
 
 class UsernameToken(Token):
@@ -108,6 +111,7 @@ class UsernameToken(Token):
     @type username: str
     @ivar password: A password.
     @type password: str
+    @type password_digest: A password digest
     @ivar nonce: A set of bytes to prevent replay attacks.
     @type nonce: str
     @ivar created: The token created.
@@ -126,6 +130,18 @@ class UsernameToken(Token):
         self.password = password
         self.nonce = None
         self.created = None
+        self.password_digest = None
+        self.nonce_has_encoding = False
+
+    def setnonceencoding(self, value=False):
+        self.nonce_has_encoding = value
+
+    def setpassworddigest(self, passwd_digest):
+        """
+        Set password digest which is a text returned by
+        auth WS.
+        """
+        self.password_digest = passwd_digest
 
     def setnonce(self, text=None):
         """
@@ -158,7 +174,6 @@ class UsernameToken(Token):
         else:
             self.created = dt
 
-
     def xml(self):
         """
         Get xml representation of the object.
@@ -171,9 +186,14 @@ class UsernameToken(Token):
         root.append(u)
         p = Element('Password', ns=wssens)
         p.setText(self.password)
+        if self.password_digest:
+            p.set("Type", wsdigest)
+            p.setText(self.password_digest)
         root.append(p)
         if self.nonce is not None:
             n = Element('Nonce', ns=wssens)
+            if self.nonce_has_encoding:
+                n.set("EncodingType", nonce_encoding_type)
             n.setText(self.nonce)
             root.append(n)
         if self.created is not None:

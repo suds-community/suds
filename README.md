@@ -792,6 +792,8 @@ can be generated and set as follows:
     token = UsernameToken('myusername', 'mypassword')
     token.setnonce()
     token.setcreated()
+    token.setnonceencoding(True)
+    token.setpassworddigest('digest')
     security.tokens.append(token)
     client.set_options(wsse=security)
 

@@ -1,6 +1,10 @@
 Release notes
 =============
 
+Unreleased
+------------------------
+* Add WSSE password digest and nonce encoding type (@ovnicraft)
+
 version 0.7.3 (2019-01-04)
 ------------------------
 * Pass header while requesting a WSDL (@guifran001)
