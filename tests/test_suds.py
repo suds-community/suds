@@ -1142,6 +1142,65 @@ def test_local_sequence_in_a_global_sequence():
     assert sequence_in2.s is None
 
 
+def test_optional_parameter_not_instantiated():
+    client = testutils.client_from_wsdl(b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:ns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:complexType name="Wrapper">
+        <xsd:sequence>
+          <xsd:element name="One" minOccurs="0" maxOccurs="1" type="Foo"/>
+          <xsd:element name="Two" minOccurs="0" maxOccurs="1" type="Bar"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Foo">
+        <xsd:sequence>
+          <xsd:element name="foo" minOccurs="0" maxOccurs="1">
+            <xsd:simpleType>
+              <xsd:restriction base="xsd:boolean">
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Bar">
+        <xsd:sequence>
+          <xsd:element name="bar" minOccurs="0" maxOccurs="1">
+            <xsd:simpleType>
+              <xsd:restriction base="xsd:boolean">
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:portType name="dummyPortType">
+  </wsdl:portType>
+  <wsdl:binding name="dummy" type="ns:dummyPortType">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+  </wsdl:binding>
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="ns:dummy">
+      <soap:address location="https://localhost/dummy"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""))
+
+    service = client.sd[0]
+    sequence_out = client.factory.create("Wrapper")
+    assert sequence_out.One is None
+    assert sequence_out.Two is None
+
+
 def test_no_trailing_comma_in_function_prototype_description_string__0():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>
