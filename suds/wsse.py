@@ -157,7 +157,7 @@ class UsernameToken(Token):
             s.append(self.password)
             s.append(Token.sysdate())
             m = md5()
-            m.update(':'.join(s))
+            m.update(':'.join(s).encode('utf-8'))
             self.nonce = m.hexdigest()
         else:
             self.nonce = text
