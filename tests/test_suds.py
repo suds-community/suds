@@ -26,6 +26,7 @@ tests get added to it and it acquires more structure.
 """
 
 import testutils
+from testutils import _assert_request_content
 if __name__ == "__main__":
     testutils.run_using_pytest(globals())
 
@@ -1143,22 +1144,30 @@ def test_local_sequence_in_a_global_sequence():
 
 
 def test_optional_parameter_not_instantiated():
-    client = testutils.client_from_wsdl(b("""\
+    wsdl = b("""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
-    xmlns:ns="my-namespace"
+    xmlns:tns="my-namespace"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
   <wsdl:types>
     <xsd:schema targetNamespace="my-namespace"
         elementFormDefault="qualified"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-      <xsd:complexType name="Wrapper">
-        <xsd:sequence>
-          <xsd:element name="One" minOccurs="0" maxOccurs="1" type="Foo"/>
-          <xsd:element name="Two" minOccurs="0" maxOccurs="1" type="Bar"/>
-        </xsd:sequence>
-      </xsd:complexType>
+        <xsd:complexType name="inputData">
+          <xsd:sequence>
+            <xsd:element name="foobar" minOccurs="1" maxOccurs="1" type="foobar"/>
+            <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
+            <xsd:element name="Optional2" minOccurs="0" maxOccurs="1" type="Bar"/>
+          </xsd:sequence>
+        </xsd:complexType>
+        <xsd:complexType name="foobar">
+          <xsd:sequence>
+            <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
+            <xsd:element name="Optional2" minOccurs="0" maxOccurs="1" type="Bar"/>
+            <xsd:element name="NonOptional1" minOccurs="1" maxOccurs="1" type="Bar"/>
+          </xsd:sequence>
+        </xsd:complexType>
       <xsd:complexType name="Foo">
         <xsd:sequence>
           <xsd:element name="foo" minOccurs="0" maxOccurs="1">
@@ -1171,34 +1180,80 @@ def test_optional_parameter_not_instantiated():
       </xsd:complexType>
       <xsd:complexType name="Bar">
         <xsd:sequence>
-          <xsd:element name="bar" minOccurs="0" maxOccurs="1">
+          <xsd:element name="bar" minOccurs="1" maxOccurs="1">
             <xsd:simpleType>
               <xsd:restriction base="xsd:boolean">
               </xsd:restriction>
             </xsd:simpleType>
           </xsd:element>
+          <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
         </xsd:sequence>
       </xsd:complexType>
+      <xsd:element name="inputData" type="tns:inputData"/>
     </xsd:schema>
   </wsdl:types>
-  <wsdl:portType name="dummyPortType">
-  </wsdl:portType>
-  <wsdl:binding name="dummy" type="ns:dummyPortType">
-    <soap:binding style="document"
-      transport="http://schemas.xmlsoap.org/soap/http"/>
-  </wsdl:binding>
+  <wsdl:message name="inputData">
+    <wsdl:part name="inputData" element="tns:inputData"/>
+  </wsdl:message>
+  
+  
   <wsdl:service name="dummy">
-    <wsdl:port name="dummy" binding="ns:dummy">
+    <wsdl:port name="dummy" binding="tns:dummy">
       <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
+  
+  
+  <wsdl:portType name="dummy">
+    <wsdl:operation name="f">
+      <wsdl:input name="inputData" message="tns:inputData"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  
+  <wsdl:binding name="dummy" type="tns:dummy">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input name="inputData">
+       <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
 </wsdl:definitions>
-"""))
+""")
 
-    service = client.sd[0]
-    sequence_out = client.factory.create("Wrapper")
-    assert sequence_out.One is None
-    assert sequence_out.Two is None
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:inputData>
+         <ns0:foobar>
+            <ns0:NonOptional1>
+               <ns0:bar/>
+            </ns0:NonOptional1>
+         </ns0:foobar>
+      </ns0:inputData>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+
+
+    foobar = client.factory.create("foobar")
+
+    assert foobar.Optional1 is None
+    assert foobar.Optional2 is None
+    assert foobar.NonOptional1 is not None
+    assert foobar.NonOptional1.Optional1 is None
+
+    service = client.service
+
+    result = service.f(foobar=foobar)
+
+    _assert_request_content(result, expected_request_content)
 
 
 def test_no_trailing_comma_in_function_prototype_description_string__0():

@@ -54,6 +54,7 @@ class Builder:
         for child, ancestry in type.children():
             if self.skip_child(child, ancestry):
                 continue
+
             self.process(data, child, history[:])
         return data
 
@@ -66,6 +67,9 @@ class Builder:
         history.append(type)
         resolved = type.resolve()
         value = None
+
+
+
         if type.multi_occurrence():
             value = []
         else:
@@ -79,7 +83,8 @@ class Builder:
                     md = value.__metadata__
                     md.sxtype = resolved
                     md.ordering = self.ordering(resolved)
-        setattr(data, type.name, value)
+
+        setattr(data, type.name, value if not type.optional() else None)
         if value is not None:
             data = value
         if not isinstance(data, list):

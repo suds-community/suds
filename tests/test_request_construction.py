@@ -29,12 +29,13 @@ then passing that wrapper object instead.
 """
 
 import testutils
+from testutils import _assert_request_content
+
 if __name__ == "__main__":
     testutils.run_using_pytest(globals())
 
 import suds
 import suds.store
-from testutils.compare_sax import CompareSAX
 
 import pytest
 from six import iterkeys, itervalues, next, u
@@ -1087,8 +1088,6 @@ def test_wrapped_parameter(monkeypatch):
 #
 ###############################################################################
 
-def _assert_request_content(request, expected_xml):
-    CompareSAX.data2data(request.envelope, expected_xml)
 
 
 def _is_input_wrapped(client, method_name):
