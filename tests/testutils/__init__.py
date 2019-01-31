@@ -28,6 +28,10 @@ import six
 import os
 import subprocess
 import sys
+from .compare_sax import CompareSAX
+
+def _assert_request_content(request, expected_xml):
+    CompareSAX.data2data(request.envelope, expected_xml)
 
 
 def client_from_wsdl(wsdl_content, *args, **kwargs):
