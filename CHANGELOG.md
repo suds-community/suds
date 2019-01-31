@@ -1,8 +1,9 @@
 Release notes
 =============
 
-Unreleased
+version 0.8.0 (2019-01-31)
 ------------------------
+* [Breaking] Objects should not be instantiated with empty optional attributs, see https://github.com/suds-community/suds/issues/14 for more information. (@guifran001)
 * Add WSSE password digest and nonce encoding type (@ovnicraft)
 
 version 0.7.3 (2019-01-04)
