@@ -27,6 +27,7 @@ tests get added to it and it acquires more structure.
 
 import testutils
 from testutils import _assert_request_content
+
 if __name__ == "__main__":
     testutils.run_using_pytest(globals())
 
@@ -41,7 +42,93 @@ import re
 import xml.sax
 
 
-#TODO: Update the current choice parameter handling implementation to make this
+@pytest.fixture
+def client_with_optional_array_parameters():
+    wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <xsd:complexType name="inputData">
+          <xsd:sequence>
+            <xsd:element name="Optional1" minOccurs="0" type="Foo"/>
+            <xsd:element name="FooBar" type="foobar"/>
+          </xsd:sequence>
+        </xsd:complexType>
+        <xsd:complexType name="foobar">
+          <xsd:sequence>
+            <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
+            <xsd:element name="BarArray" minOccurs="0" maxOccurs="unbounded" type="Bar"/>
+            <xsd:element name="NonOptional1" type="Bar"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      <xsd:complexType name="Foo">
+        <xsd:sequence>
+          <xsd:element name="foo" minOccurs="0" maxOccurs="1">
+            <xsd:simpleType>
+              <xsd:restriction base="xsd:boolean">
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Bar">
+        <xsd:sequence>
+          <xsd:element name="bar" minOccurs="1" maxOccurs="1">
+            <xsd:simpleType>
+              <xsd:restriction base="xsd:boolean">
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="inputData" type="tns:inputData"/>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="inputData">
+    <wsdl:part name="inputData" element="tns:inputData"/>
+  </wsdl:message>
+
+
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="tns:dummy">
+      <soap:address location="https://localhost/dummy"/>
+    </wsdl:port>
+  </wsdl:service>
+
+
+  <wsdl:portType name="dummy">
+    <wsdl:operation name="f">
+      <wsdl:input name="inputData" message="tns:inputData"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="dummy" type="tns:dummy">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input name="inputData">
+       <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+</wsdl:definitions>
+""")
+
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+
+    return client
+
+
+# TODO: Update the current choice parameter handling implementation to make this
 # test pass.
 @pytest.mark.xfail
 def test_choice_parameter_implementation_inconsistencies():
@@ -59,6 +146,7 @@ def test_choice_parameter_implementation_inconsistencies():
     constructed parameter definition structure.
 
     """
+
     def client(x, y):
         return testutils.client_from_wsdl(testutils.wsdl(x, input=y))
 
@@ -81,7 +169,7 @@ def test_choice_parameter_implementation_inconsistencies():
         </xsd:complexType>
       </xsd:element>""", "Wrapper")
 
-    method_param = lambda x : x.sd[0].ports[0][1][0][1][0]
+    method_param = lambda x: x.sd[0].ports[0][1][0][1][0]
     method_param_simple_short = method_param(client_simple_short)
     method_param_simple_long = method_param(client_simple_long)
     method_param_complex_wrapped = method_param(client_complex_wrapped)
@@ -145,7 +233,7 @@ def test_converting_metadata_to_string():
 def test_empty_invalid_WSDL(monkeypatch):
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(xml.sax.SAXParseException, testutils.client_from_wsdl,
-        b(""))
+                      b(""))
     try:
         assert e.value.getMessage() == "no element found"
     finally:
@@ -155,8 +243,8 @@ def test_empty_invalid_WSDL(monkeypatch):
 def test_empty_valid_WSDL():
     client = testutils.client_from_wsdl(
         b("<?xml version='1.0' encoding='UTF-8'?><root/>"))
-    assert not client.wsdl.services, "No service definitions must be read "  \
-        "from an empty WSDL."
+    assert not client.wsdl.services, "No service definitions must be read " \
+                                     "from an empty WSDL."
 
 
 def test_enumeration_type_string_should_contain_its_value():
@@ -209,7 +297,7 @@ def test_enumeration_type_string_should_contain_its_value():
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="One" />$', e1.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Two" />$', e2.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Thirty-Two" />$',
-        e3.str())
+                    e3.str())
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
@@ -1241,7 +1329,6 @@ def test_optional_parameter_not_instantiated():
 
     client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
-
     foobar = client.factory.create("foobar")
 
     assert foobar.Optional1 is None
@@ -1252,6 +1339,80 @@ def test_optional_parameter_not_instantiated():
     service = client.service
 
     result = service.f(foobar=foobar)
+
+    _assert_request_content(result, expected_request_content)
+
+
+def test_array_are_instantiated_even_if_optional(client_with_optional_array_parameters):
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+    <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+       <SOAP-ENV:Header/>
+       <ns1:Body>
+          <ns0:inputData>
+             <ns0:FooBar>
+                <ns0:BarArray>
+                  <ns0:bar>foo</ns0:bar>
+                </ns0:BarArray>
+                <ns0:BarArray>
+                  <ns0:bar>bar</ns0:bar>
+                </ns0:BarArray>
+                <ns0:NonOptional1>
+                   <ns0:bar/>
+                </ns0:NonOptional1>
+             </ns0:FooBar>
+          </ns0:inputData>
+       </ns1:Body>
+    </SOAP-ENV:Envelope>"""
+
+    client = client_with_optional_array_parameters
+
+    foobar = client.factory.create("foobar")
+
+    assert foobar.Optional1 is None
+    assert foobar.NonOptional1 is not None
+    assert isinstance(foobar.BarArray, list)
+
+    bar = client.factory.create("Bar")
+    bar.bar = "foo"
+    foobar.BarArray.append(bar)
+    bar = client.factory.create("Bar")
+    bar.bar = 'bar'
+    foobar.BarArray.append(bar)
+
+    service = client.service
+
+    result = service.f(FooBar=foobar)
+
+    print(result.envelope)
+
+    _assert_request_content(result, expected_request_content)
+
+
+def test_empty_optional_array_is_not_present(client_with_optional_array_parameters):
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:inputData>
+         <ns0:FooBar>
+            <ns0:NonOptional1>
+               <ns0:bar/>
+            </ns0:NonOptional1>
+         </ns0:FooBar>
+      </ns0:inputData>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+
+    client = client_with_optional_array_parameters
+    foobar = client.factory.create("foobar")
+    assert foobar.Optional1 is None
+    assert foobar.NonOptional1 is not None
+    assert isinstance(foobar.BarArray, list)
+
+    service = client.service
+    result = service.f(FooBar=foobar)
 
     _assert_request_content(result, expected_request_content)
 
@@ -1437,7 +1598,7 @@ def test_no_types():
 
 def test_parameter_referencing_missing_element(monkeypatch):
     wsdl = testutils.wsdl("", input="missingElement",
-        xsd_target_namespace="aaa")
+                          xsd_target_namespace="aaa")
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(suds.TypeNotFound, testutils.client_from_wsdl, wsdl)
     try:
@@ -1551,7 +1712,7 @@ def test_recursive_XSD_import():
     testutils.client_from_wsdl(wsdl, documentStore=store)
 
 
-#TODO: Update the current restriction type input parameter handling so they get
+# TODO: Update the current restriction type input parameter handling so they get
 # 'unwrapped' correctly instead of each of their enumeration values getting
 # interpreted as a separate input parameter.
 @pytest.mark.xfail
@@ -1640,29 +1801,29 @@ def test_schema_node_occurrences():
         elementFormDefault="qualified"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 """
-    + _element_node_xml("AnElement1")
-    + _element_node_xml("AnElement2", min=1)
-    + _element_node_xml("AnElement3", max=1)
+                                          + _element_node_xml("AnElement1")
+                                          + _element_node_xml("AnElement2", min=1)
+                                          + _element_node_xml("AnElement3", max=1)
 
-    + _element_node_xml("AnOptionalElement1", min=0)
-    + _element_node_xml("AnOptionalElement2", min=0, max=1)
+                                          + _element_node_xml("AnOptionalElement1", min=0)
+                                          + _element_node_xml("AnOptionalElement2", min=0, max=1)
 
-    + _element_node_xml("Array_0_2", min=0, max=2)
-    + _element_node_xml("Array_0_999", min=0, max=999)
-    + _element_node_xml("Array_0_X", min=0, max="unbounded")
+                                          + _element_node_xml("Array_0_2", min=0, max=2)
+                                          + _element_node_xml("Array_0_999", min=0, max=999)
+                                          + _element_node_xml("Array_0_X", min=0, max="unbounded")
 
-    + _element_node_xml("Array_x_2", max=2)
-    + _element_node_xml("Array_x_999", max=999)
-    + _element_node_xml("Array_x_X", max="unbounded")
+                                          + _element_node_xml("Array_x_2", max=2)
+                                          + _element_node_xml("Array_x_999", max=999)
+                                          + _element_node_xml("Array_x_X", max="unbounded")
 
-    + _element_node_xml("Array_1_2", min=1, max=2)
-    + _element_node_xml("Array_1_999", min=1, max=999)
-    + _element_node_xml("Array_1_X", min=1, max="unbounded")
+                                          + _element_node_xml("Array_1_2", min=1, max=2)
+                                          + _element_node_xml("Array_1_999", min=1, max=999)
+                                          + _element_node_xml("Array_1_X", min=1, max="unbounded")
 
-    + _element_node_xml("Array_5_5", min=5, max=5)
-    + _element_node_xml("Array_5_999", min=5, max=999)
-    + _element_node_xml("Array_5_X", min=5, max="unbounded")
-+ """
+                                          + _element_node_xml("Array_5_5", min=5, max=5)
+                                          + _element_node_xml("Array_5_999", min=5, max=999)
+                                          + _element_node_xml("Array_5_X", min=5, max="unbounded")
+                                          + """
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
@@ -1789,8 +1950,8 @@ def test_schema_node_resolve():
 
     # Resolving builtin type nodes.
     assert typo_u1.resolve().__class__ is suds.xsd.sxbuiltin.XString
-    assert typo_u1.resolve(nobuiltin=False).__class__ is  \
-        suds.xsd.sxbuiltin.XString
+    assert typo_u1.resolve(nobuiltin=False).__class__ is \
+           suds.xsd.sxbuiltin.XString
     assert typo_u1.resolve(nobuiltin=True) is typo_u1
     assert elemento_x2.resolve(nobuiltin=True) is typo
     assert elemento_x3.resolve(nobuiltin=True) is elemento_x3
@@ -1990,15 +2151,15 @@ def test_schema_object_child_access_by_index():
 
     assert sequence[-1] is None
 
-    #TODO: Children are returned as a 2-tuple containing the child element and
+    # TODO: Children are returned as a 2-tuple containing the child element and
     # its ancestry (list of its parent elements). For some reason the ancestry
     # list is returned as a new list on every __getitem__() call and so can not
     # be compared using the 'is' operator. Also the children() function and
     # accessing children by index does not seem to return ancestry lists of the
     # same depth. See whether this can be updated so we always get the same
     # ancestry list object.
-    #TODO: Add more detailed tests for the ancestry list structure.
-    #TODO: Add more detailed tests for the rawchildren list structure.
+    # TODO: Add more detailed tests for the ancestry list structure.
+    # TODO: Add more detailed tests for the rawchildren list structure.
 
     assert isinstance(sequence[0], tuple)
     assert len(sequence[0]) == 2
@@ -2211,7 +2372,7 @@ def test_wsdl_schema_content():
     assert isinstance(elemento, suds.xsd.sxbasic.Element)
 
     pytest.raises(KeyError, client.wsdl.schema.elements.__getitem__,
-        ("DoesNotExist", "OMG"))
+                  ("DoesNotExist", "OMG"))
 
     # Types.
     assert len(client.wsdl.schema.types) == 2
@@ -2221,7 +2382,7 @@ def test_wsdl_schema_content():
     assert isinstance(unga_bunga, suds.xsd.sxbasic.Complex)
 
     pytest.raises(KeyError, client.wsdl.schema.types.__getitem__,
-        ("DoesNotExist", "OMG"))
+                  ("DoesNotExist", "OMG"))
 
 
 def _assert_dynamic_type(anObject, typename):

@@ -84,7 +84,7 @@ class Builder:
                     md.sxtype = resolved
                     md.ordering = self.ordering(resolved)
 
-        setattr(data, type.name, value if not type.optional() else None)
+        setattr(data, type.name, value if not type.optional() or type.multi_occurrence() else None)
         if value is not None:
             data = value
         if not isinstance(data, list):
