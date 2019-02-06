@@ -27,7 +27,6 @@ tests get added to it and it acquires more structure.
 
 import testutils
 from testutils import _assert_request_content
-
 if __name__ == "__main__":
     testutils.run_using_pytest(globals())
 
@@ -128,7 +127,7 @@ def client_with_optional_array_parameters():
     return client
 
 
-# TODO: Update the current choice parameter handling implementation to make this
+#TODO: Update the current choice parameter handling implementation to make this
 # test pass.
 @pytest.mark.xfail
 def test_choice_parameter_implementation_inconsistencies():
@@ -146,7 +145,6 @@ def test_choice_parameter_implementation_inconsistencies():
     constructed parameter definition structure.
 
     """
-
     def client(x, y):
         return testutils.client_from_wsdl(testutils.wsdl(x, input=y))
 
@@ -169,7 +167,7 @@ def test_choice_parameter_implementation_inconsistencies():
         </xsd:complexType>
       </xsd:element>""", "Wrapper")
 
-    method_param = lambda x: x.sd[0].ports[0][1][0][1][0]
+    method_param = lambda x : x.sd[0].ports[0][1][0][1][0]
     method_param_simple_short = method_param(client_simple_short)
     method_param_simple_long = method_param(client_simple_long)
     method_param_complex_wrapped = method_param(client_complex_wrapped)
@@ -233,7 +231,7 @@ def test_converting_metadata_to_string():
 def test_empty_invalid_WSDL(monkeypatch):
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(xml.sax.SAXParseException, testutils.client_from_wsdl,
-                      b(""))
+        b(""))
     try:
         assert e.value.getMessage() == "no element found"
     finally:
@@ -243,8 +241,8 @@ def test_empty_invalid_WSDL(monkeypatch):
 def test_empty_valid_WSDL():
     client = testutils.client_from_wsdl(
         b("<?xml version='1.0' encoding='UTF-8'?><root/>"))
-    assert not client.wsdl.services, "No service definitions must be read " \
-                                     "from an empty WSDL."
+    assert not client.wsdl.services, "No service definitions must be read "  \
+        "from an empty WSDL."
 
 
 def test_enumeration_type_string_should_contain_its_value():
@@ -297,7 +295,7 @@ def test_enumeration_type_string_should_contain_its_value():
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="One" />$', e1.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Two" />$', e2.str())
     assert re.match('<Enumeration:0x[0-9a-f]+L? name="Thirty-Two" />$',
-                    e3.str())
+        e3.str())
 
 
 def test_function_parameters_global_sequence_in_a_sequence():
@@ -1329,6 +1327,7 @@ def test_optional_parameter_not_instantiated():
 
     client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
 
+
     foobar = client.factory.create("foobar")
 
     assert foobar.Optional1 is None
@@ -1598,7 +1597,7 @@ def test_no_types():
 
 def test_parameter_referencing_missing_element(monkeypatch):
     wsdl = testutils.wsdl("", input="missingElement",
-                          xsd_target_namespace="aaa")
+        xsd_target_namespace="aaa")
     monkeypatch.delitem(locals(), "e", False)
     e = pytest.raises(suds.TypeNotFound, testutils.client_from_wsdl, wsdl)
     try:
@@ -1712,7 +1711,7 @@ def test_recursive_XSD_import():
     testutils.client_from_wsdl(wsdl, documentStore=store)
 
 
-# TODO: Update the current restriction type input parameter handling so they get
+#TODO: Update the current restriction type input parameter handling so they get
 # 'unwrapped' correctly instead of each of their enumeration values getting
 # interpreted as a separate input parameter.
 @pytest.mark.xfail
@@ -1801,29 +1800,29 @@ def test_schema_node_occurrences():
         elementFormDefault="qualified"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 """
-                                          + _element_node_xml("AnElement1")
-                                          + _element_node_xml("AnElement2", min=1)
-                                          + _element_node_xml("AnElement3", max=1)
+    + _element_node_xml("AnElement1")
+    + _element_node_xml("AnElement2", min=1)
+    + _element_node_xml("AnElement3", max=1)
 
-                                          + _element_node_xml("AnOptionalElement1", min=0)
-                                          + _element_node_xml("AnOptionalElement2", min=0, max=1)
+    + _element_node_xml("AnOptionalElement1", min=0)
+    + _element_node_xml("AnOptionalElement2", min=0, max=1)
 
-                                          + _element_node_xml("Array_0_2", min=0, max=2)
-                                          + _element_node_xml("Array_0_999", min=0, max=999)
-                                          + _element_node_xml("Array_0_X", min=0, max="unbounded")
+    + _element_node_xml("Array_0_2", min=0, max=2)
+    + _element_node_xml("Array_0_999", min=0, max=999)
+    + _element_node_xml("Array_0_X", min=0, max="unbounded")
 
-                                          + _element_node_xml("Array_x_2", max=2)
-                                          + _element_node_xml("Array_x_999", max=999)
-                                          + _element_node_xml("Array_x_X", max="unbounded")
+    + _element_node_xml("Array_x_2", max=2)
+    + _element_node_xml("Array_x_999", max=999)
+    + _element_node_xml("Array_x_X", max="unbounded")
 
-                                          + _element_node_xml("Array_1_2", min=1, max=2)
-                                          + _element_node_xml("Array_1_999", min=1, max=999)
-                                          + _element_node_xml("Array_1_X", min=1, max="unbounded")
+    + _element_node_xml("Array_1_2", min=1, max=2)
+    + _element_node_xml("Array_1_999", min=1, max=999)
+    + _element_node_xml("Array_1_X", min=1, max="unbounded")
 
-                                          + _element_node_xml("Array_5_5", min=5, max=5)
-                                          + _element_node_xml("Array_5_999", min=5, max=999)
-                                          + _element_node_xml("Array_5_X", min=5, max="unbounded")
-                                          + """
+    + _element_node_xml("Array_5_5", min=5, max=5)
+    + _element_node_xml("Array_5_999", min=5, max=999)
+    + _element_node_xml("Array_5_X", min=5, max="unbounded")
++ """
     </xsd:schema>
   </wsdl:types>
 </wsdl:definitions>
@@ -1950,8 +1949,8 @@ def test_schema_node_resolve():
 
     # Resolving builtin type nodes.
     assert typo_u1.resolve().__class__ is suds.xsd.sxbuiltin.XString
-    assert typo_u1.resolve(nobuiltin=False).__class__ is \
-           suds.xsd.sxbuiltin.XString
+    assert typo_u1.resolve(nobuiltin=False).__class__ is  \
+        suds.xsd.sxbuiltin.XString
     assert typo_u1.resolve(nobuiltin=True) is typo_u1
     assert elemento_x2.resolve(nobuiltin=True) is typo
     assert elemento_x3.resolve(nobuiltin=True) is elemento_x3
@@ -2151,15 +2150,15 @@ def test_schema_object_child_access_by_index():
 
     assert sequence[-1] is None
 
-    # TODO: Children are returned as a 2-tuple containing the child element and
+    #TODO: Children are returned as a 2-tuple containing the child element and
     # its ancestry (list of its parent elements). For some reason the ancestry
     # list is returned as a new list on every __getitem__() call and so can not
     # be compared using the 'is' operator. Also the children() function and
     # accessing children by index does not seem to return ancestry lists of the
     # same depth. See whether this can be updated so we always get the same
     # ancestry list object.
-    # TODO: Add more detailed tests for the ancestry list structure.
-    # TODO: Add more detailed tests for the rawchildren list structure.
+    #TODO: Add more detailed tests for the ancestry list structure.
+    #TODO: Add more detailed tests for the rawchildren list structure.
 
     assert isinstance(sequence[0], tuple)
     assert len(sequence[0]) == 2
@@ -2372,7 +2371,7 @@ def test_wsdl_schema_content():
     assert isinstance(elemento, suds.xsd.sxbasic.Element)
 
     pytest.raises(KeyError, client.wsdl.schema.elements.__getitem__,
-                  ("DoesNotExist", "OMG"))
+        ("DoesNotExist", "OMG"))
 
     # Types.
     assert len(client.wsdl.schema.types) == 2
@@ -2382,7 +2381,7 @@ def test_wsdl_schema_content():
     assert isinstance(unga_bunga, suds.xsd.sxbasic.Complex)
 
     pytest.raises(KeyError, client.wsdl.schema.types.__getitem__,
-                  ("DoesNotExist", "OMG"))
+        ("DoesNotExist", "OMG"))
 
 
 def _assert_dynamic_type(anObject, typename):
