@@ -41,6 +41,92 @@ import re
 import xml.sax
 
 
+@pytest.fixture
+def client_with_optional_array_parameters():
+    wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <xsd:complexType name="inputData">
+          <xsd:sequence>
+            <xsd:element name="Optional1" minOccurs="0" type="Foo"/>
+            <xsd:element name="FooBar" type="foobar"/>
+          </xsd:sequence>
+        </xsd:complexType>
+        <xsd:complexType name="foobar">
+          <xsd:sequence>
+            <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
+            <xsd:element name="BarArray" minOccurs="0" maxOccurs="unbounded" type="Bar"/>
+            <xsd:element name="NonOptional1" type="Bar"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      <xsd:complexType name="Foo">
+        <xsd:sequence>
+          <xsd:element name="foo" minOccurs="0" maxOccurs="1">
+            <xsd:simpleType>
+              <xsd:restriction base="xsd:boolean">
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Bar">
+        <xsd:sequence>
+          <xsd:element name="bar" minOccurs="1" maxOccurs="1">
+            <xsd:simpleType>
+              <xsd:restriction base="xsd:boolean">
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name="Optional1" minOccurs="0" maxOccurs="1" type="Foo"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="inputData" type="tns:inputData"/>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="inputData">
+    <wsdl:part name="inputData" element="tns:inputData"/>
+  </wsdl:message>
+
+
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="tns:dummy">
+      <soap:address location="https://localhost/dummy"/>
+    </wsdl:port>
+  </wsdl:service>
+
+
+  <wsdl:portType name="dummy">
+    <wsdl:operation name="f">
+      <wsdl:input name="inputData" message="tns:inputData"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="dummy" type="tns:dummy">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input name="inputData">
+       <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+</wsdl:definitions>
+""")
+
+    client = testutils.client_from_wsdl(wsdl, nosend=True, prettyxml=True)
+
+    return client
+
+
 #TODO: Update the current choice parameter handling implementation to make this
 # test pass.
 @pytest.mark.xfail
@@ -1252,6 +1338,80 @@ def test_optional_parameter_not_instantiated():
     service = client.service
 
     result = service.f(foobar=foobar)
+
+    _assert_request_content(result, expected_request_content)
+
+
+def test_array_are_instantiated_even_if_optional(client_with_optional_array_parameters):
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+    <SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+       <SOAP-ENV:Header/>
+       <ns1:Body>
+          <ns0:inputData>
+             <ns0:FooBar>
+                <ns0:BarArray>
+                  <ns0:bar>foo</ns0:bar>
+                </ns0:BarArray>
+                <ns0:BarArray>
+                  <ns0:bar>bar</ns0:bar>
+                </ns0:BarArray>
+                <ns0:NonOptional1>
+                   <ns0:bar/>
+                </ns0:NonOptional1>
+             </ns0:FooBar>
+          </ns0:inputData>
+       </ns1:Body>
+    </SOAP-ENV:Envelope>"""
+
+    client = client_with_optional_array_parameters
+
+    foobar = client.factory.create("foobar")
+
+    assert foobar.Optional1 is None
+    assert foobar.NonOptional1 is not None
+    assert isinstance(foobar.BarArray, list)
+
+    bar = client.factory.create("Bar")
+    bar.bar = "foo"
+    foobar.BarArray.append(bar)
+    bar = client.factory.create("Bar")
+    bar.bar = 'bar'
+    foobar.BarArray.append(bar)
+
+    service = client.service
+
+    result = service.f(FooBar=foobar)
+
+    print(result.envelope)
+
+    _assert_request_content(result, expected_request_content)
+
+
+def test_empty_optional_array_is_not_present(client_with_optional_array_parameters):
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:inputData>
+         <ns0:FooBar>
+            <ns0:NonOptional1>
+               <ns0:bar/>
+            </ns0:NonOptional1>
+         </ns0:FooBar>
+      </ns0:inputData>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+
+    client = client_with_optional_array_parameters
+    foobar = client.factory.create("foobar")
+    assert foobar.Optional1 is None
+    assert foobar.NonOptional1 is not None
+    assert isinstance(foobar.BarArray, list)
+
+    service = client.service
+    result = service.f(FooBar=foobar)
 
     _assert_request_content(result, expected_request_content)
 
