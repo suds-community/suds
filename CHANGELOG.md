@@ -1,6 +1,10 @@
 Release notes
 =============
 
+version 0.8.1 (2019-02-06)
+------------------------
+* Fix bug introduced in 0.8.0, initialize optional arrays with empty lists (@guifran001)
+
 version 0.8.0 (2019-01-31)
 ------------------------
 * [Breaking] Objects should not be instantiated with empty optional attributs, see https://github.com/suds-community/suds/issues/14 for more information. (@guifran001)
