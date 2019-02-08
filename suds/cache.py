@@ -309,7 +309,7 @@ class ObjectCache(FileCache):
     @type protocol: int
 
     """
-    protocol = 2
+    # protocol = 2
 
     def fnsuffix(self):
         return "px"
@@ -326,6 +326,6 @@ class ObjectCache(FileCache):
             self.purge(id)
 
     def put(self, id, object):
-        data = pickle.dumps(object, self.protocol)
+        data = pickle.dumps(object, pickle.HIGHEST_PROTOCOL)
         super(ObjectCache, self).put(id, data)
         return object
