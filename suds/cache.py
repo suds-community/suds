@@ -301,6 +301,7 @@ class DocumentCache(FileCache):
         return object
 
 
+
 class ObjectCache(FileCache):
     """
     Pickled object file cache.

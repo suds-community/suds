@@ -64,7 +64,7 @@ class Reader(object):
         h = md5(name.encode()).hexdigest()
         return '%s-%s' % (h, x)
 
-
+import gc
 class DefinitionsReader(Reader):
     """
     Integrates between the WSDL Definitions object and the object cache.
@@ -103,7 +103,11 @@ class DefinitionsReader(Reader):
         cache = self.__cache()
         id = self.mangle(url, "wsdl")
         start = time.time()
+        # disable garbage collector
+        gc.disable()
         wsdl = cache.get(id)
+        # enable garbage collector again
+        gc.enable()
         end = time.time()
         cache_get = end - start
         if wsdl is None:
