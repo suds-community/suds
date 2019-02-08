@@ -120,6 +120,9 @@ class NamedObject(WObject):
         pmd.wrappers["qname"] = repr
 
 
+import time
+import sys
+
 class Definitions(WObject):
     """
     I{Root} container for all the WSDL objects defined by <wsdl:definitions/>.
@@ -185,12 +188,32 @@ class Definitions(WObject):
         if imported_definitions is None:
             imported_definitions = {}
         imported_definitions[url] = self
+
+        start = time.time()
         self.open_imports(imported_definitions)
+        end = time.time()
+        sys.stdout.write('open_imports '+str(end-start)+'\n')
+
+        start = time.time()
         self.resolve()
+        end = time.time()
+        sys.stdout.write('resolve '+str(end-start)+'\n')
+
+        start = time.time()
         self.build_schema()
+        end = time.time()
+        sys.stdout.write('build_schema '+str(end-start)+'\n')
+
+        start = time.time()
         self.set_wrapped()
+        end = time.time()
+        sys.stdout.write('set_wrapped '+str(end-start)+'\n')
+
         for s in self.services:
+            start = time.time()
             self.add_methods(s)
+            end = time.time()
+            sys.stdout.write('add_methods '+str(end-start)+'\n')
         log.debug("WSDL at '%s' loaded:\n%s", url, self)
 
     def mktns(self, root):

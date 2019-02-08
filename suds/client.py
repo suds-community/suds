@@ -45,6 +45,8 @@ import httplib
 from logging import getLogger
 log = getLogger(__name__)
 
+import time
+import sys
 
 class Client(UnicodeMixin):
     """
@@ -120,11 +122,20 @@ class Client(UnicodeMixin):
         self.wsdl = reader.open(url)
         plugins = PluginContainer(options.plugins)
         plugins.init.initialized(wsdl=self.wsdl)
+        start = time.time()
         self.factory = Factory(self.wsdl)
+        end = time.time()
+        sys.stdout.write('Factory '+str(end-start)+'\n')
+        start = time.time()
         self.service = ServiceSelector(self, self.wsdl.services)
+        end = time.time()
+        sys.stdout.write('ServiceSelector '+str(end-start)+'\n')
         self.sd = []
         for s in self.wsdl.services:
+            start = time.time()
             sd = ServiceDefinition(self.wsdl, s)
+            end = time.time()
+            sys.stdout.write('ServiceDefinition '+str(end-start)+'\n')
             self.sd.append(sd)
 
     def set_options(self, **kwargs):

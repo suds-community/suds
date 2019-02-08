@@ -24,6 +24,9 @@ import suds.plugin
 import suds.sax.parser
 import suds.transport
 
+import time
+import sys
+
 try:
     from hashlib import md5
 except ImportError:
@@ -99,9 +102,15 @@ class DefinitionsReader(Reader):
         """
         cache = self.__cache()
         id = self.mangle(url, "wsdl")
+        start = time.time()
         wsdl = cache.get(id)
+        end = time.time()
+        cache_get = end - start
         if wsdl is None:
+            start = time.time()
             wsdl = self.fn(url, self.options)
+            end = time.time()
+            sys.stdout.write('self.fn '+str(end-start)+'\n')
             cache.put(id, wsdl)
         else:
             # Cached WSDL Definitions objects may have been created with
@@ -109,6 +118,7 @@ class DefinitionsReader(Reader):
             wsdl.options = self.options
             for imp in wsdl.imports:
                 imp.imported.options = self.options
+            sys.stdout.write('cache.get '+str(cache_get)+'\n')
         return wsdl
 
     def __cache(self):
@@ -147,7 +157,10 @@ class DocumentReader(Reader):
         if xml is None:
             xml = self.__fetch(url)
             cache.put(id, xml)
+        start = time.time()
         self.plugins.document.parsed(url=url, document=xml.root())
+        end = time.time()
+        sys.stdout.write('documents.parsed '+str(end-start)+'\n')
         return xml
 
     def __cache(self):
@@ -190,7 +203,14 @@ class DocumentReader(Reader):
                 content = fp.read()
             finally:
                 fp.close()
+        start = time.time()
         ctx = self.plugins.document.loaded(url=url, document=content)
+        end = time.time()
+        sys.stdout.write('document.loaded '+str(end-start)+'\n')
         content = ctx.document
         sax = suds.sax.parser.Parser()
-        return sax.parse(string=content)
+        start = time.time()
+        result = sax.parse(string=content)
+        end = time.time()
+        sys.stdout.write('sax.parse '+str(end-start)+'\n')
+        return result
