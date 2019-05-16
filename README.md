@@ -273,7 +273,7 @@ or
     #!python
     try:
        person_added = client.service.addPerson(person)
-    except WebFault, e:
+    except WebFault as e:
       print e
 
 It\'s that easy.
@@ -335,7 +335,7 @@ Now, let\'s set the properties of our \'\'Person\'\' object
     #!python
     try:
        person_added = client.service.addPerson(person)
-    except WebFault, e:
+    except WebFault as e:
       print e
 
 ### Faults
