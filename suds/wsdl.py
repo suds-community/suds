@@ -565,7 +565,7 @@ class PortType(NamedObject):
         """
         try:
             return self.operations[name]
-        except Exception, e:
+        except Exception as e:
             raise MethodNotFound(name)
 
     def __gt__(self, other):
