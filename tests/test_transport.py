@@ -179,13 +179,30 @@ HEADERS: %s""") % (url, request.headers)
         u("cogito://ergo/sum"),
         u("haleluya"),
         u("look  at  me flyyyyyyyy"),
-        unichr(0),
         unichr(127),
-        u("Jurko") + unichr(0),
         u("Jurko") + unichr(127)]
     @pytest.mark.parametrize("url", test_URLs + [
         url.encode("ascii") for url in test_URLs])
     def test_URL(self, url):
+        """
+        Transport Request accepts its URL as either a byte or a unicode string.
+
+        Internally URL information is kept as the native Python str type.
+
+        """
+        request = Request(url)
+        assert isinstance(request.url, str)
+        if url.__class__ is str:
+            assert request.url is url
+        elif url.__class__ is u:
+            assert request.url == url.encode("ascii")  # Python 2.
+        else:
+            assert request.url == url.decode("ascii")  # Python 3.
+
+    test_URLs = [unichr(0), u("Jurko") + unichr(0)] if sys.version_info <= (3, 6) else []  # "https://bugs.python.org/issue32745"
+    @pytest.mark.parametrize("url", test_URLs + [
+        url.encode("ascii") for url in test_URLs])
+    def test_URL_null_bytes(self, url):
         """
         Transport Request accepts its URL as either a byte or a unicode string.
 
