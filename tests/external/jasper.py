@@ -35,7 +35,7 @@ try:
     client = Client(url, username='jeff', password='ortel')
     print(client)
     print(client.service.list(''))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)

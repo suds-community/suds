@@ -62,7 +62,7 @@ try:
     result = client.service.echoIntegerArray(inputIntegerArray=input)
     print('echoIntegerArray() = %s' % (result,))
     assert result == input
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -82,7 +82,7 @@ try:
     print('token="%s"' % (token,))
     user = client.service.getUser(token, 'soaptester')
     print('user="%s"' % (user,))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -102,7 +102,7 @@ try:
     print('**clone** token="%s"' % (token,))
     user = client.service.getUser(token, 'soaptester')
     print('**clone** user="%s"' % (user,))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -119,7 +119,7 @@ try:
     client = Client(url)
     print(client)
     print(client.service.getQuote(False))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -141,7 +141,7 @@ try:
     print('LoadGroupHierarchy("demo")')
     groupHierarchy = client.service.LoadGroupHierarchy("demo")
     print('result:\n%s' % (groupHierarchy,))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -160,7 +160,7 @@ try:
     #client.setport(0)
     tpa = client.factory.create('ns1:TPA_Extensions')
     print(client.service.Ping(tpa, "hello"))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -177,7 +177,7 @@ try:
     client = Client(url)
     print(client)
     print(client.service.genSSHA('hello', 'sha1'))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -197,7 +197,7 @@ try:
     print('Logon()')
     reply = client.service.Logon('testuser', 'test')
     print(reply)
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -213,7 +213,7 @@ try:
     start(url)
     client = Client(url)
     print(client)
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -233,7 +233,7 @@ try:
     print(env)
     options = client.factory.create('ns4:MapImageOptions')
     print(options)
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -251,7 +251,7 @@ try:
     print(client)
     #client.setport(0)
     print(client.service.getBank("76251020"))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -267,7 +267,7 @@ try:
     start(url)
     client = Client(url)
     print(client)
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -293,7 +293,7 @@ try:
     timer.stop()
     print('str(client): %s' % (timer,))
     print('client:\n%s' % (s,))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)

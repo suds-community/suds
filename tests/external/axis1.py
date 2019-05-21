@@ -168,7 +168,7 @@ try:
     print('\nreply(\n%s\n)\n' % (str(result),))
     result = client.service.updatePerson(ap, None)
     print('\nreply(\n%s\n)\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -233,7 +233,7 @@ try:
     print('addPersion()')
     result = client.service.addPerson(person)
     print('\nreply(\n%s\n)\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -251,7 +251,7 @@ try:
     print('echo(None)')
     result = client.service.echo(None)
     print('\nreply( "%s" )\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -266,7 +266,7 @@ try:
     print('hello()')
     result = client.service.hello()
     print('\nreply( %s )\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -281,7 +281,7 @@ try:
     print('testVoid()')
     result = client.service.getVoid()
     print('\nreply( %s )\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -304,7 +304,7 @@ try:
     array.item = ['my', 'dog', 'likes', 'steak']
     result = client.service.printList(array)
     print('\nreply( %s )\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -322,7 +322,7 @@ try:
         result = client.service.getList(s, n)
         print('\nreply( %s )\n' % (str(result),))
         assert ( isinstance(result, list) and len(result) == n )
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
@@ -338,7 +338,7 @@ try:
     result = client.service.throwException()
     print('\nreply( %s )\n' % (tostr(result),))
     raise Exception('Fault expected and not raised')
-except WebFault, f:
+except WebFault as f:
     print(f)
     print(f.fault)
 except (KeyboardInterrupt, SystemExit):
@@ -355,7 +355,7 @@ try:
     print('testExceptions()')
     result = client.service.throwException()
     print('\nreply( %s )\n' % (str(result),))
-except WebFault, f:
+except WebFault as f:
     errors += 1
     print(f)
     print(f.fault)
