@@ -1,6 +1,10 @@
 Release notes
 =============
 
+version 0.8.2 (Unreleased)
+------------------------
+* Add option to disable the sorting of namespaces.
+
 version 0.8.1 (2019-02-06)
 ------------------------
 * Fix bug introduced in 0.8.0, initialize optional arrays with empty lists (@guifran001)

@@ -32,6 +32,7 @@ class ServiceDefinition(UnicodeMixin):
     of a service.
     @ivar wsdl: A wsdl.
     @type wsdl: L{wsdl.Definitions}
+    @ivar sort_namespaces: Whether to sort namespaces on storing them.
     @ivar service: The service object.
     @type service: L{suds.wsdl.Service}
     @ivar ports: A list of port-tuple: (port, [(method-name, pdef)])
@@ -48,6 +49,8 @@ class ServiceDefinition(UnicodeMixin):
         @type wsdl: L{Definitions}
         @param service: A service B{name}.
         @type service: str
+        @param service: A service B{name}.
+        @param sort_namespaces: Whether to sort namespaces on storing them.
         """
         self.wsdl = wsdl
         self.service = service
@@ -121,7 +124,10 @@ class ServiceDefinition(UnicodeMixin):
                 if ns[1] in namespaces: continue
                 namespaces.append(ns[1])
         i = 0
-        namespaces.sort()
+
+        if self.wsdl.options.sortNamespaces:
+            namespaces.sort()
+
         for u in namespaces:
             p = self.nextprefix()
             ns = (p, u)

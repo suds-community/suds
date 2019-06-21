@@ -387,6 +387,7 @@ They are as follows:
 * autoblend:: Flag that ensures that the schema(s) defined
 within the WSDL import each other.
 * nosend:: Flag that causes suds to generate the soap envelope but not send it. Instead, a `RequestContext` is returned Default: False.
+* sortNamespaces:: Flag that causes suds to sort namespaces alphabetically on storing them. Default: True.
 
 ## Enumerations
 

@@ -821,6 +821,226 @@ def test_resolving_references_to_later_entities_in_XML():
     assert input_element == ('Lollypop', 'xsd-ns')
 
 
+def test_sortnamespaces_default():
+    """
+    Option to not sort namespaces.
+    """
+    wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions targetNamespace="urn:wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="urn:wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <types>
+        <xs:schema elementFormDefault="qualified" targetNamespace="urn:wsdl" xmlns:ns1="urn:wsdl:common" xmlns:ns2="urn:wsdl:account" xmlns:tns="urn:wsdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:import namespace="urn:wsdl:common"/>
+            <xs:import namespace="urn:wsdl:account"/>
+            <xs:element name="PingRequest">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="ns1:RequestMessage"/>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="PingResponse">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="ns1:ResponseMessage"/>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="CustomField">
+                <xs:sequence>
+                    <xs:element name="FieldId" type="xs:long"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema elementFormDefault="qualified" targetNamespace="urn:wsdl:common" xmlns:tns="urn:wsdl:common" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:complexType name="RequestMessage">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="MessageHeader" type="tns:MessageHeader"/>
+                    <xs:element minOccurs="0" name="SessionId" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="ResponseMessage">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="MessageHeader" type="tns:MessageHeader"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="ErrorList" type="tns:ErrorResponse"/>
+                    <xs:element name="hasErrors" type="xs:boolean"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="MessageHeader">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Trace" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="ErrorResponse">
+                <xs:sequence>
+                    <xs:element name="ErrorCode" type="xs:int"/>
+                    <xs:element name="ErrorMessage" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="Email">
+                <xs:sequence>
+                    <xs:element name="EmailAddress" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema elementFormDefault="qualified" targetNamespace="urn:wsdl:account" xmlns:msg="urn:wsdl:common" xmlns:tns="urn:wsdl:account" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:import namespace="urn:wsdl:common" />
+            <xs:simpleType name="UserAccess">
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="NO_ACCESS"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:schema>
+    </types>
+    <message name="PingRequest">
+        <part element="tns:PingRequest" name="body"/>
+    </message>
+    <message name="PingResponse">
+        <part element="tns:PingResponse" name="body"/>
+    </message>
+    <portType name="Service">
+        <operation name="Ping">
+            <input message="tns:PingRequest"/>
+            <output message="tns:PingResponse"/>
+        </operation>
+    </portType>
+    <binding name="ServiceBinding" type="tns:Service">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="Ping">
+            <soap:operation soapAction="" style="document"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+    <service name="Service">
+        <port binding="tns:ServiceBinding" name="ServicePort">
+            <soap:address location="/services/Service/"/>
+        </port>
+    </service>
+</definitions>
+""")
+    store = MockDocumentStore(wsdl=wsdl)
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
+    prefixes = client.sd[0].prefixes
+    assert str(prefixes[0][1]) == 'urn:wsdl'
+    assert str(prefixes[1][1]) == 'urn:wsdl:account'
+    assert str(prefixes[2][1]) == 'urn:wsdl:common'
+
+
+def test_sortnamespaces_turned_off():
+    """
+    Option to not sort namespaces.
+    """
+    wsdl = b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions targetNamespace="urn:wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="urn:wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <types>
+        <xs:schema elementFormDefault="qualified" targetNamespace="urn:wsdl" xmlns:ns1="urn:wsdl:common" xmlns:ns2="urn:wsdl:account" xmlns:tns="urn:wsdl" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:import namespace="urn:wsdl:common"/>
+            <xs:import namespace="urn:wsdl:account"/>
+            <xs:element name="PingRequest">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="ns1:RequestMessage"/>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="PingResponse">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="ns1:ResponseMessage"/>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:complexType name="CustomField">
+                <xs:sequence>
+                    <xs:element name="FieldId" type="xs:long"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema elementFormDefault="qualified" targetNamespace="urn:wsdl:common" xmlns:tns="urn:wsdl:common" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:complexType name="RequestMessage">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="MessageHeader" type="tns:MessageHeader"/>
+                    <xs:element minOccurs="0" name="SessionId" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="ResponseMessage">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="MessageHeader" type="tns:MessageHeader"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="ErrorList" type="tns:ErrorResponse"/>
+                    <xs:element name="hasErrors" type="xs:boolean"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="MessageHeader">
+                <xs:sequence>
+                    <xs:element minOccurs="0" name="Trace" type="xs:int"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="ErrorResponse">
+                <xs:sequence>
+                    <xs:element name="ErrorCode" type="xs:int"/>
+                    <xs:element name="ErrorMessage" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="Email">
+                <xs:sequence>
+                    <xs:element name="EmailAddress" type="xs:string"/>
+                </xs:sequence>
+            </xs:complexType>
+        </xs:schema>
+        <xs:schema elementFormDefault="qualified" targetNamespace="urn:wsdl:account" xmlns:msg="urn:wsdl:common" xmlns:tns="urn:wsdl:account" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+            <xs:import namespace="urn:wsdl:common" />
+            <xs:simpleType name="UserAccess">
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="NO_ACCESS"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:schema>
+    </types>
+    <message name="PingRequest">
+        <part element="tns:PingRequest" name="body"/>
+    </message>
+    <message name="PingResponse">
+        <part element="tns:PingResponse" name="body"/>
+    </message>
+    <portType name="Service">
+        <operation name="Ping">
+            <input message="tns:PingRequest"/>
+            <output message="tns:PingResponse"/>
+        </operation>
+    </portType>
+    <binding name="ServiceBinding" type="tns:Service">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="Ping">
+            <soap:operation soapAction="" style="document"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+        </operation>
+    </binding>
+    <service name="Service">
+        <port binding="tns:ServiceBinding" name="ServicePort">
+            <soap:address location="/services/Service/"/>
+        </port>
+    </service>
+</definitions>
+""")
+    store = MockDocumentStore(wsdl=wsdl)
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store, sortNamespaces=False)
+    prefixes = client.sd[0].prefixes
+    assert str(prefixes[0][1]) == 'urn:wsdl:common'
+    assert str(prefixes[1][1]) == 'urn:wsdl'
+    assert str(prefixes[2][1]) == 'urn:wsdl:account'
+
+
 class TestRecursiveWSDLImport:
     """
     Test different recursive WSDL import variations.

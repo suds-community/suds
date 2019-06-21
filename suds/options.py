@@ -123,6 +123,11 @@ class Options(Skin):
             ever automatically unwrapped.
                 - type: I{bool}
                 - default: True
+        - B{sortNamespaces} - Namespaces are sorted alphabetically. If disabled,
+            namespaces are left in the order they are received from the source.
+            Enabled by default for historical purposes.
+                - type: I{bool}
+                - default: True
     """
     def __init__(self, **kwargs):
         domain = __name__
@@ -146,5 +151,6 @@ class Options(Skin):
             Definition('cachingpolicy', int, 0),
             Definition('plugins', (list, tuple), []),
             Definition('nosend', bool, False),
-            Definition('unwrap', bool, True)]
+            Definition('unwrap', bool, True),
+            Definition('sortNamespaces', bool, True)]
         Skin.__init__(self, domain, definitions, kwargs)
