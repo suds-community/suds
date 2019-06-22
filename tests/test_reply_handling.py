@@ -408,6 +408,39 @@ def test_simple_bare_and_wrapped_output():
     assert response_wrapped == data
 
 
+def test_allow_unknown_message_parts():
+    # Prepare web service proxies.
+    client = testutils.client_from_wsdl(testutils.wsdl("""\
+      <xsd:element name="Wrapper">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="fResponse" type="xsd:string"/>
+            <xsd:element name="gResponse" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>""", output="Wrapper"))
+
+    client.set_options(allowUnknownMessageParts=True)
+
+    data = "The meaning of life."
+    def get_response(client, x):
+        return client.service.f(__inject=dict(reply=suds.byte_str(x)))
+
+    response = get_response(client, """<?xml version="1.0"?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Body>
+    <Wrapper xmlns="my-namespace">
+      <fResponse>%s</fResponse>
+      <gResponse></gResponse>
+      <hResponse></hResponse>
+    </Wrapper>
+  </Body>
+</Envelope>""" % (data,))
+    assert response.fResponse == data
+    assert response.gResponse == None
+    # hResponse ignored
+
+
 def test_wrapped_sequence_output():
     client = testutils.client_from_wsdl(testutils.wsdl("""\
       <xsd:element name="Wrapper">

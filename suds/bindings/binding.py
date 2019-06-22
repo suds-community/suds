@@ -202,7 +202,7 @@ class Binding(object):
             tag = node.name
             rt = dictionary.get(tag)
             if rt is None:
-                if node.get("id") is None:
+                if node.get("id") is None and not self.options().allowUnknownMessageParts:
                     message = "<%s/> not mapped to message part" % (tag,)
                     raise Exception(message)
                 continue

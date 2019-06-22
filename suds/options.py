@@ -53,11 +53,16 @@ class Options(Skin):
             store.
                 - type: L{DocumentStore}
                 - default: L{defaultDocumentStore}
-        - B{extraArgumentErrors} - Raise exceptions when extra arguments are
-            detected when invoking a web service operation, compared to the
+        - B{extraArgumentErrors} - Raise exceptions when unknown message parts
+            are detected when receiving a web service reply, compared to the
             operation's WSDL schema definition.
                 - type: I{bool}
                 - default: True
+        - B{allowUnknownMessageParts} - Raise exceptions when extra arguments are
+            detected when invoking a web service operation, compared to the
+            operation's WSDL schema definition.
+                - type: I{bool}
+                - default: False
         - B{faults} - Raise faults raised by server, else return tuple from
             service method invocation as (httpcode, object).
                 - type: I{bool}
@@ -135,6 +140,7 @@ class Options(Skin):
             Definition('cache', Cache, NoCache()),
             Definition('documentStore', DocumentStore, defaultDocumentStore),
             Definition('extraArgumentErrors', bool, True),
+            Definition('allowUnknownMessageParts', bool, False),
             Definition('faults', bool, True),
             Definition('transport', Transport, None, TpLinker()),
             Definition('service', (int, basestring), None),
