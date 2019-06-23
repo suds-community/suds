@@ -1,7 +1,7 @@
 Release notes
 =============
 
-version 0.8.2 (Unreleased)
+version 0.8.2 (2019-06-23)
 ------------------------
 * Add option to disable the sorting of namespaces.
 * Add option to allow unknown message parts.
