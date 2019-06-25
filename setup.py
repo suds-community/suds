@@ -683,6 +683,7 @@ setup(
     version=__version__,
     description="Lightweight SOAP client (community fork)",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     keywords=["SOAP", "web", "service", "client"],
     url=project_url,
     download_url=download_url,
