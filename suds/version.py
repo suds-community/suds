@@ -22,5 +22,5 @@ See the setup.py script for more detailed information.
 
 """
 
-__version__ = "0.8.2"
+__version__ = "0.8.3"
 __build__ = ""
