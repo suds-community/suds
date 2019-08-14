@@ -120,6 +120,9 @@ class MockFP:
     def readline():
         raise MustNotBeCalled
 
+    def close(self):
+        pass
+
 
 class MockURLOpenerSaboteur:
     """
