@@ -112,19 +112,15 @@ def pytest_configure(config):
         "argument list and keyword argument dictionary) based on the received "
         "input data. For more detailed information see the "
         "indirect_parametrize pytest plugin implementation module.")
+    """pytest hook publishing references in the toplevel pytest namespace."""
+    pytest.indirect_parametrize = indirect_parametrize
 
 
 def pytest_generate_tests(metafunc):
     """pytest hook called for all detected test functions."""
-    func = metafunc.function
-    try:
-        mark = func.indirect_parametrize
-    except AttributeError:
+    mark = metafunc.definition.get_closest_marker('indirect_parametrize')
+    if not mark:
         return
     args, kwargs = mark.args[0](*mark.args[1:], **mark.kwargs)
     metafunc.parametrize(*args, **kwargs)
 
-
-def pytest_namespace():
-    """pytest hook publishing references in the toplevel pytest namespace."""
-    return {'indirect_parametrize': indirect_parametrize}

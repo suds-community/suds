@@ -268,8 +268,8 @@ class TestUnsupportedParameterDefinitions:
         self.service = client.service
 
     @pytest.mark.parametrize("test_args_required", (
-        pytest.mark.xfail(reason="empty choice member items not supported")(
-            True),
+        pytest.param(True, marks=pytest.mark.xfail(
+            reason="empty choice member items not supported")),
         False))
     def test_choice_containing_an_empty_sequence(self, test_args_required):
         """
@@ -295,15 +295,16 @@ class TestUnsupportedParameterDefinitions:
     @pytest.mark.parametrize("choice", (
         # Explicitly marked as optional and containing only non-optional
         # elements.
-        pytest.mark.xfail(reason="suds does not yet support minOccurs/"
-            "maxOccurs attributes on all/choice/sequence order indicators")(
+        pytest.param(
         """\
           <xsd:complexType>
             <xsd:choice minOccurs="0">
               <xsd:element name="aString" type="xsd:string" />
               <xsd:element name="anInteger" type="xsd:integer" />
             </xsd:choice>
-          </xsd:complexType>"""),
+          </xsd:complexType>""", marks=pytest.mark.xfail(
+              reason="suds does not yet support minOccurs/"
+              "maxOccurs attributes on all/choice/sequence order indicators")),
         # Explicitly marked as optional and containing at least one
         # non-optional element.
         """\
