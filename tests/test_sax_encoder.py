@@ -141,7 +141,7 @@ symmetric_decoded_encoded_test_data__broken_encode = [
     (e, d) for d, e in
         symmetric_decoded_encoded_test_data +
         symmetric_decoded_encoded_test_data__broken_encode] + [
-    pytest.mark.xfail((e, d), reason="CDATA encoding not supported yet")
+    pytest.param(e, d, marks=pytest.mark.xfail(reason="CDATA encoding not supported yet"))
         for d, e in symmetric_decoded_encoded_test_data__broken] + [
     # Character reference lookalikes.
     (x, x) for x in (
@@ -164,7 +164,7 @@ def test_decode(input, expected):
 
 @pytest.mark.parametrize(("input", "expected"),
     symmetric_decoded_encoded_test_data + [
-    pytest.mark.xfail(x, reason="CDATA encoding not supported yet") for x in
+    pytest.param(x, y, marks=pytest.mark.xfail(reason="CDATA encoding not supported yet")) for x, y in
         symmetric_decoded_encoded_test_data__broken +
         symmetric_decoded_encoded_test_data__broken_encode] + [
     # Double encoding.
