@@ -411,7 +411,7 @@ class TestSendingToURLWithAMissingProtocolIdentifier:
         request = create_request(url)
         e = pytest.raises(ValueError, send_method, transport, request)
         try:
-            assert "unknown url type" in str(e)
+            assert "unknown url type" in str(e.value)
         finally:
             del e  # explicitly break circular reference chain in Python 3
 
