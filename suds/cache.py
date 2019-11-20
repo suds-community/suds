@@ -285,10 +285,11 @@ class DocumentCache(FileCache):
         fp = None
         try:
             fp = self._getf(id)
-            if fp is None:
-                return None
-            p = suds.sax.parser.Parser()
-            return p.parse(fp)
+            if fp is not None:
+                p = suds.sax.parser.Parser()
+                cached = p.parse(fp)
+                fp.close()
+                return cached
         except Exception:
             if fp is not None:
                 fp.close()
@@ -319,7 +320,9 @@ class ObjectCache(FileCache):
         try:
             fp = self._getf(id)
             if fp is not None:
-                return pickle.load(fp)
+                cached = pickle.load(fp)
+                fp.close()
+                return cached
         except Exception:
             if fp is not None:
                 fp.close()
