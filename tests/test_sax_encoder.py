@@ -59,7 +59,7 @@ the current encode()/decode() operation implementations are broken.
 invariant_decoded_encoded_test_data__broken = (
     # CDATA handling.
     "<![CDATA['\"&<> \t\r\n\v\f &lt; &gt; &apos; &quot; &amp;]]>",
-    "<![CDATA[\\'\\\"\\&\\<\\> \\&lt; \\&gt; \\&apos; \\&quot; ]\&amp;]]>",
+    "<![CDATA[\\'\\\"\\&\\<\\> \\&lt; \\&gt; \\&apos; \\&quot; ]\\&amp;]]>",
     "<![CDATA[&&<><><><>>>>><<<< This is !!!&& &amp; a test...."
         "<<>>>>>>>>}}>]?]>>>>]]>")
 

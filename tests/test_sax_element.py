@@ -160,7 +160,7 @@ class TestStringRepresentation:
 
     def test_plain_method(self):
         element = self.create_test_element(self.str_formatted_xml)
-        expected = re.sub("\s*[\r\n]\s*", "", self.str_formatted_xml)
+        expected = re.sub(r"\s*[\r\n]\s*", "", self.str_formatted_xml)
         result = element.plain()
         assert result == expected
 

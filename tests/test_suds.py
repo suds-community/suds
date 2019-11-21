@@ -225,7 +225,7 @@ def test_converting_metadata_to_string():
     assert len(metadata) == 2
     metadata_string = str(metadata)
     assert re.search(" sxtype = ", metadata_string)
-    assert re.search(" ordering\[\] = ", metadata_string)
+    assert re.search(r" ordering\[\] = ", metadata_string)
 
 
 def test_empty_invalid_WSDL(monkeypatch):
