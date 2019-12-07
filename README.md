@@ -120,22 +120,22 @@ Suggested modules for debugging:
   * suds.client:: Set the logging level to DEBUG on this module to see soap messages (in & out) and http headers.
   * suds.transport:: Set the logging level to DEBUG on this module to see more details about soap messages (in& out) and http headers.
   * suds.xsd.schema:: Set the logging level to DEBUG on this module to see digestion of the schema(s).
-  * suds.wsdl:: Set the logging level to \'\'DEBUG\'\' on this module to see digestion WSDL.
+  * suds.wsdl:: Set the logging level to `DEBUG` on this module to see digestion WSDL.
 
 ## Basic Usage
 
 Version: API\^3\^
 
-The \'\'suds\'\'
+The `suds`
 `Client` class provides a consolidated API for consuming web services.
 The object contains (2) sub-namespaces:
 
-\_\_service\_\_:: The
+__service__:: The
 `service` namespace provides a proxy for the consumed service. This
 object is used to invoke operations (methods) provided by the service
 endpoint.
 
-\_\_factory\_\_:: The
+__factory__:: The
 `factory` namespace provides a factory that may be used to create
 instances of objects and types defined in the WSDL.
 
@@ -177,18 +177,18 @@ list of methods provide by the service:
          Phone
          AnotherPerson
 
-\'\'\'note:\'\'\' See example of service with multiple ports below.
+note: See example of service with multiple ports below.
 
 The sample ouput lists that the service named
-\'\'`WebServiceTestBeanService`\'\' has methods such as
+`WebServiceTestBeanService` has methods such as
 getPercentBodyFat() and addPerson().
 
 #### Simple Arguments
 
 Let\'s start with the simple example. The getPercentBodyFat() method has
-the signature of getPercentBodyFat(\'\'xs:string\'\' name,
-\'\'xs:int\'\' height, \'\'xs:int\'\' weight). In this case, the
-parameters are \'\'simple\'\' types. That is, they not objects. This
+the signature of getPercentBodyFat(`xs:string` name,
+`xs:int` height, `xs:int` weight). In this case, the
+parameters are `simple` types. That is, they not objects. This
 method would be invoked as follows:
 
     #!python
@@ -212,15 +212,15 @@ You have 21% body fat.
 
 #### Complex Arguments
 
-The addPerson() method takes a \'\'person\'\' argument of type:
-\'\'Person\'\' and has a signature of: addPerson(\'\'Person\'\' person,
+The addPerson() method takes a `person` argument of type:
+`Person` and has a signature of: addPerson(`Person` person,
 ) where parameter type is printed followed by it\'s name. There is a
 type (or class) named \'person\' which is coincidentally the same name
 as the argument. Or in the case of getPercentBodyFat() the parameters
-are \_\_string\_\_ of type xs:string and \_\_integer\_\_ of type xs:int.
+are __string__ of type xs:string and __integer__ of type xs:int.
 
-So, to create a \'\'Person\'\' object to pass as an argument we need to
-get a person argument using the \'\'factory\'\' sub-namespace as
+So, to create a `Person` object to pass as an argument we need to
+get a person argument using the `factory` sub-namespace as
 follows:
 
     #!python
@@ -239,7 +239,7 @@ follows:
        }
 
 As you can see, the object is created as defined by the WSDL. The list
-of phone number is empty so we\'ll have to create a \'\'Phone\'\'
+of phone number is empty so we\'ll have to create a `Phone`
 object:
 
     #!python
@@ -256,7 +256,7 @@ create a name object first:
     name.first = 'Elmer'
     name.last = 'Fudd'
 
-Now, let\'s set the properties of our \'\'Person\'\' object
+Now, let\'s set the properties of our `Person` object
 
     #!python
     person.name = name
@@ -278,34 +278,34 @@ or
 
 It\'s that easy.
 
-The ability to use python \'\'dict\'\' to represent complex objects was
-\'\'\'re-introduced in 0.3.8\'\'\'. However, this is not the preferred
+The ability to use python `dict` to represent complex objects was
+re-introduced in 0.3.8. However, this is not the preferred
 method because it may lead to passing incomplete objects. Also, this
-approach has a significant limitation. Users may \_\_not\_\_ use python
-\'\'dict\'\' for complex objects when they are subclasses (or
+approach has a significant limitation. Users may __not__ use python
+`dict` for complex objects when they are subclasses (or
 extensions) of types defined in the wsdl/schema. In other words, if the
-schema defines a type to be an \'\'Animal\'\' and you wish to pass a
-\'\'Dog\'\' (assumes Dog \'\'isa\'\' Animal), you may \_\_not\_\_ use a
-\'\'dict\'\' to represent the dog. In this case, suds needs to set the
-xsi:type=\"Dog\" but cannot because the python \'\'dict\'\' does not
-provide enough information to indicate that it is a \'\'Dog\'\' not an
-\'\'Animal\'\'. Most likely, the server will reject the request and
-indicate that it cannot instantiate a abstract \'\'Animal\'\'.
+schema defines a type to be an `Animal` and you wish to pass a
+`Dog` (assumes Dog `isa` Animal), you may __not__ use a
+`dict` to represent the dog. In this case, suds needs to set the
+xsi:type=\"Dog\" but cannot because the python `dict` does not
+provide enough information to indicate that it is a `Dog` not an
+`Animal`. Most likely, the server will reject the request and
+indicate that it cannot instantiate a abstract `Animal`.
 
 #### Complex Arguments Using Python (dict)
 
-\'\'\'Note:\'\'\' version 0.3.8+
+Note: version 0.3.8+
 
 Just like the factory example, let\'s assume the addPerson() method
-takes a \'\'person\'\' argument of type: \'\'Person\'\'. So, to create a
-\'\'Person\'\' object to pass as an argument we need to get a person
-object and we can do so by creating a simple python \'\'dict\'\'.
+takes a `person` argument of type: `Person`. So, to create a
+`Person` object to pass as an argument we need to get a person
+object and we can do so by creating a simple python `dict`.
 
     #!python
     person = {}
 
 According to the WSDL we know that the Person contains a list of Phone
-objects so we\'ll need \'\'dict\'\'s for them as well.
+objects so we\'ll need `dict`s for them as well.
 
     #!python
     phone = {
@@ -323,7 +323,7 @@ create a name object first:
         'last':'Fudd'
     }
 
-Now, let\'s set the properties of our \'\'Person\'\' object
+Now, let\'s set the properties of our `Person` object
 
     #!python
     person['name'] = name
@@ -352,7 +352,7 @@ return a tuple (\<status\>, \<returned-value\>) instead as follows:
 
 ### Options
 
-The \'\'suds\'\'
+The `suds`
 `client` has many that may be used to control the behavior of the
 library. Some are
 `general options` and others are
@@ -380,7 +380,7 @@ They are as follows:
 * wsse:: Provides for WS-Security object. \
 * __inject`:: Controls message/reply message injection.
 * doctor:: The schema `doctor` specifies an object used to fix broken schema(s).
-* xstq:: The XML schema type qualified flag indicates that `xsi:type` attribute \_\_values\_\_ should be qualified by namespace.
+* xstq:: The XML schema type qualified flag indicates that `xsi:type` attribute __values__ should be qualified by namespace.
 * prefixes:: Elements of the soap message should be qualified (when needed) using XML prefixes as opposed to xmlns=\"\" syntax.
 * timeout:: The URL connection timeout (seconds) default=90.
 * retxml:: Flag that causes the I{raw} soap envelope to be returned instead of the python object graph.
@@ -406,7 +406,7 @@ Let\'s say the wsdl defines the following enumeration:
     </xs:simpleType>
 
 The client can instantiate the enumeration so it can be used. Misspelled
-references to elements of the \'\'enum\'\' will raise a `AttrError`
+references to elements of the `enum` will raise a `AttrError`
 exception as:
 
     #!python
@@ -417,8 +417,8 @@ exception as:
 
 The
 `factory` is used to create complex objects defined the the wsdl/schema.
-This is \_\_not\_\_ necessary for parameters or types that are specified
-as \'\'simple\'\' types such as xs:string, xs:int, etc \...
+This is __not__ necessary for parameters or types that are specified
+as `simple` types such as xs:string, xs:int, etc \...
 
 The create() method should always be used becuase it returns objects
 that already have the proper structure and schema-type information.
@@ -444,7 +444,7 @@ full qualification syntax as (as of 0.2.6):
     #!python
     name = client.factory.create('{http://test.server.enterprise.rhq.org/}person')
 
-Qualified names can only be used for the \'\'\'first\'\'\' part of the
+Qualified names can only be used for the first part of the
 name, when using (.) dot notation to specify a path.
 
 ## Services With Multiple Ports
@@ -500,7 +500,7 @@ the method name with the port.
 
 There are (2) ways to do this:
 
--   Select a default port using the \'\'port\'\'
+-   Select a default port using the `port`
     `    option` before invoking the method as:
 
 <!-- -->
@@ -516,7 +516,7 @@ There are (2) ways to do this:
     #!python
     client.service.soap.getBank()
 
-\'\'\'**\'\'\'After r551 version 0.3.7, this changes some to support
+**After r551 version 0.3.7, this changes some to support
 multiple-services within (1) WSDL as follows:**
 
 This example only has (1) method defined for each port but it could very
@@ -529,12 +529,12 @@ invocation to be qualifed (as shown above) by the port as:
 unless the user wants to specify a particular port. In most cases, the
 server will work properly with any of the soap ports. However, if you
 want to invoke the getBank() method on this service the user may qualify
-the method name with the port. The \'\'port\'\' may be subscripted
+the method name with the port. The `port` may be subscripted
 either by name (string) or index(int).
 
 There are many ways to do this:
 
--   Select a default port using the \'\'port\'\'
+-   Select a default port using the `port`
     `    option` before invoking the method as:
 
 <!-- -->
@@ -543,14 +543,14 @@ There are many ways to do this:
     client.set_options(port='soap')
     client.service.getBank()
 
--   fully qualify the method using the port \'\'name\'\' as:
+-   fully qualify the method using the port `name` as:
 
 <!-- -->
 
     #!python
     client.service['soap'].getBank()
 
--   fully qualify the method using the port \'\'index\'\' as:
+-   fully qualify the method using the port `index` as:
 
 <!-- -->
 
@@ -624,7 +624,7 @@ And are reported by suds as:
           detailsType
 
 This example only has (1) method defined for each port but it could very
-likely have may methods defined. Suds does \_\_not\_\_ require the
+likely have may methods defined. Suds does __not__ require the
 method invocation to be qualifed (as shown above) by the service and/or
 port as:
 
@@ -634,19 +634,19 @@ port as:
 unless the user wants to specify a particular service and/or port. In
 most cases, the server will work properly with any of the soap ports.
 However, if you want to invoke the getBank() method on the
-\'\'`OtherBLZService`\'\' service the user may qualify the method name
+`OtherBLZService` service the user may qualify the method name
 with the service and/or port. If not specified, suds will default the
 service to the 1st server defined in the WSDL and default to the 1st
 port within each service. Also, when a WSDL defines (1) services, the
 \[` subscript is applied to the port selection. This may be a little
 confusing because the syntax for subscripting can seem inconsistent.
-Both the \'\'service\'\' \_\_and\_\_ \'\'port\'\' may be subscripted
+Both the `service` __and__ `port` may be subscripted
 either by name (string) or index (int).
 
 There are many ways to do this:
 
--   Select a default service using the \'\'service\'\' option and
-    default port using \'\'port\'\' option
+-   Select a default service using the `service` option and
+    default port using `port` option
     `    option` before invoking the method as:
 
 <!-- -->
@@ -655,14 +655,14 @@ There are many ways to do this:
     client.set_options(service='OtherBLZService', port='soap')
     client.service.getBank()
 
--   method qualified by \'\'service\'\' and \'\'port\'\' as:
+-   method qualified by `service` and `port` as:
 
 <!-- -->
 
     #!python
     client.service['OtherBLZService']['soap'].getBank()
 
--   method qualified by \'\'service\'\' and \'\'port\'\' using indexes
+-   method qualified by `service` and `port` using indexes
     as:
 
 <!-- -->
@@ -670,29 +670,29 @@ There are many ways to do this:
     #!python
     client.service[1][0].getBank()
 
--   method qualified by \'\'service\'\' (by name) only as:
+-   method qualified by `service` (by name) only as:
 
 <!-- -->
 
     #!python
     client.service['OtherBLZService'].getBank()
 
--   method qualified by \'\'service\'\' (by index) only as:
+-   method qualified by `service` (by index) only as:
 
 <!-- -->
 
     #!python
     client.service[1].getBank()
 
-Note, that if a WSDL defines more then one service, you \_\_must\_\_
-qualify the \'\'service\'\' via
+Note, that if a WSDL defines more then one service, you __must__
+qualify the `service` via
 `option` or by using the subscripting syntax in order to specify the
-\'\'port\'\' using the subscript syntax.
+`port` using the subscript syntax.
 
 ## SOAP Headers
 
 SOAP headers may be passed during the service invocation by using the
-\'\'soapheaders\'\' `option` as follows:
+`soapheaders` `option` as follows:
 
     #!python
     client = client(url)
@@ -722,7 +722,7 @@ OR
     client.set_options(soapheaders=(userid,password))
     result = client.service.addPerson(person)
 
-The \'\'soapheaders\'\' option may also be assigned a dictionary for
+The `soapheaders` option may also be assigned a dictionary for
 those cases when optional headers are specified and users don\'t want to
 pass None place holders. This works much like the method parameters. Eg:
 
@@ -732,16 +732,16 @@ pass None place holders. This works much like the method parameters. Eg:
     client.set_options(soapheaders=myheaders)
     result = client.service.addPerson(person)
 
-Passing \'\'soapheaders\'\' by keyword (dict) is available in 0.3.4
+Passing `soapheaders` by keyword (dict) is available in 0.3.4
 (r442) and later.
 
 ## Custom SOAP Headers
 
 Custom SOAP headers may be passed during the service invocation by using
-the \'\'soapheaders\'\'
-`option`. A \'\'custom\'\' soap header is defined as a header that is
-required by the service by \_\_not\_\_ defined in the wsdl. Thus, the
-\'\'easy\'\' method of passing soap headers already described cannot be
+the `soapheaders`
+`option`. A `custom` soap header is defined as a header that is
+required by the service by __not__ defined in the wsdl. Thus, the
+`easy` method of passing soap headers already described cannot be
 used. This is done by constructing and passing an
 `Element` or collection of
 `Elements` as follows:
@@ -754,7 +754,7 @@ used. This is done by constructing and passing an
     client.set_options(soapheaders=ssn)
     result = client.service.addPerson(person)
 
-Do \_\_not\_\_ try to pass the header as an XML \'\'string\'\' such as:
+Do __not__ try to pass the header as an XML `string` such as:
 
     #!python
     client = client(url)
@@ -763,11 +763,11 @@ Do \_\_not\_\_ try to pass the header as an XML \'\'string\'\' such as:
     result = client.service.addPerson(person)
 
 It will not work because: 1. Only
-`Elements` are processed as \'\'custom\'\' headers. 1. The XML string
+`Elements` are processed as `custom` headers. 1. The XML string
 would be escaped as &lt;ssn:SessionID&gt;123&lt;/ssn:SessionID&gt;
 anyway.
 
-\'\'\'\*Notes:\'\'\' 1. Passing single
+\*Notes: 1. Passing single
 `Elements` as soap headers fixed in Ticket \#232 (r533) and will be
 released on 0.3.7. 1. Reusing this
 `Element` in subsequent calls fixed in Ticket \#233 (r533) and will be
@@ -776,7 +776,7 @@ released on 0.3.7.
 ## WS-SECURITY
 
 As of r452 / 0.3.4 (beta) to provide basic ws-security with
-\'\'`UsernameToken`\'\' with \'\'clear-text\'\' password (no digest).
+`UsernameToken` with `clear-text` password (no digest).
 
     #!python
     from suds.wsse import *
@@ -785,7 +785,7 @@ As of r452 / 0.3.4 (beta) to provide basic ws-security with
     security.tokens.append(token)
     client.set_options(wsse=security)
 
-or, if the \'\'Nonce\'\' and \'\'Create\'\' elements are needed, they
+or, if the `Nonce` and `Create` elements are needed, they
 can be generated and set as follows:
 
     #!python
@@ -799,8 +799,8 @@ can be generated and set as follows:
     security.tokens.append(token)
     client.set_options(wsse=security)
 
-but, if you want to manually set the \'\'Nonce\'\' and/or
-\'\'Created\'\', you may do as follows:
+but, if you want to manually set the `Nonce` and/or
+`Created`, you may do as follows:
 
     #!python
     from suds.wsse import *
@@ -841,7 +841,7 @@ of the document. Eg:
     ...
     </definitions>
 
-Suds will report the method \'\'foo\'\' signature as:
+Suds will report the method `foo` signature as:
 
     foo(xs:string name, xs:int age,)
 
@@ -872,7 +872,7 @@ Now, if the wsdl defines:
     ...
     </definitions>
 
-Suds will be forced to report the method \'\'foo\'\' signature as:
+Suds will be forced to report the method `foo` signature as:
 
     foo(Foo foo, xs:int bar)
 
@@ -884,7 +884,7 @@ view of the method.
 
 #### Basic
 
-As of version 0.3.3 and \'\'newer\'\', \'\'basic\'\' HTTP authentication
+As of version 0.3.3 and newer, `basic` HTTP authentication
 as defined by [RFC-2617](http://www.ietf.org/rfc/rfc2617.txt) can be
 done as follows:
 
@@ -892,14 +892,14 @@ done as follows:
     client = Client(url, username='elmer', password='fudd')
 
 Authentication is provided by the (default)
-`HttpAuthenticated` \'\'Transport\'\' class defined in the
+`HttpAuthenticated` `Transport` class defined in the
 `transport.https` module that follows the challenge (http 401) /
 response model defined in the RFC.
 
-As of r537, \'\'0.3.7\'\' beta, a new \'\'Transport\'\' was added in the
+As of r537, `0.3.7` beta, a new `Transport` was added in the
 `transport.http` module that provides http authentication for servers
 that don\'t follow the challenge/response model. Rather, it sets the
-\'\'Authentication:\'\' http header on \_\_all\_\_ http requests. This
+`Authentication:` http header on __all__ http requests. This
 transport can be used as follows:
 
     #!python
@@ -914,7 +914,7 @@ Or
     t = HttpAuthenticated()
     client = Client(url, transport=t, username='elmer', password='fudd')
 
-For version: \'\'\'0.3.3 and older ONLY\'\'\':
+For version: 0.3.3 and older ONLY:
 
 Revision 63+ (and release 0.1.8+) includes the migration from httplib to
 urllib2 in the suds default
@@ -945,7 +945,7 @@ and set the urlopener.
 
 As of 0.3.8, suds includes a
 `NTLM transport` based on urllib2. This implementation requires
-\'\'users\'\' to install the [python-ntlm](http://code.google.com/p/python-ntlm/). It is \_\_not\_\_ packaged with \'\'suds\'\'.
+`users to install the [python-ntlm](http://code.google.com/p/python-ntlm/). It is __not__ packaged with suds.
 
 To use this, simply do something like:
 
@@ -974,16 +974,16 @@ The service API provides for message/reply injection.
 
 To inject either a soap message to be sent or to inject a reply or fault
 to be processed as if returned by the soap server, simply specify the
-\'\'`__inject`\'\' keyword argument with a value of a dictionary
+`__inject` keyword argument with a value of a dictionary
 containing either:
 
--   \'\'msg\'\' = \<message string\>
--   \'\'reply\'\' = \<reply string\>
--   \'\'fault\'\' = \<fault string\>
+-   msg = \<message string\>
+-   reply = \<reply string\>
+-   fault = \<fault string\>
 
 when invoking the service. Eg:
 
-Sending a \'\'raw\'\' soap message:
+Sending a raw soap message:
 
     #!python
     message = \
@@ -1068,12 +1068,12 @@ client = Client(url, transport=custom_https),
 As of 0.3.5 r473, suds provides some URL caching. By default, http
 get(s) such as getting the WSDL and importing XSDs are cached. The
 caching applies to URL such as those used to get the referenced WSDLs
-and XSD schemas but does \_\_not\_\_ apply to service method invocation
+and XSD schemas but does __not__ apply to service method invocation
 as this would not make sense.
 
 In 0.3.9, `FileCache` was replaced with `ObjectCache`.
 
-The default \'\'cache\'\' is a
+The default cache is a
 `ObjectCache` with an expiration of (1) day.
 
 This duration may be adjusted as follows:
@@ -1087,16 +1087,16 @@ OR
     #!python
      cache.setduration(seconds=90)
 
-The \'\'duration\'\' my be (months, weeks, days, hours, seconds ).
+The duration my be (months, weeks, days, hours, seconds ).
 
-The default \'\'location\'\' (directory) is \'\'/tmp/suds\'\' so
-\'\'Windows\'\' users will need to set the \'\'location\'\' to something
+The default location (directory) is /tmp/suds so
+Windows users will need to set the location to something
 that makes sense on windows.
 
 The cache is an
 `option` and can be set with any kind of
-`Cache` object or may be disabled by setting the option to \'\'None\'\'.
-So, uses may \'\'plug-in\'\' any kind of cache they want.
+`Cache` object or may be disabled by setting the option to None.
+So, uses may plug-in any kind of cache they want.
 
     #!python
     from suds.cache import Cache
@@ -1115,19 +1115,19 @@ There are many cases where the schema(s) defined both within the WSDL or
 imported are broken. The most common problem is failure to import the
 follow proper import rules. That is, references are made in one schema
 to named objects defined in another schema without importing it. The
-`doctor` module defines a set of classes for \'\'mending\'\' broken
+`doctor` module defines a set of classes for mending broken
 schema(s).
 
 ### Doctors
 
 The
 `Doctor` class provides the interface for classes that provide this
-service. Once defined, the \'\'doctor\'\' can be specified using the
-schema \'\'doctor\'\' as an
+service. Once defined, the doctor can be specified using the
+schema doctor as an
 `option` when creating the Client. Or, you can use one of the stock
-\'\'doctors\'\'
+doctors
 
--   `    ImportDoctor` - Used to fix \'\'import\'\' problems. For example:
+-   `    ImportDoctor` - Used to fix import problems. For example:
 
 <!-- -->
 
@@ -1138,16 +1138,16 @@ schema \'\'doctor\'\' as an
     doctor = ImportDoctor(imp)
     client = Client(url, doctor=doctor)
 
-In this example, we\'ve specified that the \'\'doctor\'\' should examine
-schema(s) with a \'\'targetNamespace\'\' of
+In this example, we\'ve specified that the doctor should examine
+schema(s) with a targetNamespace of
 `http://some/namespace/A or http://some/namespace/B` and ensure that the
 schema for the `http://schemas.xmlsoap.org/soap/encoding/` is imported.
 If those schema(s) do not have an \<xs:import/\> for those namespaces,
 it is added.
 
-For cases where the \'\'schemaLocation\'\' is not bound to the
-\'\'namespace\'\', the
-`Import` can be created specifying the \'\'location\'\' has follows:
+For cases where the schemaLocation is not bound to the
+namespace, the
+`Import` can be created specifying the location has follows:
 
     #!python
     imp = Import('http://www.w3.org/2001/XMLSchema', location='http://www.w3.org/2001/XMLSchema.xsd')
@@ -1165,7 +1165,7 @@ A commonly referenced schema (that is not imported) is the SOAP section
     doctor = ImportDoctor(imp)
     client = Client(url, doctor=doctor)
 
-\'\'\'note:\'\'\' Available in r512+ and 0.3.6 \'\'beta\'\'.
+note: Available in r512+ and 0.3.6 `beta`.
 
 ### Binding Schema Locations (URL) to Namespaces
 
@@ -1194,32 +1194,32 @@ Or, the shorthand (when location is the same as the namespace URI)
     #!python
     Import.bind(ns)
 
-\'\'\'note:\'\'\' `http://schemas.xmlsoap.org/soap/encoding/'`
-automatically \'\'bound\'\' in 0.3.4 as of (r420).
+note: `http://schemas.xmlsoap.org/soap/encoding/'`
+automatically `bound` in 0.3.4 as of (r420).
 
 ## Plugins
 
 New in 0.4 is a plugin facility. It is intended to be a general, more
 extensible, mechanism for users to inspect/modify suds while it is
-running. Today, there are two \'\'one-off\'\' ways to do this:
+running. Today, there are two `one-off` ways to do this:
 
 1\. bindings.Binding.replyfilter - The reply text can be inspected &
-modified. 2. xsd.Doctor - The doctor \'\'option\'\' used to mend broken
+modified. 2. xsd.Doctor - The doctor `option` used to mend broken
 schemas.
 
 The `plugin` module provides a number of classes but users really only need
 to be concerned with a few:
 
 -   The `Plugin` class which defines the interface for user plugins
--   The \'\'Context\'\' classes which are passed to the plugin.
+-   The `Context` classes which are passed to the plugin.
 
-The plugins are divided into (4) classes based on the \'\'tasks\'\' of
+The plugins are divided into (4) classes based on the `tasks` of
 the soap client:
 
-\'\'Initialization\'\' :: The client initialization task which is when
-the client has digested the WSDL and associated XSD. \'\'Document
-Loading\'\' :: The document loading task. This is when the client is
-loading WSDL & XSD documents. \'\'Messaging\'\' :: The messaging task is
+`Initialization` :: The client initialization task which is when
+the client has digested the WSDL and associated XSD. `Document
+Loading` :: The document loading task. This is when the client is
+loading WSDL & XSD documents. `Messaging` :: The messaging task is
 when the client is doing soap messaging as part of method (operation)
 invocation.
 
@@ -1227,28 +1227,28 @@ invocation.
 
 The `InitPlugin` currently has (1) hook:
 
-\'\'initialized()\'\' :: Called after the client is initialized. The
-context contains the \'\'WSDL\'\' object.
+`initialized()` :: Called after the client is initialized. The
+context contains the `WSDL` object.
 
 #### DocumentPlugin
 
 The `DocumentPlugin` currently has (2) hooks::
 
-\'\'loaded()\'\' :: Called before parsing a \'\'WSDL\'\' or \'\'XSD\'\'
+`loaded()` :: Called before parsing a `WSDL` or `XSD`
 document. The context contains the url & document text.
 
-\'\'parsed()\'\' :: Called after parsing a \'\'WSDL\'\' or \'\'XSD\'\'
-document. The context contains the url & document \'\'root\'\'.
+`parsed()` :: Called after parsing a `WSDL` or `XSD`
+document. The context contains the url & document `root`.
 
 #### MessagePlugin
 
 The `MessagePlugin` currently has (5) hooks ::
 
-*marshalled():: Provides the plugin with the opportunity to inspect/modify the envelope \'\'\'Document\'\'\' \_\_before\_\_ it is sent.
-* sending():: Provides the plugin with the opportunity to inspect/modify the message \'\'\'text\'\'\' \_\_before\_\_ it is sent.
-* received():: Provides the plugin with the opportunity to inspect/modify the received XML \'\'\'text\'\'\' \_\_before\_\_ it is SAX parsed.
-* parsed():: Provides the plugin with the opportunity to inspect/modify the sax parsed DOM tree for the reply \_\_before\_\_ it is unmarshalled.
-* unmarshalled():: Provides the plugin with the opportunity to inspect/modify the unmarshalled reply \_\_before\_\_ it is returned to the caller.
+*marshalled():: Provides the plugin with the opportunity to inspect/modify the envelope Document __before__ it is sent.
+* sending():: Provides the plugin with the opportunity to inspect/modify the message text __before__ it is sent.
+* received():: Provides the plugin with the opportunity to inspect/modify the received XML text __before__ it is SAX parsed.
+* parsed():: Provides the plugin with the opportunity to inspect/modify the sax parsed DOM tree for the reply __before__ it is unmarshalled.
+* unmarshalled():: Provides the plugin with the opportunity to inspect/modify the unmarshalled reply __before__ it is returned to the caller.
 
 General usage:
 
@@ -1261,7 +1261,7 @@ General usage:
     plugin = MyPlugin()
     client = Client(url, plugins=[plugin])
 
-Plugins need to override \_\_only\_\_ those methods (hooks) of interest
+Plugins need to override __only__ those methods (hooks) of interest
 - not all of them. Exceptions are caught and logged.
 
 Here is an example. Say I want to add some attributes to the document
@@ -1303,8 +1303,8 @@ But what you need is:
 
     client = Client(url, plugins=[MyPlugin()])
 
-In the future, the \'\'Binding.replyfilter\'\' and \'\'doctor\'\'
-\_\_option\_\_ will likely be deprecated. The
+In the future, the `Binding.replyfilter` and `doctor`
+__option__ will likely be deprecated. The
 `ImportDoctor` has been extended to implement the
 `Plugin`.onLoad() API.
 
