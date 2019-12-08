@@ -78,7 +78,7 @@ class HttpTransport(Transport):
             self.proxy = self.options.proxy
             request.headers.update(u2request.headers)
             log.debug('sending:\n%s', request)
-            fp = self.u2open(u2request)
+            fp = self.u2open(u2request, timeout=request.timeout)
             self.getcookies(fp, u2request)
             headers = fp.headers
             if sys.version_info < (3, 0):
@@ -110,7 +110,7 @@ class HttpTransport(Transport):
         """
         self.cookiejar.extract_cookies(fp, u2request)
 
-    def u2open(self, u2request):
+    def u2open(self, u2request, timeout=None):
         """
         Open a connection.
 
@@ -120,7 +120,7 @@ class HttpTransport(Transport):
         @rtype: fp
 
         """
-        tm = self.options.timeout
+        tm = timeout or self.options.timeout
         url = self.u2opener()
         if (sys.version_info < (3, 0)) and (self.u2ver() < 2.6):
             socket.setdefaulttimeout(tm)

@@ -104,10 +104,12 @@ class TestRequest:
         # Always use the same URL as different ways to specify a Request's URL
         # are tested separately.
         url = "some://url"
-        request = Request(url, message)
+        timeout = 10
+        request = Request(url, message, timeout)
         assert request.url is url
         assert request.message is message
         assert request.headers == {}
+        assert request.timeout == timeout
 
     def test_construct_with_no_message(self):
         request = Request("some://url")

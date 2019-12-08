@@ -382,7 +382,7 @@ They are as follows:
 * doctor:: The schema `doctor` specifies an object used to fix broken schema(s).
 * xstq:: The XML schema type qualified flag indicates that `xsi:type` attribute __values__ should be qualified by namespace.
 * prefixes:: Elements of the soap message should be qualified (when needed) using XML prefixes as opposed to xmlns=\"\" syntax.
-* timeout:: The URL connection timeout (seconds) default=90.
+* timeout:: The URL connection timeout (seconds) default=90. A timeout can also be set per method invocation.
 * retxml:: Flag that causes the I{raw} soap envelope to be returned instead of the python object graph.
 * autoblend:: Flag that ensures that the schema(s) defined
 within the WSDL import each other.
@@ -1062,6 +1062,17 @@ custom_https = ClientHttpsTransport('/path/to/certificate_file', '/path/to/key_f
 client = Client(url, transport=custom_https),
 ```
 
+## Timeouts
+
+Per request timeouts can be set by using a `__timeout` keyword argument in
+each call. This supersedes the global client default. For example, the
+following call will have a timeout of 10 seconds:
+
+
+```python
+client = Client(url, timeout=30)
+client.service.test(__timeout=10)
+```
 
 ## Performance
 

@@ -39,6 +39,7 @@ from six.moves.urllib.request import ProxyHandler
 import base64
 import re
 import sys
+from email.message import Message
 
 # We can not use six.moves modules for this since we want to monkey-patch the
 # exact underlying urllib2/urllib.request module in our tests and not just
@@ -596,6 +597,42 @@ class TestURLOpenerUsage:
         t = suds.transport.http.HttpTransport()
         t.urlopener = MockURLOpenerSaboteur(open_exception=e_original)
         assert t.send(create_request()) is None
+
+    def test_specify_timeout(self):
+        """
+        HttpTransport send() operation should pass a Request timeout parameter
+        to urllib
+        """
+        t = suds.transport.http.HttpTransport()
+        request = create_request()
+        request.timeout = 10
+
+        # Python 2 compatible object
+        class CompatibleHeaders(dict):
+            dict = {}
+
+        class MockResponse:
+            def info(self):
+                message = Message()
+                # Python 2 compatible response
+                message.getheaders = lambda k: {}
+                return message
+
+            @property
+            def headers(self):
+                return CompatibleHeaders()
+
+            def read(self):
+                return ''
+
+        class MockURLOpener:
+            def open(self, urllib_request, timeout=None):
+                assert timeout == request.timeout
+                return MockResponse()
+
+        t.urlopener = MockURLOpener()
+        t.send(request)
+
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_urlopener_default(self, url, send_method, monkeypatch):

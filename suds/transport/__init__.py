@@ -44,12 +44,13 @@ class Request(UnicodeMixin):
     @type url: str
     @ivar message: The optional message to be sent in the request body.
     @type message: bytes|None
+    @type timeout: int|None
     @ivar headers: The HTTP headers to be used for the request.
     @type headers: dict
 
     """
 
-    def __init__(self, url, message=None):
+    def __init__(self, url, message=None, timeout=None):
         """
         Raised exception in case of detected non-ASCII URL characters may be
         either UnicodeEncodeError or UnicodeDecodeError, depending on the used
@@ -64,6 +65,7 @@ class Request(UnicodeMixin):
         self.__set_URL(url)
         self.headers = {}
         self.message = message
+        self.timeout = timeout
 
     def __unicode__(self):
         result = [u"URL: %s\nHEADERS: %s" % (self.url, self.headers)]

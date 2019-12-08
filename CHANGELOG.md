@@ -1,6 +1,15 @@
 Release notes
 =============
 
+version 0.8.4 (unreleased)
+------------------------
+* Add per invocation timeout
+
+
+version 0.8.3 (2019-06-24)
+------------------------
+* Fix pypi description format
+
 version 0.8.2 (2019-06-23)
 ------------------------
 * Add option to disable the sorting of namespaces.

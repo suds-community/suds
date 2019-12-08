@@ -652,6 +652,8 @@ class _SoapClient:
 
     """
 
+    TIMEOUT_ARGUMENT = "__timeout"
+
     def __init__(self, client, method):
         """
         @param client: A suds client.
@@ -697,17 +699,18 @@ class _SoapClient:
         timer = metrics.Timer()
         timer.start()
         binding = self.method.binding.input
+        timeout = kwargs.pop(_SoapClient.TIMEOUT_ARGUMENT, None)
         soapenv = binding.get_message(self.method, args, kwargs)
         timer.stop()
         method_name = self.method.name
         metrics.log.debug("message for '%s' created: %s", method_name, timer)
         timer.start()
-        result = self.send(soapenv)
+        result = self.send(soapenv, timeout=timeout)
         timer.stop()
         metrics.log.debug("method '%s' invoked: %s", method_name, timer)
         return result
 
-    def send(self, soapenv):
+    def send(self, soapenv, timeout=None):
         """
         Send SOAP message.
 
@@ -739,7 +742,7 @@ class _SoapClient:
         soapenv = ctx.envelope
         if self.options.nosend:
             return RequestContext(self.process_reply, soapenv)
-        request = suds.transport.Request(location, soapenv)
+        request = suds.transport.Request(location, soapenv, timeout)
         request.headers = self.__headers()
         try:
             timer = metrics.Timer()
