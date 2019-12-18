@@ -363,32 +363,37 @@ preferred and supported way to set/unset options is through:
 -   The `Client`.set\_options()
 -   The `Transport` constructor(s).
 
-They are as follows:
+General options are as follows:
 
 * faults:: Controls web fault behavior.
 * service:: Controls the default service name for multi-service wsdls.
 * port:: Controls the default service port for multi-port services.
 * location:: This overrides the service port address URL defined in the WSDL.
-* proxy:: Controls http proxy settings.
 * transport:: Controls the plugin web `transport`.
 * cache:: Provides caching of documents and objects related to loading the WSDL. Soap envelopes are never cached.
 * cachingpolicy:: The caching policy, determines how data is cached. The default is 0. version 0.4+
   - 0 = XML documents such as WSDL & XSD.
   - 1 = WSDL object graph.
-* headers:: Provides for `extra` http headers.
 * soapheaders:: Provides for soap headers.
 * wsse:: Provides for WS-Security object. \
 * __inject`:: Controls message/reply message injection.
 * doctor:: The schema `doctor` specifies an object used to fix broken schema(s).
 * xstq:: The XML schema type qualified flag indicates that `xsi:type` attribute __values__ should be qualified by namespace.
 * prefixes:: Elements of the soap message should be qualified (when needed) using XML prefixes as opposed to xmlns=\"\" syntax.
-* timeout:: The URL connection timeout (seconds) default=90. A timeout can also be set per method invocation.
 * retxml:: Flag that causes the I{raw} soap envelope to be returned instead of the python object graph.
 * autoblend:: Flag that ensures that the schema(s) defined
 within the WSDL import each other.
 * nosend:: Flag that causes suds to generate the soap envelope but not send it. Instead, a `RequestContext` is returned Default: False.
 * sortnamespaces:: Flag that causes suds to sort namespaces alphabetically on storing them. Default: True.
 * allowUnknownMessageParts:: Raise exceptions when unknown message parts  are detected when receiving a web service reply, compared to the operation's WSDL schema definition. Default: False.
+
+**Transport options passed to the `Client` contructor are only used if the default transport is used**, they are as follows:
+
+* proxy:: Controls http proxy settings.
+* timeout:: The URL connection timeout (seconds) default=90. A timeout can also be set per method invocation.
+* headers:: Provides for `extra` http headers.
+* username:: username for HTTP authentication.
+* password:: password for HTTP authentication.
 
 ## Enumerations
 

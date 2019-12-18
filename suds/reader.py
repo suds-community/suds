@@ -185,6 +185,7 @@ class DocumentReader(Reader):
             content = store.open(url)
         if content is None:
             request = suds.transport.Request(url)
+            request.headers = self.options.headers
             fp = self.options.transport.open(request)
             try:
                 content = fp.read()

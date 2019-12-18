@@ -130,12 +130,14 @@ class MockTransport(suds.transport.Transport):
         elif send_data.__class__ is not list:
             send_data = [send_data]
         self.mock_log = []
+        self.mock_requests = []
         self.mock_open_data = open_data
         self.mock_send_data = send_data
         super(MockTransport, self).__init__()
 
     def open(self, request):
         self.mock_log.append(("open", [request.url]))
+        self.mock_requests.append(request)
         if not self.mock_open_data:
             pytest.fail("Unexpected MockTransport.open() operation call.")
         result = self.__next_operation_result(self.mock_open_data)
@@ -143,6 +145,7 @@ class MockTransport(suds.transport.Transport):
 
     def send(self, request):
         self.mock_log.append(("send", [request.url, request.message]))
+        self.mock_requests.append(request)
         if not self.mock_send_data:
             pytest.fail("Unexpected MockTransport.send() operation call.")
         status = http_client.OK
@@ -680,6 +683,16 @@ class TestTransportUsage:
         t = MockTransport(open_data=testutils.wsdl(""))
         suds.client.Client(url, cache=None, documentStore=store, transport=t)
         assert t.mock_log == [("open", [url])]
+
+    def test_WSDL_transport_headers(self):
+        url = test_URL_data[0]
+        store = MockDocumentStore()
+        t = MockTransport(open_data=testutils.wsdl(""))
+        headers = {'foo': 'bar'}
+        t.options.headers = headers # since we create a custom client, options must be set explicitly
+        suds.client.Client(url, cache=None, documentStore=store, transport=t)
+        assert len(t.mock_requests) == 1
+        assert t.mock_requests[0].headers == headers
 
     @pytest.mark.parametrize("url", test_URL_data)
     def test_imported_WSDL_transport(self, url):
