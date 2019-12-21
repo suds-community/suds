@@ -1,7 +1,7 @@
 Release notes
 =============
 
-version 0.8.4 (unreleased)
+version 0.8.4 (2019-12-21)
 ------------------------
 * Add per invocation timeout
 * Ensure request headers set in options are used to fetch definitions
