@@ -179,6 +179,10 @@ class SchemaObject(UnicodeMixin):
 
         """
         ns = self.schema.tns
+
+        if self.ref and self.ref in self.schema.elements.keys():
+            ns = self.ref
+
         if ns[0] is None:
             ns = (prefix, ns[1])
         return ns
