@@ -19,7 +19,6 @@ include notes/*.txt
 recursive-include tests *.py
 
 # Project development & setup tools.
-include tools/*.cmd
 include tools/*.py
 include tools/*.txt
 recursive-include tools/suds_devel *.py
