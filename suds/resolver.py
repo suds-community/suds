@@ -86,7 +86,7 @@ class PathResolver(Resolver):
         Resolver.__init__(self, wsdl.schema)
         self.wsdl = wsdl
         self.altp = re.compile('({)(.+)(})(.+)')
-        self.splitp = re.compile('({.+})*[^\%s]+' % ps[0])
+        self.splitp = re.compile('({.+})*[^\\%s]+' % ps[0])
 
     def find(self, path, resolved=True):
         """
