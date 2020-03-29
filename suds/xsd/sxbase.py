@@ -180,8 +180,13 @@ class SchemaObject(UnicodeMixin):
         """
         ns = self.schema.tns
 
+        if self.ref:
+            import pdb; pdb.set_trace()
+            pass
         if self.ref and self.ref in self.schema.elements.keys():
-            ns = self.ref
+        #     ns = self.ref
+            import pdb; pdb.set_trace()
+            pass
 
         if ns[0] is None:
             ns = (prefix, ns[1])

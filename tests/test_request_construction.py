@@ -424,18 +424,19 @@ def test_disabling_automated_simple_interface_unwrapping():
 def test_element_references_to_different_namespaces():
     wsdl = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="first-namespace"
+<wsdl:definitions
+    targetNamespace="first-namespace"
+    xmlns:tns="first-namespace"
+    xmlns:second="second-namespace"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-    xmlns:tns="first-namespace">
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
   <wsdl:types>
     <xsd:schema
         targetNamespace="first-namespace"
         elementFormDefault="qualified"
-        attributeFormDefault="unqualified"
-        xmlns:second="second-namespace">
+        attributeFormDefault="unqualified">
       <xsd:import namespace="second-namespace" schemaLocation="suds://external_schema"/>
       <xsd:element name="local_referenced" type="xsd:string"/>
       <xsd:element name="fRequest">
@@ -444,6 +445,15 @@ def test_element_references_to_different_namespaces():
             <xsd:element name="local" type="xsd:string"/>
             <xsd:element ref="tns:local_referenced"/>
             <xsd:element ref="second:external"/>
+            <xsd:element ref="second:complex_external"/>
+            <xsd:element name="complex_local">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element ref="second:complex_external" />
+                  <xsd:element ref="second:complex_external_type" />
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
           </xsd:sequence>
         </xsd:complexType>
       </xsd:element>
@@ -477,28 +487,58 @@ def test_element_references_to_different_namespaces():
 
     external_schema = suds.byte_str("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<schema
+<xs:schema
     targetNamespace="second-namespace"
+    xmlns="second-namespace"
     elementFormDefault="qualified"
-    xmlns="http://www.w3.org/2001/XMLSchema">
-  <element name="external" type="string"/>
-</schema>""")
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="external" type="xs:string"/>
+  <xs:element name="complex_external_type" type="complex_external_type"/>
+  <xs:complexType name="complex_external_type">
+    <xs:attribute name="status" type="xs:string" />
+  </xs:complexType>
+  <xs:element name="complex_external">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="bar" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>""")
 
     store = suds.store.DocumentStore(external_schema=external_schema,
         wsdl=wsdl)
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
         nosend=True, prettyxml=True)
-    _assert_request_content(client.service.f(local="--L--",
-        local_referenced="--LR--", external="--E--"), """\
+    complex_external = client.factory.create('ns1:complex_external')
+    complex_external.bar = 'foo'
+    complex_external_type = client.factory.create('ns1:complex_external_type')
+    complex_external_type._status = 'bar'
+    request = client.service.f(
+      local="--L--",
+      local_referenced="--LR--",
+      external="--E--",
+      complex_external=complex_external,
+      complex_local=[complex_external, complex_external_type]
+    )
+    # print(request.envelope.decode('utf-8'))
+    _assert_request_content(request, """\
 <?xml version="1.0" encoding="UTF-8"?>
-<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns0="first-namespace" xmlns:ns1="second-namespace">
   <Header/>
-  <Body xmlns:ns1="first-namespace" xmlns:ns2="second-namespace">
-    <ns1:fRequest>
-      <ns1:local>--L--</ns1:local>
-      <ns1:local_referenced>--LR--</ns1:local_referenced>
-      <ns2:external>--E--</ns2:external>
-    </ns1:fRequest>
+  <Body>
+    <ns0:fRequest>
+      <ns0:local>--L--</ns0:local>
+      <ns0:local_referenced>--LR--</ns0:local_referenced>
+      <ns1:external>--E--</ns1:external>
+      <complex_external xmlns="second-namespace">
+        <bar>foo</bar>
+      </complex_external>
+      <ns0:complex_local>
+        <bar xmlns="second-namespace">foo</bar>
+      </ns0:complex_local>
+      <ns0:complex_local status="bar"/>
+    </ns0:fRequest>
   </Body>
 </Envelope>""")
 
