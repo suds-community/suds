@@ -503,6 +503,80 @@ def test_element_references_to_different_namespaces():
 </Envelope>""")
 
 
+def test_function_with_reserved_characters():
+    wsdl = suds.byte_str("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="first-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="first-namespace">
+
+  <wsdl:types>
+    <xsd:schema
+        targetNamespace="first-namespace"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified">
+      <xsd:element name="fRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="local" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="fRequestMessage">
+    <wsdl:part name="parameters" element="tns:fRequest"/>
+  </wsdl:message>
+
+  <wsdl:portType name="DummyServicePortType">
+    <wsdl:operation name=".f">
+      <wsdl:input message="tns:fRequestMessage"/>
+    </wsdl:operation>
+    <wsdl:operation name="f">
+      <wsdl:input message="tns:fRequestMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="DummyServiceBinding" type="tns:DummyServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name=".f">
+      <soap:operation soapAction=".f"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+    </wsdl:operation>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="DummyService">
+    <wsdl:port name="DummyServicePort" binding="tns:DummyServiceBinding">
+      <soap:address location="BoogaWooga"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>""")
+
+    store = suds.store.DocumentStore(wsdl=wsdl)
+    client = suds.client.Client("suds://wsdl", cache=None, documentStore=store,
+        nosend=True, prettyxml=True)
+    operation_name = ".f"
+    method = getattr(client.service, operation_name)
+    request = method(local="--L--")
+    _assert_request_content(request, """\
+<?xml version="1.0" encoding="UTF-8"?>
+<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+  <Header/>
+  <Body xmlns:ns1="first-namespace">
+    <ns1:fRequest>
+      <ns1:local>--L--</ns1:local>
+    </ns1:fRequest>
+  </Body>
+</Envelope>""")
+
+
 def test_invalid_input_parameter_type_handling():
     """
     Input parameters of invalid type get silently pushed into the constructed
