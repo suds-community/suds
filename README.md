@@ -7,10 +7,7 @@ Suds is a lightweight SOAP-based web service client for Python
 licensed under LGPL (see the `LICENSE.txt` file included in the
 distribution).
 
-This is hopefully just a temporary fork of the original `suds` Python
-library project created because the original project development seems
-to have stalled. Should be reintegrated back into the original project
-if it ever gets revived again.
+This is a community fork of the jurko fork.
 
 **Forked project information**
 
@@ -96,6 +93,12 @@ sub-namespaces defined below. When the
 From this information, it derives a representation of this information
 which is used to provide the user with a service description and
 for message/reply processing.
+
+## Python Support
+
+See `.travis.yml` for supported Python versions. The goal is to support
+[currently maintained Python version](https://devguide.python.org/#status-of-python-branches)
+and Python 2.7.
 
 ## Logging
 
