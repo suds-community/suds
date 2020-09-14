@@ -882,7 +882,7 @@ Now, if the wsdl defines:
 
 Suds will be forced to report the method `foo` signature as:
 
-    foo(Foo foo, xs:int bar)
+    foo(Foo foo, xs:string bar)
 
 The message has (2) parts which defines that the message payload
 contains (2) documents. In this case, suds must present a /Document/
