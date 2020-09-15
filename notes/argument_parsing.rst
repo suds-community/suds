@@ -1,7 +1,7 @@
 ===================================================================
 Notes on input argument usage when invoking a web service operation
 ===================================================================
-:Authors: Jurko Gospodnetiæ
+:Authors: Jurko GospodnetiÄ‡
 :Date: 2014-01-23
 
 

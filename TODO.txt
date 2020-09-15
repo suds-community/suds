@@ -302,7 +302,7 @@ PRIORITIZED:
 
 (28.02.2013.)
 
-(+) * (Jurko) Merge changes prepared by Juraj Ivanèiæ.
+(+) * (Jurko) Merge changes prepared by Juraj IvanÄiÄ‡.
 (+)     * Update the original Hg repository containing Python 3 related fixes.
 (+) * (Jurko) Process received pull requests.
 
@@ -413,7 +413,7 @@ PRIORITIZED:
 (01.04.2013.)
 
 (+) * (Jurko) Add tests for wrapped suds operation output data.
-(+) * (Jurko) Merge patches sent in by Juraj Ivanèiæ from PKE sistemi.
+(+) * (Jurko) Merge patches sent in by Juraj IvanÄiÄ‡ from PKE sistemi.
 (+)     * Add tests for disabled wrapped suds operation input & output data
 (+)       support.
 (+)     * Add code for disabling suds library wrapped parameter support.
@@ -421,7 +421,7 @@ PRIORITIZED:
 (02.04.2013.)
 
 (+) * (Jurko) Restriction support cleanup based on patches sent in by Juraj
-(+)   Ivanèiæ from PKE sistemi.
+(+)   IvanÄiÄ‡ from PKE sistemi.
 (+)     * Research.
 (+)         * Not enough time to research this thoroughly and come up with a
 (+)           complete and well tested solution.

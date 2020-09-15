@@ -1,7 +1,7 @@
 ==========================
 XSD element research notes
 ==========================
-:Authors: Jurko Gospodnetiæ
+:Authors: Jurko GospodnetiÄ‡
 :Date: 2014-06-29
 
 
