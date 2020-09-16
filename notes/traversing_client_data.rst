@@ -1,7 +1,7 @@
 ================================================
 Examples on traversing suds library's data model
 ================================================
-:Authors: Jurko Gospodnetiæ
+:Authors: Jurko GospodnetiÄ‡
 :Date: 2014-01-23
 
 Get service from client::

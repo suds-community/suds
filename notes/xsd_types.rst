@@ -1,7 +1,7 @@
 ==========================
 Modeling XSD types in suds
 ==========================
-:Authors: Jurko Gospodnetiæ
+:Authors: Jurko GospodnetiÄ‡
 :Date: 2014-01-29
 
 XSD types can be one of the following:

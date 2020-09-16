@@ -1,7 +1,7 @@
 ================================
 WSDL SOAP binding research notes
 ================================
-:Authors: Jurko Gospodnetiæ
+:Authors: Jurko GospodnetiÄ‡
 :Date: 2014-06-30
 
 

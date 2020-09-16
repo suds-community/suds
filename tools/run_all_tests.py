@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-# written by: Jurko Gospodnetiæ ( jurko.gospodnetic@pke.hr )
+# written by: Jurko GospodnetiÄ‡ ( jurko.gospodnetic@pke.hr )
 
 """
 "poor man's tox" development script used on Windows to run the full suds-jurko
