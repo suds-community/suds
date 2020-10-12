@@ -107,17 +107,19 @@ all messages are at level DEBUG or ERROR.
 
 To register a console handler you can use basicConfig:
 
-    #!python
-    import logging
-    logging.basicConfig(level=logging.INFO)
+```py
+import logging
+logging.basicConfig(level=logging.INFO)
+```
 
 Once the console handler is configured, the user can enable module
 specific debugging doing the following: logging.getLogger(\<desired
 package\>).setLevel(logging.\<desired-level\>) A common example (show
 sent/received soap messages):
 
-    #!python
-    logging.getLogger('suds.client').setLevel(logging.DEBUG)
+```py
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
+```
 
 Suggested modules for debugging:
   * suds.client:: Set the logging level to DEBUG on this module to see soap messages (in & out) and http headers.
@@ -145,40 +147,42 @@ instances of objects and types defined in the WSDL.
 You will need to know the url for WSDL for each service used. Simply
 create a client for that service as follows:
 
-    #!python
-    from suds.client import Client
-    url = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
-    client = Client(url)
+```py
+from suds.client import Client
+url = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+client = Client(url)
+```
 
 You can inspect service object with: `__str()__` as follows to get a
 list of methods provide by the service:
 
-    #!python
-    print client
+```py
+print client
 
-    Suds - version: 0.3.3 build: (beta) R397-20081121
+Suds - version: 0.3.3 build: (beta) R397-20081121
 
-    Service (WebServiceTestBeanService) tns="http://test.server.enterprise.rhq.org/"
-       Prefixes (1):
-         ns0 = "http://test.server.enterprise.rhq.org/"
-       Ports (1):
-         (Soap)
-           Methods:
-             addPerson(Person person, )
-             echo(xs:string arg0, )
-             getList(xs:string str, xs:int length, )
-             getPercentBodyFat(xs:string name, xs:int height, xs:int weight)
-             getPersonByName(Name name, )
-             hello()
-             testExceptions()
-             testListArg(xs:string[] list, )
-             testVoid()
-             updatePerson(AnotherPerson person, name name, )
-       Types (23):
-         Person
-         Name
-         Phone
-         AnotherPerson
+Service (WebServiceTestBeanService) tns="http://test.server.enterprise.rhq.org/"
+   Prefixes (1):
+     ns0 = "http://test.server.enterprise.rhq.org/"
+   Ports (1):
+     (Soap)
+       Methods:
+         addPerson(Person person, )
+         echo(xs:string arg0, )
+         getList(xs:string str, xs:int length, )
+         getPercentBodyFat(xs:string name, xs:int height, xs:int weight)
+         getPersonByName(Name name, )
+         hello()
+         testExceptions()
+         testListArg(xs:string[] list, )
+         testVoid()
+         updatePerson(AnotherPerson person, name name, )
+   Types (23):
+     Person
+     Name
+     Phone
+     AnotherPerson
+```
 
 note: See example of service with multiple ports below.
 
@@ -194,24 +198,27 @@ the signature of getPercentBodyFat(`xs:string` name,
 parameters are `simple` types. That is, they not objects. This
 method would be invoked as follows:
 
-    #!python
-    result = client.service.getPercentBodyFat('jeff', 68, 170)
-    print result
+```py
+result = client.service.getPercentBodyFat('jeff', 68, 170)
+print result
+```
 
 You have 21% body fat.
 
-    #!python
-    result = client.service.getPercentBodyFat(name='jeff', height=68, weight=170)
-    print result
+```py
+result = client.service.getPercentBodyFat(name='jeff', height=68, weight=170)
+print result
+```
 
 You have 21% body fat.
 
-    #!python
-    d = dict(name='jeff', height=68, weight=170)
-    result = client.service.getPercentBodyFat(**d)
-    print result
+```py
+d = dict(name='jeff', height=68, weight=170)
+result = client.service.getPercentBodyFat(**d)
+print result
 
-    You have 21% body fat.
+You have 21% body fat.
+```
 
 #### Complex Arguments
 
@@ -226,58 +233,63 @@ So, to create a `Person` object to pass as an argument we need to
 get a person argument using the `factory` sub-namespace as
 follows:
 
-    #!python
-    person = client.factory.create('Person')
-    print person
+```py
+person = client.factory.create('Person')
+print person
 
-    (Person)=
-      {
-        phone = []
-        age = NONE
-        name(Name) =
-            {
-                last = NONE
-                first = NONE
-            }
-       }
+(Person)=
+  {
+    phone = []
+    age = NONE
+    name(Name) =
+        {
+            last = NONE
+            first = NONE
+        }
+   }
+```
 
 As you can see, the object is created as defined by the WSDL. The list
 of phone number is empty so we\'ll have to create a `Phone`
 object:
 
-    #!python
-    phone = client.factory.create('Phone')
-    phone.npa = 202
-    phone.nxx = 555
-    phone.number = 1212
+```py
+phone = client.factory.create('Phone')
+phone.npa = 202
+phone.nxx = 555
+phone.number = 1212
+```
 
 \... and the name (Name object) and age need to be set and we need to
 create a name object first:
 
-    #!python
-    name = client.factory.create('Name')
-    name.first = 'Elmer'
-    name.last = 'Fudd'
+```py
+name = client.factory.create('Name')
+name.first = 'Elmer'
+name.last = 'Fudd'
+```
 
 Now, let\'s set the properties of our `Person` object
 
-    #!python
-    person.name = name
-    person.age = 35
-    person.phone = [phone]
+```py
+person.name = name
+person.age = 35
+person.phone = [phone]
+```
 
 or
 
-    #!python
-    person.phone.append(phone)
+```py
+person.phone.append(phone)
 
 \... and invoke our method named addPerson() as follows:
 
-    #!python
-    try:
-       person_added = client.service.addPerson(person)
-    except WebFault as e:
-      print e
+```py
+try:
+   person_added = client.service.addPerson(person)
+except WebFault as e:
+  print e
+```
 
 It\'s that easy.
 
@@ -304,54 +316,60 @@ takes a `person` argument of type: `Person`. So, to create a
 `Person` object to pass as an argument we need to get a person
 object and we can do so by creating a simple python `dict`.
 
-    #!python
-    person = {}
+```py
+person = {}
+```
 
 According to the WSDL we know that the Person contains a list of Phone
 objects so we\'ll need `dict`s for them as well.
 
-    #!python
-    phone = {
-        'npa':202,
-        'nxx':555,
-        'number':1212,
-    }
+```py
+phone = {
+    'npa':202,
+    'nxx':555,
+    'number':1212,
+}
+```
 
 \... and the name (Name object) and age need to be set and we need to
 create a name object first:
 
-    #!python
-    name = {
-        'first':'Elmer',
-        'last':'Fudd'
-    }
+```py
+name = {
+    'first':'Elmer',
+    'last':'Fudd'
+}
+```
 
 Now, let\'s set the properties of our `Person` object
 
-    #!python
-    person['name'] = name
-    person['age'] = 35
-    person['phone'] = [phone,]
+```py
+person['name'] = name
+person['age'] = 35
+person['phone'] = [phone,]
+```
 
 \... and invoke our method named addPerson() as follows:
 
-    #!python
-    try:
-       person_added = client.service.addPerson(person)
-    except WebFault as e:
-      print e
+```py
+try:
+   person_added = client.service.addPerson(person)
+except WebFault as e:
+  print e
+```
 
 ### Faults
 
 The Client can be configured to throw web faults as `WebFault` or to
 return a tuple (\<status\>, \<returned-value\>) instead as follows:
 
-    #!python
-    client = client(url, faults=False)
-    result = client.service.addPerson(person)
-    print result
+```py
+client = client(url, faults=False)
+result = client.service.addPerson(person)
+print result
 
-    ( 200, person ...)
+( 200, person ...)
+```
 
 ### Options
 
@@ -404,22 +422,24 @@ Enumerations are handled as follows:
 
 Let\'s say the wsdl defines the following enumeration:
 
-    #!xml
-    <xs:simpleType name="resourceCategory">
-      <xs:restriction base="xs:string">
-        <xs:enumeration value="PLATFORM"/>
-        <xs:enumeration value="SERVER"/>
-        <xs:enumeration value="SERVICE"/>
-      </xs:restriction>
-    </xs:simpleType>
+```xml
+<xs:simpleType name="resourceCategory">
+  <xs:restriction base="xs:string">
+    <xs:enumeration value="PLATFORM"/>
+    <xs:enumeration value="SERVER"/>
+    <xs:enumeration value="SERVICE"/>
+  </xs:restriction>
+</xs:simpleType>
+```
 
 The client can instantiate the enumeration so it can be used. Misspelled
 references to elements of the `enum` will raise a `AttrError`
 exception as:
 
-    #!python
-    resourceCategory = client.factory.create('resourceCategory')
-    client.service.getResourceByCategory(resourceCategory.PLATFORM)
+```py
+resourceCategory = client.factory.create('resourceCategory')
+client.service.getResourceByCategory(resourceCategory.PLATFORM)
+```
 
 ## Factory
 
@@ -436,21 +456,24 @@ a top level \"named\" type but rather defined within the (Person) type.
 In this case creating a (Name) object would have to be quanified by
 it\'s parent\'s name using the dot notation as follows:
 
-    #!python
-    name = client.factory.create('Person.Name')
+```py
+name = client.factory.create('Person.Name')
+```
 
 If the type is in the same namespace as the wsdl (targetNamespace) then
 it may be referenced without any namespace qualification. If not, the
 type must be qualifed by either a namespace prefix such as:
 
-    #!python
-    name = client.factory.create('ns0:Person')
+```py
+name = client.factory.create('ns0:Person')
+```
 
 Or, the name can be fully qualified by the namespace itself using the
 full qualification syntax as (as of 0.2.6):
 
-    #!python
-    name = client.factory.create('{http://test.server.enterprise.rhq.org/}person')
+```py
+name = client.factory.create('{http://test.server.enterprise.rhq.org/}person')
+```
 
 Qualified names can only be used for the first part of the
 name, when using (.) dot notation to specify a path.
@@ -459,47 +482,50 @@ name, when using (.) dot notation to specify a path.
 
 Some services are defined with multiple ports as:
 
-    #!xml
-    <wsdl:service name="BLZService">
-      <wsdl:port name="soap" binding="tns:BLZServiceSOAP11Binding">
-        <soap:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
-      </wsdl:port>
-      <wsdl:port name="soap12" binding="tns:BLZServiceSOAP12Binding">
-        <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
-    </wsdl:service>
+```xml
+<wsdl:service name="BLZService">
+  <wsdl:port name="soap" binding="tns:BLZServiceSOAP11Binding">
+    <soap:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+  </wsdl:port>
+  <wsdl:port name="soap12" binding="tns:BLZServiceSOAP12Binding">
+    <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+</wsdl:service>
+```
 
 And are reported by suds as:
 
-    #!python
-    url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
-    client = Client(url)
-    print client
+```py
+url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
+client = Client(url)
+print client
 
-    Suds - version: 0.3.3 build: (beta) R397-20081121
+Suds - version: 0.3.3 build: (beta) R397-20081121
 
-    Service (BLZService) tns="http://thomas-bayer.com/blz/"
-       Prefixes (1)
-         ns0 = "http://thomas-bayer.com/blz/"
-       Ports (2):
-         (soap)
-           Methods (1):
-             getBank(xs:string blz, )
-         (soap12)
-           Methods (1):
-             getBank(xs:string blz, )
-       Types (5):
-          getBankType
-          getBankResponseType
-          getBankType
-          getBankResponseType
-          detailsType
+Service (BLZService) tns="http://thomas-bayer.com/blz/"
+   Prefixes (1)
+     ns0 = "http://thomas-bayer.com/blz/"
+   Ports (2):
+     (soap)
+       Methods (1):
+         getBank(xs:string blz, )
+     (soap12)
+       Methods (1):
+         getBank(xs:string blz, )
+   Types (5):
+      getBankType
+      getBankResponseType
+      getBankType
+      getBankResponseType
+      detailsType
+```
 
 This example only has (1) method defined for each port but it could very
 likely have may methods defined. Suds does not require the method
 invocation to be qualifed (as shown above) by the port as:
 
-    #!python
-    client.service.<port>.getBank()
+```py
+client.service.<port>.getBank()
+```
 
 unless the user wants to specify a particular port. In most cases, the
 server will work properly with any of the soap ports. However, if you
@@ -513,16 +539,18 @@ There are (2) ways to do this:
 
 <!-- -->
 
-    #!python
-    client.set_options(port='soap')
-    client.service.getBank()
+```py
+client.set_options(port='soap')
+client.service.getBank()
+```
 
 -   fully qualify the method as:
 
 <!-- -->
 
-    #!python
-    client.service.soap.getBank()
+```py
+client.service.soap.getBank()
+```
 
 **After r551 version 0.3.7, this changes some to support
 multiple-services within (1) WSDL as follows:**
@@ -531,8 +559,9 @@ This example only has (1) method defined for each port but it could very
 likely have may methods defined. Suds does not require the method
 invocation to be qualifed (as shown above) by the port as:
 
-    #!python
-    client.service[port].getBank()
+```py
+client.service[port].getBank()
+```
 
 unless the user wants to specify a particular port. In most cases, the
 server will work properly with any of the soap ports. However, if you
@@ -547,23 +576,26 @@ There are many ways to do this:
 
 <!-- -->
 
-    #!python
-    client.set_options(port='soap')
-    client.service.getBank()
+```py
+client.set_options(port='soap')
+client.service.getBank()
+```
 
 -   fully qualify the method using the port `name` as:
 
 <!-- -->
 
-    #!python
-    client.service['soap'].getBank()
+```py
+client.service['soap'].getBank()
+```
 
 -   fully qualify the method using the port `index` as:
 
 <!-- -->
 
-    #!python
-    client.service[0].getBank()
+```py
+client.service[0].getBank()
+```
 
 ## WSDL With Multiple Services & Multiple Ports
 
@@ -572,72 +604,75 @@ version: 0.3.7+
 Some WSDLs define multiple services which may (or may not) be defined
 with multiple ports as:
 
-    #!xml
-    <wsdl:service name="BLZService">
-      <wsdl:port name="soap" binding="tns:BLZServiceSOAP11Binding">
-        <soap:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
-      </wsdl:port>
-      <wsdl:port name="soap12" binding="tns:BLZServiceSOAP12Binding">
-        <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
-    </wsdl:service>
-    <wsdl:service name="OtherBLZService">
-      <wsdl:port name="soap" binding="tns:OtherBLZServiceSOAP11Binding">
-        <soap:address location="http://www.thomas-bayer.com:80/axis2/services/OtherBLZService"/>
-      </wsdl:port>
-      <wsdl:port name="soap12" binding="tns:OtherBLZServiceSOAP12Binding">
-        <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/OtherBLZService"/>
-    </wsdl:service>
+```xml
+<wsdl:service name="BLZService">
+  <wsdl:port name="soap" binding="tns:BLZServiceSOAP11Binding">
+    <soap:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+  </wsdl:port>
+  <wsdl:port name="soap12" binding="tns:BLZServiceSOAP12Binding">
+    <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/BLZService"/>
+</wsdl:service>
+<wsdl:service name="OtherBLZService">
+  <wsdl:port name="soap" binding="tns:OtherBLZServiceSOAP11Binding">
+    <soap:address location="http://www.thomas-bayer.com:80/axis2/services/OtherBLZService"/>
+  </wsdl:port>
+  <wsdl:port name="soap12" binding="tns:OtherBLZServiceSOAP12Binding">
+    <soap12:address location="http://www.thomas-bayer.com:80/axis2/services/OtherBLZService"/>
+</wsdl:service>
+```
 
 And are reported by suds as:
 
-    #!python
-    url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
-    client = Client(url)
-    print client
+```py
+url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
+client = Client(url)
+print client
 
-    Suds - version: 0.3.7 build: (beta) R550-20090820
+Suds - version: 0.3.7 build: (beta) R550-20090820
 
-    Service (BLZService) tns="http://thomas-bayer.com/blz/"
-       Prefixes (1)
-         ns0 = "http://thomas-bayer.com/blz/"
-       Ports (2):
-         (soap)
-           Methods (1):
-             getBank(xs:string blz, )
-         (soap12)
-           Methods (1):
-             getBank(xs:string blz, )
-       Types (5):
-          getBankType
-          getBankResponseType
-          getBankType
-          getBankResponseType
-          detailsType
+Service (BLZService) tns="http://thomas-bayer.com/blz/"
+   Prefixes (1)
+     ns0 = "http://thomas-bayer.com/blz/"
+   Ports (2):
+     (soap)
+       Methods (1):
+         getBank(xs:string blz, )
+     (soap12)
+       Methods (1):
+         getBank(xs:string blz, )
+   Types (5):
+      getBankType
+      getBankResponseType
+      getBankType
+      getBankResponseType
+      detailsType
 
-    Service (OtherBLZService) tns="http://thomas-bayer.com/blz/"
-       Prefixes (1)
-         ns0 = "http://thomas-bayer.com/blz/"
-       Ports (2):
-         (soap)
-           Methods (1):
-             getBank(xs:string blz, )
-         (soap12)
-           Methods (1):
-             getBank(xs:string blz, )
-       Types (5):
-          getBankType
-          getBankResponseType
-          getBankType
-          getBankResponseType
-          detailsType
+Service (OtherBLZService) tns="http://thomas-bayer.com/blz/"
+   Prefixes (1)
+     ns0 = "http://thomas-bayer.com/blz/"
+   Ports (2):
+     (soap)
+       Methods (1):
+         getBank(xs:string blz, )
+     (soap12)
+       Methods (1):
+         getBank(xs:string blz, )
+   Types (5):
+      getBankType
+      getBankResponseType
+      getBankType
+      getBankResponseType
+      detailsType
+```
 
 This example only has (1) method defined for each port but it could very
 likely have may methods defined. Suds does __not__ require the
 method invocation to be qualifed (as shown above) by the service and/or
 port as:
 
-    #!python
-    client.service[service][port].getBank()
+```py
+client.service[service][port].getBank()
+```
 
 unless the user wants to specify a particular service and/or port. In
 most cases, the server will work properly with any of the soap ports.
@@ -659,38 +694,43 @@ There are many ways to do this:
 
 <!-- -->
 
-    #!python
-    client.set_options(service='OtherBLZService', port='soap')
-    client.service.getBank()
+```py
+client.set_options(service='OtherBLZService', port='soap')
+client.service.getBank()
+```
 
 -   method qualified by `service` and `port` as:
 
 <!-- -->
 
-    #!python
-    client.service['OtherBLZService']['soap'].getBank()
+```py
+client.service['OtherBLZService']['soap'].getBank()
+```
 
 -   method qualified by `service` and `port` using indexes
     as:
 
 <!-- -->
 
-    #!python
-    client.service[1][0].getBank()
+```py
+client.service[1][0].getBank()
+```
 
 -   method qualified by `service` (by name) only as:
 
 <!-- -->
 
-    #!python
-    client.service['OtherBLZService'].getBank()
+```py
+client.service['OtherBLZService'].getBank()
+```
 
 -   method qualified by `service` (by index) only as:
 
 <!-- -->
 
-    #!python
-    client.service[1].getBank()
+```py
+client.service[1].getBank()
+```
 
 Note, that if a WSDL defines more then one service, you __must__
 qualify the `service` via
@@ -702,43 +742,47 @@ qualify the `service` via
 SOAP headers may be passed during the service invocation by using the
 `soapheaders` `option` as follows:
 
-    #!python
-    client = client(url)
-    token = client.factory.create('AuthToken')
-    token.username = 'Elvis'
-    token.password = 'TheKing'
-    client.set_options(soapheaders=token)
-    result = client.service.addPerson(person)
+```py
+client = client(url)
+token = client.factory.create('AuthToken')
+token.username = 'Elvis'
+token.password = 'TheKing'
+client.set_options(soapheaders=token)
+result = client.service.addPerson(person)
+```
 
 OR
 
-    #!python
-    client = client(url)
-    userid = client.factory.create('Auth.UserID')
-    userid.set('Elvis')
-    password = client.factory.create('Auth.Password')
-    password.set('TheKing')
-    client.set_options(soapheaders=(userid,password))
-    result = client.service.addPerson(person)
+```py
+client = client(url)
+userid = client.factory.create('Auth.UserID')
+userid.set('Elvis')
+password = client.factory.create('Auth.Password')
+password.set('TheKing')
+client.set_options(soapheaders=(userid,password))
+result = client.service.addPerson(person)
+```
 
 OR
 
-    #!python
-    client = client(url)
-    userid = 'Elmer'
-    passwd = 'Fudd'
-    client.set_options(soapheaders=(userid,password))
-    result = client.service.addPerson(person)
+```py
+client = client(url)
+userid = 'Elmer'
+passwd = 'Fudd'
+client.set_options(soapheaders=(userid,password))
+result = client.service.addPerson(person)
+```
 
 The `soapheaders` option may also be assigned a dictionary for
 those cases when optional headers are specified and users don\'t want to
 pass None place holders. This works much like the method parameters. Eg:
 
-    #!python
-    client = client(url)
-    myheaders = dict(userid='Elmer', passwd='Fudd')
-    client.set_options(soapheaders=myheaders)
-    result = client.service.addPerson(person)
+```py
+client = client(url)
+myheaders = dict(userid='Elmer', passwd='Fudd')
+client.set_options(soapheaders=myheaders)
+result = client.service.addPerson(person)
+```
 
 Passing `soapheaders` by keyword (dict) is available in 0.3.4
 (r442) and later.
@@ -754,21 +798,23 @@ used. This is done by constructing and passing an
 `Element` or collection of
 `Elements` as follows:
 
-    #!python
-    from suds.sax.element import Element
-    client = client(url)
-    ssnns = ('ssn', 'http://namespaces/sessionid')
-    ssn = Element('SessionID', ns=ssnns).setText('123')
-    client.set_options(soapheaders=ssn)
-    result = client.service.addPerson(person)
+```py
+from suds.sax.element import Element
+client = client(url)
+ssnns = ('ssn', 'http://namespaces/sessionid')
+ssn = Element('SessionID', ns=ssnns).setText('123')
+client.set_options(soapheaders=ssn)
+result = client.service.addPerson(person)
+```
 
 Do __not__ try to pass the header as an XML `string` such as:
 
-    #!python
-    client = client(url)
-    ssn = '<ssn:SessionID>123</ssn:SessionID>'
-    client.set_options(soapheaders=ssn)
-    result = client.service.addPerson(person)
+```py
+client = client(url)
+ssn = '<ssn:SessionID>123</ssn:SessionID>'
+client.set_options(soapheaders=ssn)
+result = client.service.addPerson(person)
+```
 
 It will not work because: 1. Only
 `Elements` are processed as `custom` headers. 1. The XML string
@@ -786,38 +832,41 @@ released on 0.3.7.
 As of r452 / 0.3.4 (beta) to provide basic ws-security with
 `UsernameToken` with `clear-text` password (no digest).
 
-    #!python
-    from suds.wsse import *
-    security = Security()
-    token = UsernameToken('myusername', 'mypassword')
-    security.tokens.append(token)
-    client.set_options(wsse=security)
+```py
+from suds.wsse import *
+security = Security()
+token = UsernameToken('myusername', 'mypassword')
+security.tokens.append(token)
+client.set_options(wsse=security)
+```
 
 or, if the `Nonce` and `Create` elements are needed, they
 can be generated and set as follows:
 
-    #!python
-    from suds.wsse import *
-    security = Security()
-    token = UsernameToken('myusername', 'mypassword')
-    token.setnonce()
-    token.setcreated()
-    token.setnonceencoding(True)
-    token.setpassworddigest('digest')
-    security.tokens.append(token)
-    client.set_options(wsse=security)
+```py
+from suds.wsse import *
+security = Security()
+token = UsernameToken('myusername', 'mypassword')
+token.setnonce()
+token.setcreated()
+token.setnonceencoding(True)
+token.setpassworddigest('digest')
+security.tokens.append(token)
+client.set_options(wsse=security)
+```
 
 but, if you want to manually set the `Nonce` and/or
 `Created`, you may do as follows:
 
-    #!python
-    from suds.wsse import *
-    security = Security()
-    token = UsernameToken('myusername', 'mypassword')
-    token.setnonce('MyNonceString...')
-    token.setcreated(datetime.now())
-    security.tokens.append(token)
-    client.set_options(wsse=security)
+```py
+from suds.wsse import *
+security = Security()
+token = UsernameToken('myusername', 'mypassword')
+token.setnonce('MyNonceString...')
+token.setcreated(datetime.now())
+security.tokens.append(token)
+client.set_options(wsse=security)
+```
 
 ## Multi-document (Document/Literal)
 
@@ -828,26 +877,27 @@ style will define a single document as the message payload. The
 that method by displaying the method signature as the contents (nodes)
 of the document. Eg:
 
-    #!xml
-    <schema>
-    ...
-    <xs:element name="Foo" type = "tns:Foo"/>
-    <xs:complexType name="Foo">
-      <xs:sequence>
-        <xs:element name="name" type="xs:string"/>
-        <xs:element name="age" type="xs:int"/>
-      </xs:sequence>
-    </xs:complexType>
-    ...
-    </schema>
+```xml
+<schema>
+...
+<xs:element name="Foo" type = "tns:Foo"/>
+<xs:complexType name="Foo">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"/>
+    <xs:element name="age" type="xs:int"/>
+  </xs:sequence>
+</xs:complexType>
+...
+</schema>
 
-    <definitions>
-    ...
-    <message name="FooMessage">
-      <part name="parameters" element="Foo">
-    </message>
-    ...
-    </definitions>
+<definitions>
+...
+<message name="FooMessage">
+  <part name="parameters" element="Foo">
+</message>
+...
+</definitions>
+```
 
 Suds will report the method `foo` signature as:
 
@@ -857,32 +907,33 @@ This provides an RPC feel to the document/literal soap binding style.
 
 Now, if the wsdl defines:
 
-    #!xml
-    <schema>
-    ...
-    <xs:element name="Foo" type = "tns:Foo"/>
-    <xs:element name="Bar" type = "xs:string"/>
-    <xs:complexType name="Foo">
-      <xs:sequence>
-        <xs:element name="name" type="xs:string"/>
-        <xs:element name="age" type="xs:int"/>
-      </xs:sequence>
-    </xs:complexType>
-    ...
-    </schema>
+```xml
+<schema>
+...
+<xs:element name="Foo" type = "tns:Foo"/>
+<xs:element name="Bar" type = "xs:string"/>
+<xs:complexType name="Foo">
+  <xs:sequence>
+    <xs:element name="name" type="xs:string"/>
+    <xs:element name="age" type="xs:int"/>
+  </xs:sequence>
+</xs:complexType>
+...
+</schema>
 
-    <definitions>
-    ...
-    <message name="FooMessage">
-      <part name="foo" element="Foo">
-      <part name="bar" element="Bar">
-    </message>
-    ...
-    </definitions>
+<definitions>
+...
+<message name="FooMessage">
+  <part name="foo" element="Foo">
+  <part name="bar" element="Bar">
+</message>
+...
+</definitions>
+```
 
 Suds will be forced to report the method `foo` signature as:
 
-    foo(Foo foo, xs:string bar)
+    foo(Foo foo, xs:int bar)
 
 The message has (2) parts which defines that the message payload
 contains (2) documents. In this case, suds must present a /Document/
@@ -896,8 +947,9 @@ As of version 0.3.3 and newer, `basic` HTTP authentication
 as defined by [RFC-2617](http://www.ietf.org/rfc/rfc2617.txt) can be
 done as follows:
 
-    #!python
-    client = Client(url, username='elmer', password='fudd')
+```py
+client = Client(url, username='elmer', password='fudd')
+```
 
 Authentication is provided by the (default)
 `HttpAuthenticated` `Transport` class defined in the
@@ -910,17 +962,19 @@ that don\'t follow the challenge/response model. Rather, it sets the
 `Authentication:` http header on __all__ http requests. This
 transport can be used as follows:
 
-    #!python
-    from suds.transport.http import HttpAuthenticated
-    t = HttpAuthenticated(username='elmer', password='fudd')
-    client = Client(url, transport=t)
+```py
+from suds.transport.http import HttpAuthenticated
+t = HttpAuthenticated(username='elmer', password='fudd')
+client = Client(url, transport=t)
+```
 
 Or
 
-    #!python
-    from suds.transport.http import HttpAuthenticated
-    t = HttpAuthenticated()
-    client = Client(url, transport=t, username='elmer', password='fudd')
+```py
+from suds.transport.http import HttpAuthenticated
+t = HttpAuthenticated()
+client = Client(url, transport=t, username='elmer', password='fudd')
+```
 
 For version: 0.3.3 and older ONLY:
 
@@ -930,19 +984,20 @@ urllib2 in the suds default
 features provided by urllib2. For example basic HTTP authentication
 could be implemented as follows:
 
-    #!python
-    myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
-    client = Client(myurl)
+```py
+myurl = 'http://localhost:7080/webservices/WebServiceTestBean?wsdl'
+client = Client(myurl)
 
-    import urllib2
-    baseurl = 'http://localhost:7080/'
-    username = 'myuser'
-    password = 'mypassword'
-    passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    passman.add_password(None, baseurl, username, password)
-    authhandler = urllib2.HTTPBasicAuthHandler(passman)
+import urllib2
+baseurl = 'http://localhost:7080/'
+username = 'myuser'
+password = 'mypassword'
+passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+passman.add_password(None, baseurl, username, password)
+authhandler = urllib2.HTTPBasicAuthHandler(passman)
 
-    client.options.transport.urlopener  = urllib2.build_opener(authhandler)
+client.options.transport.urlopener  = urllib2.build_opener(authhandler)
+```
 
 The suds default
 `HTTP transport` uses urllib2.urlopen(), basic http authentication is
@@ -957,10 +1012,11 @@ As of 0.3.8, suds includes a
 
 To use this, simply do something like:
 
-    #!python
-    from suds.transport.https import WindowsHttpAuthenticated
-    ntlm = WindowsHttpAuthenticated(username='xx', password='xx')
-    client = Client(url, transport=ntlm)
+```py
+from suds.transport.https import WindowsHttpAuthenticated
+ntlm = WindowsHttpAuthenticated(username='xx', password='xx')
+client = Client(url, transport=ntlm)
+```
 
 ## Proxies
 
@@ -970,11 +1026,12 @@ proxy options can be passed set using Client.set\_options. The proxy
 options must contain a dictionary where keys=protocols and values are
 the hostname (or IP) and port of the proxy.
 
-    #!python
-    ...
-    d = dict(http='host:80', https='host:443', ...)
-    client.set_options(proxy=d)
-    ...
+```py
+...
+d = dict(http='host:80', https='host:443', ...)
+client.set_options(proxy=d)
+...
+```
 
 ## Message Injection  (Diagnostics/Testing)
 
@@ -993,29 +1050,31 @@ when invoking the service. Eg:
 
 Sending a raw soap message:
 
-    #!python
-    message = \
-    """<?xml version="1.0" encoding="UTF-8"?>
-    <SOAP-ENV:Envelope>
-        <SOAP-ENV:Body>
-            ...
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>"""
+```py
+message = \
+"""<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope>
+    <SOAP-ENV:Body>
+        ...
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
 
-    print client.service.test(__inject={'msg':message})
+print client.service.test(__inject={'msg':message})
+```
 
 Injecting a response for testing:
 
-    #!python
-    reply = \
-    """<?xml version="1.0" encoding="UTF-8"?>
-    <SOAP-ENV:Envelope>
-        <SOAP-ENV:Body>
-            ...
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>"""
+```py
+reply = \
+"""<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope>
+    <SOAP-ENV:Body>
+        ...
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
 
-    print client.service.test(__inject={'reply':reply})
+print client.service.test(__inject={'reply':reply})
+```
 
 ## SSL certificate verification & Custom Certificates
 
@@ -1097,14 +1156,16 @@ The default cache is a
 
 This duration may be adjusted as follows:
 
-    #!python
-    cache = client.options.cache
-    cache.setduration(days=10)
+```py
+cache = client.options.cache
+cache.setduration(days=10)
+```
 
 OR
 
-    #!python
-     cache.setduration(seconds=90)
+```py
+ cache.setduration(seconds=90)
+```
 
 The duration my be (months, weeks, days, hours, seconds ).
 
@@ -1117,16 +1178,18 @@ The cache is an
 `Cache` object or may be disabled by setting the option to None.
 So, uses may plug-in any kind of cache they want.
 
-    #!python
-    from suds.cache import Cache
-    class MyCache(Cache)
-     ...
-    client.set_options(cache=MyCache())
+```py
+from suds.cache import Cache
+class MyCache(Cache)
+ ...
+client.set_options(cache=MyCache())
+```
 
 To disable caching:
 
-    #!python
-    client.set_options(cache=None)
+```py
+client.set_options(cache=None)
+```
 
 ## Fixing Broken Schema(s)
 
@@ -1150,12 +1213,13 @@ doctors
 
 <!-- -->
 
-    #!python
-    imp = Import('http://schemas.xmlsoap.org/soap/encoding/')
-    imp.filter.add('http://some/namespace/A')
-    imp.filter.add('http://some/namespace/B')
-    doctor = ImportDoctor(imp)
-    client = Client(url, doctor=doctor)
+```py
+imp = Import('http://schemas.xmlsoap.org/soap/encoding/')
+imp.filter.add('http://some/namespace/A')
+imp.filter.add('http://some/namespace/B')
+doctor = ImportDoctor(imp)
+client = Client(url, doctor=doctor)
+```
 
 In this example, we\'ve specified that the doctor should examine
 schema(s) with a targetNamespace of
@@ -1168,21 +1232,23 @@ For cases where the schemaLocation is not bound to the
 namespace, the
 `Import` can be created specifying the location has follows:
 
-    #!python
-    imp = Import('http://www.w3.org/2001/XMLSchema', location='http://www.w3.org/2001/XMLSchema.xsd')
-    imp.filter.add('http://some/namespace/A')
-    imp.filter.add('http://some/namespace/B')
-    doctor = ImportDoctor(imp)
-    client = Client(url, doctor=doctor)
+```py
+imp = Import('http://www.w3.org/2001/XMLSchema', location='http://www.w3.org/2001/XMLSchema.xsd')
+imp.filter.add('http://some/namespace/A')
+imp.filter.add('http://some/namespace/B')
+doctor = ImportDoctor(imp)
+client = Client(url, doctor=doctor)
+```
 
 A commonly referenced schema (that is not imported) is the SOAP section
 5 encoding schema. This can now be fixed as follows:
 
-    #!python
-    imp = Import('http://schemas.xmlsoap.org/soap/encoding/')
-    imp.filter.add('http://some/namespace/A')
-    doctor = ImportDoctor(imp)
-    client = Client(url, doctor=doctor)
+```py
+imp = Import('http://schemas.xmlsoap.org/soap/encoding/')
+imp.filter.add('http://some/namespace/A')
+doctor = ImportDoctor(imp)
+client = Client(url, doctor=doctor)
+```
 
 note: Available in r512+ and 0.3.6 `beta`.
 
@@ -1202,16 +1268,18 @@ a schema but does not look outside unless:
 
 <!-- -->
 
-    #!python
-    from suds.xsd.sxbasic import Import
-    ns = 'http://schemas.xmlsoap.org/soap/encoding/'
-    location = 'http://schemas.xmlsoap.org/soap/encoding/'
-    Import.bind(ns, location)
+```py
+from suds.xsd.sxbasic import Import
+ns = 'http://schemas.xmlsoap.org/soap/encoding/'
+location = 'http://schemas.xmlsoap.org/soap/encoding/'
+Import.bind(ns, location)
+```
 
 Or, the shorthand (when location is the same as the namespace URI)
 
-    #!python
-    Import.bind(ns)
+```py
+Import.bind(ns)
+```
 
 note: `http://schemas.xmlsoap.org/soap/encoding/'`
 automatically `bound` in 0.3.4 as of (r420).
@@ -1271,14 +1339,15 @@ The `MessagePlugin` currently has (5) hooks ::
 
 General usage:
 
-    #!python
-    from suds.plugin import *
+```py
+from suds.plugin import *
 
-    class MyPlugin(DocumentPlugin):
-            ...
+class MyPlugin(DocumentPlugin):
+        ...
 
-    plugin = MyPlugin()
-    client = Client(url, plugins=[plugin])
+plugin = MyPlugin()
+client = Client(url, plugins=[plugin])
+```
 
 Plugins need to override __only__ those methods (hooks) of interest
 - not all of them. Exceptions are caught and logged.
@@ -1310,17 +1379,18 @@ But what you need is:
       </soapenv:Body>
     </soapenv:Envelope>
 
-    #!python
-    from suds.plugin import MessagePlugin
+```py
+from suds.plugin import MessagePlugin
 
-    class MyPlugin(MessagePlugin):
-        def marshalled(self, context):
-            body = context.envelope.getChild('Body')
-            foo = body[0]
-            foo.set('id', '12345')
-            foo.set('version', '2.0')
+class MyPlugin(MessagePlugin):
+    def marshalled(self, context):
+        body = context.envelope.getChild('Body')
+        foo = body[0]
+        foo.set('id', '12345')
+        foo.set('version', '2.0')
 
-    client = Client(url, plugins=[MyPlugin()])
+client = Client(url, plugins=[MyPlugin()])
+```
 
 In the future, the `Binding.replyfilter` and `doctor`
 __option__ will likely be deprecated. The
@@ -1329,28 +1399,30 @@ __option__ will likely be deprecated. The
 
 In doing this, we can treat the `ImportDoctor` as a plugin:
 
-    #!python
-    imp = Import('http://www.w3.org/2001/XMLSchema')
-    imp.filter.add('http://webservices.serviceU.com/')
-    d = ImportDoctor(imp)
-    client = Client(url, plugins=[d])
+```py
+imp = Import('http://www.w3.org/2001/XMLSchema')
+imp.filter.add('http://webservices.serviceU.com/')
+d = ImportDoctor(imp)
+client = Client(url, plugins=[d])
+```
 
 We can also replace our Binding.replyfilter() with a plugin as follows:
 
-    #!python
-    def myfilter(reply):
-      return reply[1:]
+```py
+def myfilter(reply):
+  return reply[1:]
 
-    Binding.replyfilter = myfilter
+Binding.replyfilter = myfilter
 
-    # replace with:
+# replace with:
 
-    class Filter(MessagePlugin):
-        def received(self, context):
-            reply = context.reply
-            context.reply = reply[1:]
+class Filter(MessagePlugin):
+    def received(self, context):
+        reply = context.reply
+        context.reply = reply[1:]
 
-    client = Client(url, plugins=[Filter()])
+client = Client(url, plugins=[Filter()])
+```
 
 ## Technical (FYI) Notes
 
