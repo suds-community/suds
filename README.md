@@ -186,7 +186,7 @@ Service (WebServiceTestBeanService) tns="http://test.server.enterprise.rhq.org/"
 
 note: See example of service with multiple ports below.
 
-The sample ouput lists that the service named
+The sample output lists that the service named
 `WebServiceTestBeanService` has methods such as
 getPercentBodyFat() and addPerson().
 
