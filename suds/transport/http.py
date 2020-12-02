@@ -27,6 +27,8 @@ import httplib
 import socket
 import sys
 import urllib2
+import gzip
+import zlib
 
 from logging import getLogger
 log = getLogger(__name__)
@@ -72,6 +74,12 @@ class HttpTransport(Transport):
         url = self.__get_request_url_for_urllib(request)
         msg = request.message
         headers = request.headers
+        if 'Content-Encoding' in headers:
+            encoding = headers['Content-Encoding']
+            if encoding == 'gzip':
+                msg = gzip.compress(msg)
+            elif encoding == 'deflate':
+                msg = zlib.compress(msg)
         try:
             u2request = urllib2.Request(url, msg, headers)
             self.addcookies(u2request)
@@ -83,7 +91,14 @@ class HttpTransport(Transport):
             headers = fp.headers
             if sys.version_info < (3, 0):
                 headers = headers.dict
-            reply = Reply(httplib.OK, headers, fp.read())
+            message = fp.read()
+            if 'Content-Encoding' in headers:
+                encoding = headers['Content-Encoding']
+                if encoding == 'gzip':
+                    message = gzip.decompress(message)
+                elif encoding == 'deflate':
+                    message = zlib.decompress(message)
+            reply = Reply(httplib.OK, headers, message)
             log.debug('received:\n%s', reply)
             return reply
         except urllib2.HTTPError as e:
