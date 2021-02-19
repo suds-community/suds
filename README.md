@@ -201,16 +201,16 @@ method would be invoked as follows:
 ```py
 result = client.service.getPercentBodyFat('jeff', 68, 170)
 print result
-```
 
 You have 21% body fat.
+```
 
 ```py
 result = client.service.getPercentBodyFat(name='jeff', height=68, weight=170)
 print result
-```
 
 You have 21% body fat.
+```
 
 ```py
 d = dict(name='jeff', height=68, weight=170)
