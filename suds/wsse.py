@@ -45,8 +45,10 @@ wsencns = \
     ('wsenc',
      'http://www.w3.org/2001/04/xmlenc#')
 
-wsdigest = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest"
 nonce_encoding_type = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"
+username_token_profile = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0"
+wsdigest = "%s#PasswordDigest" % username_token_profile
+wstext = "%s#PasswordText" % username_token_profile
 
 
 class Security(Object):
@@ -189,6 +191,8 @@ class UsernameToken(Token):
         if self.password_digest:
             p.set("Type", wsdigest)
             p.setText(self.password_digest)
+        else:
+            p.set("Type", wstext)
         root.append(p)
         if self.nonce is not None:
             n = Element('Nonce', ns=wssens)

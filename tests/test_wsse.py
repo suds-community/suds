@@ -17,7 +17,7 @@ class TestUsernameToken:
         expected = """<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" mustUnderstand="true">
    <wsse:UsernameToken>
       <wsse:Username>username</wsse:Username>
-      <wsse:Password>password</wsse:Password>
+      <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">password</wsse:Password>
    </wsse:UsernameToken>
 </wsse:Security>"""
         assert expected == str(security.xml())
