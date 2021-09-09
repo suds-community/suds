@@ -36,11 +36,11 @@ import suds.transport
 import suds.transport.https
 from suds.umx.basic import Basic as UmxBasic
 from suds.wsdl import Definitions
-import sudsobject
+from . import sudsobject
 
-from cookielib import CookieJar
+from http.cookiejar import CookieJar
 from copy import deepcopy
-import httplib
+import http.client
 
 from logging import getLogger
 log = getLogger(__name__)
@@ -192,7 +192,7 @@ class Client(UnicodeMixin):
         if suds.__build__:
             s.append("  build: %s" % (suds.__build__,))
         for sd in self.sd:
-            s.append("\n\n%s" % (unicode(sd),))
+            s.append("\n\n%s" % (str(sd),))
         return "".join(s)
 
 
@@ -239,7 +239,7 @@ class Factory:
         else:
             try:
                 result = self.builder.build(type)
-            except Exception, e:
+            except Exception as e:
                 log.error("create '%s' failed", name, exc_info=True)
                 raise BuildError(name, e)
         timer.stop()
@@ -340,20 +340,20 @@ class ServiceSelector:
         """
         service = None
         if not self.__services:
-            raise Exception, "No services defined"
+            raise Exception("No services defined")
         if isinstance(name, int):
             try:
                 service = self.__services[name]
                 name = service.name
             except IndexError:
-                raise ServiceNotFound, "at [%d]" % (name,)
+                raise ServiceNotFound("at [%d]" % (name,))
         else:
             for s in self.__services:
                 if name == s.name:
                     service = s
                     break
         if service is None:
-            raise ServiceNotFound, name
+            raise ServiceNotFound(name)
         return PortSelector(self.__client, service.ports, name)
 
     def __ds(self):
@@ -450,13 +450,13 @@ class PortSelector:
         """
         port = None
         if not self.__ports:
-            raise Exception, "No ports defined: %s" % (self.__qn,)
+            raise Exception("No ports defined: %s" % (self.__qn,))
         if isinstance(name, int):
             qn = "%s[%d]" % (self.__qn, name)
             try:
                 port = self.__ports[name]
             except IndexError:
-                raise PortNotFound, qn
+                raise PortNotFound(qn)
         else:
             qn = ".".join((self.__qn, name))
             for p in self.__ports:
@@ -464,7 +464,7 @@ class PortSelector:
                     port = p
                     break
         if port is None:
-            raise PortNotFound, qn
+            raise PortNotFound(qn)
         qn = ".".join((self.__qn, port.name))
         return MethodSelector(self.__client, port.methods, qn)
 
@@ -532,7 +532,7 @@ class MethodSelector:
         m = self.__methods.get(name)
         if m is None:
             qn = ".".join((self.__qn, name))
-            raise MethodNotFound, qn
+            raise MethodNotFound(qn)
         return Method(self.__client, m)
 
 
@@ -564,10 +564,10 @@ class Method:
         client = clientclass(self.client, self.method)
         try:
             return client.invoke(args, kwargs)
-        except WebFault, e:
+        except WebFault as e:
             if self.faults():
                 raise
-            return httplib.INTERNAL_SERVER_ERROR, e
+            return http.client.INTERNAL_SERVER_ERROR, e
 
     def faults(self):
         """Get faults option."""
@@ -750,7 +750,7 @@ class _SoapClient:
             reply = self.options.transport.send(request)
             timer.stop()
             metrics.log.debug("waited %s on server reply", timer)
-        except suds.transport.TransportError, e:
+        except suds.transport.TransportError as e:
             content = e.fp and e.fp.read() or ""
             return self.process_reply(content, e.httpcode, tostr(e))
         return self.process_reply(reply.message, None, None)
@@ -774,15 +774,15 @@ class _SoapClient:
 
         """
         if status is None:
-            status = httplib.OK
+            status = http.client.OK
         debug_message = "Reply HTTP status - %d" % (status,)
-        if status in (httplib.ACCEPTED, httplib.NO_CONTENT):
+        if status in (http.client.ACCEPTED, http.client.NO_CONTENT):
             log.debug(debug_message)
             return
         #TODO: Consider whether and how to allow plugins to handle error,
         # httplib.ACCEPTED & httplib.NO_CONTENT replies as well as successful
         # ones.
-        if status == httplib.OK:
+        if status == http.client.OK:
             log.debug("%s\n%s", debug_message, reply)
         else:
             log.debug("%s - %s\n%s", debug_message, description, reply)
@@ -804,19 +804,19 @@ class _SoapClient:
         #   An INSTANCE MUST use a "500 Internal Server Error" HTTP status code
         # if the response message is a SOAP Fault.
         replyroot = None
-        if status in (httplib.OK, httplib.INTERNAL_SERVER_ERROR):
+        if status in (http.client.OK, http.client.INTERNAL_SERVER_ERROR):
             replyroot = _parse(reply)
             plugins.message.parsed(reply=replyroot)
             fault = self.__get_fault(replyroot)
             if fault:
-                if status != httplib.INTERNAL_SERVER_ERROR:
+                if status != http.client.INTERNAL_SERVER_ERROR:
                     log.warning("Web service reported a SOAP processing fault "
                         "using an unexpected HTTP status code %d. Reporting "
                         "as an internal server error.", status)
                 if self.options.faults:
                     raise WebFault(fault, replyroot)
-                return httplib.INTERNAL_SERVER_ERROR, fault
-        if status != httplib.OK:
+                return http.client.INTERNAL_SERVER_ERROR, fault
+        if status != http.client.OK:
             if self.options.faults:
                 #TODO: Use a more specific exception class here.
                 raise Exception((status, description))
@@ -831,7 +831,7 @@ class _SoapClient:
         result = ctx.reply
         if self.options.faults:
             return result
-        return httplib.OK, result
+        return http.client.OK, result
 
     def __get_fault(self, replyroot):
         """
@@ -861,7 +861,7 @@ class _SoapClient:
 
         """
         action = self.method.soap.action
-        if isinstance(action, unicode):
+        if isinstance(action, str):
             action = action.encode("utf-8")
         result = {
             "Content-Type": "text/xml; charset=utf-8",
@@ -889,7 +889,7 @@ class _SimClient(_SoapClient):
     @classmethod
     def simulation(cls, kwargs):
         """Get whether injected data has been specified in I{kwargs}."""
-        return kwargs.has_key(_SimClient.__injkey)
+        return _SimClient.__injkey in kwargs
 
     def invoke(self, args, kwargs):
         """

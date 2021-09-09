@@ -170,7 +170,7 @@ class Element(UnicodeMixin):
             root.append(a.clone(self))
         for c in self.children:
             root.append(c.clone(self))
-        for ns in self.nsprefixes.items():
+        for ns in list(self.nsprefixes.items()):
             root.addPrefix(ns[0], ns[1])
         return root
 
@@ -621,10 +621,10 @@ class Element(UnicodeMixin):
         @rtype: basestring
 
         """
-        for item in self.nsprefixes.items():
+        for item in list(self.nsprefixes.items()):
             if item[1] == uri:
                 return item[0]
-        for item in self.specialprefixes.items():
+        for item in list(self.specialprefixes.items()):
             if item[1] == uri:
                 return item[0]
         if self.parent is not None:
@@ -647,11 +647,11 @@ class Element(UnicodeMixin):
 
         """
         result = []
-        for item in self.nsprefixes.items():
+        for item in list(self.nsprefixes.items()):
             if self.matcher[match](item[1], uri):
                 prefix = item[0]
                 result.append(prefix)
-        for item in self.specialprefixes.items():
+        for item in list(self.specialprefixes.items()):
             if self.matcher[match](item[1], uri):
                 prefix = item[0]
                 result.append(prefix)
@@ -675,7 +675,7 @@ class Element(UnicodeMixin):
             c.promotePrefixes()
         if self.parent is None:
             return
-        for p, u in self.nsprefixes.items():
+        for p, u in list(self.nsprefixes.items()):
             if p in self.parent.nsprefixes:
                 pu = self.parent.nsprefixes[p]
                 if pu == u:
@@ -806,7 +806,7 @@ class Element(UnicodeMixin):
         result.append("%s<%s" % (tab, self.qname()))
         result.append(self.nsdeclarations())
         for a in self.attributes:
-            result.append(" %s" % (unicode(a),))
+            result.append(" %s" % (str(a),))
         if self.isempty():
             result.append("/>")
             return "".join(result)
@@ -831,7 +831,7 @@ class Element(UnicodeMixin):
         """
         result = ["<%s" % (self.qname(),), self.nsdeclarations()]
         for a in self.attributes:
-            result.append(" %s" % (unicode(a),))
+            result.append(" %s" % (str(a),))
         if self.isempty():
             result.append("/>")
             return "".join(result)
@@ -861,7 +861,7 @@ class Element(UnicodeMixin):
         if myns[1] != pns[1]:
             if self.expns is not None:
                 s.append(' xmlns="%s"' % (self.expns,))
-        for item in self.nsprefixes.items():
+        for item in list(self.nsprefixes.items()):
             p, u = item
             if self.parent is not None:
                 ns = self.parent.resolvePrefix(p)
@@ -965,13 +965,13 @@ class Element(UnicodeMixin):
         return len(self.children)
 
     def __getitem__(self, index):
-        if isinstance(index, basestring):
+        if isinstance(index, str):
             return self.get(index)
         if index < len(self.children):
             return self.children[index]
 
     def __setitem__(self, index, value):
-        if isinstance(index, basestring):
+        if isinstance(index, str):
             self.set(index, value)
         else:
             if index < len(self.children) and isinstance(value, Element):
@@ -1011,7 +1011,7 @@ class NodeIterator:
         self.pos = 0
         self.children = parent.children
 
-    def next(self):
+    def __next__(self):
         """
         Get the next child.
 
@@ -1093,7 +1093,7 @@ class PrefixNormalizer:
 
         """
         s = set()
-        for ns in n.nsprefixes.items():
+        for ns in list(n.nsprefixes.items()):
             if self.permit(ns):
                 s.add(ns[1])
         return s
@@ -1173,7 +1173,7 @@ class PrefixNormalizer:
         for n in self.branch:
             n.nsprefixes = {}
         n = self.node
-        for u, p in self.prefixes.items():
+        for u, p in list(self.prefixes.items()):
             n.addPrefix(p, u)
 
     def permit(self, ns):

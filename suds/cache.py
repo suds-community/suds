@@ -25,7 +25,7 @@ import suds.sax.parser
 import datetime
 import os
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except Exception:
     import pickle
 import shutil

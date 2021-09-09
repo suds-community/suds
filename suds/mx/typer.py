@@ -36,10 +36,10 @@ class Typer:
         bool: ("boolean", Namespace.xsdns),
         float: ("float", Namespace.xsdns),
         int: ("int", Namespace.xsdns),
-        long: ("long", Namespace.xsdns),
+        int: ("long", Namespace.xsdns),
         str: ("string", Namespace.xsdns),
         Text: ("string", Namespace.xsdns),
-        unicode: ("string", Namespace.xsdns)}
+        str: ("string", Namespace.xsdns)}
 
     @classmethod
     def auto(cls, node, value=None):

@@ -206,7 +206,7 @@ class PropertyAppender(Appender):
         child = self.node(content)
         child.setText(p.get())
         parent.append(child)
-        for item in p.items():
+        for item in list(p.items()):
             cont = Content(tag=item[0], value=item[1])
             Appender.append(self, child, cont)
 

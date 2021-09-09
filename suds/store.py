@@ -566,7 +566,7 @@ class DocumentStore(object):
         protocol, location = self.__split(url)
         content = self.__find(location)
         if protocol == 'suds' and content is None:
-            raise Exception, 'location "%s" not in document store' % location
+            raise Exception('location "%s" not in document store' % location)
         return content
 
     def __find(self, location):

@@ -68,11 +68,11 @@ class Request(UnicodeMixin):
         self.timeout = timeout
 
     def __unicode__(self):
-        result = [u"URL: %s\nHEADERS: %s" % (self.url, self.headers)]
+        result = ["URL: %s\nHEADERS: %s" % (self.url, self.headers)]
         if self.message is not None:
-            result.append(u"MESSAGE:")
+            result.append("MESSAGE:")
             result.append(self.message.decode("raw_unicode_escape"))
-        return u"\n".join(result)
+        return "\n".join(result)
 
     def __set_URL(self, url):
         """
@@ -120,7 +120,7 @@ class Reply(UnicodeMixin):
         self.message = message
 
     def __unicode__(self):
-        return u"""\
+        return """\
 CODE: %s
 HEADERS: %s
 MESSAGE:

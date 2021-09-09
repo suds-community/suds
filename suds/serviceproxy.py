@@ -70,7 +70,7 @@ class ServiceProxy(UnicodeMixin):
         return self.__client__.factory.create(name)
 
     def __unicode__(self):
-        return unicode(self.__client__)
+        return str(self.__client__)
 
     def __getattr__(self, name):
         builtin = name.startswith('__') and name.endswith('__')

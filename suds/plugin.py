@@ -219,7 +219,7 @@ class PluginContainer:
     def __getattr__(self, name):
         domain = self.domains.get(name)
         if not domain:
-            raise Exception, 'plugin domain (%s), invalid' % (name,)
+            raise Exception('plugin domain (%s), invalid' % (name,))
         ctx, pclass = domain
         plugins = [p for p in self.plugins if isinstance(p, pclass)]
         return PluginDomain(ctx, plugins)
