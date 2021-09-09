@@ -1,5 +1,4 @@
-[![Build
-Status](https://travis-ci.org/suds-community/suds.svg?branch=master)](https://travis-ci.org/suds-community/suds)
+![Build Status](https://github.com/suds-community/suds/workflows/Test/badge.svg?branch=master)
 
 # Overview
 
@@ -96,7 +95,7 @@ for message/reply processing.
 
 ## Python Support
 
-See `.travis.yml` for supported Python versions. The goal is to support
+See `.github/workflows/test_and_release.yml` for supported Python versions. The goal is to support
 [currently maintained Python version](https://devguide.python.org/#status-of-python-branches)
 and Python 2.7.
 
