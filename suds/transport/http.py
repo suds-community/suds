@@ -137,9 +137,6 @@ class HttpTransport(Transport):
         """
         tm = timeout or self.options.timeout
         url = self.u2opener()
-        if (sys.version_info < (3, 0)) and (self.u2ver() < 2.6):
-            socket.setdefaulttimeout(tm)
-            return url.open(u2request)
         return url.open(u2request, timeout=tm)
 
     def u2opener(self):
@@ -173,10 +170,8 @@ class HttpTransport(Transport):
 
         """
         try:
-            part = urllib.request.__version__.split('.', 1)
-            return float('.'.join(part))
+            return float('%d.%d' % sys.version_info[:2])
         except Exception as e:
-            log.exception(e)
             return 0
 
     def __deepcopy__(self, memo={}):
