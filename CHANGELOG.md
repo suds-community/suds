@@ -1,6 +1,16 @@
 Release notes
 =============
 
+version 1.0.0-beta.1 (2021-09-13)
+------------------------
+* Drop support for python 2.x
+
+version 0.8.5 (2021-05-14)
+------------------------
+* R4201 Any PASSWORD MUST specify a Type attribute
+* Compress or decompress message when Content-Encoding is present in headers
+* Do not force byte-compilation optimization at level 1
+
 version 0.8.4 (2019-12-21)
 ------------------------
 * Add per invocation timeout
