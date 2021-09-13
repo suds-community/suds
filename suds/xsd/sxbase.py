@@ -533,7 +533,7 @@ class SchemaObject(UnicodeMixin):
         return ()
 
     def __unicode__(self):
-        return unicode(self.str())
+        return str(self.str())
 
     def __repr__(self):
         s = []
@@ -596,7 +596,7 @@ class Iter:
             self.items = sx.rawchildren
             self.index = 0
 
-        def next(self):
+        def __next__(self):
             """
             Get the I{next} item in the frame's collection.
 
@@ -654,7 +654,7 @@ class Iter:
             return self.stack[-1]
         raise StopIteration()
 
-    def next(self):
+    def __next__(self):
         """
         Get the next item.
 
@@ -665,15 +665,15 @@ class Iter:
         """
         frame = self.top()
         while True:
-            result = frame.next()
+            result = next(frame)
             if result is None:
                 self.pop()
-                return self.next()
+                return next(self)
             if isinstance(result, Content):
                 ancestry = [f.sx for f in self.stack]
                 return result, ancestry
             self.push(result)
-            return self.next()
+            return next(self)
 
     def __iter__(self):
         return self

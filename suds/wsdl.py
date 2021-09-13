@@ -32,8 +32,8 @@ from suds.xsd.query import ElementQuery
 from suds.xsd.schema import Schema, SchemaCollection
 
 import re
-import soaparray
-from urlparse import urljoin
+from . import soaparray
+from urllib.parse import urljoin
 
 from logging import getLogger
 log = getLogger(__name__)
@@ -267,7 +267,7 @@ class Definitions(WObject):
         for p in service.ports:
             binding = p.binding
             ptype = p.binding.type
-            operations = p.binding.type.operations.values()
+            operations = list(p.binding.type.operations.values())
             for name in (op.name for op in operations):
                 m = Facade("Method")
                 m.name = name
@@ -283,8 +283,8 @@ class Definitions(WObject):
 
     def set_wrapped(self):
         """Set (wrapped|bare) flag on messages."""
-        for b in self.bindings.values():
-            for op in b.operations.values():
+        for b in list(self.bindings.values()):
+            for op in list(b.operations.values()):
                 for body in (op.soap.input.body, op.soap.output.body):
                     body.wrapped = False
                     if not self.options.unwrap:
@@ -528,7 +528,7 @@ class PortType(NamedObject):
         @type definitions: L{Definitions}
 
         """
-        for op in self.operations.values():
+        for op in list(self.operations.values()):
             if op.input is None:
                 op.input = Message(Element("no-input"), definitions)
             else:
@@ -704,7 +704,7 @@ class Binding(NamedObject):
 
         """
         self.__resolveport(definitions)
-        for op in self.operations.values():
+        for op in list(self.operations.values()):
             self.__resolvesoapbody(definitions, op)
             self.__resolveheaders(definitions, op)
             self.__resolvefaults(definitions, op)
@@ -932,7 +932,7 @@ class Service(NamedObject):
 
         """
         for p in self.ports:
-            for m in p.methods.values():
+            for m in list(p.methods.values()):
                 if names is None or m.name in names:
                     m.location = url
 

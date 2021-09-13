@@ -96,8 +96,7 @@ for message/reply processing.
 ## Python Support
 
 See `.github/workflows/test_and_release.yml` for supported Python versions. The goal is to support
-[currently maintained Python version](https://devguide.python.org/#status-of-python-branches)
-and Python 2.7.
+[currently maintained versions of Python](https://devguide.python.org/#status-of-python-branches).
 
 ## Logging
 

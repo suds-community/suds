@@ -58,7 +58,7 @@ class Encoder:
         @rtype: str
 
         """
-        if isinstance(s, basestring) and self.__needs_encoding(s):
+        if isinstance(s, str) and self.__needs_encoding(s):
             for x in self.encodings:
                 s = re.sub(x[0], x[1], s)
         return s
@@ -73,7 +73,7 @@ class Encoder:
         @rtype: str
 
         """
-        if isinstance(s, basestring) and "&" in s:
+        if isinstance(s, str) and "&" in s:
             for x in self.decodings:
                 s = s.replace(x[0], x[1])
         return s
@@ -88,7 +88,7 @@ class Encoder:
         @rtype: boolean
 
         """
-        if isinstance(s, basestring):
+        if isinstance(s, str):
             for c in self.special:
                 if c in s:
                     return True

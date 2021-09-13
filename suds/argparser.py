@@ -161,7 +161,7 @@ class _ArgParser:
             return
 
         if self.__kwargs:
-            param_name = self.__kwargs.keys()[0]
+            param_name = list(self.__kwargs.keys())[0]
             if param_name in self.__params_with_arguments:
                 msg = "got multiple values for parameter '%s'"
             else:
@@ -263,7 +263,7 @@ class _ArgParser:
         if len(stack) == 1:
             return stack[0], ancestry
         previous = stack[0]
-        for frame, n in zip(stack[1:], xrange(len(ancestry))):
+        for frame, n in zip(stack[1:], range(len(ancestry))):
             if frame.id() is not ancestry[n]:
                 return previous, ancestry[n:]
             previous = frame

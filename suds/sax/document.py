@@ -52,7 +52,7 @@ class Document(UnicodeMixin):
             the document root element.
         @type node: (L{Element}|str|None)
         """
-        if isinstance(node, basestring):
+        if isinstance(node, str):
             self.__root = Element(node)
             return
         if isinstance(node, Element):

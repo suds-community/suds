@@ -170,4 +170,4 @@ class Attribute(UnicodeMixin):
 
     def __unicode__(self):
         """XML string representation."""
-        return u'%s="%s"' % (self.qname(), self.value and self.value.escape())
+        return '%s="%s"' % (self.qname(), self.value and self.value.escape())

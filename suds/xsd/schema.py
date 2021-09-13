@@ -116,7 +116,7 @@ class SchemaCollection(UnicodeMixin):
         @rtype: L{SchemaCollection}
 
         """
-        namespaces = self.namespaces.keys()
+        namespaces = list(self.namespaces.keys())
         for s in self.children:
             for ns in namespaces:
                 tns = s.root.get("targetNamespace")
@@ -307,27 +307,27 @@ class Schema(UnicodeMixin):
         @rtype: L{Schema}
 
         """
-        for item in schema.attributes.items():
+        for item in list(schema.attributes.items()):
             if item[0] in self.attributes:
                 continue
             self.all.append(item[1])
             self.attributes[item[0]] = item[1]
-        for item in schema.elements.items():
+        for item in list(schema.elements.items()):
             if item[0] in self.elements:
                 continue
             self.all.append(item[1])
             self.elements[item[0]] = item[1]
-        for item in schema.types.items():
+        for item in list(schema.types.items()):
             if item[0] in self.types:
                 continue
             self.all.append(item[1])
             self.types[item[0]] = item[1]
-        for item in schema.groups.items():
+        for item in list(schema.groups.items()):
             if item[0] in self.groups:
                 continue
             self.all.append(item[1])
             self.groups[item[0]] = item[1]
-        for item in schema.agrps.items():
+        for item in list(schema.agrps.items()):
             if item[0] in self.agrps:
                 continue
             self.all.append(item[1])

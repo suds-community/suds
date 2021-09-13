@@ -23,7 +23,6 @@ Attempts to use setuptools if available, and even attempts to install it
 automatically if it is not, downloading it from PyPI if needed. However, its
 main functionality will function just fine without setuptools as well. Having
 setuptools available provides us with the following benefits:
-  - simpler py2to3/distutils integration
   - setup.py 'egg_info' command constructing the project's metadata
   - setup.py 'develop' command deploying the project in 'development mode',
     thus making it available on sys.path, yet still editable directly in its
@@ -575,27 +574,6 @@ if sys.version_info >= (2, 5):
 
 
 # -----------------------------------------------------------------------------
-# Integrate py2to3 into our build operation.
-# -----------------------------------------------------------------------------
-
-if sys.version_info >= (3,):
-    # Integrate the py2to3 step into our build.
-    if using_setuptools:
-        extra_setup_params["use_2to3"] = True
-    else:
-        from distutils.command.build_py import build_py_2to3
-        distutils_cmdclass["build_py"] = build_py_2to3
-
-    # Teach Python's urllib lib2to3 fixer that the old urllib2.__version__ data
-    # member is now stored in the urllib.request module.
-    import lib2to3.fixes.fix_urllib
-    for x in lib2to3.fixes.fix_urllib.MAPPING["urllib2"]:
-        if x[0] == "urllib.request":
-            x[1].append("__version__")
-            break
-
-
-# -----------------------------------------------------------------------------
 # Avoid setup warnings when constructing a list of all project sources.
 # -----------------------------------------------------------------------------
 # Part of this workaround implemented and part in the project's MANIFEST.in
@@ -704,9 +682,8 @@ setup(
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -721,5 +698,6 @@ setup(
 
     # Register distutils command customizations.
     cmdclass=distutils_cmdclass,
+    python_requires=">=3.5",
 
     **extra_setup_params)

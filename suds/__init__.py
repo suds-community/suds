@@ -25,7 +25,7 @@ import sys
 # Project properties
 #
 
-from version import __build__, __version__
+from .version import __build__, __version__
 
 
 #
@@ -34,23 +34,23 @@ from version import __build__, __version__
 
 class MethodNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Method not found: '%s'" % (name,))
+        Exception.__init__(self, "Method not found: '%s'" % (name,))
 
 class PortNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Port not found: '%s'" % (name,))
+        Exception.__init__(self, "Port not found: '%s'" % (name,))
 
 class ServiceNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Service not found: '%s'" % (name,))
+        Exception.__init__(self, "Service not found: '%s'" % (name,))
 
 class TypeNotFound(Exception):
     def __init__(self, name):
-        Exception.__init__(self, u"Type not found: '%s'" % (tostr(name),))
+        Exception.__init__(self, "Type not found: '%s'" % (tostr(name),))
 
 class BuildError(Exception):
     def __init__(self, name, exception):
-        Exception.__init__(self, u"An error occurred while building an "
+        Exception.__init__(self, "An error occurred while building an "
             "instance of (%s). As a result the object you requested could not "
             "be constructed. It is recommended that you construct the type "
             "manually using a Suds object. Please open a ticket with a "
@@ -59,7 +59,7 @@ class BuildError(Exception):
 class WebFault(Exception):
     def __init__(self, fault, document):
         if hasattr(fault, "faultstring"):
-            Exception.__init__(self, u"Server raised fault: '%s'" %
+            Exception.__init__(self, "Server raised fault: '%s'" %
                 (fault.faultstring,))
         self.fault = fault
         self.document = document
@@ -89,7 +89,7 @@ def objid(obj):
 
 def tostr(object, encoding=None):
     """Get a unicode safe string representation of an object."""
-    if isinstance(object, basestring):
+    if isinstance(object, str):
         if encoding is None:
             return object
         return object.encode(encoding)
@@ -109,7 +109,7 @@ def tostr(object, encoding=None):
         return "".join(s)
     if isinstance(object, dict):
         s = ["{"]
-        for item in object.items():
+        for item in list(object.items()):
             s.append(tostr(item[0]))
             s.append(" = ")
             s.append(tostr(item[1]))
@@ -117,7 +117,7 @@ def tostr(object, encoding=None):
         s.append("}")
         return "".join(s)
     try:
-        return unicode(object)
+        return str(object)
     except Exception:
         return str(object)
 
@@ -127,7 +127,7 @@ def tostr(object, encoding=None):
 #
 
 if sys.version_info < (3, 0):
-    from cStringIO import StringIO as BytesIO
+    from io import StringIO as BytesIO
 else:
     from io import BytesIO
 
@@ -137,7 +137,7 @@ class UnicodeMixin(object):
         # For Python 3, __str__() and __unicode__() should be identical.
         __str__ = lambda x: x.__unicode__()
     else:
-        __str__ = lambda x: unicode(x).encode("utf-8")
+        __str__ = lambda x: str(x).encode("utf-8")
 
 # Used instead of byte literals as they are not supported on Python versions
 # prior to 2.6.
@@ -149,8 +149,8 @@ def byte_str(s="", encoding="utf-8", input_encoding="utf-8", errors="strict"):
     strings encoded using the given input encoding.
 
     """
-    assert isinstance(s, basestring)
-    if isinstance(s, unicode):
+    assert isinstance(s, str)
+    if isinstance(s, str):
         return s.encode(encoding, errors)
     if s and encoding != input_encoding:
         return s.decode(input_encoding, errors).encode(encoding, errors)

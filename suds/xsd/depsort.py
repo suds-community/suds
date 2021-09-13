@@ -52,7 +52,7 @@ def dependency_sort(dependency_tree):
     """
     sorted = []
     processed = set()
-    for key, deps in dependency_tree.iteritems():
+    for key, deps in dependency_tree.items():
         _sort_r(sorted, processed, key, deps, dependency_tree)
     return sorted
 
