@@ -22,5 +22,5 @@ See the setup.py script for more detailed information.
 
 """
 
-__version__ = "1.0.0-beta.1"
+__version__ = "1.0.0"
 __build__ = ""
