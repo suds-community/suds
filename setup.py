@@ -645,7 +645,7 @@ licensed under LGPL (see the LICENSE.txt file included in the
 distribution).
 """
 
-package_name = "suds-community"
+package_name = os.environ.get('SUDS_PACKAGE', 'suds-community')
 version_tag = safe_version(__version__)
 project_url = "https://github.com/suds-community/suds"
 base_download_url = project_url + "/archive"

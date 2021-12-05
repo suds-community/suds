@@ -6,14 +6,18 @@ Suds is a lightweight SOAP-based web service client for Python
 licensed under LGPL (see the `LICENSE.txt` file included in the
 distribution).
 
-This is a community fork of the jurko fork.
+Although the original `suds` package stopped releasing versions after `0.4`,
+many (but not all) other open source projects moved to a maintained fork known
+as "suds-jurko". This is a community fork of that fork that is releasing
+packages under the main `suds` package name (and `suds-community` for
+consistency until version 2.x of this package).
 
 **Forked project information**
 
 -   Project site - <https://github.com/suds-community/suds>
 -   Official releases can be downloaded from:
     -   Github - <https://github.com/suds-community/suds>
-    -   PyPI - <http://pypi.python.org/pypi/suds-community>
+    -   PyPI - <http://pypi.python.org/pypi/suds> and <http://pypi.python.org/pypi/suds-community>
 
 **Original suds Python library development project information**
 
@@ -28,10 +32,10 @@ Here are the basic instructions for 3 different installation methods:
 
 1.  Using `pip`
     -   Have the `pip` package installed.
-    -   Run `pip install suds-community`.
+    -   Run `pip install suds`.
 2.  Using `easy-install`
     -   Have the `setuptools` package installed.
-    -   Run `easy_install suds-community`.
+    -   Run `easy_install suds`.
 3.  From sources
     -   Unpack the source package somewhere.
     -   Run `python setup.py install` from the source distribution\'s
