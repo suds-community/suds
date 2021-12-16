@@ -106,7 +106,7 @@ def rhqTest():
         print('\nreply(\n%s\n)\n' % (str(result),))
         result = client.service.updatePerson(person, None)
         print('\nreply(\n%s\n)\n' % (str(result),))
-    except WebFault, f:
+    except WebFault as f:
         errors += 1
         print(f)
         print(f.fault)
@@ -124,7 +124,7 @@ def rhqTest():
         print('echo(None)')
         result = client.service.echo(None)
         print('\nreply( %s )\n' % (str(result),))
-    except WebFault, f:
+    except WebFault as f:
         errors += 1
         print(f)
         print(f.fault)
@@ -139,7 +139,7 @@ def rhqTest():
         print('hello()')
         result = client.service.hello()
         print('\nreply( %s )\n' % (str(result),))
-    except WebFault, f:
+    except WebFault as f:
         errors += 1
         print(f)
         print(f.fault)
@@ -154,7 +154,7 @@ def rhqTest():
         print('testVoid()')
         result = client.service.testVoid()
         print('\nreply( %s )\n' % (str(result),))
-    except WebFault, f:
+    except WebFault as f:
         errors += 1
         print(f)
         print(f.fault)
@@ -170,7 +170,7 @@ def rhqTest():
         print('testListArgs(%s)' % (mylist,))
         result = client.service.testListArg(mylist)
         print('\nreply( %s )\n' % (str(result),))
-    except WebFault, f:
+    except WebFault as f:
         errors += 1
         print(f)
         print(f.fault)
@@ -190,7 +190,7 @@ def rhqTest():
             if len(result) != n:
                 errors += 1
                 print('expected (%d), reply (%d)' % (n, len(result)))
-    except WebFault, f:
+    except WebFault as f:
         errors += 1
         print(f)
         print(f.fault)
@@ -206,7 +206,7 @@ def rhqTest():
         result = client.service.testExceptions()
         print('\nreply( %s )\n' % (tostr(result),))
         raise Exception('Fault expected and not raised')
-    except WebFault, f:
+    except WebFault as f:
         print(f)
         print(f.fault)
         print(f.document)
