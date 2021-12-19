@@ -39,4 +39,16 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: "__token__"
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.PYPI_API_TOKEN_SUDS_COMMUNITY }}
+      - name: Clean up earlier distribution
+        run: |
+          rm -rf dist/
+      - name: Build a binary wheel and a source tarball
+        run: python setup.py sdist bdist_wheel
+        env:
+          SUDS_PACKAGE: suds
+      - name: Publish distribution 📦 to PyPI (suds)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: "__token__"
+          password: ${{ secrets.PYPI_API_TOKEN_SUDS }}
