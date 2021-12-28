@@ -23,6 +23,7 @@ from suds.mx import *
 from suds.sudsobject import Object, Property
 from suds.sax.element import Element
 from suds.sax.text import Text
+from suds.xsd.sxbasic import Attribute
 
 
 class Matcher:
@@ -172,7 +173,7 @@ class PrimitiveAppender(Appender):
     """
 
     def append(self, parent, content):
-        if content.tag.startswith('_'):
+        if content.tag.startswith('_') and isinstance(content.type, Attribute):
             attr = content.tag[1:]
             value = tostr(content.value)
             if value:
@@ -244,7 +245,7 @@ class ElementAppender(Appender):
     """
 
     def append(self, parent, content):
-        if content.tag.startswith('_'):
+        if content.tag.startswith('_') and isinstance(content.type, Attribute):
             raise Exception('raw XML not valid as attribute value')
         child = ElementWrapper(content.value)
         parent.append(child)
@@ -271,7 +272,7 @@ class TextAppender(Appender):
     """
 
     def append(self, parent, content):
-        if content.tag.startswith('_'):
+        if content.tag.startswith('_') and isinstance(content.type, Attribute):
             attr = content.tag[1:]
             value = tostr(content.value)
             if value:

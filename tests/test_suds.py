@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
 import suds
 import suds.store
+from suds.sax.text import Raw
 from testutils.compare_sax import CompareSAX
 
 import pytest
@@ -1413,6 +1414,247 @@ def test_empty_optional_array_is_not_present(client_with_optional_array_paramete
 
     _assert_request_content(result, expected_request_content)
 
+
+def test_named_parameter_with_underscore():
+    client = testutils.client_from_wsdl(b("""\
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="https://labelservice.gls-italy.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="https://labelservice.gls-italy.com/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="https://labelservice.gls-italy.com/">
+      <s:element name="CloseWorkDayByShipmentNumber">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="_xmlRequest" type="s:string" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="CloseWorkDayByShipmentNumberResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="CloseWorkDayByShipmentNumberResult">
+              <s:complexType mixed="true">
+                <s:sequence>
+                  <s:any />
+                </s:sequence>
+              </s:complexType>
+            </s:element>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="CloseWorkDayByShipmentNumberSoapIn">
+    <wsdl:part name="parameters" element="tns:CloseWorkDayByShipmentNumber" />
+  </wsdl:message>
+  <wsdl:message name="CloseWorkDayByShipmentNumberSoapOut">
+    <wsdl:part name="parameters" element="tns:CloseWorkDayByShipmentNumberResponse" />
+  </wsdl:message>
+  <wsdl:message name="CloseWorkDayByShipmentNumberHttpPostIn">
+    <wsdl:part name="_xmlRequest" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="CloseWorkDayByShipmentNumberHttpPostOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:message name="CloseWorkDayByShipmentNumberHttpGetIn">
+    <wsdl:part name="_xmlRequest" type="s:string" />
+  </wsdl:message>
+  <wsdl:message name="CloseWorkDayByShipmentNumberHttpGetOut">
+    <wsdl:part name="Body" />
+  </wsdl:message>
+  <wsdl:portType name="IlsWebServiceSoap">
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Invia le informazioni definitive di chiusura delle spedizioni (Esegue la trasmissione in sede.)</wsdl:documentation>
+      <wsdl:input message="tns:CloseWorkDayByShipmentNumberSoapIn" />
+      <wsdl:output message="tns:CloseWorkDayByShipmentNumberSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="IlsWebServiceHttpGet">
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Invia le informazioni definitive di chiusura delle spedizioni (Esegue la trasmissione in sede.)</wsdl:documentation>
+      <wsdl:input message="tns:CloseWorkDayByShipmentNumberHttpGetIn" />
+      <wsdl:output message="tns:CloseWorkDayByShipmentNumberHttpGetOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:portType name="IlsWebServiceHttpPost">
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <wsdl:documentation xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">Invia le informazioni definitive di chiusura delle spedizioni (Esegue la trasmissione in sede.)</wsdl:documentation>
+      <wsdl:input message="tns:CloseWorkDayByShipmentNumberHttpPostIn" />
+      <wsdl:output message="tns:CloseWorkDayByShipmentNumberHttpPostOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="IlsWebServiceSoap" type="tns:IlsWebServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <soap:operation soapAction="https://labelservice.gls-italy.com/CloseWorkDayByShipmentNumber" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="IlsWebServiceSoap12" type="tns:IlsWebServiceSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <soap12:operation soapAction="https://labelservice.gls-italy.com/CloseWorkDayByShipmentNumber" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="IlsWebServiceHttpGet" type="tns:IlsWebServiceHttpGet">
+    <http:binding verb="GET" />
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <http:operation location="/CloseWorkDayByShipmentNumber" />
+      <wsdl:input>
+        <http:urlEncoded />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="IlsWebServiceHttpPost" type="tns:IlsWebServiceHttpPost">
+    <http:binding verb="POST" />
+    <wsdl:operation name="CloseWorkDayByShipmentNumber">
+      <http:operation location="/CloseWorkDayByShipmentNumber" />
+      <wsdl:input>
+        <mime:content type="application/x-www-form-urlencoded" />
+      </wsdl:input>
+      <wsdl:output>
+        <mime:content part="Body" type="text/xml" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="IlsWebService">
+    <wsdl:port name="IlsWebServiceSoap" binding="tns:IlsWebServiceSoap">
+      <soap:address location="https://labelservice.gls-italy.com/ilswebservice.asmx" />
+    </wsdl:port>
+    <wsdl:port name="IlsWebServiceSoap12" binding="tns:IlsWebServiceSoap12">
+      <soap12:address location="https://labelservice.gls-italy.com/ilswebservice.asmx" />
+    </wsdl:port>
+    <wsdl:port name="IlsWebServiceHttpGet" binding="tns:IlsWebServiceHttpGet">
+      <http:address location="https://labelservice.gls-italy.com/ilswebservice.asmx" />
+    </wsdl:port>
+    <wsdl:port name="IlsWebServiceHttpPost" binding="tns:IlsWebServiceHttpPost">
+      <http:address location="https://labelservice.gls-italy.com/ilswebservice.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""), nosend=True, prettyxml=True)
+    xml = Raw("""
+    <info>
+      <SedeGls>XX</SedeGls>
+      <CodiceClienteGls>xxx</CodiceClienteGls>
+      <PasswordClienteGls>xxx</PasswordClienteGls>
+      <Parcel>
+        <NumeroDiSpedizioneGLSDaConfermare>11111111</NumeroDiSpedizioneGLSDaConfermare>
+      </Parcel>
+    </info>""")
+    result = client.service.CloseWorkDayByShipmentNumber(xml)
+
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns0="https://labelservice.gls-italy.com/" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header/>
+  <ns1:Body>
+    <ns0:CloseWorkDayByShipmentNumber>
+      <ns0:_xmlRequest>
+        <info>
+          <SedeGls>XX</SedeGls>
+          <CodiceClienteGls>xxx</CodiceClienteGls>
+          <PasswordClienteGls>xxx</PasswordClienteGls>
+          <Parcel>
+            <NumeroDiSpedizioneGLSDaConfermare>11111111</NumeroDiSpedizioneGLSDaConfermare>
+          </Parcel>
+        </info>
+      </ns0:_xmlRequest>
+    </ns0:CloseWorkDayByShipmentNumber>
+  </ns1:Body>
+</SOAP-ENV:Envelope>"""
+    _assert_request_content(result, expected_request_content)
+
+
+def test_attributes_on_elements():
+    client = testutils.client_from_wsdl(b("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<wsdl:definitions targetNamespace="my-namespace"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:tns="my-namespace"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="my-namespace"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <xsd:complexType name="inputData">
+          <xsd:sequence>
+            <xsd:element name="foobar" minOccurs="1" maxOccurs="1" type="foobar"/>
+          </xsd:sequence>
+        </xsd:complexType>
+        <xsd:complexType name="foobar">
+          <xsd:sequence>
+            <xsd:element minOccurs="0" maxOccurs="1" name="value" type="xsd:string" />
+          </xsd:sequence>
+          <xsd:attribute name="name" type="xsd:string" />
+        </xsd:complexType>
+      <xsd:element name="inputData" type="tns:inputData"/>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="inputData">
+    <wsdl:part name="inputData" element="tns:inputData"/>
+  </wsdl:message>
+
+  <wsdl:service name="dummy">
+    <wsdl:port name="dummy" binding="tns:dummy">
+      <soap:address location="https://localhost/dummy"/>
+    </wsdl:port>
+  </wsdl:service>
+
+  <wsdl:portType name="dummy">
+    <wsdl:operation name="f">
+      <wsdl:input name="inputData" message="tns:inputData"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="dummy" type="tns:dummy">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="f">
+      <soap:operation soapAction="f" style="document"/>
+      <wsdl:input name="inputData">
+       <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+</wsdl:definitions>
+"""), nosend=True)
+    foobar = client.factory.create("foobar")
+
+    assert foobar.value is None
+    assert foobar._name == ""
+
+    foobar.value = "foo"
+    foobar._name = "bar"
+    result = client.service.f(foobar)
+
+    expected_request_content = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="my-namespace" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:inputData>
+         <ns0:foobar name="bar">
+            <ns0:value>foo</ns0:value>
+         </ns0:foobar>
+      </ns0:inputData>
+   </ns1:Body>
+</SOAP-ENV:Envelope>"""
+    _assert_request_content(result, expected_request_content)
 
 def test_no_trailing_comma_in_function_prototype_description_string__0():
     client = testutils.client_from_wsdl(b("""\
