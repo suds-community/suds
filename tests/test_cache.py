@@ -584,7 +584,10 @@ class TestFileCache:
         else:
             MockDateTime.mock_value = current_time
         monkeypatch.setattr(datetime, "datetime", MockDateTime)
-        assert (cache._getf(id) is None) == expect_remove
+        fp = cache._getf(id)
+        assert (fp is None) == expect_remove
+        if fp:
+            fp.close()
         monkeypatch.undo()
         if cache.duration:
             assert MockDateTime.mock_counter == 1
