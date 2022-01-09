@@ -1281,21 +1281,21 @@ def test_optional_parameter_not_instantiated():
   <wsdl:message name="inputData">
     <wsdl:part name="inputData" element="tns:inputData"/>
   </wsdl:message>
-  
-  
+
+
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="tns:dummy">
       <soap:address location="https://localhost/dummy"/>
     </wsdl:port>
   </wsdl:service>
-  
-  
+
+
   <wsdl:portType name="dummy">
     <wsdl:operation name="f">
       <wsdl:input name="inputData" message="tns:inputData"/>
     </wsdl:operation>
   </wsdl:portType>
-  
+
   <wsdl:binding name="dummy" type="tns:dummy">
     <soap:binding style="document"
       transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -1382,8 +1382,6 @@ def test_array_are_instantiated_even_if_optional(client_with_optional_array_para
     service = client.service
 
     result = service.f(FooBar=foobar)
-
-    print(result.envelope)
 
     _assert_request_content(result, expected_request_content)
 
