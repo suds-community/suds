@@ -15,7 +15,6 @@
 # written by: Jeff Ortel ( jortel@redhat.com )
 
 
-from suds import *
 from suds.sax import Namespace, splitPrefix
 
 

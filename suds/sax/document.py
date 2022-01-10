@@ -18,8 +18,8 @@
 Provides XML I{document} classes.
 """
 
-from suds import *
-from suds.sax import *
+from suds import UnicodeMixin
+from suds.sax import splitPrefix
 from suds.sax.element import Element
 
 

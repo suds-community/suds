@@ -18,8 +18,8 @@
 Provides encoded I{marshaller} classes.
 """
 
-from suds import *
-from suds.mx import *
+from suds import TypeNotFound
+from suds.mx import Content
 from suds.mx.literal import Literal
 from suds.mx.typer import Typer
 from suds.sudsobject import Factory, Object

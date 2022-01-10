@@ -18,8 +18,8 @@
 The I{query} module defines a class for performing schema queries.
 """
 
-from suds import *
-from suds.sudsobject import *
+from suds import Repr, objid
+from suds.sudsobject import Object, tostr
 from suds.xsd import qualify, isqref
 from suds.xsd.sxbuiltin import Factory
 

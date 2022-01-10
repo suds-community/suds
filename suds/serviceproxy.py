@@ -20,7 +20,7 @@ The service proxy provides access to web services.
 Replaced by: L{client.Client}
 """
 
-from suds import *
+from suds import UnicodeMixin
 from suds.client import Client
 
 

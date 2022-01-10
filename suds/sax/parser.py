@@ -26,8 +26,6 @@ prefix and the URI, e.g. I{('tns', 'http://myns')}.
 """
 
 import suds
-from suds import *
-from suds.sax import *
 from suds.sax.attribute import Attribute
 from suds.sax.document import Document
 from suds.sax.element import Element

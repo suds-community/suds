@@ -17,9 +17,7 @@
 
 """Classes representing I{built-in} XSD schema objects."""
 
-from suds import *
-from suds.xsd import *
-from suds.sax.date import *
+from suds.sax.date import Date, DateTime, Time
 from suds.xsd.sxbase import XBuiltin
 
 import datetime

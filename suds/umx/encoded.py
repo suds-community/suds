@@ -18,8 +18,7 @@
 Provides soap encoded unmarshaller classes.
 """
 
-from suds import *
-from suds.umx import *
+from suds.umx import Content
 from suds.umx.typed import Typed
 from suds.sax import Namespace
 

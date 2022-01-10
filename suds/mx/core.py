@@ -18,8 +18,6 @@
 Provides I{marshaller} core classes.
 """
 
-from suds import *
-from suds.mx import *
 from suds.mx.appender import ContentAppender
 from suds.sax.document import Document
 

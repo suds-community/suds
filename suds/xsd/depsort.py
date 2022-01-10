@@ -18,7 +18,7 @@ Dependency/topological sort implementation.
 
 """
 
-from suds import *
+from suds import Repr
 
 from logging import getLogger
 log = getLogger(__name__)

@@ -22,10 +22,10 @@ and targeted denormalization.
 
 """
 
-from suds import *
-from suds.xsd import *
+from suds import Repr, UnicodeMixin, objid
+from suds.xsd import isqref
 from suds.xsd.depsort import dependency_sort
-from suds.xsd.sxbuiltin import *
+from suds.xsd.sxbuiltin import Factory
 from suds.xsd.sxbase import SchemaObject
 from suds.xsd.sxbasic import Factory as BasicFactory
 from suds.xsd.sxbuiltin import Factory as BuiltinFactory

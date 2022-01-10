@@ -19,8 +19,7 @@ Provides basic unmarshaller classes.
 """
 
 from logging import getLogger
-from suds import *
-from suds.umx import *
+from suds.umx import Content
 from suds.umx.core import Core
 
 

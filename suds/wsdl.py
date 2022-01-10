@@ -21,7 +21,7 @@ WSDL schema document.
 
 """
 
-from suds import *
+from suds import MethodNotFound, TypeNotFound, objid
 from suds.bindings.document import Document
 from suds.bindings.rpc import RPC, Encoded
 from suds.reader import DocumentReader

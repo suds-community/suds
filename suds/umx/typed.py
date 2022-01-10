@@ -18,8 +18,8 @@
 Provides typed unmarshaller classes.
 """
 
-from suds import *
-from suds.umx import *
+from suds import TypeNotFound
+from suds.umx import Content
 from suds.umx.core import Core
 from suds.resolver import NodeResolver, Frame
 from suds.sudsobject import Factory

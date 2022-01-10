@@ -18,8 +18,8 @@
 Provides appender classes for I{marshalling}.
 """
 
-from suds import *
-from suds.mx import *
+from suds import null, tostr
+from suds.mx import Content
 from suds.sudsobject import Object, Property
 from suds.sax.element import Element
 from suds.sax.text import Text

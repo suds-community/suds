@@ -15,8 +15,8 @@
 
 """I{Base} classes representing XSD schema objects."""
 
-from suds import *
-from suds.xsd import *
+from suds import Repr, UnicodeMixin, objid
+from suds.xsd import Filter, isqref, qualify
 from suds.sax.element import Element
 from suds.sax import Namespace
 

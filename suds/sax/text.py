@@ -18,9 +18,7 @@
 Contains XML text classes.
 """
 
-from suds import *
-from suds.sax import *
-
+from suds import sax
 
 class Text(str):
     """

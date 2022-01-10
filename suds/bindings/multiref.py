@@ -17,7 +17,6 @@
 Provides classes for handling soap multirefs.
 """
 
-from suds import *
 from suds.sax.element import Element
 
 

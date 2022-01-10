@@ -18,8 +18,7 @@
 Provides base classes for XML->object I{unmarshalling}.
 """
 
-from suds import *
-from suds.umx import *
+from suds.umx import Content
 from suds.umx.attrlist import AttrList
 from suds.sax.text import Text
 from suds.sudsobject import Factory, merge

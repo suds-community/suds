@@ -19,7 +19,7 @@ Suds basic options classes.
 """
 
 from suds.cache import Cache, NoCache
-from suds.properties import *
+from suds.properties import AutoLinker, Definition, Skin, Unskin
 from suds.store import DocumentStore, defaultDocumentStore
 from suds.transport import Transport
 from suds.wsse import Security

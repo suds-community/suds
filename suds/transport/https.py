@@ -18,7 +18,6 @@ Contains classes for authenticated HTTP transport implementations.
 
 """
 
-from suds.transport import *
 from suds.transport.http import HttpTransport
 
 import urllib.request, urllib.error, urllib.parse

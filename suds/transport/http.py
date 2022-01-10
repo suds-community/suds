@@ -19,7 +19,7 @@ Basic HTTP transport implementation classes.
 """
 
 from suds.properties import Unskin
-from suds.transport import *
+from suds.transport import Reply, Transport, TransportError
 
 import base64
 from http.cookiejar import CookieJar

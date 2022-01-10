@@ -18,8 +18,8 @@ XML I{element} classes.
 
 """
 
-from suds import *
-from suds.sax import *
+from suds import UnicodeMixin
+from suds.sax import Namespace, splitPrefix
 from suds.sax.text import Text
 from suds.sax.attribute import Attribute
 

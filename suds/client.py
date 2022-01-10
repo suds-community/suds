@@ -19,7 +19,8 @@ Service proxy implementation providing access to web services.
 """
 
 import suds
-from suds import *
+from suds import (BuildError, MethodNotFound, PortNotFound, ServiceNotFound, TypeNotFound,
+                  UnicodeMixin, WebFault, tostr)
 import suds.bindings.binding
 from suds.builder import Builder
 import suds.cache

@@ -18,7 +18,7 @@
 The I{service definition} provides a textual representation of a service.
 """
 
-from suds import *
+from suds import UnicodeMixin, tostr
 import suds.metrics as metrics
 from suds.sax import Namespace
 

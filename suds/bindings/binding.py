@@ -18,7 +18,7 @@
 
 """
 
-from suds import *
+from suds import TypeNotFound
 from suds.sax import Namespace
 from suds.sax.document import Document
 from suds.sax.element import Element

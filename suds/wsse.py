@@ -19,7 +19,6 @@ The I{wsse} module provides WS-Security.
 """
 
 from logging import getLogger
-from suds import *
 from suds.sudsobject import Object
 from suds.sax.element import Element
 from suds.sax.date import DateTime, UtcTimezone

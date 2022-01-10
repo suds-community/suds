@@ -18,7 +18,6 @@ Classes for the (WS) SOAP I{rpc/literal} and I{rpc/encoded} bindings.
 
 """
 
-from suds import *
 from suds.mx.encoded import Encoded as MxEncoded
 from suds.umx.encoded import Encoded as UmxEncoded
 from suds.bindings.binding import Binding, envns

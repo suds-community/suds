@@ -18,7 +18,7 @@
 The I{builder} module provides an wsdl/xsd defined types factory
 """
 
-from suds import *
+from suds import TypeNotFound
 from suds.sudsobject import Factory
 
 

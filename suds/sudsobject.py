@@ -19,7 +19,7 @@ interactions with WSDL/XSD defined types.
 
 """
 
-from suds import *
+from suds import UnicodeMixin, tostr
 
 from logging import getLogger
 log = getLogger(__name__)

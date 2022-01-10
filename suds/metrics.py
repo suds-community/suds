@@ -20,7 +20,6 @@ designed for collecting and reporting performance metrics.
 """
 
 import time
-from suds import *
 from math import modf
 
 from logging import getLogger

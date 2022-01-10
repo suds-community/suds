@@ -18,8 +18,6 @@
 Provides filtered attribute list classes.
 """
 
-from suds import *
-from suds.umx import *
 from suds.sax import Namespace
 
 
