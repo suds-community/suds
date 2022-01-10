@@ -82,7 +82,7 @@ def parse_args(method_name, param_defs, args, kwargs, external_param_processor,
     arg_parser = _ArgParser(method_name, param_defs, external_param_processor)
     return arg_parser(args, kwargs, extra_parameter_errors)
 
-
+# pytype: disable=attribute-error
 class _ArgParser:
     """Internal argument parser implementation function object."""
 
@@ -323,7 +323,7 @@ class _ArgParser:
         last_matching_frame, unmatched_ancestry = match_result
         self.__pop_frames_above(last_matching_frame)
         self.__push_frames(unmatched_ancestry)
-
+# pytype: enable=attribute-error
 
 class Frame:
     """

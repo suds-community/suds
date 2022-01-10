@@ -133,11 +133,12 @@ else:
 
 # Idea from 'http://lucumr.pocoo.org/2011/1/22/forwards-compatible-python'.
 class UnicodeMixin(object):
-    if sys.version_info >= (3, 0):
-        # For Python 3, __str__() and __unicode__() should be identical.
-        __str__ = lambda x: x.__unicode__()
-    else:
-        __str__ = lambda x: str(x).encode("utf-8")
+    # if sys.version_info >= (3, 0):
+    #     # For Python 3, __str__() and __unicode__() should be identical.
+    #     __str__ = lambda x: x.__unicode__()
+    # else:
+    #     __str__ = lambda x: str(x).encode("utf-8")
+    __str__ = lambda x: x.__unicode__()  # pytype: disable=attribute-error
 
 # Used instead of byte literals as they are not supported on Python versions
 # prior to 2.6.

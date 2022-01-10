@@ -54,7 +54,7 @@ class Text(str):
         if not self.escaped:
             post = sax.encoder.encode(self)
             escaped = ( post != self )
-            return Text(post, lang=self.lang, escaped=escaped)
+            return Text(post, lang=self.lang, escaped=escaped)  # pytype: disable=wrong-keyword-args
         return self
 
     def unescape(self):
@@ -65,16 +65,16 @@ class Text(str):
         """
         if self.escaped:
             post = sax.encoder.decode(self)
-            return Text(post, lang=self.lang)
+            return Text(post, lang=self.lang)  # pytype: disable=wrong-keyword-args
         return self
 
     def trim(self):
         post = self.strip()
-        return Text(post, lang=self.lang, escaped=self.escaped)
+        return Text(post, lang=self.lang, escaped=self.escaped)  # pytype: disable=wrong-keyword-args
 
     def __add__(self, other):
         joined = ''.join((self, other))
-        result = Text(joined, lang=self.lang, escaped=self.escaped)
+        result = Text(joined, lang=self.lang, escaped=self.escaped)  # pytype: disable=wrong-keyword-args
         if isinstance(other, Text):
             result.escaped = self.escaped or other.escaped
         return result
@@ -111,4 +111,4 @@ class Raw(Text):
 
     def __add__(self, other):
         joined = ''.join((self, other))
-        return Raw(joined, lang=self.lang)
+        return Raw(joined, lang=self.lang)  # pytype: disable=wrong-keyword-args
