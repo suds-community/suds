@@ -18,18 +18,12 @@ XML document reader classes providing integration with the suds library's
 caching system.
 
 """
+from hashlib import md5
 
 import suds.cache
 import suds.plugin
 import suds.sax.parser
 import suds.transport
-
-try:
-    from hashlib import md5
-except ImportError:
-    # 'hashlib' package added in Python 2.5 so use the now deprecated/removed
-    # 'md5' package in older Python versions.
-    from md5 import md5
 
 
 class Reader(object):

@@ -22,14 +22,19 @@ Suds web service operation invocation function argument parser.
 See the parse_args() function description for more detailed information.
 
 """
+from typing import Any, Tuple
+
+ParsedArgs = Tuple[int, int]
 
 __all__ = ["parse_args"]
 
 
 def parse_args(method_name, param_defs, args, kwargs, external_param_processor,
-    extra_parameter_errors):
+    extra_parameter_errors) -> ParsedArgs:
     """
     Parse arguments for suds web service operation invocation functions.
+    Returns an informative 2-tuple containing the number of required &
+    allowed arguments.
 
     Suds prepares Python function objects for invoking web service operations.
     This function implements generic binding agnostic part of processing the
@@ -86,7 +91,7 @@ def parse_args(method_name, param_defs, args, kwargs, external_param_processor,
 class _ArgParser:
     """Internal argument parser implementation function object."""
 
-    def __init__(self, method_name, param_defs, external_param_processor):
+    def __init__(self, method_name, param_defs, external_param_processor) -> None:
         self.__method_name = method_name
         self.__param_defs = param_defs
         self.__external_param_processor = external_param_processor
@@ -111,7 +116,7 @@ class _ArgParser:
             self.__cleanup_run()
             assert not self.active()
 
-    def active(self):
+    def active(self) -> bool:
         """
         Return whether this object is currently running argument processing.
 
@@ -334,7 +339,7 @@ class Frame:
 
     """
 
-    def __init__(self, id, error, extra_parameter_errors):
+    def __init__(self, id, error, extra_parameter_errors) -> None:
         """
         Construct a new Frame instance.
 
@@ -349,31 +354,31 @@ class Frame:
         self._args_required = 0
         self._has_value = False
 
-    def args_allowed(self):
+    def args_allowed(self) -> Any:
         return self._args_allowed
 
-    def args_required(self):
+    def args_required(self) -> Any:
         return self._args_required
 
-    def has_value(self):
+    def has_value(self) -> bool:
         return self._has_value
 
-    def id(self):
+    def id(self) -> Any:
         return self.__id
 
-    def process_parameter(self, optional, has_value):
+    def process_parameter(self, optional, has_value) -> None:
         args_required = 1
         if optional:
             args_required = 0
         self._process_item(has_value, 1, args_required)
 
-    def process_subframe(self, subframe):
+    def process_subframe(self, subframe) -> None:
         self._process_item(
             subframe.has_value(),
             subframe.args_allowed(),
             subframe.args_required())
 
-    def _process_item(self, has_value, args_allowed, args_required):
+    def _process_item(self, has_value, args_allowed, args_required) -> None:
         self._args_allowed += args_allowed
         self._args_required += args_required
         if has_value:
@@ -394,12 +399,12 @@ class ChoiceFrame(Frame):
 
     """
 
-    def __init__(self, id, error, extra_parameter_errors):
+    def __init__(self, id, error, extra_parameter_errors) -> None:
         assert id.choice()
         Frame.__init__(self, id, error, extra_parameter_errors)
         self.__has_item = False
 
-    def _process_item(self, has_value, args_allowed, args_required):
+    def _process_item(self, has_value, args_allowed, args_required) -> None:
         self._args_allowed += args_allowed
         self.__update_args_required_for_item(args_required)
         self.__update_has_value_for_item(has_value)

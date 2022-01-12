@@ -20,19 +20,21 @@ The I{builder} module provides an wsdl/xsd defined types factory
 
 from suds import TypeNotFound
 from suds.sudsobject import Factory
+from suds.resolver import Resolver
+from typing import Any
 
 
 class Builder:
     """ Builder used to construct an object for types defined in the schema """
 
-    def __init__(self, resolver):
+    def __init__(self, resolver: Resolver):
         """
         @param resolver: A schema object name resolver.
         @type resolver: L{resolver.Resolver}
         """
         self.resolver = resolver
 
-    def build(self, name):
+    def build(self, name) -> Any:
         """ build a an object for the specified typename as defined in the schema """
         if isinstance(name, str):
             type = self.resolver.find(name)
@@ -58,7 +60,7 @@ class Builder:
             self.process(data, child, history[:])
         return data
 
-    def process(self, data, type, history):
+    def process(self, data, type, history) -> None:
         """ process the specified type then process its children """
         if type in history:
             return
@@ -67,8 +69,6 @@ class Builder:
         history.append(type)
         resolved = type.resolve()
         value = None
-
-
 
         if type.multi_occurrence():
             value = []
@@ -94,14 +94,14 @@ class Builder:
                     continue
                 self.process(data, child, history[:])
 
-    def add_attributes(self, data, type):
+    def add_attributes(self, data, type) -> None:
         """ add required attributes """
         for attr, ancestry in type.attributes():
             name = '_%s' % attr.name
             value = attr.get_default()
             setattr(data, name, value)
 
-    def skip_child(self, child, ancestry):
+    def skip_child(self, child, ancestry) -> bool:
         """ get whether or not to skip the specified child """
         if child.any(): return True
         for x in ancestry:
@@ -113,7 +113,7 @@ class Builder:
         """ whether or not to skip setting the value """
         return type.optional() and not type.multi_occurrence()
 
-    def ordering(self, type):
+    def ordering(self, type) -> list:
         """ get the ordering """
         result = []
         for child, ancestry in type.resolve():

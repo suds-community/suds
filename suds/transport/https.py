@@ -90,7 +90,7 @@ class WindowsHttpAuthenticated(HttpAuthenticated):
 
     def u2handlers(self):
         try:
-            from ntlm import HTTPNtlmAuthHandler
+            from ntlm import HTTPNtlmAuthHandler  # pytype: disable=import-error
         except ImportError:
             raise Exception("Cannot import python-ntlm module")
         handlers = HttpTransport.u2handlers(self)

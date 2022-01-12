@@ -17,6 +17,7 @@
 Service proxy implementation providing access to web services.
 
 """
+from __future__ import annotations
 
 import suds
 from suds import (BuildError, MethodNotFound, PortNotFound, ServiceNotFound, TypeNotFound,
@@ -43,6 +44,8 @@ from http.cookiejar import CookieJar
 from copy import deepcopy
 import http.client
 
+from typing import Optional, List, Dict, Generator, Union
+
 from logging import getLogger
 log = getLogger(__name__)
 
@@ -63,7 +66,7 @@ class Client(UnicodeMixin):
     """
 
     @classmethod
-    def items(cls, sobject):
+    def items(cls, sobject: sudsobject.Object) -> Generator:
         """
         Extract I{items} from a suds object.
 
@@ -78,7 +81,7 @@ class Client(UnicodeMixin):
         return sudsobject.items(sobject)
 
     @classmethod
-    def dict(cls, sobject):
+    def dict(cls, sobject: sudsobject.Object) -> Dict:
         """
         Convert a sudsobject into a dictionary.
 
@@ -91,7 +94,7 @@ class Client(UnicodeMixin):
         return sudsobject.asdict(sobject)
 
     @classmethod
-    def metadata(cls, sobject):
+    def metadata(cls, sobject: sudsobject.Object) -> sudsobject.Metadata:
         """
         Extract the metadata from a suds object.
 
@@ -103,7 +106,7 @@ class Client(UnicodeMixin):
         """
         return sobject.__metadata__
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url: str, **kwargs):
         """
         @param url: The URL for the WSDL.
         @type url: str
@@ -139,7 +142,7 @@ class Client(UnicodeMixin):
         p = Unskin(self.options)
         p.update(kwargs)
 
-    def add_prefix(self, prefix, uri):
+    def add_prefix(self, prefix: str, uri: str):
         """
         Add I{static} mapping of an XML namespace prefix to a namespace.
 
@@ -161,7 +164,7 @@ class Client(UnicodeMixin):
         if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
 
-    def clone(self):
+    def clone(self) -> Client:
         """
         Get a shallow clone of this object.
 
@@ -186,7 +189,7 @@ class Client(UnicodeMixin):
         clone.sd = self.sd
         return clone
 
-    def __unicode__(self):
+    def __unicode__(self) -> str:
         s = ["\n"]
         s.append("Suds ( https://fedorahosted.org/suds/ )")
         s.append("  version: %s" % (suds.__version__,))
@@ -208,7 +211,7 @@ class Factory:
 
     """
 
-    def __init__(self, wsdl):
+    def __init__(self, wsdl: Definitions):
         """
         @param wsdl: A schema object.
         @type wsdl: L{wsdl.Definitions}
@@ -218,7 +221,7 @@ class Factory:
         self.resolver = PathResolver(wsdl)
         self.builder = Builder(self.resolver)
 
-    def create(self, name):
+    def create(self, name: str) -> sudsobject.Object:
         """
         Create a WSDL type by name.
 
@@ -247,7 +250,7 @@ class Factory:
         metrics.log.debug("%s created: %s", name, timer)
         return result
 
-    def separator(self, ps):
+    def separator(self, ps: str):
         """
         Set the path separator.
 
@@ -276,7 +279,7 @@ class ServiceSelector:
     @type __services: list
 
     """
-    def __init__(self, client, services):
+    def __init__(self, client: Client, services: List[Definitions]):
         """
         @param client: A suds client.
         @type client: L{Client}
@@ -287,7 +290,7 @@ class ServiceSelector:
         self.__client = client
         self.__services = services
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Optional[PortSelector]:
         """
         Attribute access is forwarded to the L{PortSelector}.
 
@@ -307,7 +310,7 @@ class ServiceSelector:
             port = default
         return getattr(port, name)
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> PortSelector:
         """
         Provides I{service} selection by name (string) or index (integer).
 
@@ -329,7 +332,7 @@ class ServiceSelector:
             return port[name]
         return self.__find(name)
 
-    def __find(self, name):
+    def __find(self, name: Union[str, int]) -> PortSelector:
         """
         Find a I{service} by name (string) or index (integer).
 
@@ -357,7 +360,7 @@ class ServiceSelector:
             raise ServiceNotFound(name)
         return PortSelector(self.__client, service.ports, name)
 
-    def __ds(self):
+    def __ds(self) -> Optional[PortSelector]:
         """
         Get the I{default} service if defined in the I{options}.
 
@@ -934,7 +937,7 @@ class _SimClient(_SoapClient):
         raise Exception("reply or msg injection parameter expected")
 
 
-def _parse(string):
+def _parse(string) -> Optional[Document]:
     """
     Parses given XML document content.
 

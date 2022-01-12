@@ -21,6 +21,7 @@ Basic caching classes.
 import suds
 import suds.sax.element
 import suds.sax.parser
+from suds.sax.document import Document
 
 import datetime
 import os
@@ -30,15 +31,20 @@ except Exception:
     import pickle
 import shutil
 import tempfile
+from typing import Any, Union, Optional
 
 from logging import getLogger
+from typing import NoReturn, TypeVar
+
+CachedDoc = Union[Document, suds.sax.element.Element]
+
 log = getLogger(__name__)
 
 
 class Cache(object):
     """An object cache."""
 
-    def get(self, id):
+    def get(self, id: str):
         """
         Get an object from the cache by id.
 
@@ -50,7 +56,7 @@ class Cache(object):
         """
         raise Exception("not-implemented")
 
-    def put(self, id, object):
+    def put(self, id: str, object: Any):
         """
         Put an object into the cache.
 
@@ -62,7 +68,7 @@ class Cache(object):
         """
         raise Exception("not-implemented")
 
-    def purge(self, id):
+    def purge(self, id: str):
         """
         Purge an object from the cache by id.
 
@@ -72,7 +78,7 @@ class Cache(object):
         """
         raise Exception("not-implemented")
 
-    def clear(self):
+    def clear(self) -> NoReturn:
         """Clear all objects from the cache."""
         raise Exception("not-implemented")
 
@@ -80,10 +86,10 @@ class Cache(object):
 class NoCache(Cache):
     """The pass-through object cache."""
 
-    def get(self, id):
+    def get(self, id: str):
         return
 
-    def put(self, id, object):
+    def put(self, id: str, object: Any):
         pass
 
 
@@ -130,7 +136,7 @@ class FileCache(Cache):
         self.duration = datetime.timedelta(**duration)
         self.__check_version()
 
-    def clear(self):
+    def clear(self) -> None:
         for filename in os.listdir(self.location):
             path = os.path.join(self.location, filename)
             if os.path.isdir(path):
@@ -139,7 +145,7 @@ class FileCache(Cache):
                 os.remove(path)
                 log.debug("deleted: %s", path)
 
-    def fnsuffix(self):
+    def fnsuffix(self) -> str:
         """
         Get the file name suffix.
 
@@ -149,7 +155,7 @@ class FileCache(Cache):
         """
         return "gcf"
 
-    def get(self, id):
+    def get(self, id: str):
         try:
             f = self._getf(id)
             try:
@@ -159,14 +165,14 @@ class FileCache(Cache):
         except Exception:
             pass
 
-    def purge(self, id):
+    def purge(self, id: str):
         filename = self.__filename(id)
         try:
             os.remove(filename)
         except Exception:
             pass
 
-    def put(self, id, data):
+    def put(self, id: str, data: Any):
         try:
             filename = self.__filename(id)
             f = self.__open(filename, "wb")
@@ -179,7 +185,7 @@ class FileCache(Cache):
             log.debug(id, exc_info=True)
             return data
 
-    def _getf(self, id):
+    def _getf(self, id: str):
         """Open a cached file with the given id for reading."""
         try:
             filename = self.__filename(id)
@@ -206,7 +212,7 @@ class FileCache(Cache):
             finally:
                 f.close()
 
-    def __filename(self, id):
+    def __filename(self, id: str) -> str:
         """Return the cache file name for an entry with a given id."""
         suffix = self.fnsuffix()
         filename = "%s-%s.%s" % (self.fnprefix, id, suffix)
@@ -258,7 +264,7 @@ class FileCache(Cache):
             # test command on Python 2.4.x.
             shutil.rmtree(FileCache.__default_location, ignore_errors=True)
 
-    def __remove_if_expired(self, filename):
+    def __remove_if_expired(self, filename: str):
         """
         Remove a cached file entry if it expired.
 
@@ -278,10 +284,10 @@ class FileCache(Cache):
 class DocumentCache(FileCache):
     """XML document file cache."""
 
-    def fnsuffix(self):
+    def fnsuffix(self) -> str:
         return "xml"
 
-    def get(self, id):
+    def get(self, id: str) -> Optional[Document]:
         fp = None
         try:
             fp = self._getf(id)
@@ -295,7 +301,7 @@ class DocumentCache(FileCache):
                 fp.close()
             self.purge(id)
 
-    def put(self, id, object):
+    def put(self, id: str, object: CachedDoc) -> CachedDoc:
         if isinstance(object,
                 (suds.sax.document.Document, suds.sax.element.Element)):
             super(DocumentCache, self).put(id, suds.byte_str(str(object)))
@@ -312,10 +318,10 @@ class ObjectCache(FileCache):
     """
     protocol = 2
 
-    def fnsuffix(self):
+    def fnsuffix(self) -> str:
         return "px"
 
-    def get(self, id):
+    def get(self, id: str) -> Any:
         fp = None
         try:
             fp = self._getf(id)
@@ -328,7 +334,7 @@ class ObjectCache(FileCache):
                 fp.close()
             self.purge(id)
 
-    def put(self, id, object):
+    def put(self, id: str, object: Any) -> Any:
         data = pickle.dumps(object, self.protocol)
         super(ObjectCache, self).put(id, data)
         return object

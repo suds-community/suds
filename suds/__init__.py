@@ -142,13 +142,12 @@ class UnicodeMixin(object):
 
 # Used instead of byte literals as they are not supported on Python versions
 # prior to 2.6.
-def byte_str(s="", encoding="utf-8", input_encoding="utf-8", errors="strict"):
+def byte_str(s: str ="", encoding="utf-8", input_encoding="utf-8", errors="strict") -> bytes:
     """
     Returns a byte string version of 's', encoded as specified in 'encoding'.
 
     Accepts str & unicode objects, interpreting non-unicode strings as byte
     strings encoded using the given input encoding.
-
     """
     assert isinstance(s, str)
     if isinstance(s, str):

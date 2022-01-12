@@ -21,13 +21,42 @@ provide wsdl/xsd named type resolution.
 
 from suds import Repr
 from suds.sax import splitPrefix, Namespace
+from suds.sax.element import Element
 from suds.sudsobject import Object
 from suds.xsd.query import BlindQuery, TypeQuery, qualify
+from suds.xsd.sxbase import SchemaObject
+from suds.xsd.schema import Schema
+from suds.wsdl import Definitions
 
 import re
-
+from typing import Optional, List, Any
 from logging import getLogger
+from typing import TypeVar
+
+_T0 = TypeVar('_T0')
 log = getLogger(__name__)
+
+
+class Frame:
+    def __init__(self, type, resolved=None, ancestry=()) -> None:
+        self.type = type
+        if resolved is None:
+            resolved = type.resolve()
+        self.resolved = resolved.resolve()
+        self.ancestry = ancestry
+
+    def __str__(self):
+        return '%s\n%s\n%s' % \
+            (Repr(self.type),
+            Repr(self.resolved),
+            [Repr(t) for t in self.ancestry])
+
+    class Empty:
+        def __getattr__(self, name):
+            if name == 'ancestry':
+                return ()
+            else:
+                return None
 
 
 class Resolver:
@@ -37,14 +66,14 @@ class Resolver:
     @type schema: L{xsd.schema.Schema}
     """
 
-    def __init__(self, schema):
+    def __init__(self, schema: Schema):
         """
         @param schema: A schema object.
         @type schema: L{xsd.schema.Schema}
         """
         self.schema = schema
 
-    def find(self, name, resolved=True):
+    def find(self, name: str, resolved: bool = True) -> Optional[SchemaObject]:
         """
         Get the definition object for the schema object by name.
         @param name: The name of a schema object.
@@ -76,7 +105,7 @@ class PathResolver(Resolver):
     @type wsdl: L{wsdl.Definitions}
     """
 
-    def __init__(self, wsdl, ps='.'):
+    def __init__(self, wsdl: Definitions, ps: str='.'):
         """
         @param wsdl: A schema object.
         @type wsdl: L{wsdl.Definitions}
@@ -88,7 +117,7 @@ class PathResolver(Resolver):
         self.altp = re.compile('({)(.+)(})(.+)')
         self.splitp = re.compile('({.+})*[^\\%s]+' % ps[0])
 
-    def find(self, path, resolved=True):
+    def find(self, path: str, resolved=True) -> Optional[SchemaObject]:
         """
         Get the definition object for the schema type located at the specified path.
         The path may contain (.) dot notation to specify nested types.
@@ -116,7 +145,7 @@ class PathResolver(Resolver):
             log.error('path: "%s", not-found' % path)
         return result
 
-    def root(self, parts):
+    def root(self, parts: List[str]) -> Optional[SchemaObject]:
         """
         Find the path root.
         @param parts: A list of path parts.
@@ -136,7 +165,7 @@ class PathResolver(Resolver):
         log.debug('found (%s) as (%s)', name, Repr(result))
         return result
 
-    def branch(self, root, parts):
+    def branch(self, root: SchemaObject, parts: List[str]) -> SchemaObject:
         """
         Traverse the path until a leaf is reached.
         @param parts: A list of path parts.
@@ -158,7 +187,7 @@ class PathResolver(Resolver):
             log.debug('found (%s) as (%s)', name, Repr(result))
         return result
 
-    def leaf(self, parent, parts):
+    def leaf(self, parent: SchemaObject, parts: List[str]) -> SchemaObject:
         """
         Find the leaf.
         @param parts: A list of path parts.
@@ -177,7 +206,7 @@ class PathResolver(Resolver):
             raise PathResolver.BadPath(name)
         return result
 
-    def qualify(self, name):
+    def qualify(self, name: str):
         """
         Qualify the name as either:
           - plain name
@@ -194,7 +223,7 @@ class PathResolver(Resolver):
         else:
             return (m.group(4), m.group(2))
 
-    def split(self, s):
+    def split(self, s: str):
         """
         Split the string on (.) while preserving any (.) inside the
         '{}' alternalte syntax for full ns qualification.
@@ -227,7 +256,7 @@ class TreeResolver(Resolver):
     @type stack: list
     """
 
-    def __init__(self, schema):
+    def __init__(self, schema: Schema):
         """
         @param schema: A schema object.
         @type schema: L{xsd.schema.Schema}
@@ -235,13 +264,13 @@ class TreeResolver(Resolver):
         Resolver.__init__(self, schema)
         self.stack = Stack()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset the resolver's state.
         """
         self.stack = Stack()
 
-    def push(self, x):
+    def push(self, x: Any):
         """
         Push an I{object} onto the stack.
         @param x: An object to push.
@@ -257,7 +286,7 @@ class TreeResolver(Resolver):
         log.debug('push: (%s)\n%s', Repr(frame), Repr(self.stack))
         return frame
 
-    def top(self):
+    def top(self) -> Any:
         """
         Get the I{frame} at the top of the stack.
         @return: The top I{frame}, else Frame.Empty.
@@ -268,7 +297,7 @@ class TreeResolver(Resolver):
         else:
             return Frame.Empty()
 
-    def pop(self):
+    def pop(self) -> Optional[Frame]:
         """
         Pop the frame at the top of the stack.
         @return: The popped frame, else None.
@@ -281,7 +310,7 @@ class TreeResolver(Resolver):
         log.debug('stack empty, not-popped')
         return None
 
-    def depth(self):
+    def depth(self) -> int:
         """
         Get the current stack depth.
         @return: The current stack depth.
@@ -289,7 +318,7 @@ class TreeResolver(Resolver):
         """
         return len(self.stack)
 
-    def getchild(self, name, parent):
+    def getchild(self, name: str, parent):
         """Get a child by name."""
         log.debug('searching parent (%s) for (%s)', Repr(parent), name)
         if name.startswith('@'):
@@ -305,14 +334,14 @@ class NodeResolver(TreeResolver):
     context.
     """
 
-    def __init__(self, schema):
+    def __init__(self, schema: Schema):
         """
         @param schema: A schema object.
         @type schema: L{xsd.schema.Schema}
         """
         TreeResolver.__init__(self, schema)
 
-    def find(self, node, resolved=False, push=True):
+    def find(self, node: Element, resolved=False, push=True):
         """
         @param node: An xml node to be resolved.
         @type node: L{sax.element.Element}
@@ -341,7 +370,7 @@ class NodeResolver(TreeResolver):
             result = result.resolve()
         return result
 
-    def findattr(self, name, resolved=True):
+    def findattr(self, name: str, resolved=True):
         """
         Find an attribute type definition.
         @param name: An attribute name.
@@ -364,7 +393,7 @@ class NodeResolver(TreeResolver):
             result = result.resolve()
         return result
 
-    def query(self, name, node):
+    def query(self, name: str, node):
         """Blindly query the schema by name."""
         log.debug('searching schema for (%s)', name)
         qref = qualify(name, node, node.namespace())
@@ -372,7 +401,7 @@ class NodeResolver(TreeResolver):
         result = query.execute(self.schema)
         return (result, [])
 
-    def known(self, node):
+    def known(self, node) -> Any:
         """Resolve type referenced by @xsi:type."""
         ref = node.get('type', Namespace.xsins)
         if ref is None:
@@ -390,14 +419,14 @@ class GraphResolver(TreeResolver):
     context.
     """
 
-    def __init__(self, schema):
+    def __init__(self, schema: Schema):
         """
         @param schema: A schema object.
         @type schema: L{xsd.schema.Schema}
         """
         TreeResolver.__init__(self, schema)
 
-    def find(self, name, object, resolved=False, push=True):
+    def find(self, name: str, object: Any, resolved=False, push=True):
         """
         @param name: The name of the object to be resolved.
         @type name: basestring
@@ -432,7 +461,7 @@ class GraphResolver(TreeResolver):
                 result = known
         return result
 
-    def query(self, name):
+    def query(self, name: str):
         """Blindly query the schema by name."""
         log.debug('searching schema for (%s)', name)
         schema = self.schema
@@ -445,7 +474,7 @@ class GraphResolver(TreeResolver):
         result = query.execute(schema)
         return (result, [])
 
-    def wsdl(self):
+    def wsdl(self) -> Any:
         """Get the wsdl."""
         container = self.schema.container
         if container is None:
@@ -453,7 +482,7 @@ class GraphResolver(TreeResolver):
         else:
             return container.wsdl
 
-    def known(self, object):
+    def known(self, object) -> Any:
         """Get the type specified in the object's metadata."""
         try:
             md = object.__metadata__
@@ -461,28 +490,6 @@ class GraphResolver(TreeResolver):
             return known
         except Exception:
             pass
-
-
-class Frame:
-    def __init__(self, type, resolved=None, ancestry=()):
-        self.type = type
-        if resolved is None:
-            resolved = type.resolve()
-        self.resolved = resolved.resolve()
-        self.ancestry = ancestry
-
-    def __str__(self):
-        return '%s\n%s\n%s' % \
-            (Repr(self.type),
-            Repr(self.resolved),
-            [Repr(t) for t in self.ancestry])
-
-    class Empty:
-        def __getattr__(self, name):
-            if name == 'ancestry':
-                return ()
-            else:
-                return None
 
 
 class Stack(list):

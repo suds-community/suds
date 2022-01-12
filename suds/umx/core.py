@@ -93,9 +93,9 @@ class Core:
             if self.nillable(content):
                 return None
             else:
-                return Text('', lang=lang)
+                return Text('', lang=lang)  # pytype: disable=wrong-keyword-args
         if isinstance(content.text, str):
-            return Text(content.text, lang=lang)
+            return Text(content.text, lang=lang)  # pytype: disable=wrong-keyword-args
         else:
             return content.text
 
