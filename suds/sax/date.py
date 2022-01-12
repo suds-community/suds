@@ -225,9 +225,9 @@ class FixedOffsetTimezone(datetime.tzinfo, UnicodeMixin):
         @type offset: I{int} or B{datetime}.I{timedelta}
 
         """
-        if type(offset) == int:
+        if isinstance(offset, int):
             offset = datetime.timedelta(hours=offset)
-        elif type(offset) != datetime.timedelta:
+        elif not isinstance(offset, datetime.timedelta):
             raise TypeError("timezone offset must be an int or "
                 "datetime.timedelta")
         if offset.microseconds or (offset.seconds % 60 != 0):
