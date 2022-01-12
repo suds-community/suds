@@ -26,13 +26,16 @@ prefix and the URI, e.g. I{('tns', 'http://myns')}.
 """
 
 import suds
+import suds.metrics as metrics
 from suds.sax.attribute import Attribute
 from suds.sax.document import Document
 from suds.sax.element import Element
 from suds.sax.text import Text
 
 import sys
-from xml.sax import make_parser, InputSource, ContentHandler
+from xml.sax import make_parser
+from xml.sax.xmlreader import InputSource
+from xml.sax.handler import ContentHandler
 from xml.sax.handler import feature_external_ges
 
 
@@ -119,7 +122,7 @@ class Parser:
         """
         if file is None and string is None:
             return
-        timer = suds.metrics.Timer()
+        timer = metrics.Timer()
         timer.start()
         source = file
         if file is None:
@@ -129,7 +132,7 @@ class Parser:
         sax.parse(source)
         timer.stop()
         if file is None:
-            suds.metrics.log.debug("%s\nsax duration: %s", string, timer)
+            metrics.log.debug("%s\nsax duration: %s", string, timer)
         else:
-            suds.metrics.log.debug("sax (%s) duration: %s", file, timer)
+            metrics.log.debug("sax (%s) duration: %s", file, timer)
         return handler.nodes[0]
