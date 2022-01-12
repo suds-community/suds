@@ -243,4 +243,4 @@ class ServiceDefinition(UnicodeMixin):
             return self.description()
         except Exception as e:
             log.exception(e)
-        return tostr(e)
+            return tostr(e)

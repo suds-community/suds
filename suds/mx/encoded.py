@@ -107,7 +107,7 @@ class Encoded(Literal):
         query = TypeQuery(aty)
         ref = query.execute(self.schema)
         if ref is None:
-            raise TypeNotFound(qref)
+            raise TypeNotFound(ref)
         for x in content.value:
             if isinstance(x, (list, tuple)):
                 array.item.append(x)

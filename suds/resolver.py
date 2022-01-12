@@ -260,7 +260,7 @@ class TreeResolver(Resolver):
     def top(self):
         """
         Get the I{frame} at the top of the stack.
-        @return: The top I{frame}, else None.
+        @return: The top I{frame}, else Frame.Empty.
         @rtype: L{Frame}
         """
         if len(self.stack):
@@ -355,7 +355,7 @@ class NodeResolver(TreeResolver):
         name = '@%s'%name
         parent = self.top().resolved
         if parent is None:
-            result, ancestry = self.query(name, node)
+            return None
         else:
             result, ancestry = self.getchild(name, parent)
         if result is None:

@@ -1,6 +1,10 @@
 Release notes
 =============
 
+Unreleased
+------------------------
+* Fix undeclared variables, found via linting.
+
 version 1.0.0, 1.0.0-beta.1, 1.0.0-beta.2 (2021-09-13)
 ------------------------
 * Drop support for python 2.x
