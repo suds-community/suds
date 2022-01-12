@@ -1414,6 +1414,381 @@ def test_empty_optional_array_is_not_present(client_with_optional_array_paramete
     _assert_request_content(result, expected_request_content)
 
 
+ledger_wsdl = """<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.example.com/Soa/Foundation/" xmlns:s1="http://www.example.com/Soa/Foundation/MessageDefinition.xsd" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://www.example.com/Soa/Foundation/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.example.com/Soa/Foundation/">
+      <s:import namespace="http://www.example.com/Soa/Foundation/MessageDefinition.xsd" />
+      <s:element name="PostLedger">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" ref="s1:PostLedgerRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="PostLedgerResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" ref="s1:PostLedgerResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="RequestHeader" type="tns:RequestHeader" />
+      <s:complexType name="RequestHeader">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Headers" type="tns:ArrayOfAnyType" />
+        </s:sequence>
+        <s:anyAttribute />
+      </s:complexType>
+      <s:complexType name="ArrayOfAnyType">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="anyType" nillable="true" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="ResponseHeader" type="tns:ResponseHeader" />
+      <s:complexType name="ResponseHeader">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Headers" type="tns:ArrayOfAnyType" />
+        </s:sequence>
+        <s:anyAttribute />
+      </s:complexType>
+    </s:schema>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.example.com/Soa/Foundation/MessageDefinition.xsd">
+      <s:element name="PostLedgerRequest" type="s1:PostLedgerRequest" />
+      <s:complexType name="PostLedgerRequest">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericRequest">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Payments" type="s1:ArrayOfPaymentInMsg" />
+              <s:element minOccurs="0" maxOccurs="1" name="Charges" type="s1:ArrayOfChargeInMsg" />
+              <s:element minOccurs="0" maxOccurs="1" name="Refunds" type="s1:ArrayOfRefundInMsg" />
+              <s:element minOccurs="0" maxOccurs="1" name="Voids" type="s1:ArrayOfVoidInMsg" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="GenericRequest">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="TokenId" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfPaymentInMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="PaymentInMsg" nillable="true" type="s1:PaymentInMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="PaymentInMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:LedgerInMsg">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" default="-1" name="EnrollmentId" type="s:int" />
+              <s:element minOccurs="0" maxOccurs="1" default="-1" name="CourseId" type="s:int" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="LedgerInMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericInMsg">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="StudentId" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="Amount" type="s:decimal" />
+              <s:element minOccurs="0" maxOccurs="1" name="Description" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="GenericInMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericMsg">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="MessageState" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="GenericMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" default="-1" name="MessageId" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" name="CustomAttributes" type="s1:ArrayOfCustomAttributeMsg" />
+          <s:element minOccurs="0" maxOccurs="1" default="-1" name="CorrelationId" type="s:int" />
+          <s:element minOccurs="0" maxOccurs="1" default="false" name="SkipSemanticValidation" type="s:boolean" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfCustomAttributeMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CustomAttributeMsg" nillable="true" type="s1:CustomAttributeMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CustomAttributeMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Name" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Value" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="GenericOutMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericMsg">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="MessageResult" type="s:string" />
+              <s:element minOccurs="0" maxOccurs="1" default="OK" name="MessageStatus" type="s1:MessageStatusType" />
+              <s:element minOccurs="0" maxOccurs="1" name="MessageErrorCode" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:simpleType name="MessageStatusType">
+        <s:restriction base="s:string">
+          <s:enumeration value="OK" />
+          <s:enumeration value="FailedValidation" />
+          <s:enumeration value="FailedExecution" />
+          <s:enumeration value="FailedAuthorization" />
+          <s:enumeration value="FailedOther" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="VoidOutMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericOutMsg" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="LedgerOutMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericOutMsg">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="Id" type="s:int" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="RefundOutMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:LedgerOutMsg" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="ChargeOutMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:LedgerOutMsg" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="PaymentOutMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:LedgerOutMsg" />
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="VoidInMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericInMsg">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="StudentId" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="TransactionId" type="s:int" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="RefundInMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:LedgerInMsg">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" default="-1" name="EnrollmentId" type="s:int" />
+              <s:element minOccurs="0" maxOccurs="1" name="CheckNumber" type="s:string" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="DisbursementAmountMsg">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="DisbursementId" type="s:int" />
+          <s:element minOccurs="1" maxOccurs="1" name="Amount" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="ReturnMethod">
+        <s:restriction base="s:string">
+          <s:enumeration value="Check" />
+          <s:enumeration value="CreditCard" />
+        </s:restriction>
+      </s:simpleType>
+      <s:simpleType name="PaymentType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Cash" />
+          <s:enumeration value="Check" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ChargeInMsg">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:LedgerInMsg">
+            <s:sequence>
+              <s:element minOccurs="1" maxOccurs="1" name="TransactionCodeId" type="s:int" />
+              <s:element minOccurs="1" maxOccurs="1" name="TransactionType" type="s1:TransactionType" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:simpleType name="TransactionType">
+        <s:restriction base="s:string">
+          <s:enumeration value="Invoice" />
+          <s:enumeration value="DebitMemo" />
+          <s:enumeration value="CreditMemo" />
+          <s:enumeration value="Payment" />
+        </s:restriction>
+      </s:simpleType>
+      <s:simpleType name="AwardYearType">
+        <s:restriction base="s:string">
+          <s:enumeration value="None" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="PaymentDistributionMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="BillCode" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="AmountApplied" type="s:decimal" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfChargeInMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ChargeInMsg" nillable="true" type="s1:ChargeInMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfRefundInMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="RefundInMsg" nillable="true" type="s1:RefundInMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfVoidInMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="VoidInMsg" nillable="true" type="s1:VoidInMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:element name="PostLedgerResponse" type="s1:PostLedgerResponse" />
+      <s:complexType name="PostLedgerResponse">
+        <s:complexContent mixed="false">
+          <s:extension base="s1:GenericResponse">
+            <s:sequence>
+              <s:element minOccurs="0" maxOccurs="1" name="Payments" type="s1:ArrayOfPaymentOutMsg" />
+              <s:element minOccurs="0" maxOccurs="1" name="Charges" type="s1:ArrayOfChargeOutMsg" />
+              <s:element minOccurs="0" maxOccurs="1" name="Refunds" type="s1:ArrayOfRefundOutMsg" />
+              <s:element minOccurs="0" maxOccurs="1" name="Voids" type="s1:ArrayOfVoidOutMsg" />
+            </s:sequence>
+          </s:extension>
+        </s:complexContent>
+      </s:complexType>
+      <s:complexType name="GenericResponse">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="Status" type="s1:TrxStatus" />
+          <s:element minOccurs="0" maxOccurs="1" name="TokenId" type="s:string" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="TrxStatus">
+        <s:restriction base="s:string">
+          <s:enumeration value="OK" />
+          <s:enumeration value="ErrorBusinessLogic" />
+        </s:restriction>
+      </s:simpleType>
+      <s:complexType name="ArrayOfPaymentOutMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="PaymentOutMsg" nillable="true" type="s1:PaymentOutMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfChargeOutMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="ChargeOutMsg" nillable="true" type="s1:ChargeOutMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfRefundOutMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="RefundOutMsg" nillable="true" type="s1:RefundOutMsg" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfVoidOutMsg">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="VoidOutMsg" nillable="true" type="s1:VoidOutMsg" />
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="PostLedgerSoapIn">
+    <wsdl:part name="parameters" element="tns:PostLedger" />
+  </wsdl:message>
+  <wsdl:message name="PostLedgerSoapOut">
+    <wsdl:part name="parameters" element="tns:PostLedgerResponse" />
+  </wsdl:message>
+  <wsdl:message name="PostLedgerRequestHeader">
+    <wsdl:part name="RequestHeader" element="tns:RequestHeader" />
+  </wsdl:message>
+  <wsdl:message name="PostLedgerResponseHeader">
+    <wsdl:part name="ResponseHeader" element="tns:ResponseHeader" />
+  </wsdl:message>
+  <wsdl:portType name="LedgerWebServiceSoap">
+    <wsdl:operation name="PostLedger">
+      <wsdl:input message="tns:PostLedgerSoapIn" />
+      <wsdl:output message="tns:PostLedgerSoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="LedgerWebServiceSoap" type="tns:LedgerWebServiceSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="PostLedger">
+      <soap:operation soapAction="http://www.example.com/Soa/Foundation/PostLedger" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+        <soap:header message="tns:PostLedgerRequestHeader" part="RequestHeader" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+        <soap:header message="tns:PostLedgerResponseHeader" part="ResponseHeader" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="LedgerWebServiceSoap12" type="tns:LedgerWebServiceSoap">
+    <wsdl:operation name="PostLedger">
+      <soap12:operation soapAction="http://www.example.com/Soa/Foundation/PostLedger" style="document" />
+      <wsdl:input>
+        <soap12:header message="tns:PostLedgerRequestHeader" part="RequestHeader" use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:header message="tns:PostLedgerResponseHeader" part="ResponseHeader" use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="LedgerWebService">
+    <wsdl:port name="LedgerWebServiceSoap" binding="tns:LedgerWebServiceSoap">
+      <soap:address location="https://api.example.com/webservices/LedgerWebService.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
+"""
+
+def test_complex_sequence_is_instantiated():
+    """
+    """
+    wsdl = suds.byte_str(ledger_wsdl)
+    client = testutils.client_from_wsdl(wsdl)
+    assert client is not None
+    req = client.factory.create("ns1:PostLedgerRequest")
+    for a in ["Payments", "Charges", "Refunds", "Voids"]:
+        assert hasattr(req, a)
+        assert getattr(req, a) is not None
+    assert req.Payments.__class__.__name__ == "ArrayOfPaymentInMsg"
+    assert req.Charges.__class__.__name__ == "ArrayOfChargeInMsg"
+    assert req.Refunds.__class__.__name__ == "ArrayOfRefundInMsg"
+    assert req.Voids.__class__.__name__ == "ArrayOfVoidInMsg"
+
+    assert isinstance(req.Payments.PaymentInMsg, list)
+
+    # create a charge
+    sample_charge = client.factory.create("ns1:ChargeInMsg")
+    sample_charge.StudentId = 1234
+    sample_charge.Description = "Room and Board"
+    sample_charge.Amount = 987.65
+    # Add to the request
+    req.Charges.ChargeInMsg = [sample_charge,]
+    # if req.Charges is None, cannot do above, but
+    # the following doesn't seem to work correctly
+    # req.Charges = [sample_charge,]
+    # print(req)
+    assert req.Charges.ChargeInMsg
+    # print(req.Charges.ChargeInMsg[0])
+    assert req.Charges.ChargeInMsg[0] == sample_charge
+
+
+
 def test_no_trailing_comma_in_function_prototype_description_string__0():
     client = testutils.client_from_wsdl(b("""\
 <?xml version='1.0' encoding='UTF-8'?>

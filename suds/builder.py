@@ -84,7 +84,7 @@ class Builder:
                     md.sxtype = resolved
                     md.ordering = self.ordering(resolved)
 
-        setattr(data, type.name, value if not type.optional() or type.multi_occurrence() else None)
+        setattr(data, type.name, None if self.skip_value(type, resolved) else value)
         if value is not None:
             data = value
         if not isinstance(data, list):
@@ -93,6 +93,10 @@ class Builder:
                 if self.skip_child(child, ancestry):
                     continue
                 self.process(data, child, history[:])
+
+    def skip_value(self, type, resolved):
+        has_complex_sequence = len(resolved.rawchildren) == 1 and resolved.rawchildren[0].sequence()
+        return type.optional() and not type.multi_occurrence() and not has_complex_sequence
 
     def add_attributes(self, data, type):
         """ add required attributes """
