@@ -176,7 +176,7 @@ class FileCache(Cache):
                 f.close()
             return data
         except Exception:
-            log.debug(id, exc_info=1)
+            log.debug(id, exc_info=True)
             return data
 
     def _getf(self, id):
@@ -233,7 +233,7 @@ class FileCache(Cache):
             if not os.path.isdir(self.location):
                 os.makedirs(self.location)
         except Exception:
-            log.debug(self.location, exc_info=1)
+            log.debug(self.location, exc_info=True)
         return self
 
     def __open(self, filename, *args):
