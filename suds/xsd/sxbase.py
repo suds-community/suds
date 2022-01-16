@@ -609,6 +609,9 @@ class Iter:
                 self.index += 1
                 return result
 
+        def __iter__(self):
+            return self
+
     def __init__(self, sx):
         """
         @param sx: A schema object.
