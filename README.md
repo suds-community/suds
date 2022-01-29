@@ -418,6 +418,25 @@ within the WSDL import each other.
 * username:: username for HTTP authentication.
 * password:: password for HTTP authentication.
 
+### Custom behavior through swapping components
+
+Various ways that suds behaves can be customized by swapping out custom
+
+#### Initializing optional arrays with lists
+
+In some unreleased versions of suds-jurko, all children elements were populated with empty lists. This was fixed in suds-community as a regression. This can be desired behavior as it simplifies constructing complex requests. To obtain the prior behavior, use a custom `Builder` class, for example:
+
+```
+from suds.client import Client, Builder
+
+class AlwaysInitializeBuilder(Builder):
+    def skip_value(self, type):
+        return False # always set value
+
+client = Client(url)
+client.factory.builder = AlwaysInitializeBuilder(client.factory.builder.resolver)
+```
+
 ## Enumerations
 
 Enumerations are handled as follows:

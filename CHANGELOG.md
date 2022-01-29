@@ -4,6 +4,7 @@ Release notes
 Unreleased
 ------------------------
 * Fix undeclared variables, found via linting.
+* Allow subclassing Builder to always initialize optional arrays with empty lists
 
 version 1.0.0, 1.0.0-beta.1, 1.0.0-beta.2 (2021-09-13)
 ------------------------

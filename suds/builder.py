@@ -84,7 +84,7 @@ class Builder:
                     md.sxtype = resolved
                     md.ordering = self.ordering(resolved)
 
-        setattr(data, type.name, value if not type.optional() or type.multi_occurrence() else None)
+        setattr(data, type.name, None if self.skip_value(type) else value)
         if value is not None:
             data = value
         if not isinstance(data, list):
@@ -108,6 +108,10 @@ class Builder:
             if x.choice():
                 return True
         return False
+
+    def skip_value(self, type):
+        """ whether or not to skip setting the value """
+        return type.optional() and not type.multi_occurrence()
 
     def ordering(self, type):
         """ get the ordering """
