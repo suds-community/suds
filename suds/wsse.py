@@ -158,7 +158,12 @@ class UsernameToken(Token):
             s.append(self.username)
             s.append(self.password)
             s.append(Token.sysdate())
-            m = md5()
+            try:
+                # FIPS requires usedforsecurity=False and might not be
+                # available on all distros: https://bugs.python.org/issue9216
+                m = md5(usedforsecurity=False)
+            except (AttributeError, TypeError):
+                m = md5()
             m.update(':'.join(s).encode('utf-8'))
             self.nonce = m.hexdigest()
         else:
