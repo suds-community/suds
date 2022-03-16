@@ -3,8 +3,15 @@ Release notes
 
 Unreleased
 ------------------------
+
+
+version 1.1.0 (2022-03-15)
+------------------------
 * Fix undeclared variables, found via linting.
 * Allow subclassing Builder to always initialize optional arrays with empty lists
+* [ci] Drop py3.6 testing, add 3.10
+* Allow subclasses of Builder to determine if children are initialized.
+* Don't ignore underscore prefixed attribute
 
 version 1.0.0, 1.0.0-beta.1, 1.0.0-beta.2 (2021-09-13)
 ------------------------
