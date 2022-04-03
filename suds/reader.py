@@ -58,7 +58,12 @@ class Reader(object):
         @rtype: str
 
         """
-        h = md5(name.encode()).hexdigest()
+        try:
+            # FIPS requires usedforsecurity=False and might not be
+            # available on all distros: https://bugs.python.org/issue9216
+            h = md5(name.encode(), usedforsecurity=False).hexdigest()
+        except (AttributeError, TypeError):
+            h = md5(name.encode()).hexdigest()
         return '%s-%s' % (h, x)
 
 
