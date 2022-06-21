@@ -665,6 +665,8 @@ class TestTransportUsage:
         assert b(xsd_target_namespace) in request_message
         assert b(test_input_data) in request_message
         assert reply == test_output_data
+        assert client.messages.get("rx") == client.last_received()
+        assert client.messages.get("tx") == client.last_sent()
 
     @pytest.mark.parametrize("transport", (object(), suds.cache.NoCache()))
     def test_reject_invalid_transport_class(self, transport, monkeypatch):

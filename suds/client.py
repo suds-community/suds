@@ -58,6 +58,8 @@ class Client(UnicodeMixin):
     @type factory: L{Factory}
     @ivar sd: The service definition
     @type sd: L{ServiceDefinition}
+    @ivar messages: The last sent/received messages.
+    @type messages: str[2]
 
     """
 
@@ -126,6 +128,7 @@ class Client(UnicodeMixin):
         for s in self.wsdl.services:
             sd = ServiceDefinition(self.wsdl, s)
             self.sd.append(sd)
+        self.messages = dict(tx=None, rx=None)
 
     def set_options(self, **kwargs):
         """
@@ -160,6 +163,22 @@ class Client(UnicodeMixin):
         if mapped[1] != uri:
             raise Exception('"%s" already mapped as "%s"' % (prefix, mapped))
 
+    def last_sent(self):
+        """
+        Get last sent I{soap} message.
+        @return: The last sent I{soap} message.
+        @rtype: L{Document}
+        """
+        return self.messages.get('tx')
+
+    def last_received(self):
+        """
+        Get last received I{soap} message.
+        @return: The last received I{soap} message.
+        @rtype: L{Document}
+        """
+        return self.messages.get('rx')
+
     def clone(self):
         """
         Get a shallow clone of this object.
@@ -183,6 +202,7 @@ class Client(UnicodeMixin):
         clone.factory = self.factory
         clone.service = ServiceSelector(clone, self.wsdl.services)
         clone.sd = self.sd
+        clone.messages = dict(tx=None, rx=None)
         return clone
 
     def __unicode__(self):
@@ -731,6 +751,7 @@ class _SoapClient:
         """
         location = self.__location()
         log.debug("sending to (%s)\nmessage:\n%s", location, soapenv)
+        self.last_sent(soapenv)
         plugins = PluginContainer(self.options.plugins)
         plugins.message.marshalled(envelope=soapenv.root())
         if self.options.prettyxml:
@@ -806,6 +827,8 @@ class _SoapClient:
         replyroot = None
         if status in (http.client.OK, http.client.INTERNAL_SERVER_ERROR):
             replyroot = _parse(reply)
+            if len(reply) > 0:
+                self.last_received(replyroot)
             plugins.message.parsed(reply=replyroot)
             fault = self.__get_fault(replyroot)
             if fault:
@@ -873,6 +896,46 @@ class _SoapClient:
     def __location(self):
         """Returns the SOAP request's target location URL."""
         return Unskin(self.options).get("location", self.method.location)
+
+    def last_sent(self, d=None):
+        """
+        Get or set last SOAP sent messages document
+
+        To get the last sent document call the function without parameter.
+        To set the last sent message, pass the document as parameter.
+
+        @param d: A SOAP reply dict message key
+        @type string: I{bytes}
+        @return: The last sent I{soap} message.
+        @rtype: L{Document}
+
+        """
+        key = 'tx'
+        messages = self.client.messages
+        if d is None:
+            return messages.get(key)
+        else:
+            messages[key] = d
+
+    def last_received(self, d=None):
+        """
+        Get or set last SOAP received messages document
+
+        To get the last received document call the function without parameter.
+        To set the last sent message, pass the document as parameter.
+
+        @param d: A SOAP reply dict message key
+        @type string: I{bytes}
+        @return: The last received I{soap} message.
+        @rtype: L{Document}
+
+        """
+        key = 'rx'
+        messages = self.client.messages
+        if d is None:
+            return messages.get(key)
+        else:
+            messages[key] = d
 
 
 class _SimClient(_SoapClient):
