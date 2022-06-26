@@ -4,6 +4,10 @@ Release notes
 Unreleased
 ------------------------
 
+version 1.1.2 (2022-06-25)
+------------------------
+* Restore last_sent and last_received functions
+
 version 1.1.1 (2022-03-15)
 ------------------------
 *  Use usedforsecurity=False for md5() calls to make suds work on FIPS compliant python
