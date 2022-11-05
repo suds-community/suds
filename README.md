@@ -1178,17 +1178,13 @@ The default cache is a
 This duration may be adjusted as follows:
 
 ```py
+import datetime
+ ...
 cache = client.options.cache
-cache.setduration(days=10)
+cache.duration = datetime.timedelta(days=10)
 ```
 
-OR
-
-```py
- cache.setduration(seconds=90)
-```
-
-The duration my be (months, weeks, days, hours, seconds ).
+The duration must be a `datetime.timedelta`.
 
 The default location (directory) is /tmp/suds so
 Windows users will need to set the location to something
