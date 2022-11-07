@@ -33,7 +33,6 @@ import suds.sax.parser
 import pytest
 
 import re
-import sys
 
 
 class TestChildAtPath:
@@ -145,12 +144,6 @@ class TestStringRepresentation:
         element = xml.root()
         assert element.__class__ is Element
         return element
-
-    @pytest.mark.skipif(sys.version_info >= (3,), reason="Python 2 specific")
-    def test_convert_to_byte_str(self):
-        element = self.create_test_element()
-        expected = suds.byte_str(element.str())
-        assert str(element) == expected
 
     def test_convert_to_unicode(self):
         element = self.create_test_element()

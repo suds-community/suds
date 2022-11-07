@@ -35,18 +35,12 @@ import pytest
 import base64
 import http.client
 import re
-import sys
 from email.message import Message
 from urllib.error import HTTPError
 from urllib.request import ProxyHandler
 
-# We can not use six.moves modules for this since we want to monkey-patch the
-# exact underlying urllib2/urllib.request module in our tests and not just
-# their six.moves proxy module.
-if sys.version_info < (3,):
-    import urllib2 as urllib_request
-else:
-    import urllib.request as urllib_request
+# We want to monkey-patch the urllib.request module in our tests
+import urllib.request as urllib_request
 
 
 class MustNotBeCalled(Exception):
@@ -382,9 +376,6 @@ class TestSendingToURLWithAMissingProtocolIdentifier:
     """
     Test suds reporting URLs with a missing protocol identifier.
 
-    Python urllib library makes this check under Python 3.x, but not under
-    earlier Python versions.
-
     """
 
     # We can not set this 'url' fixture data using a class decorator since that
@@ -394,15 +385,6 @@ class TestSendingToURLWithAMissingProtocolIdentifier:
         "my no-protocol URL",
         ":my no-protocol URL"))
 
-    @pytest.mark.skipif(sys.version_info >= (3,), reason="Python 2 specific")
-    @invalid_URL_parametrization
-    def test_python2(self, url, send_method):
-        transport = suds.transport.http.HttpTransport()
-        transport.urlopener = MockURLOpenerSaboteur(MyException)
-        request = create_request(url)
-        pytest.raises(MyException, send_method, transport, request)
-
-    @pytest.mark.skipif(sys.version_info < (3,), reason="Python 3+ specific")
     @invalid_URL_parametrization
     def test_python3(self, url, send_method, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)

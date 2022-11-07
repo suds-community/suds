@@ -89,8 +89,6 @@ HEADERS: %s
 MESSAGE:
 %s""" % (code, reply.headers, message.decode("raw_unicode_escape"))
         assert str(reply) == expected
-        if sys.version_info < (3,):
-            assert str(reply) == expected.encode("utf-8")
 
 
 class TestRequest:
@@ -159,8 +157,6 @@ HEADERS: %s
 MESSAGE:
 %s""" % (url, request.headers, message.decode("raw_unicode_escape"))
         assert str(request) == expected
-        if sys.version_info < (3,):
-            assert str(request) == expected.encode("utf-8")
 
     def test_string_representation_with_no_message(self):
         url = "look at my silly little URL"
@@ -171,8 +167,6 @@ MESSAGE:
 URL: %s
 HEADERS: %s""" % (url, request.headers)
         assert str(request) == expected
-        if sys.version_info < (3,):
-            assert str(request) == expected.encode("utf-8")
 
     test_URLs = [
         "",

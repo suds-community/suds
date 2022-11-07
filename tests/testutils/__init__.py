@@ -88,12 +88,10 @@ if suds.__version__ != %(suds.__version__)r:
     print("Unexpected suds version imported - '%%s'." %% (suds.__version__))
     sys.exit(-2)
 
-if sys.version_info >= (3, 0):
-    def exec_file(x):
-        e = getattr(__builtins__, "exec")
-        return e(open(x).read(), globals(), globals())
-else:
-    exec_file = execfile
+def exec_file(x):
+    e = getattr(__builtins__, "exec")
+    return e(open(x).read(), globals(), globals())
+
 exec_file(%(script)r)
 """ % {"suds.__version__": suds.__version__,
     "script": script.basename,
