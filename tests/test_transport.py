@@ -198,7 +198,7 @@ HEADERS: %s""" % (url, request.headers)
         else:
             assert request.url == url.decode("ascii")
 
-    test_URLs = [chr(0), "Jurko" + chr(0)] if sys.version_info <= (3, 6) else []  # "https://bugs.python.org/issue32745"
+    test_URLs = [chr(0), "Jurko" + chr(0)] if sys.version_info >= (3, 8) else []  # "https://bugs.python.org/issue32745"
     @pytest.mark.parametrize("url", test_URLs + [
         url.encode("ascii") for url in test_URLs])
     def test_URL_null_bytes(self, url):
