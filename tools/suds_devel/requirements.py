@@ -248,22 +248,6 @@ def pytest_requirements(version_info=None, ctypes_version=_Unspecified):
     yield requirement_spec("pytest", *pytest_version)
 
 
-def six_requirements(version_info=sys.version_info):
-    """
-    Generate Python version specific six package requirements.
-
-    The requirements are returned as setuptools/pip compatible requirement
-    specification strings.
-
-    """
-    if version_info < (2, 5):
-        # 'six' release 1.5 dropped Python 2.4.x compatibility.
-        yield requirement_spec("six",
-            ("<", lowest_version_string_with_prefix("1.5")))
-    else:
-        yield requirement_spec("six")
-
-
 def virtualenv_requirements(version_info=sys.version_info):
     """
     Generate Python version specific virtualenv package requirements.

@@ -31,8 +31,6 @@ import suds.sax.document
 import suds.sax.element
 import suds.sax.parser
 
-from six import text_type, u
-
 import sys
 
 
@@ -227,11 +225,11 @@ class CompareSAX:
     def __element_name(element):
         """Returns a given SAX element's name as unicode or '???' on error."""
         try:
-            return text_type(element.name)
+            return str(element.name)
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
-            return u("???")
+            return "???"
 
     def __element2element(self, lhs, rhs, context_info=(0, 1)):
         """
@@ -282,8 +280,8 @@ class CompareSAX:
         bytes object.
 
         """
-        if isinstance(data, text_type):
-            data = data.encode("utf-8")
+        if isinstance(data, str):
+            data = data.encode()
         return suds.sax.parser.Parser().parse(string=data)
 
     def __pop_context(self):

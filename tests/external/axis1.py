@@ -89,7 +89,7 @@ try:
     #
     print('create name')
     name = client.factory.create('ns0:Name')
-    name.first = u'jeff'+unichr(1234)
+    name.first = u'jeff'+chr(1234)
     name.last = 'ortel'
     print(name)
     #

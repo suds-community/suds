@@ -31,15 +31,14 @@ import suds.transport
 import suds.transport.http
 
 import pytest
-from six import u
-from six.moves import http_client
-from six.moves.urllib.error import HTTPError
-from six.moves.urllib.request import ProxyHandler
 
 import base64
+import http.client
 import re
 import sys
 from email.message import Message
+from urllib.error import HTTPError
+from urllib.request import ProxyHandler
 
 # We can not use six.moves modules for this since we want to monkey-patch the
 # exact underlying urllib2/urllib.request module in our tests and not just
@@ -180,7 +179,7 @@ def assert_default_transport(transport):
     assert transport.urlopener is None
 
 
-def create_request(url="protocol://default-url", data=u("Rumpelstiltskin")):
+def create_request(url="protocol://default-url", data="Rumpelstiltskin"):
     """Test utility constructing a suds.transport.Request instance."""
     return suds.transport.Request(url, data)
 
@@ -336,7 +335,7 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
     url_relative = "svc"
     url = "http://%s/%s" % (host_port, url_relative)
     partial_ascii_byte_data = suds.byte_str("Muka-laka-hiki")
-    non_ascii_byte_data = u("\u0414\u043C\u0438 \u0442\u0440").encode("utf-8")
+    non_ascii_byte_data = "\u0414\u043C\u0438 \u0442\u0440".encode()
     non_ascii_byte_data += partial_ascii_byte_data
     mocker = Mocker(host, port)
     monkeypatch.setattr("socket.getaddrinfo", mocker.getaddrinfo)
@@ -372,7 +371,7 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
         expected_sent_data_start, url_relative)
     expected_sent_data_start = suds.byte_str(expected_sent_data_start)
     assert mocker.mock_sent_data.startswith(expected_sent_data_start)
-    assert host_port.encode("utf-8") in mocker.mock_sent_data
+    assert host_port.encode() in mocker.mock_sent_data
     if expected_request_data_send:
         assert mocker.mock_sent_data.endswith(non_ascii_byte_data)
     else:
@@ -448,17 +447,17 @@ class TestURLOpenerUsage:
         return HTTPError(url=url, code=code, msg=msg, hdrs=hdrs, fp=fp)
 
     @pytest.mark.parametrize("status_code", (
-        http_client.ACCEPTED,
-        http_client.NO_CONTENT,
-        http_client.RESET_CONTENT,
-        http_client.MOVED_PERMANENTLY,
-        http_client.BAD_REQUEST,
-        http_client.PAYMENT_REQUIRED,
-        http_client.FORBIDDEN,
-        http_client.NOT_FOUND,
-        http_client.INTERNAL_SERVER_ERROR,
-        http_client.NOT_IMPLEMENTED,
-        http_client.HTTP_VERSION_NOT_SUPPORTED))
+        http.client.ACCEPTED,
+        http.client.NO_CONTENT,
+        http.client.RESET_CONTENT,
+        http.client.MOVED_PERMANENTLY,
+        http.client.BAD_REQUEST,
+        http.client.PAYMENT_REQUIRED,
+        http.client.FORBIDDEN,
+        http.client.NOT_FOUND,
+        http.client.INTERNAL_SERVER_ERROR,
+        http.client.NOT_IMPLEMENTED,
+        http.client.HTTP_VERSION_NOT_SUPPORTED))
     def test_open_propagating_HTTPError_exceptions(self, status_code,
             monkeypatch):
         """
@@ -486,8 +485,8 @@ class TestURLOpenerUsage:
 
     @pytest.mark.xfail(reason="original suds library bug")
     @pytest.mark.parametrize("status_code", (
-        http_client.ACCEPTED,
-        http_client.NO_CONTENT))
+        http.client.ACCEPTED,
+        http.client.NO_CONTENT))
     def test_operation_invoke_with_urlopen_accept_no_content__data(self,
             status_code):
         """
@@ -507,8 +506,8 @@ class TestURLOpenerUsage:
 
     @pytest.mark.xfail(reason="original suds library bug")
     @pytest.mark.parametrize("status_code", (
-        http_client.ACCEPTED,
-        http_client.NO_CONTENT))
+        http.client.ACCEPTED,
+        http.client.NO_CONTENT))
     def test_operation_invoke_with_urlopen_accept_no_content__no_data(self,
             status_code):
         """
@@ -545,15 +544,15 @@ class TestURLOpenerUsage:
         assert pytest.raises(e.__class__, t.open, create_request()).value is e
 
     @pytest.mark.parametrize("status_code", (
-        http_client.RESET_CONTENT,
-        http_client.MOVED_PERMANENTLY,
-        http_client.BAD_REQUEST,
-        http_client.PAYMENT_REQUIRED,
-        http_client.FORBIDDEN,
-        http_client.NOT_FOUND,
-        http_client.INTERNAL_SERVER_ERROR,
-        http_client.NOT_IMPLEMENTED,
-        http_client.HTTP_VERSION_NOT_SUPPORTED))
+        http.client.RESET_CONTENT,
+        http.client.MOVED_PERMANENTLY,
+        http.client.BAD_REQUEST,
+        http.client.PAYMENT_REQUIRED,
+        http.client.FORBIDDEN,
+        http.client.NOT_FOUND,
+        http.client.INTERNAL_SERVER_ERROR,
+        http.client.NOT_IMPLEMENTED,
+        http.client.HTTP_VERSION_NOT_SUPPORTED))
     def test_send_transforming_HTTPError_exceptions(self, status_code,
             monkeypatch):
         """
@@ -583,8 +582,8 @@ class TestURLOpenerUsage:
             del e  # explicitly break circular reference chain in Python 3
 
     @pytest.mark.parametrize("status_code", (
-        http_client.ACCEPTED,
-        http_client.NO_CONTENT))
+        http.client.ACCEPTED,
+        http.client.NO_CONTENT))
     def test_send_transforming_HTTPError_exceptions__accepted_no_content(self,
             status_code):
         """

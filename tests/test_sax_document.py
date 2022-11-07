@@ -31,7 +31,6 @@ from suds.sax.document import Document
 import suds.sax.parser
 
 import pytest
-import six
 
 import re
 import sys
@@ -64,7 +63,7 @@ class TestStringRepresentation:
     def test_convert_to_unicode(self):
         document = self.create_test_document()
         expected = document.str()
-        assert six.text_type(document) == expected
+        assert str(document) == expected
 
     def test_plain_method(self):
         document = self.create_test_document()

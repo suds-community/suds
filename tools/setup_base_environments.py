@@ -25,7 +25,6 @@ The environments should have the following Python packages installed:
   * setuptools (for installing pip)
   * pip (for installing everything except itself)
   * pytest (for running the project's test suite)
-  * six (Python 2/3 compatibility layer used in the project's test suite)
   * virtualenv (for creating virtual Python environments)
 plus certain specific Python versions may require additional backward
 compatibility support packages.
@@ -124,8 +123,7 @@ from suds_devel.egg import zip_eggs_in_folder
 from suds_devel.environment import BadEnvironment, Environment
 from suds_devel.exception import EnvironmentSetupError
 from suds_devel.parse_version import parse_version
-from suds_devel.requirements import (pytest_requirements, six_requirements,
-    virtualenv_requirements)
+from suds_devel.requirements import pytest_requirements, virtualenv_requirements
 import suds_devel.utility as utility
 
 
@@ -763,7 +761,6 @@ def prepare_pip_requirements_file_if_needed(requirements):
 def prepare_pip_requirements(env):
     requirements = list(itertools.chain(
         pytest_requirements(env.sys_version_info, env.ctypes_version),
-        six_requirements(env.sys_version_info),
         virtualenv_requirements(env.sys_version_info)))
     janitor = prepare_pip_requirements_file_if_needed(requirements)
     return requirements, janitor

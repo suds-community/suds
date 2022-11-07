@@ -50,7 +50,7 @@ def rhqTest():
         # create name
         #
         name = client.factory.create('name')
-        name.first = u'Jeff'+unichr(1234)
+        name.first = u'Jeff'+chr(1234)
         name.last = 'Ortel &amp;lt; Company'
         #
         # create a phone object using the wsdl
