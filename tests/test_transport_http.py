@@ -348,17 +348,6 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
     assert mocker.mock_call_count("socket") == 1
     assert mocker.mock_socket.mock_call_count("connect") == 1
     assert mocker.mock_socket.mock_call_count("makefile") == 1
-    # With older Python versions, e.g. Python 2.4, urllib implementation calls
-    # Socket's sendall() method twice - once for sending the HTTP request
-    # headers and once for its body.
-    assert mocker.mock_socket.mock_call_count("sendall") in (1, 2)
-    # Python versions prior to 3.4.2 do not explicitly close their HTTP server
-    # connection socket in case of our custom exceptions, e.g. version 3.4.1.
-    # closes it only on OSError exceptions.
-    assert mocker.mock_socket.mock_call_count("close") in (0, 1)
-    # With older Python versions, e.g. Python 2.4, Socket class does not
-    # implement the settimeout() method.
-    assert mocker.mock_socket.mock_call_count("settimeout") in (0, 1)
     assert mocker.mock_socket.mock_reader.mock_call_count("readline") == 1
     assert mocker.mock_sent_data.__class__ is suds.byte_str_class
     expected_sent_data_start = "%s /%s HTTP/1.1\r\n" % (
@@ -372,20 +361,13 @@ def test_sending_using_network_sockets(send_method, monkeypatch):
         assert partial_ascii_byte_data not in mocker.mock_sent_data
 
 
+@pytest.mark.parametrize("url", ("my no-protocol URL", ":my no-protocol URL"))
 class TestSendingToURLWithAMissingProtocolIdentifier:
     """
     Test suds reporting URLs with a missing protocol identifier.
 
     """
 
-    # We can not set this 'url' fixture data using a class decorator since that
-    # Python feature has been introduced in Python 2.6 and we need to keep this
-    # code backward compatible with Python 2.4.
-    invalid_URL_parametrization = pytest.mark.parametrize("url", (
-        "my no-protocol URL",
-        ":my no-protocol URL"))
-
-    @invalid_URL_parametrization
     def test_python3(self, url, send_method, monkeypatch):
         monkeypatch.delitem(locals(), "e", False)
         transport = suds.transport.http.HttpTransport()
