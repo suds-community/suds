@@ -31,7 +31,6 @@ import suds.cache
 import suds.sax.parser
 
 import pytest
-from six import b, next, u
 
 import datetime
 import os
@@ -163,18 +162,18 @@ class MockPickleLoad:
 
 
 # Hardcoded values used in different caching test cases.
-value_empty = b("")
-value_f2 = b("fifi2")
-value_f22 = b("fifi22")
-value_f3 = b("fifi3")
-value_p1 = b("pero1")
-value_p11 = b("pero11")
-value_p111 = b("pero111")
-value_p2 = b("pero2")
-value_p22 = b("pero22")
-value_unicode = u("\u20AC \u7684 "
+value_empty = b""
+value_f2 = b"fifi2"
+value_f22 = b"fifi22"
+value_f3 = b"fifi3"
+value_p1 = b"pero1"
+value_p11 = b"pero11"
+value_p111 = b"pero111"
+value_p2 = b"pero2"
+value_p22 = b"pero22"
+value_unicode = ("\u20AC \u7684 "
     "\u010D\u0107\u017E\u0161\u0111"
-    "\u010C\u0106\u017D\u0160\u0110").encode("utf-8")
+    "\u010C\u0106\u017D\u0160\u0110").encode()
 
 
 # FileCache item expiration test data - duration, current_time, expect_remove.

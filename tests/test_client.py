@@ -33,8 +33,8 @@ import suds.transport
 import suds.transport.https
 
 import pytest
-from six import b, binary_type, iteritems, itervalues, next
-from six.moves import http_client
+
+import http.client
 
 
 class MyException(Exception):
@@ -148,7 +148,7 @@ class MockTransport(suds.transport.Transport):
         self.mock_requests.append(request)
         if not self.mock_send_data:
             pytest.fail("Unexpected MockTransport.send() operation call.")
-        status = http_client.OK
+        status = http.client.OK
         headers = {}
         data = self.__next_operation_result(self.mock_send_data)
         return suds.transport.Reply(status, headers, data)
@@ -160,7 +160,7 @@ class MockTransport(suds.transport.Transport):
             raise value
         if value.__class__ is type and issubclass(value, Exception):
             raise value()
-        assert value.__class__ is binary_type, "bad test data"
+        assert value.__class__ is bytes, "bad test data"
         return value
 
 
@@ -171,18 +171,18 @@ wsdl_imported_wsdl_namespace = "goodbye"
 def wsdl_imported_format(schema_content="",
         target_namespace=wsdl_imported_wsdl_namespace,
         target_xsd_namespace="ice-scream"):
-    return b("""\
+    return f"""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="%(tns)s"
+<wsdl:definitions targetNamespace="{target_namespace}"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-    xmlns:tns="%(tns)s"
+    xmlns:tns="{target_namespace}"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
   <wsdl:types>
-    <xsd:schema targetNamespace="%(tns_xsd)s"
+    <xsd:schema targetNamespace="{target_xsd_namespace}"
         elementFormDefault="qualified"
         attributeFormDefault="unqualified"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-%(schema_content)s
+{schema_content}
     </xsd:schema>
   </wsdl:types>
   <wsdl:portType name="dummyPortType">
@@ -195,28 +195,25 @@ def wsdl_imported_format(schema_content="",
       <soap:operation soapAction="my-soap-action" style="document"/>
     </wsdl:operation>
   </wsdl:binding>
-</wsdl:definitions>""" % dict(schema_content=schema_content,
-        tns_xsd=target_xsd_namespace, tns=target_namespace))
+</wsdl:definitions>""".encode()
+
 
 def wsdl_import_wrapper_format(url_imported,
         imported_reference_ns=wsdl_imported_wsdl_namespace,
         target_namespace="hello"):
-    return b("""\
+    return f"""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="%(tns)s"
-    xmlns:imported_reference_ns="%(imported_reference_ns)s"
+<wsdl:definitions targetNamespace="{target_namespace}"
+    xmlns:imported_reference_ns="{imported_reference_ns}"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="%(imported_ns)s" location="%(url_imported)s"/>
+  <wsdl:import namespace="{wsdl_imported_wsdl_namespace}" location="{url_imported}"/>
   <wsdl:service name="dummy">
     <wsdl:port name="dummy" binding="imported_reference_ns:dummy">
       <soap:address location="unga-bunga-location"/>
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>""" % dict(imported_ns=wsdl_imported_wsdl_namespace,
-        imported_reference_ns=imported_reference_ns,
-        tns=target_namespace,
-        url_imported=url_imported))
+</wsdl:definitions>""".encode()
 
 
 # Test URL data used by several tests in this test module.
@@ -257,7 +254,7 @@ class TestCacheStoreTransportUsage:
                 cache=cache, documentStore=store1, transport=MockTransport())
             assert store1.mock_log == ["suds://wsdl", "suds://wsdl_imported"]
             assert len(cache.mock_data) == 1
-            wsdl_object_id, wsdl_object = next(iteritems(cache.mock_data))
+            wsdl_object_id, wsdl_object = next(iter(cache.mock_data.items()))
             assert wsdl_object.__class__ is suds.wsdl.Definitions
 
             # Reuse from cache.
@@ -280,8 +277,8 @@ class TestCacheStoreTransportUsage:
 <schema xmlns="http://www.w3.org/2001/XMLSchema">
     <element name="external%d" type="string"/>
 </schema>"""
-            external_xsd1 = b(external_xsd_format % (1,))
-            external_xsd2 = b(external_xsd_format % (2,))
+            external_xsd1 = (external_xsd_format % (1,)).encode()
+            external_xsd2 = (external_xsd_format % (2,)).encode()
 
             # Add to cache.
             cache = MockCache()
@@ -292,7 +289,7 @@ class TestCacheStoreTransportUsage:
             assert store1.mock_log == ["suds://wsdl", "suds://imported_xsd",
                 "suds://included_xsd"]
             assert len(cache.mock_data) == 1
-            wsdl_object_id, wsdl_object = next(iteritems(cache.mock_data))
+            wsdl_object_id, wsdl_object = next(iter(cache.mock_data.items()))
             assert wsdl_object.__class__ is suds.wsdl.Definitions
 
             # Reuse from cache.
@@ -404,12 +401,12 @@ class TestCacheStoreTransportUsage:
         assert len(cache.mock_data) == 1
         if caching_policy == 0:
             # Cache contains SAX XML documents.
-            wsdl_document = next(itervalues(cache.mock_data))
+            wsdl_document = next(iter(cache.mock_data.values()))
             assert wsdl_document.__class__ is suds.sax.document.Document
             wsdl_cached_root = wsdl_document.root()
         else:
             # Cache contains complete suds WSDL objects.
-            wsdl = next(itervalues(cache.mock_data))
+            wsdl = next(iter(cache.mock_data.values()))
             assert wsdl.__class__ is suds.wsdl.Definitions
             wsdl_cached_root = wsdl.root
         assert c1.wsdl.root is wsdl_cached_root
@@ -447,12 +444,12 @@ class TestCacheStoreTransportUsage:
         wsdl = testutils.wsdl('<xsd:%s schemaLocation="suds://external"/>' % (
             external_reference_tag,),
             xsd_target_namespace=xsd_target_namespace)
-        external_schema = b("""\
+        external_schema = b"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema">
   <element name="external" type="string"/>
 </schema>
-""")
+"""
 
         # Imported XSD schema items retain their namespace, while included ones
         # get merged into the target namespace.
@@ -647,13 +644,13 @@ class TestTransportUsage:
         test_input_data = "Riff-raff"
         test_output_data = "La-di-da-da-da"
         store = MockDocumentStore(wsdl=wsdl)
-        transport = MockTransport(send_data=b("""\
+        transport = MockTransport(send_data=f"""\
 <?xml version="1.0"?>
 <env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
-    <Data xmlns="%s">%s</Data>
+    <Data xmlns="{xsd_target_namespace}">{test_output_data}</Data>
   </env:Body>
-</env:Envelope>""" % (xsd_target_namespace, test_output_data)))
+</env:Envelope>""".encode())
         client = suds.client.Client("suds://wsdl", documentStore=store,
             cache=None, transport=transport)
         assert transport.mock_log == []
@@ -662,8 +659,8 @@ class TestTransportUsage:
         assert transport.mock_log[0][0] == "send"
         assert transport.mock_log[0][1][0] == web_service_URL
         request_message = transport.mock_log[0][1][1]
-        assert b(xsd_target_namespace) in request_message
-        assert b(test_input_data) in request_message
+        assert xsd_target_namespace.encode() in request_message
+        assert test_input_data.encode() in request_message
         assert reply == test_output_data
         assert client.messages.get("rx") == client.last_received()
         assert client.messages.get("tx") == client.last_sent()
@@ -712,10 +709,10 @@ class TestTransportUsage:
         xsd_content = '<xsd:%(tag)s schemaLocation="%(url)s"/>' % dict(
             tag=external_reference_tag, url=url)
         store = MockDocumentStore(wsdl=testutils.wsdl(xsd_content))
-        t = MockTransport(open_data=b("""\
+        t = MockTransport(open_data=b"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema"/>
-"""))
+""")
         suds.client.Client("suds://wsdl", cache=None, documentStore=store,
             transport=t)
         assert t.mock_log == [("open", [url])]
@@ -786,7 +783,7 @@ def test_resolving_references_to_later_entities_in_XML():
     referencing entity in the underlying XML structure.
 
     """
-    wsdl = b("""\
+    wsdl = b"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="tns-ns"
     xmlns:ns="xsd-ns"
@@ -822,7 +819,7 @@ def test_resolving_references_to_later_entities_in_XML():
       <xsd:element name="Lollypop" type="xsd:string"/>
     </xsd:schema>
   </wsdl:types>
-</wsdl:definitions>""")
+</wsdl:definitions>"""
     store = MockDocumentStore(wsdl=wsdl)
     c = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
     service = c.wsdl.services[0]
@@ -840,7 +837,7 @@ def test_sortnamespaces_default():
     """
     Option to not sort namespaces.
     """
-    wsdl = b("""\
+    wsdl = b"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <definitions targetNamespace="urn:wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="urn:wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <types>
@@ -937,7 +934,7 @@ def test_sortnamespaces_default():
         </port>
     </service>
 </definitions>
-""")
+"""
     store = MockDocumentStore(wsdl=wsdl)
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store)
     prefixes = client.sd[0].prefixes
@@ -950,7 +947,7 @@ def test_sortnamespaces_turned_off():
     """
     Option to not sort namespaces.
     """
-    wsdl = b("""\
+    wsdl = b"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <definitions targetNamespace="urn:wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="urn:wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <types>
@@ -1047,7 +1044,7 @@ def test_sortnamespaces_turned_off():
         </port>
     </service>
 </definitions>
-""")
+"""
     store = MockDocumentStore(wsdl=wsdl)
     client = suds.client.Client("suds://wsdl", cache=None, documentStore=store, sortNamespaces=False)
     prefixes = client.sd[0].prefixes
@@ -1068,13 +1065,13 @@ class TestRecursiveWSDLImport:
 
     @staticmethod
     def __wsdl_binding(tns_binding, tns_main, url_main):
-        return b("""\
+        return f"""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="%(tns)s"
-    xmlns:main_ns="%(tns_imported)s"
+<wsdl:definitions targetNamespace="{tns_binding}"
+    xmlns:main_ns="{tns_main}"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="%(tns_imported)s" location="%(url_imported)s"/>
+  <wsdl:import namespace="{tns_main}" location="{url_main}"/>
   <wsdl:binding name="my-binding" type="main_ns:my-port-type">
     <soap:binding style="document"
         transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -1082,18 +1079,17 @@ class TestRecursiveWSDLImport:
       <soap:operation soapAction="my-soap-action" style="document"/>
     </wsdl:operation>
   </wsdl:binding>
-</wsdl:definitions>""" % dict(tns=tns_binding, tns_imported=tns_main,
-            url_imported=url_main))
+</wsdl:definitions>""".encode()
 
     @staticmethod
     def __wsdl_no_binding(tns_main, tns_binding, url_binding):
-        return b("""\
+        return f"""\
 <?xml version='1.0' encoding='UTF-8'?>
-<wsdl:definitions targetNamespace="%(tns)s"
-    xmlns:binding_ns="%(tns_imported)s"
+<wsdl:definitions targetNamespace="{tns_main}"
+    xmlns:binding_ns="{tns_binding}"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="%(tns_imported)s" location="%(url_imported)s"/>
+  <wsdl:import namespace="{tns_binding}" location="{url_binding}"/>
   <wsdl:portType name="my-port-type">
     <wsdl:operation name="f"/>
   </wsdl:portType>
@@ -1102,8 +1098,7 @@ class TestRecursiveWSDLImport:
       <soap:address location="somewhere-under-a-rainbow"/>
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>""" % dict(tns=tns_main, tns_imported=tns_binding,
-            url_imported=url_binding))
+</wsdl:definitions>""".encode()
 
     def test_recursive_WSDL_import_with_single_URL_per_WSDL(self):
         url_main = "suds://wsdl_main"
@@ -1134,13 +1129,13 @@ class TestRecursiveWSDLImport:
 
     def test_WSDL_self_import(self):
         url = "suds://wsdl"
-        wsdl = b("""\
+        wsdl = f"""\
 <?xml version='1.0' encoding='UTF-8'?>
 <wsdl:definitions targetNamespace="my-namespace"
     xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:tns="my-namespace"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
-  <wsdl:import namespace="my-namespace" location="%(url_imported)s"/>
+  <wsdl:import namespace="my-namespace" location="{url}"/>
   <wsdl:portType name="my-port-type">
     <wsdl:operation name="f"/>
   </wsdl:portType>
@@ -1156,7 +1151,7 @@ class TestRecursiveWSDLImport:
       <soap:address location="how I wish... how I wish you were here..."/>
     </wsdl:port>
   </wsdl:service>
-</wsdl:definitions>""" % dict(url_imported=url))
+</wsdl:definitions>""".encode()
 
         store = MockDocumentStore(wsdl=wsdl)
         suds.client.Client(url, cache=None, documentStore=store)

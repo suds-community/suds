@@ -34,7 +34,6 @@ import suds.store
 import suds.xsd.schema
 
 import pytest
-from six import b
 
 
 # shared test input data
@@ -70,7 +69,7 @@ class TestElementForm:
             "parent_name": parent_name}
         expected = form == "qualified" or (
             (form is None) and (form_default == "qualified"))
-        schema = _parse_schema_xml(b(schema_xml))
+        schema = _parse_schema_xml(schema_xml.encode())
         parent_element = schema.elements[parent_name, namespace]
         element = parent_element.get_child(element_name)[0]
         assert bool(element.form_qualified) == expected
@@ -104,7 +103,7 @@ class TestElementForm:
             "namespace": namespace,
             "referenced_name": referenced_name,
             "referencing_parent_name": referencing_parent_name}
-        schema = _parse_schema_xml(b(schema_xml))
+        schema = _parse_schema_xml(schema_xml.encode())
         parent_element = schema.elements[referencing_parent_name, namespace]
         referencing_element = parent_element.get_child(referenced_name)[0]
         assert referencing_element.form_qualified
@@ -128,8 +127,8 @@ class TestElementForm:
 <schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="ns-there">
     <element name="Referenced"/>
 </schema>"""
-        store = suds.store.DocumentStore({"there.xsd": b(schema_xml_there)})
-        schema = _parse_schema_xml(b(schema_xml_here), store)
+        store = suds.store.DocumentStore({"there.xsd": schema_xml_there.encode()})
+        schema = _parse_schema_xml(schema_xml_here.encode(), store)
         referenced_element = schema.elements["Referenced", "ns-there"]
         referencing_parent = schema.elements["Referencing", None]
         referencing_element = referencing_parent.get_child("Referenced")[0]
@@ -151,7 +150,7 @@ class TestElementForm:
             "form": _attribute_xml("form", form),
             "form_default": _attribute_xml("elementFormDefault", form_default),
             "namespace": namespace}
-        schema = _parse_schema_xml(b(schema_xml))
+        schema = _parse_schema_xml(schema_xml.encode())
         element = schema.elements[element_name, namespace]
         assert element.form_qualified
 
@@ -175,8 +174,8 @@ def test_reference():
 <schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="ns-there">
     <element name="Referenced"/>
 </schema>"""
-    store = suds.store.DocumentStore({"there.xsd": b(schema_xml_there)})
-    schema = _parse_schema_xml(b(schema_xml_here), store)
+    store = suds.store.DocumentStore({"there.xsd": schema_xml_there.encode()})
+    schema = _parse_schema_xml(schema_xml_here.encode(), store)
     referenced_element = schema.elements["Referenced", "ns-there"]
     referencing_parent = schema.elements["Referencing", None]
     referencing_element = referencing_parent.get_child("Referenced")[0]

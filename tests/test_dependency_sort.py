@@ -29,7 +29,6 @@ if __name__ == "__main__":
 from suds.xsd.depsort import dependency_sort
 
 import pytest
-from six import iteritems
 
 import copy
 
@@ -68,7 +67,7 @@ _test_dependency_tree = {
 def test_dependency_sort():
     dependency_tree = _test_dependency_tree
     result = dependency_sort(dependency_tree)
-    assert sorted(result) == sorted(iteritems(dependency_tree))
+    assert sorted(result) == sorted(dependency_tree.items())
     _assert_dependency_order((x[0] for x in result), dependency_tree)
 
 
@@ -78,7 +77,7 @@ def test_dependency_sort_does_not_mutate_input():
     # save the original dependency tree structure information
     expected_deps = {}
     expected_deps_ids = {}
-    for x, y in iteritems(dependency_tree):
+    for x, y in dependency_tree.items():
         expected_deps[x] = copy.copy(y)
         expected_deps_ids[id(x)] = id(y)
 
@@ -87,7 +86,7 @@ def test_dependency_sort_does_not_mutate_input():
 
     # verify that the dependency tree structure is unchanged
     assert len(dependency_tree) == len(expected_deps)
-    for key, deps in iteritems(dependency_tree):
+    for key, deps in dependency_tree.items():
         # same deps for each key
         assert id(deps) == expected_deps_ids[id(key)]
         # deps structure compare with the original copy
@@ -146,12 +145,12 @@ def _transitive_dependency_closure(dependencies):
 
     """
     def clone(deps):
-        return dict((k, set(v)) for k, v in iteritems(deps))
+        return dict((k, set(v)) for k, v in deps.items())
     closure = None
     new = clone(dependencies)
     while new != closure:
         closure = clone(new)
-        for k, deps in iteritems(closure):
+        for k, deps in closure.items():
             for dep in deps:
                 new[k] |= closure[dep]
     return closure

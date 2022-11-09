@@ -1,5 +1,4 @@
 import pytest
-from six import b, itervalues, next
 
 import testutils
 if __name__ == "__main__":

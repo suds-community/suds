@@ -30,11 +30,7 @@ import suds
 from suds.sax.document import Document
 import suds.sax.parser
 
-import pytest
-import six
-
 import re
-import sys
 
 
 class TestStringRepresentation:
@@ -55,16 +51,10 @@ class TestStringRepresentation:
         assert document.__class__ is Document
         return document
 
-    @pytest.mark.skipif(sys.version_info >= (3,), reason="Python 2 specific")
-    def test_convert_to_byte_str(self):
-        document = self.create_test_document()
-        expected = suds.byte_str(document.str())
-        assert str(document) == expected
-
     def test_convert_to_unicode(self):
         document = self.create_test_document()
         expected = document.str()
-        assert six.text_type(document) == expected
+        assert str(document) == expected
 
     def test_plain_method(self):
         document = self.create_test_document()

@@ -36,15 +36,11 @@ import pytest
 
 import datetime
 import decimal
+import fractions
 import re
 import sys
 
-if sys.version_info >= (2, 6):
-    import fractions
-if sys.version_info >= (3,):
-    long = int
-
-
+    
 class _Dummy:
     """Class for testing unknown object class handling."""
     pass
@@ -164,10 +160,6 @@ class TestXBoolean:
 
     @pytest.mark.parametrize("source", (
         None,
-        pytest.mark.skipif(sys.version_info >= (3,),
-            reason="int == long since Python 3.0")(long(0)),
-        pytest.mark.skipif(sys.version_info >= (3,),
-            reason="int == long since Python 3.0")(long(1)),
         "x",
         "True",
         "False",
@@ -315,12 +307,10 @@ class TestXDecimal:
         assert translated.__class__ is str
         assert translated == expected
 
-    extra_test_data = ()
-    if sys.version_info >= (2, 6):
-        extra_test_data = (
-            # fraction.Fraction
-            fractions.Fraction(10, 4),
-            fractions.Fraction(1, 3))
+    extra_test_data = (
+        # fraction.Fraction
+        fractions.Fraction(10, 4),
+        fractions.Fraction(1, 3))
     @pytest.mark.parametrize("source", (
         None,
         # bool
@@ -383,12 +373,10 @@ class TestXDecimal:
 class TestXFloat:
     """suds.xsd.sxbuiltin.XFloat.translate() tests."""
 
-    extra_test_data = ()
-    if sys.version_info >= (2, 6):
-        extra_test_data = (
-            # fraction.Fraction
-            fractions.Fraction(10, 4),
-            fractions.Fraction(1, 3))
+    extra_test_data = (
+        # fraction.Fraction
+        fractions.Fraction(10, 4),
+        fractions.Fraction(1, 3))
     @pytest.mark.parametrize("source", (
         None,
         # bool
@@ -475,11 +463,6 @@ class TestXInteger:
         0,
         1,
         50,
-        # long
-        long(-50),
-        long(0),
-        long(1),
-        long(50),
         # str
         "x",
         # other
@@ -535,11 +518,6 @@ class TestXLong:
         0,
         1,
         50,
-        # long
-        long(-50),
-        long(0),
-        long(1),
-        long(50),
         # str
         "x",
         # other
@@ -558,7 +536,7 @@ class TestXLong:
         ("100", 100)))
     def test_to_python_object(self, source, expected):
         translated = MockXLong().translate(source)
-        assert translated.__class__ is long
+        assert translated.__class__ is int
         assert translated == expected
 
     @pytest.mark.parametrize("source",
@@ -570,7 +548,7 @@ class TestXLong:
     def test_to_python_object__invalid_string(self, source, monkeypatch):
         """
         Suds raises raw Python exceptions when it fails to convert received
-        response element data to its mapped Python long data type, according to
+        response element data to its mapped Python int data type, according to
         the used WSDL schema.
 
         """
@@ -580,7 +558,7 @@ class TestXLong:
             # Using different Python interpreter versions and different source
             # strings results in different exception messages here.
             try:
-                long(source)
+                int(source)
                 pytest.fail("Bad test data.")
             except ValueError:
                 assert str(e) == str(sys.exc_info()[1])

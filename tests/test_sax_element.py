@@ -31,10 +31,8 @@ from suds.sax.element import Element
 import suds.sax.parser
 
 import pytest
-import six
 
 import re
-import sys
 
 
 class TestChildAtPath:
@@ -147,16 +145,10 @@ class TestStringRepresentation:
         assert element.__class__ is Element
         return element
 
-    @pytest.mark.skipif(sys.version_info >= (3,), reason="Python 2 specific")
-    def test_convert_to_byte_str(self):
-        element = self.create_test_element()
-        expected = suds.byte_str(element.str())
-        assert str(element) == expected
-
     def test_convert_to_unicode(self):
         element = self.create_test_element()
         expected = element.str()
-        assert six.text_type(element) == expected
+        assert str(element) == expected
 
     def test_plain_method(self):
         element = self.create_test_element(self.str_formatted_xml)

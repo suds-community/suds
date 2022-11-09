@@ -31,7 +31,6 @@ from testutils.assertion import assert_no_output
 from testutils.compare_sax import CompareSAX
 
 import pytest
-from six import text_type, u
 
 import xml.sax
 
@@ -79,14 +78,14 @@ class TestMatched:
         ('<a xmlns="one"/>', '<ns:a xmlns:ns="one"/>'),
         ('<ns1:b xmlns:ns1="two"/>', '<ns2:b xmlns:ns2="two"/>'),
         # Numeric unicode character references.
-        (u("<a>\u2606</a>"), "<a>&#%d;</a>" % (0x2606,))))
+        ("<a>\u2606</a>", "<a>&#%d;</a>" % (0x2606,))))
     def test_data2data(self, data1, data2, capsys):
         CompareSAX.data2data(data1, data2)
         assert_no_output(capsys)
 
     @skip_test_if_CompareSAX_assertions_disabled
-    @pytest.mark.parametrize("type1", (suds.byte_str, text_type))
-    @pytest.mark.parametrize("type2", (suds.byte_str, text_type))
+    @pytest.mark.parametrize("type1", (suds.byte_str, str))
+    @pytest.mark.parametrize("type2", (suds.byte_str, str))
     def test_string_input_types(self, type1, type2, capsys):
         xml = "<a/>"
         CompareSAX.data2data(type1(xml), type2(xml))
@@ -95,7 +94,7 @@ class TestMatched:
     @skip_test_if_CompareSAX_assertions_disabled
     def test_xml_encoding(self, capsys):
         """Test that the encoding listed in the XML declaration is honored."""
-        xml_format = u('<?xml version="1.0" encoding="%s"?><a>\u00D8</a>')
+        xml_format = '<?xml version="1.0" encoding="%s"?><a>\u00D8</a>'
         data1 = (xml_format % ("UTF-8",)).encode('utf-8')
         data2 = (xml_format % ("latin1",)).encode('latin1')
         CompareSAX.data2data(data1, data2)

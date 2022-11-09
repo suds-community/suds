@@ -122,7 +122,7 @@ import suds_devel
 sys.path.pop(0)
 
 from suds_devel.requirements import (check_Python24_pytest_requirements,
-    pytest_requirements, six_requirements)
+    pytest_requirements)
 
 
 # -----------------------------------------------------------------------------
@@ -482,7 +482,6 @@ def test_requirements():
     result = []
     if include_pytest_requirements:
         result.extend(pytest_requirements())
-    result.extend(six_requirements())
     return result
 
 test_error = None

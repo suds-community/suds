@@ -23,8 +23,6 @@ Package containing different utilities used for suds project testing.
 import suds.client
 import suds.store
 
-import six
-
 import os
 import subprocess
 import sys
@@ -90,12 +88,10 @@ if suds.__version__ != %(suds.__version__)r:
     print("Unexpected suds version imported - '%%s'." %% (suds.__version__))
     sys.exit(-2)
 
-if sys.version_info >= (3, 0):
-    def exec_file(x):
-        e = getattr(__builtins__, "exec")
-        return e(open(x).read(), globals(), globals())
-else:
-    exec_file = execfile
+def exec_file(x):
+    e = getattr(__builtins__, "exec")
+    return e(open(x).read(), globals(), globals())
+
 exec_file(%(script)r)
 """ % {"suds.__version__": suds.__version__,
     "script": script.basename,
@@ -159,7 +155,7 @@ def wsdl(schema_content, input=None, output=None, operation_name="f",
         name.
 
     """
-    assert isinstance(schema_content, six.string_types)
+    assert isinstance(schema_content, str)
 
     has_input = input is not None
     has_output = output is not None
