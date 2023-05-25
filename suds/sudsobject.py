@@ -41,7 +41,7 @@ def items(sobject):
         yield item
 
 
-def asdict(sobject,recursive=False):
+def asdict(sobject, recursive=False):
     """
     Convert a sudsobject into a dictionary.
 
