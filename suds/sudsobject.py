@@ -41,7 +41,7 @@ def items(sobject):
         yield item
 
 
-def asdict(sobject):
+def asdict(sobject, recursive=False):
     """
     Convert a sudsobject into a dictionary.
 
@@ -51,7 +51,46 @@ def asdict(sobject):
     @rtype: dict
 
     """
+    if recursive:
+        return recursive_asdict(sobject)
     return dict(items(sobject))
+
+def recursive_asdict(suds_object):
+  """Convert a suds object to a dictionary.
+
+  Args:
+    suds_object: A suds object
+
+  Returns:
+    A python dictionary containing the items contained in the suds object.
+  """
+
+  # Create an empty dictionary.
+  output_dict = {}
+
+  # Iterate over the items in the suds object.
+  for key, value in asdict(suds_object).items():
+
+    # If the value is a suds object, recursively convert it to a dictionary.
+    if hasattr(value, "__keylist__"):
+      output_dict[key] = recursive_asdict(value)
+
+    # If the value is a list, recursively convert each item in the list to a dictionary.
+    elif isinstance(value, list):
+      output_dict[key] = []
+      for item in value:
+        if hasattr(item, "__keylist__"):
+          output_dict[key].append(recursive_asdict(item))
+        else:
+          output_dict[key].append(item)
+
+    # Otherwise, just add the value to the dictionary.
+    else:
+      output_dict[key] = value
+
+  # Return the dictionary.
+  return output_dict
+
 
 def merge(a, b):
     """
