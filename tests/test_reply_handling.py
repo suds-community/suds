@@ -481,6 +481,28 @@ def test_wrapped_sequence_output():
     assert response.result3.__class__ is suds.sax.text.Text
 
 
+def test_soap12_envns():
+    # Prepare web service proxies.
+    client_bare = testutils.client_from_wsdl(testutils.wsdl("""\
+      <xsd:element name="fResponse" type="xsd:string"/>""",
+        output="fResponse"))
+
+    assert not _isOutputWrapped(client_bare, "f")
+
+    data = "The meaning of life."
+    def get_response(client, x):
+        return client.service.f(__inject=dict(reply=suds.byte_str(x)))
+    # Envelope namespace URI is SOAP 1.2
+    response_bare = get_response(client_bare, """<?xml version="1.0"?>
+<Envelope xmlns="http://www.w3.org/2003/05/soap-envelope">
+  <Body>
+    <fResponse xmlns="my-namespace">%s</fResponse>
+  </Body>
+</Envelope>""" % (data,))
+    assert response_bare.__class__ is suds.sax.text.Text
+    assert response_bare == data
+
+
 def _attributes(object):
     result = set()
     for x in object:
