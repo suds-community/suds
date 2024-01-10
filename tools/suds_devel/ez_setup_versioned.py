@@ -33,7 +33,4 @@ def script_name(version_info=sys.version_info):
 
 
 def module_name(version_info=sys.version_info):
-    if version_info < (2, 6):
-        # setuptools 1.4.2 - the final supported release on Python 2.4 & 2.5.
-        return "ez_setup_1_4_2"
     return "ez_setup"
