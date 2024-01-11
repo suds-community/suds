@@ -23,8 +23,7 @@ import subprocess
 import platform
 import textwrap
 import contextlib
-
-from distutils import log
+import logging
 
 try:
     from urllib.request import urlopen
@@ -38,6 +37,9 @@ except ImportError:
 
 DEFAULT_VERSION = "5.1"
 DEFAULT_URL = "https://pypi.python.org/packages/source/s/setuptools/"
+
+
+log = logging.getLogger(__name__)
 
 def _python_cmd(*args):
     """
