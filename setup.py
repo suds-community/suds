@@ -19,10 +19,8 @@
 """
 Main installation and project management script for this project.
 
-Attempts to use setuptools if available, and even attempts to install it
-automatically if it is not, downloading it from PyPI if needed. However, its
-main functionality will function just fine without setuptools as well. Having
-setuptools available provides us with the following benefits:
+Requires setuptools. Having setuptools available provides us with the following
+benefits:
   - setup.py 'egg_info' command constructing the project's metadata
   - setup.py 'develop' command deploying the project in 'development mode',
     thus making it available on sys.path, yet still editable directly in its
@@ -78,11 +76,6 @@ if (3,) <= sys.version_info < (3, 2):
 
 distutils_cmdclass = {}
 extra_setup_params = {}
-
-# Hardcoded configuration.
-attempt_to_use_setuptools = True
-attempt_to_install_setuptools = True
-
 
 # -----------------------------------------------------------------------------
 # Detect the setup.py environment - current & script folder.
@@ -166,13 +159,13 @@ from suds_devel.requirements import (check_Python24_pytest_requirements,
 #       - see below for notes on using different setuptools versions
 #   * use preinstalled setuptools if possible, or fall back to installing it
 #     on-demand
-#       - chosen design
 #       - see below for notes on using different setuptools versions
 #       - automated setuptools installations, and especially in-place upgrades,
 #         can fail for various reasons (see below)
 #       - reduces the risk of a stalled download stalling the whole setup
 #         operation, e.g. because of an unavailable or unresponsive DNS server
 #   * always install setuptools
+#       - chosen design
 #       - automated setuptools installations, and especially in-place upgrades,
 #         can fail for various reasons (see below)
 #       - user has no way to avoid setuptools installation issues by installing
@@ -238,44 +231,16 @@ from suds_devel.requirements import (check_Python24_pytest_requirements,
 #             installation (chosen design).
 
 def acquire_setuptools_setup():
-    if not attempt_to_use_setuptools:
-        return
-
-    def import_setuptools_setup():
-        try:
-            from setuptools import setup
-        except ImportError:
-            return
-        return setup
-
-    setup = import_setuptools_setup()
-    if setup or not attempt_to_install_setuptools:
-        return setup
-    import suds_devel.ez_setup_versioned
-    ez_setup = suds_devel.ez_setup_versioned.import_module()
     try:
-        # Since we know there is no setuptools package in the current
-        # environment, this will:
-        # 1. download a setuptools source distribution to the current folder
-        # 2. prepare an installable setuptools egg distribution in the current
-        #    folder
-        # 3. schedule for the prepared setuptools distribution to be installed
-        #    together with our package (if our package is getting installed at
-        #    all and setup has not been called for some other purpose, e.g.
-        #    displaying its help information or running a non-install related
-        #    setup command)
-        ez_setup.use_setuptools()
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    except Exception:
+        from setuptools import setup
+    except ImportError:
+        print("WARNING: setuptools is not detected. It is required, install via: "
+            "python -m pip install --upgrade pip setuptools wheel")
         return
-    return import_setuptools_setup()
+    return setup
 
 setup = acquire_setuptools_setup()
 using_setuptools = bool(setup)
-if not using_setuptools:
-    # Fall back to using distutils.
-    from distutils.core import setup
 
 
 # -----------------------------------------------------------------------------

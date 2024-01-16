@@ -5,7 +5,6 @@
 # tried out did not work correctly with Python 3.
 
 # Top level project files.
-include ez_setup.py
 include HACKING.rst
 include LICENSE.txt
 include TODO.txt

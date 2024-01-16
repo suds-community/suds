@@ -231,8 +231,7 @@ RELEASE PROCEDURE
 
 1. Document the release correctly in ``README.rst``.
 
-2. Test the project build with the latest available ``setuptools`` project and
-   update the ``ez_setup.py`` ``setuptools`` installation script as needed.
+2. Test the project build with the latest available ``setuptools`` project.
 
   * Use the latest available & tested ``setuptools`` release.
   * If a new ``setuptools`` release drops support for an older Python release,
