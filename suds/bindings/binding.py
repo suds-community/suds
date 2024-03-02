@@ -36,6 +36,7 @@ from copy import deepcopy
 
 
 envns = ("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/")
+envns12 = ("SOAP-ENV", "http://www.w3.org/2003/05/soap-envelope")
 
 
 class Binding(object):
@@ -146,8 +147,12 @@ class Binding(object):
 
         """
         soapenv = replyroot.getChild("Envelope", envns)
+        if not soapenv:
+            soapenv = replyroot.getChild("Envelope", envns12)
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild("Body", envns)
+        if not soapbody:
+            soapbody = soapenv.getChild("Body", envns12)
         soapbody = self.multiref.process(soapbody)
         nodes = self.replycontent(method, soapbody)
         rtypes = self.returned_types(method)
