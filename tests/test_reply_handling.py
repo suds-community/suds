@@ -481,7 +481,9 @@ def test_wrapped_sequence_output():
     assert response.result3.__class__ is suds.sax.text.Text
 
 
-def test_soap12_envns():
+def test_soap12_envns(monkeypatch):
+    monkeypatch.delitem(locals(), "e", False)
+
     # Prepare web service proxies.
     client_bare = testutils.client_from_wsdl(testutils.wsdl("""\
       <xsd:element name="fResponse" type="xsd:string"/>""",
@@ -493,7 +495,8 @@ def test_soap12_envns():
     def get_response(client, x):
         return client.service.f(__inject=dict(reply=suds.byte_str(x)))
     # Envelope namespace URI is SOAP 1.2
-    response_bare = get_response(client_bare, """<?xml version="1.0"?>
+    response_bare = get_response(client_bare, """\
+<?xml version="1.0"?>
 <Envelope xmlns="http://www.w3.org/2003/05/soap-envelope">
   <Body>
     <fResponse xmlns="my-namespace">%s</fResponse>
@@ -501,6 +504,25 @@ def test_soap12_envns():
 </Envelope>""" % (data,))
     assert response_bare.__class__ is suds.sax.text.Text
     assert response_bare == data
+
+    inject = dict(reply=suds.byte_str("""\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">
+  <env:Body>
+    <env:Fault>
+      <faultcode>env:Client</faultcode>
+      <faultstring>Dummy error.</faultstring>
+    </env:Fault>
+  </env:Body>
+</env:Envelope>
+"""), status=http.client.INTERNAL_SERVER_ERROR)
+    e = pytest.raises(suds.WebFault, client_bare.service.f, __inject=inject).value
+    try:
+        _test_fault(e.fault, False)
+        assert e.document.__class__ is suds.sax.document.Document
+        assert str(e) == "Server raised fault: 'Dummy error.'"
+    finally:
+        del e  # explicitly break circular reference chain in Python 3
 
 
 def _attributes(object):
