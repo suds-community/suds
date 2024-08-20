@@ -37,45 +37,15 @@ benefits:
 """
 
 import sys
-if sys.version_info < (2, 4):
-    print("ERROR: Python 2.4+ required")
-    sys.exit(-2)
-if (3,) <= sys.version_info < (3, 1):
-    print("ERROR: Python 3.0 not supported - please use Python 3.1+ instead")
-    sys.exit(-2)
-
 import os
 import os.path
 import re
-
-# Workaround for a Python issue detected with Python 3.1.3 when running our
-# pytest based 'setup.py test' command. At the end of the test run, Python
-# would report an error:
-#
-#   > Error in atexit._run_exitfuncs:
-#   > TypeError: print_exception(): Exception expected for value, str found
-#
-# Workaround found suggested by Richard Oudkerk in Python's issue tracker at:
-#   http://bugs.python.org/issue15881#msg170215
-#
-# The error is caused by two chained Python bugs:
-#  1. The multiprocessing module seems to call its global cleanup function only
-#     after all of its globals have already been released, thus raising an
-#     exception.
-#  2. atexit exception handling implementation is not prepared to handle and
-#     correctly report the exception as raised by the multiprocessing module
-#     cleanup.
-if (3,) <= sys.version_info < (3, 2):
-    import multiprocessing
-    del multiprocessing
-
 
 # -----------------------------------------------------------------------------
 # Global variables.
 # -----------------------------------------------------------------------------
 
 distutils_cmdclass = {}
-extra_setup_params = {}
 
 # -----------------------------------------------------------------------------
 # Detect the setup.py environment - current & script folder.
@@ -113,10 +83,6 @@ tools_folder = os.path.join(script_folder, "tools")
 sys.path.insert(0, tools_folder)
 import suds_devel
 sys.path.pop(0)
-
-from suds_devel.requirements import (check_Python24_pytest_requirements,
-    pytest_requirements)
-
 
 # -----------------------------------------------------------------------------
 # Attempt to use setuptools for this installation.
@@ -335,141 +301,6 @@ exec(read_python_code(os.path.join(script_folder, "suds", "version.py")))
 
 
 # -----------------------------------------------------------------------------
-# Custom setup.py 'test' command for running the project test suite.
-# -----------------------------------------------------------------------------
-# pytest and any of its requirements not already installed in the target Python
-# environment will be automatically downloaded from PyPI and installed into the
-# current folder as zipped egg distributions.
-#
-# Requirements:
-#   - setup must be using setuptools
-#   - if running Python version prior to 2.5, a suitable pytest version must
-#     already be installed and will not be installed on demand (see the related
-#     embedded code comment below for more detailed information)
-#
-# If the requirements are not met, the command simply reports an end-user error
-# message explaining why the test functionality is unavailable.
-#
-# Since Python's distutils framework does not allow passing all received
-# command-line arguments to its commands, it does not seem easy to customize
-# how pytest runs its tests this way. To have better control over this, user
-# should run the pytest on the target source tree directly, possibly after
-# first building a temporary one to work around problems like Python 2/3
-# compatibility.
-
-def test_requirements():
-    """
-    Return test requirements for the 'test' command or an error string.
-
-    An error is reported if the requirements can not be satisfied for some
-    reason.
-
-    Exact required packages and their versions vary depending on our target
-    Python environment version as pytest dropped backward compatibility support
-    for some of the Python versions we still support in this project.
-
-    """
-    if not using_setuptools:
-        return "test command not available without setuptools"
-
-    include_pytest_requirements = True
-
-    # When using Python 2.5 on Windows, if setuptools chooses to install the
-    # colorama package (pytest requirement on Windows) older than version
-    # 0.1.11, running our 'setup.py test' command may show benign error
-    # messages caused by some colorama atexit handlers getting triggered
-    # multiple times. There are no adverse effects to this and the issue only
-    # occurs if the package is not already installed and it is the 'setup.py
-    # test' command that is installing it. The issue has been fixed by the next
-    # Python 2.5 compatible colorama 0.3.2 release.
-    result = []
-    if include_pytest_requirements:
-        result.extend(pytest_requirements())
-    return result
-
-test_error = None
-tests_require = test_requirements()
-if isinstance(tests_require, str):
-    test_error = tests_require
-else:
-    extra_setup_params["tests_require"] = tests_require
-
-if test_error:
-    import distutils.cmd
-    import distutils.errors
-
-    class TestCommand(distutils.cmd.Command):
-        description = test_error
-        user_options = []
-        def initialize_options(self):
-            pass
-        def finalize_options(self):
-            pass
-        def run(self):
-            raise distutils.errors.DistutilsPlatformError(self.description)
-else:
-    from setuptools.command.test import (normalize_path as _normalize_path,
-        test as _test)
-
-    class TestCommand(_test):
-        # Derived from setuptools.command.test.test for its
-        # with_project_on_sys_path() method.
-
-        description = "run pytest based unit tests after a build"
-
-        # Override base class's command-line options.
-        #TODO: pytest argument passing support could be improved if we could
-        # get distutils/setuptools to pass all unrecognized command-line
-        # parameters to us instead of complaining about them.
-        user_options = [("pytest-args=", "a", "arguments to pass to pytest "
-            "(whitespace separated, whitespaces in arguments not supported)")]
-
-        def initialize_options(self):
-            self.pytest_args = None
-
-        def finalize_options(self):
-            self.test_args = []
-            if self.pytest_args is not None:
-                self.test_args = self.pytest_args.split()
-
-        def run(self):
-            # shamelessly lifted from setuptools.command.test.test.run()
-            dist = self.distribution
-            if dist.install_requires:
-                dist.fetch_build_eggs(dist.install_requires)
-            if dist.tests_require:
-                dist.fetch_build_eggs(dist.tests_require)
-
-            cmd = self._test_cmd_string()
-            if self.dry_run:
-                self.announce("skipping '%s' (dry run)" % (cmd,))
-            else:
-                self.announce("running '%s'" % (cmd,))
-                self.with_project_on_sys_path(self.run_tests)
-
-        def run_tests(self):
-            import pytest
-            sys.exit(pytest.main(self.test_args))
-
-        def _test_cmd_string(self):
-            parts = ["pytest"]
-            if self.pytest_args:
-                parts.append(self.pytest_args)
-            return " ".join(parts)
-
-distutils_cmdclass["test"] = TestCommand
-
-
-# -----------------------------------------------------------------------------
-# Mark the original suds project as obsolete.
-# -----------------------------------------------------------------------------
-
-if sys.version_info >= (2, 5):
-    # distutils.setup() 'obsoletes' parameter not introduced until Python 2.5.
-    extra_setup_params["obsoletes"] = ["suds"]
-
-
-# -----------------------------------------------------------------------------
 # Avoid setup warnings when constructing a list of all project sources.
 # -----------------------------------------------------------------------------
 # Part of this workaround implemented and part in the project's MANIFEST.in
@@ -522,7 +353,8 @@ licensed under LGPL (see the LICENSE.txt file included in the
 distribution).
 """
 
-package_name = os.environ.get('SUDS_PACKAGE', 'suds-community')
+forked_package_name = 'suds-community'
+package_name = os.environ.get('SUDS_PACKAGE', forked_package_name)
 version_tag = safe_version(__version__)
 project_url = "https://github.com/suds-community/suds"
 base_download_url = project_url + "/archive"
@@ -570,8 +402,6 @@ setup(
     license="(specified using classifiers)",
     platforms=["(specified using classifiers)"],
 
-    # Register distutils command customizations.
-    cmdclass=distutils_cmdclass,
     python_requires=">=3.7",
-
-    **extra_setup_params)
+    obsoletes=["suds"] if package_name == forked_package_name else [],
+)

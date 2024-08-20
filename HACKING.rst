@@ -108,128 +108,27 @@ states aiming for Python 2.4 compatibility we do so as well.
 The Python 3.0 minor release is not supported. See `Python 3.0 support`_
 subsection below for more detailed information.
 
-Test & setup code needs to be implemented using Python 2 & 3 compatible source
+Test & setup code needs to be implemented using Python 3 compatible source
 code. Setup & setup related scripts need to be implemented so they do not rely
 on other pre-installed libraries.
 
 These backward compatibility requirements do not affect internal development
 operations such as ``setup.py`` support for uploading a new project distribution
-package to PyPI. Such operations need to be supported on the latest Python 2 & 3
+package to PyPI. Such operations need to be supported on the latest Python 3
 releases only and no additional backward compatibility is either tested or
 guaranteed for them.
 
 The following is a list of backward incompatible Python features not used in
 this project to maintain backward compatibility:
 
-Features missing prior to Python 2.5
-------------------------------------
-
-* ``any`` & ``all`` functions.
-* ``with`` statement.
-* BaseException class introduced and KeyboardInterrupt & SystemExit exception
-  classes stopped being Exception subclasses.
-
-  * This means that code wanting to support Python versions prior to this
-    release needs to re-raise KeyboardInterrupt & SystemExit exceptions before
-    handling the generic 'Exception' case, unless it really wants to gobble up
-    those special infrastructural exceptions as well.
-
-* ``try``/``except``/``finally`` blocks.
-
-  * Prior to this Python release, code like the following::
-
-      try:
-          A
-      except XXX:
-          B
-      finally:
-          C
-
-    was considered illegal and needed to be written using nested ``try`` blocks
-    as in::
-
-      try:
-          try:
-              A
-          except XXX:
-              B
-      finally:
-          C
-
-* ``yield`` expression inside a ``try`` block with a ``finally`` clause.
-
-  * Prior to this Python release, code like the following::
-
-      try:
-          yield x
-      finally:
-          do_something()
-
-    is considered illegal, but can be replaced with legal code similar to the
-    following::
-
-      try:
-          yield x
-      except:
-          do_something()
-          raise
-      do_something()
-
-Features missing prior to Python 2.6
-------------------------------------
-
-* ``bytes`` type.
-* Byte literals, e.g. ``b"quack"``.
-* Class decorators.
-* ``fractions`` module.
-* ``numbers`` module.
-* String ``format()`` method.
-* Using the ``with`` statement from Python 2.5.x requires the ``from __future__
-  import with_statement``.
-
-
-Features missing prior to Python 2.7
-------------------------------------
-
-* Dictionary & set comprehensions.
-* Set literals.
-
-Features missing in Python 3.0 & 3.1
-------------------------------------
-
-* py2to3 conversion for source files with an explicitly specified UTF-8 BOM.
-
-
-Python 3.0 support
-------------------
-
-Python 3.0 release has been marked as deprecated almost immediately after the
-release 3.1. It is not expected that this Python release is actively used
-anywhere in the wild. That said, if anyone really wants this version supported
-- patches are welcome.
-
-At least the following problems have been found with Python 3.0:
-
-* None of the tools required to properly test our project (setuptools, pip,
-  virtualenv, tox, etc.) will work on it.
-* When you attempt to setuptools project with Python 3.0, it attempts to use the
-  ``sys.stdout.detach()`` method introduced only in Python 3.1. This specific
-  issue could be worked around by using ``sys.stdout.buffer`` directly but the
-  actual fix has not been attempted. If anyone wants to take this route though
-  and work on supporting setuptools on Python 3.0 - be warned that it will most
-  likely have other issues after this one as well.
-* When applying py2to3 to the project sources, Python will use the current
-  user's locale encoding instead of the one specified in the project sources,
-  thus causing the operation to fail on some source files containing different
-  unicode characters unless the user's environement uses some sort of unicode
-  encoding by default, e.g. will fail on some test scripts when run on Windows
-  with eastern European regional settings (uses the CP1250 encoding).
+N/A - None at this time
+-----------------------
 
 
 RELEASE PROCEDURE
 =================================================
 
-1. Document the release correctly in ``README.rst``.
+1. Document the release correctly in ``README.rst`` and ``CHANGELOG.md``.
 
 2. Test the project build with the latest available ``setuptools`` project.
 
@@ -242,14 +141,13 @@ RELEASE PROCEDURE
       2.5 and so ``setup.py`` uses a separate ``ez_setup_1_4_2.py``
       ``setuptools`` installation script with Python versions older than 2.6.
 
-3. Version identification.
+3. Version identification follows semantic versioning.
 
   * Official releases marked with no extra suffix after the basic version
     number.
-  * Alfa releases marked with the suffix ``.a#``.
-  * Beta releases marked with the suffix ``.b#``.
-  * Release candidate releases marked with the suffix ``.rc#``.
-  * Development releases marked with the suffix ``.dev#``.
+  * Alfa releases marked with the suffix ``.alpha.#``.
+  * Beta releases marked with the suffix ``.beta.#``.
+  * Release candidate releases marked with the suffix ``.rc.#``.
   * Version ordering (as recognized by pip & setuptools)::
 
       0.5.dev0 < 0.5.dev1 < 0.5.dev5
@@ -270,11 +168,11 @@ RELEASE PROCEDURE
         ...
         < 1.0
 
-4. Tag in Hg.
+4. Tag in git.
 
-  * Name the tag like ``release-<version-info>``, e.g. ``release-0.5``.
+  * Name the tag like ``v<version-info>``, e.g. ``v0.5.0``.
 
-5. Prepare official releases based only on tagged commits.
+5. Prepare official releases based only on tagged commits. Generally this can be done by pushing the new tag to Github and a workflow on Github Actions will build and push to PyPi. A manual approach is described below.
 
   * Official releases should always be prepared based on tagged revisions with
     no local changes in the used sandbox.
@@ -283,14 +181,14 @@ RELEASE PROCEDURE
 
     * Run ``setup.py sdist upload``.
 
-  * Prepare wheel packages for Python 2 & 3 using the latest Python 2 & 3
+  * Prepare wheel packages for Python 3 using the latest Python 3
     environments with the ``wheel`` package installed and upload them to PyPI.
 
-    * Run ``setup.py bdist_wheel upload`` using both Python 2 & 3.
+    * Run ``setup.py bdist_wheel upload`` using both Python 3.
 
   * Upload the prepared source & wheel packages to the project site.
 
-    * Use the BitBucket project web interface.
+    * Use the Github project web interface.
 
 6. Next development version identification.
 
@@ -318,23 +216,14 @@ respectively.
 Setting up the development & testing environment
 ------------------------------------------------
 
-``tools/setup_base_environments.py`` script should be used for setting up the
-basic Python environments so they support testing our project. The script can be
-configured from the main project Python configuration file ``setup.cfg``. It
-implements all the backward compatibility tweaks and performs additional
-required package installation that would otherwise need to be done manually in
-order to be able to test our project in those environments.
-
-These exact requirements and their related version specific tweaks are not
-documented elsewhere so anyone interested in the details should consult the
-script's sources.
-
-The testing environment is generally set up as follows:
+This package is tested against multiple versions of Python using the
 
 1. Install clean target Python environments.
-#. Update the project's ``setup.py`` configuration with information on your
-   installed Python environments.
-#. Run the ``tools/setup_base_environments.py`` script.
+#. Install project requirements: ``pip install -r requirements.txt``
+
+Note: An older script to setup mulitple python interprets exists in the
+``tools/setup_base_environments.py`` script. This is not maintained and may
+be removed.
 
 Some older Python environments may have slight issues caused by varying support
 levels in different used Python packages, but the basic testing functionality
@@ -345,93 +234,6 @@ Examples of such issues:
 
 * Colors not getting displayed on a Windows console terminal, with possibly ANSI
   color code escape sequences getting displayed instead.
-* ``pip`` utility can not be run from the command-line using the ``py -m pip``
-  syntax for some older versions. In such cases use the more portable ``py -c
-  "import pip;pip.main()"`` syntax instead.
-* Some specific older Python versions (e.g. 2.4.3) have no SSL support and so
-  have to reuse installations downloaded by other Python versions.
-
-Running the project tests - ``tools/run_all_tests.py`` script
--------------------------------------------------------------
-
-``tools/run_all_tests.py`` script is a basic *poor man's tox* development script
-that can be used for running the full project test suite using multiple Python
-interpreter versions on a development machine.
-
-Intended to be replaced by a more portable ``tox`` based or similar automated
-testing solution some time in the future.
-
-Can be configured by tweaking the main project Python configuration file
-``setup.cfg``:
-
-* List of target Python environments.
-* Each target Python environment's invocation command.
-
-Requires the target Python environment already be set up, and all the packages
-required for running the project test suite installed. See the `Setting up the
-development & testing environment`_ section for more detailed information.
-
-Automatically installs the project in editable mode in all tested Python
-environments.
-
-Caveats:
-
-* This method does not allow you to provide any extra ``pytest`` options when
-  running the project test suite.
-
-Running the project tests - ``setup.py test`` command
------------------------------------------------------
-
-Project tests can also be run for a specific Python environment by running the
-project's ``setup.py`` script in that environment and invoking its ``test``
-command. E.g. run a command like one of the following ones from the top level
-project folder::
-
-  py243 setup.py test
-  py27 setup.py test
-  py3 setup.py test
-
-Note that the ``setup.py`` script always needs to be called from the top level
-project folder.
-
-For most Python versions, the target Python environment needs not be set up
-prior to running this command. Where possible (e.g. not for Python 2.4.x or
-3.1.x versions), any missing testing requirements will be installed
-automatically, but not directly into the target environment but in the current
-folder instead. This functionality should be considered a band-aid though, and
-setting up the target environment can be better done as described in the
-`Setting up the development & testing environment`_ section.
-
-The ``setup.py test`` command will build the project if needed and run its test
-suite in the target Python environment. The project does not need to be
-preinstalled into the target Python environment for this operation to work, and
-neither will the operation leave it installed.
-
-Unless a more restricted test set is selected using ``pytest`` specific
-command-line options, ``setup.py test`` command runs the complete project test
-suite.
-
-Specific ``pytest`` command-line options may be provided by passing them all as
-a single whitespace separated string tunnelled via the ``setup.py test``
-command's ``--pytest-args``/``-a`` command-line option.
-
-For example, the following command will run only tests containing ``binding`` in
-their name, will stop on first failure and will automatically drop into Python's
-post-mortem debugger on failure::
-
-  setup.py test -a "-k binding -x --pdb"
-
-Caveats:
-
-* This method does not currently allow passing ``pytest`` specific command-line
-  options containing embedded whitespace.
-* When running the ``setup.py test`` command in a Windows Python 2.5 environment
-  without an included ctypes module (e.g. 64-bit CPython 2.5 distribution does
-  not include ctypes) and having it automatically install the colorama package
-  version older than 0.1.11, you will get benign error messages reporting
-  colorama's atexit handlers failing. Running the same command again avoids the
-  issue since the colorama package will then already be installed. Suggested
-  workaround is to use a colorama package version 0.3.2 or newer.
 
 Running the project tests - using ``pytest`` directly
 -----------------------------------------------------
@@ -518,6 +320,41 @@ options. Some interesting ones:
   --tb=short  shorter traceback information for each failure
   -x          stop on first failure
   --pdb       enter Python debugger on failure
+
+Running the project tests - ``tools/run_all_tests.py`` script
+-------------------------------------------------------------
+
+This is no longer supported and may be removed.
+
+``tools/run_all_tests.py`` script is a basic *poor man's tox* development script
+that can be used for running the full project test suite using multiple Python
+interpreter versions on a development machine.
+
+Intended to be replaced by a more portable ``tox`` based or similar automated
+testing solution some time in the future.
+
+Can be configured by tweaking the main project Python configuration file
+``setup.cfg``:
+
+* List of target Python environments.
+* Each target Python environment's invocation command.
+
+Requires the target Python environment already be set up, and all the packages
+required for running the project test suite installed. See the `Setting up the
+development & testing environment`_ section for more detailed information.
+
+Automatically installs the project in editable mode in all tested Python
+environments.
+
+Caveats:
+
+* This method does not allow you to provide any extra ``pytest`` options when
+  running the project test suite.
+
+Running the project tests - ``setup.py test`` command
+-----------------------------------------------------
+
+Removed as setuptools has removed support for ``setup.py test`` after version 72.
 
 Setting up multiple parallel Python interpreter versions on Windows
 -------------------------------------------------------------------
