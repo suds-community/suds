@@ -4,6 +4,14 @@ Release notes
 Unreleased
 ------------------------
 
+version 1.2.0 (2024-08-24)
+------------------------
+
+* Remove support from before Python 3.7
+* asdict functionality to optionally recursively give suds object
+* Support process SOAP 1.2 reply
+* [ci] Switch to requirements.txt and use pytest directly
+
 version 1.1.2 (2022-06-25)
 ------------------------
 * Restore last_sent and last_received functions
