@@ -95,7 +95,7 @@ class Token(Object):
 
     @classmethod
     def utc(cls):
-        return datetime.utcnow().replace(tzinfo=UtcTimezone())
+        return datetime.now(tz=UtcTimezone())
 
     @classmethod
     def sysdate(cls):
