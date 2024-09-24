@@ -159,7 +159,7 @@ You can inspect service object with: `__str()__` as follows to get a
 list of methods provide by the service:
 
 ```py
-print client
+print(client)
 
 Suds - version: 0.3.3 build: (beta) R397-20081121
 
@@ -202,14 +202,14 @@ method would be invoked as follows:
 
 ```py
 result = client.service.getPercentBodyFat('jeff', 68, 170)
-print result
+print(result)
 
 You have 21% body fat.
 ```
 
 ```py
 result = client.service.getPercentBodyFat(name='jeff', height=68, weight=170)
-print result
+print(result)
 
 You have 21% body fat.
 ```
@@ -217,7 +217,7 @@ You have 21% body fat.
 ```py
 d = dict(name='jeff', height=68, weight=170)
 result = client.service.getPercentBodyFat(**d)
-print result
+print(result)
 
 You have 21% body fat.
 ```
@@ -237,7 +237,7 @@ follows:
 
 ```py
 person = client.factory.create('Person')
-print person
+print(person)
 
 (Person)=
   {
@@ -290,7 +290,7 @@ person.phone.append(phone)
 try:
    person_added = client.service.addPerson(person)
 except WebFault as e:
-  print e
+  print(e)
 ```
 
 It\'s that easy.
@@ -357,7 +357,7 @@ person['phone'] = [phone,]
 try:
    person_added = client.service.addPerson(person)
 except WebFault as e:
-  print e
+  print(e)
 ```
 
 ### Faults
@@ -368,7 +368,7 @@ return a tuple (\<status\>, \<returned-value\>) instead as follows:
 ```py
 client = client(url, faults=False)
 result = client.service.addPerson(person)
-print result
+print(result)
 
 ( 200, person ...)
 ```
@@ -518,7 +518,7 @@ And are reported by suds as:
 ```py
 url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
 client = Client(url)
-print client
+print(client)
 
 Suds - version: 0.3.3 build: (beta) R397-20081121
 
@@ -647,7 +647,7 @@ And are reported by suds as:
 ```py
 url = 'http://www.thomas-bayer.com/axis2/services/BLZService?wsdl'
 client = Client(url)
-print client
+print(client)
 
 Suds - version: 0.3.7 build: (beta) R550-20090820
 
@@ -1080,7 +1080,7 @@ message = \
     </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"""
 
-print client.service.test(__inject={'msg':message})
+print(client.service.test(__inject={'msg':message}))
 ```
 
 Injecting a response for testing:
@@ -1094,7 +1094,7 @@ reply = \
     </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>"""
 
-print client.service.test(__inject={'reply':reply})
+print(client.service.test(__inject={'reply':reply}))
 ```
 
 ## SSL certificate verification & Custom Certificates
