@@ -176,8 +176,7 @@ class PrimitiveAppender(Appender):
         if content.tag.startswith('_') and isinstance(content.type, Attribute):
             attr = content.tag[1:]
             value = tostr(content.value)
-            if value:
-                parent.set(attr, value)
+            parent.set(attr, value)
         else:
             child = self.node(content)
             child.setText(tostr(content.value))
@@ -275,8 +274,7 @@ class TextAppender(Appender):
         if content.tag.startswith('_') and isinstance(content.type, Attribute):
             attr = content.tag[1:]
             value = tostr(content.value)
-            if value:
-                parent.set(attr, value)
+            parent.set(attr, value)
         else:
             child = self.node(content)
             child.setText(content.value)
