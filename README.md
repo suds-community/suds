@@ -1301,6 +1301,12 @@ Import.bind(ns)
 note: `http://schemas.xmlsoap.org/soap/encoding/'`
 automatically `bound` in 0.3.4 as of (r420).
 
+To forcefully replace a schema location, even when the \@schemaLocation is defined.
+
+Use:
+```py
+Import.replace(ns, location)
+```
 ## Plugins
 
 New in 0.4 is a plugin facility. It is intended to be a general, more
