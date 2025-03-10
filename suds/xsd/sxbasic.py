@@ -512,6 +512,8 @@ class Import(SchemaObject):
 
     @cvar locations: A dictionary of namespace locations.
     @type locations: dict
+    @cvar replacements: A dictionary of the locations to replace in that namespace.
+    @type replacements: dict
     @ivar ns: The imported namespace.
     @type ns: str
     @ivar location: The (optional) location.
@@ -522,6 +524,7 @@ class Import(SchemaObject):
     """
 
     locations = {}
+    replacements = {}
 
     @classmethod
     def bind(cls, ns, location=None):
@@ -541,10 +544,27 @@ class Import(SchemaObject):
             location = ns
         cls.locations[ns] = location
 
+    @classmethod
+    def replace(cls, ns, location=None):
+        """
+        Replace the schema location for the namespace.
+
+        @param ns: A namespace-uri.
+        @type ns: str
+        @param location: The (optional) schema location for the namespace.
+            (default=ns)
+        @type location: str
+
+        """
+        cls.bind(ns, location)
+        cls.replacements[ns] = location
+
     def __init__(self, schema, root):
         SchemaObject.__init__(self, schema, root)
         self.ns = (None, root.get("namespace"))
         self.location = root.get("schemaLocation")
+        if self.ns[1] in self.replacements:
+            self.location = self.replacements.get(self.ns[1])
         if self.location is None:
             self.location = self.locations.get(self.ns[1])
         self.opened = False
