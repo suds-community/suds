@@ -147,11 +147,11 @@ class Binding(object):
 
         """
         soapenv = replyroot.getChild("Envelope", envns)
-        if not soapenv:
+        if soapenv is None:
             soapenv = replyroot.getChild("Envelope", envns12)
         soapenv.promotePrefixes()
         soapbody = soapenv.getChild("Body", envns)
-        if not soapbody:
+        if soapbody is None:
             soapbody = soapenv.getChild("Body", envns12)
         soapbody = self.multiref.process(soapbody)
         nodes = self.replycontent(method, soapbody)
