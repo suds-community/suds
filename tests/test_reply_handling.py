@@ -152,6 +152,19 @@ def test_disabling_automated_simple_interface_unwrapping():
     assert response.Elemento == "La-di-da-da-da"
 
 
+def test_empty_body():
+    wsdl = testutils.wsdl("", output=None)
+    client = testutils.client_from_wsdl(wsdl)
+    reply = """\
+<?xml version="1.0"?>
+<env:Envelope xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
+  <env:Body/>
+</env:Envelope>
+"""
+    inject = {"reply": suds.byte_str(reply)}
+    assert client.service.f(__inject=inject) is None
+
+
 def test_empty_reply():
     client = testutils.client_from_wsdl(_wsdl__simple_f, faults=False)
     def f(status=None, description=None):
