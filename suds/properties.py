@@ -68,22 +68,18 @@ class Link(object):
         if pA in pB.links or \
            pB in pA.links:
             raise Exception('Already linked')
-        dA = pA.domains()
-        dB = pB.domains()
-        for d in dA:
-            if d in dB:
-                raise Exception('Duplicate domain "%s" found' % d)
-        for d in dB:
-            if d in dA:
-                raise Exception('Duplicate domain "%s" found' % d)
-        kA = list(pA.keys())
-        kB = list(pB.keys())
-        for k in kA:
-            if k in kB:
-                raise Exception('Duplicate key %s found' % k)
-        for k in kB:
-            if k in kA:
-                raise Exception('Duplicate key %s found' % k)
+        dA = set(pA.domains())
+        dB = set(pB.domains())
+        duplicate_domains = dA.intersection(dB)
+        if duplicate_domains:
+            raise Exception('Duplicate domains found: %s' % ', '.join(map(str, duplicate_domains)))
+        
+        kA = set(pA.keys())
+        kB = set(pB.keys())
+        duplicate_keys = kA.intersection(kB)
+        if duplicate_keys:
+            raise Exception('Duplicate keys found: %s' % ', '.join(map(str, duplicate_keys)))
+        
         return self
 
     def teardown(self):
