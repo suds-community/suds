@@ -28,7 +28,7 @@ distribution.
 
 Standard Python installation.
 
-Here are the basic instructions for 3 different installation methods:
+Here are the basic instructions for 4 different installation methods:
 
 1.  Using `pip`
     -   Have the `pip` package installed.
@@ -40,6 +40,8 @@ Here are the basic instructions for 3 different installation methods:
     -   Unpack the source package somewhere.
     -   Run `python setup.py install` from the source distribution\'s
         top level folder.
+4.  From the `conda` package (maintained separately, please open issues related to the conda package on https://github.com/conda-forge/suds-community-feedstock)
+    -   `conda install -c conda-forge suds-community`
 
 ## Installation troubleshooting
 
